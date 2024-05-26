@@ -1,0 +1,9 @@
+- name: Install common dependencies
+  ansible.builtin.apt:
+    name:
+      - curl
+      - gpg
+      - neovim
+      - ripgrep
+      - ufw
+    state: latest

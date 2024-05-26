@@ -1,0 +1,14 @@
+http:
+  routers:
+    sonarr:
+      rule: Host(`sonarr.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: sonarr
+      tls:
+        certResolver: myresolver
+  services:
+    sonarr:
+      loadBalancer:
+        servers:
+          - url: "http://sonarr:8989"

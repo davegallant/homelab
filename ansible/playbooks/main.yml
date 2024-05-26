@@ -1,0 +1,23 @@
+---
+
+- import_playbook: archivebox/main.yml
+- import_playbook: audiobookshelf/main.yml
+- import_playbook: changedetection/main.yml
+- import_playbook: gitea/main.yml
+- import_playbook: homepage/main.yml
+- import_playbook: invidious/main.yml
+- import_playbook: jackett/main.yml
+- import_playbook: jellyfin/main.yml
+- import_playbook: ladder/main.yml
+- import_playbook: lidarr/main.yml
+- import_playbook: linkwarden/main.yml
+- import_playbook: miniflux/main.yml
+- import_playbook: plex/main.yml
+- import_playbook: qbittorrent/main.yml
+- import_playbook: radarr/main.yml
+- import_playbook: sonarr/main.yml
+- import_playbook: speedtest-tracker/main.yml
+- import_playbook: stirling-pdf/main.yml
+- import_playbook: synology/main.yml
+- import_playbook: uptime-kuma/main.yml
+- import_playbook: wazuh/main.yml
