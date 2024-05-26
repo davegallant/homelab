@@ -1,0 +1,23 @@
+
+services:
+  ladder:
+    image: ghcr.io/everywall/ladder:v0.0.21
+    container_name: ladder
+    environment:
+      - PORT=8080
+      - RULESET=https://raw.githubusercontent.com/everywall/ladder/main/ruleset.yaml
+    ports:
+      - "8080:8080"
+  traefik:
+    image: traefik:v3.0.1
+    container_name: traefik
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
+      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
+      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock

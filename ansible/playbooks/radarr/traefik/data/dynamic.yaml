@@ -1,0 +1,14 @@
+http:
+  routers:
+    radarr:
+      rule: Host(`radarr.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: radarr
+      tls:
+        certResolver: myresolver
+  services:
+    radarr:
+      loadBalancer:
+        servers:
+          - url: "http://radarr:7878"
