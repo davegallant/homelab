@@ -1,0 +1,46 @@
+
+services:
+  speedtest-tracker:
+    container_name: speedtest-tracker
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - DB_CONNECTION=pgsql
+      - DB_HOST=speedtest-db
+      - DB_PORT=5432
+      - DB_DATABASE=speedtest_tracker
+      - DB_USERNAME={{ speedtest_tracker_db_username }}
+      - DB_PASSWORD={{ speedtest_tracker_db_password }}
+    volumes:
+      - speedtest-app:/config
+      - "./web:/etc/ssl/web"
+    image: lscr.io/linuxserver/speedtest-tracker:0.19.0
+    restart: unless-stopped
+    depends_on:
+      - speedtest-db
+  speedtest-db:
+    container_name: speedtest-db
+    image: postgres:15
+    restart: always
+    environment:
+      - POSTGRES_DB=speedtest_tracker
+      - POSTGRES_USER={{ speedtest_tracker_db_username }}
+      - POSTGRES_PASSWORD={{ speedtest_tracker_db_password }}
+    volumes:
+      - speedtest-db:/var/lib/postgresql/data
+  traefik:
+    image: traefik:v3.0.1
+    container_name: traefik
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
+      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
+      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
+volumes:
+  speedtest-app:
+  speedtest-db:

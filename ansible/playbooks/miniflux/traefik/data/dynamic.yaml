@@ -1,0 +1,14 @@
+http:
+  routers:
+    miniflux:
+      rule: Host(`miniflux.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: miniflux
+      tls:
+        certResolver: myresolver
+  services:
+    miniflux:
+      loadBalancer:
+        servers:
+          - url: "http://miniflux:8080"

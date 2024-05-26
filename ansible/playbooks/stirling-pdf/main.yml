@@ -1,0 +1,53 @@
+---
+- name: Install stirling-pdf
+  hosts: stirling-pdf
+  tasks:
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-docker-on-debian.yml
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-common-dependencies.yml
+
+    - name: Copy docker-compose.yml
+      ansible.builtin.template:
+        src: docker-compose.yml
+        dest: "~/docker-compose.yml"
+        mode: "0640"
+
+    - name: Copy config data
+      ansible.builtin.copy:
+        src: ./config/
+        dest: "~/config/"
+        mode: "0640"
+
+    - name: Allow https
+      community.general.ufw:
+        rule: allow
+        port: https
+        proto: tcp
+
+    - name: Allow ssh
+      community.general.ufw:
+        rule: allow
+        port: ssh
+        proto: tcp
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+        policy: deny
+
+    - name: Pull and start containers
+      community.docker.docker_compose_v2:
+        project_src: .
+        pull: always
+
+    - name: Prune docker images
+      community.docker.docker_prune:
+        containers: false
+        images: true
+        images_filters:
+          dangling: false
+        networks: false
+        volumes: false
+        builder_cache: false

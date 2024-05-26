@@ -1,0 +1,76 @@
+---
+- name: Install plex
+  hosts: plex
+  tasks:
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-docker-on-debian.yml
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-common-dependencies.yml
+
+    - name: Copy docker-compose.yml
+      ansible.builtin.copy:
+        src: docker-compose.yml
+        dest: "~/docker-compose.yml"
+        mode: "0640"
+
+    - name: Allow ssh
+      community.general.ufw:
+        rule: allow
+        port: ssh
+        proto: tcp
+
+    - name: Allow plex media server (32400)
+      community.general.ufw:
+        rule: allow
+        port: "32400"
+        proto: tcp
+
+    - name: Allow access to plex dlna server (1900)
+      community.general.ufw:
+        rule: allow
+        port: "1900"
+        proto: udp
+
+    - name: Allow access to bonjour/avahi network discovery (5353)
+      community.general.ufw:
+        rule: allow
+        port: "5353"
+        proto: udp
+
+    - name: Allow access to gdm network discovery ports
+      community.general.ufw:
+        rule: allow
+        proto: udp
+        port: "{{ item }}"
+      loop:
+        - "32410"
+        - "32412"
+        - "32413"
+        - "32414"
+
+    - name: Allow access to plex dlna server (32469)
+      community.general.ufw:
+        rule: allow
+        port: "32469"
+        proto: tcp
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+        policy: deny
+
+    - name: Pull and start containers
+      community.docker.docker_compose_v2:
+        project_src: .
+        pull: always
+
+    - name: Prune docker images
+      community.docker.docker_prune:
+        containers: false
+        images: true
+        images_filters:
+          dangling: false
+        networks: false
+        volumes: false
+        builder_cache: false

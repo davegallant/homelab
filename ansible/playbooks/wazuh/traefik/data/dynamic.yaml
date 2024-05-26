@@ -1,0 +1,14 @@
+http:
+  routers:
+    wazuh:
+      rule: Host(`wazuh.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: wazuh
+      tls:
+        certResolver: myresolver
+  services:
+    wazuh:
+      loadBalancer:
+        servers:
+          - url: "http://wazuh:5601"

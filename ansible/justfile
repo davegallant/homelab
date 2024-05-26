@@ -1,0 +1,9 @@
+set positional-arguments
+
+# Sets up ansible
+setup:
+	ansible-galaxy collection install -r requirements.yml
+
+# Run ansible-playbook
+run argument:
+	ansible-playbook --ask-vault-pass playbooks/main.yml -i inventory {{argument}}

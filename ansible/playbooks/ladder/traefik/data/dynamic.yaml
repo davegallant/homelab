@@ -1,0 +1,14 @@
+http:
+  routers:
+    ladder:
+      rule: Host(`ladder.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: ladder
+      tls:
+        certResolver: myresolver
+  services:
+    ladder:
+      loadBalancer:
+        servers:
+          - url: "http://ladder:8080"

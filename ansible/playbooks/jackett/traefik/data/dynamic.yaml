@@ -1,0 +1,14 @@
+http:
+  routers:
+    jackett:
+      rule: Host(`jackett.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: jackett
+      tls:
+        certResolver: myresolver
+  services:
+    jackett:
+      loadBalancer:
+        servers:
+          - url: "http://jackett:9117"

@@ -1,0 +1,25 @@
+services:
+  archivebox:
+    image: archivebox/archivebox:sha-62183b4
+    command: server --quick-init 0.0.0.0:8000
+    ports:
+      - 8000:8000
+    environment:
+      # add any ArchiveBox config options you want here
+      - ALLOWED_HOSTS=*
+      - MEDIA_MAX_SIZE=750m
+    volumes:
+      - ./data:/data
+  traefik:
+    image: traefik:v3.0.1
+    container_name: traefik
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
+      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
+      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock

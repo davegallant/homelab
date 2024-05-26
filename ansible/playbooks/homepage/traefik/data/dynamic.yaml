@@ -1,0 +1,12 @@
+http:
+  routers:
+    homepage:
+      service: homepage
+      rule: Host(`homepage.snake-cloud.ts.net`)
+      tls:
+        certResolver: myresolver
+  services:
+    homepage:
+      loadBalancer:
+        servers:
+          - url: "http://homepage:3000"

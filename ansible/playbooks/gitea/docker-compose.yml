@@ -1,0 +1,54 @@
+services:
+  gitea:
+    image: gitea/gitea:1.21.11
+    container_name: gitea
+    network_mode: service:ts-gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+
+      - GITEA__server__DOMAIN=gitea.snake-cloud.ts.net
+      - GITEA__server__ROOT_URL=https://gitea.snake-cloud.ts.net
+      - GITEA__server__HTTP_ADDR=0.0.0.0
+      - GITEA__server__LFS_JWT_SECRET={{ gitea_lfs_jwt }}
+
+      - GITEA__mailer__ENABLED=true
+      - GITEA__mailer__SMTP_ADDR=smtp.gmail.com
+      - GITEA__mailer__SMTP_PORT=465
+      - GITEA__mailer__FROM={{ gitea_mailer_from }}
+      - GITEA__mailer__USER=davegallant
+      - GITEA__mailer__PASSWD={{ gitea_mailer_passwd }}
+      - GITEA__mailer__SMTP_PROTOCOL=smtps
+
+      - GITEA__service__DISABLE_REGISTRATION=true
+
+      - GITEA__ui__DEFAULT_THEME=palenight
+      - GITEA__ui__THEMES=palenight
+
+      - GITEA__indexer__REPO_INDEXER_ENABLED=true
+      - GITEA__indexer__REPO_INDEXER_PATH=indexers/repos.bleve
+      - GITEA__indexer__MAX_FILE_SIZE=1048576
+      - GITEA__indexer__REPO_INDEXER_INCLUDE=
+      - GITEA__indexer__REPO_INDEXER_EXCLUDE=resources/bin/**
+    restart: always
+    volumes:
+      - ./data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
+  ts-gitea:
+    image: tailscale/tailscale:v1.66
+    container_name: ts-gitea
+    hostname: gitea
+    environment:
+      - TS_AUTHKEY={{ gitea_ts_authkey }}
+      - TS_SERVE_CONFIG=/config/gitea.json
+      - TS_STATE_DIR=/var/lib/tailscale
+    volumes:
+      - ${PWD}/state:/var/lib/tailscale
+      - ${PWD}/config:/config
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped

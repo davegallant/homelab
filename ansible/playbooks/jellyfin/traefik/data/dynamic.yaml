@@ -1,0 +1,14 @@
+http:
+  routers:
+    jellyfin:
+      rule: Host(`jellyfin.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: jellyfin
+      tls:
+        certResolver: myresolver
+  services:
+    jellyfin:
+      loadBalancer:
+        servers:
+          - url: "http://jellyfin:8096"

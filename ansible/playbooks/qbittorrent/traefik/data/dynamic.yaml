@@ -1,0 +1,14 @@
+http:
+  routers:
+    qbittorrent:
+      rule: Host(`qbittorrent.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: qbittorrent
+      tls:
+        certResolver: myresolver
+  services:
+    qbittorrent:
+      loadBalancer:
+        servers:
+          - url: "http://qbittorrent:8080"
