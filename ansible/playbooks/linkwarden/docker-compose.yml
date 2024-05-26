@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_PASSWORD={{ linkwarden_postgres_password }}
+    restart: always
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+  linkwarden:
+    environment:
+      - DATABASE_URL=postgresql://postgres:{{ linkwarden_postgres_password }}@postgres:5432/postgres
+      - NEXTAUTH_SECRET={{ linkwarden_nextauth_secret }}
+      - NEXTAUTH_URL=http://localhost:3000/api/v1/auth
+    restart: always
+    image: ghcr.io/linkwarden/linkwarden:latest # comment this line to build from source
+    ports:
+      - 3000:3000
+    volumes:
+      - ./data:/data/data
+    depends_on:
+      - postgres
+  traefik:
+    image: traefik:v3.0.1
+    container_name: traefik
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
+      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
+      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock

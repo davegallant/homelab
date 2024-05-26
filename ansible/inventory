@@ -1,0 +1,24 @@
+[homelab]
+audiobookshelf ansible_ssh_user=root ansible_host=192.168.1.50
+archivebox ansible_ssh_user=root
+changedetection ansible_ssh_user=root
+gitea ansible_ssh_user=root ansible_host=192.168.1.144
+homepage ansible_ssh_user=root
+invidious ansible_ssh_user=root
+jackett ansible_ssh_user=root
+jellyfin ansible_ssh_user=root
+ladder ansible_ssh_user=root
+lidarr ansible_ssh_user=root
+linkwarden ansible_ssh_user=root
+miniflux ansible_ssh_user=root
+plex ansible_ssh_user=root ansible_host=192.168.1.198
+qbittorrent ansible_ssh_user=root
+radarr ansible_ssh_user=root
+sonarr ansible_ssh_user=root
+speedtest-tracker ansible_ssh_user=root
+stirling-pdf ansible_ssh_user=root ansible_host=192.168.1.124
+synology ansible_ssh_user=root
+tailscale-exit-node ansible_ssh_user=root
+tailscale-subnet-router ansible_ssh_user=root
+uptime-kuma ansible_ssh_user=root
+wazuh ansible_ssh_user=root
