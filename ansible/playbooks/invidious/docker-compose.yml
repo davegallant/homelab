@@ -29,7 +29,7 @@ services:
       - invidious
 
   invidious-db:
-    image: docker.io/library/postgres:14
+    image: docker.io/library/postgres:16
     restart: unless-stopped
     volumes:
       - postgresdata:/var/lib/postgresql/data
