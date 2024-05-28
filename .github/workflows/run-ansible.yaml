@@ -1,0 +1,40 @@
+name: Run ansible
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "@daily"
+
+jobs:
+  run-ansible-playbook:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Install ansible
+        run: |
+          apt update && apt install ansible -y
+      - name: Run playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: ansible/playbooks/main.yml
+          requirements: ansible/requirements.yml
+          key: ${{ secrets.ANSIBLE_SSH_KEY }}
+          vault_password: ${{secrets.ANSIBLE_VAULT_PASSWORD}}
+          options: |
+            --inventory ansible/inventory
+      - name: Send failure notification
+        uses: dawidd6/action-send-mail@v3
+        if: always() && failure()
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: davegallant
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: homelab ansible failed
+          to: davegallant@gmail.com
+          from: Gitea
+          body: |
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}
