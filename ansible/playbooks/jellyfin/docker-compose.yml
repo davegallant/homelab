@@ -1,6 +1,6 @@
 services:
   jellyfin:
-    image: jellyfin/jellyfin:10.9.4
+    image: jellyfin/jellyfin:10.9.5
     container_name: jellyfin
     ports:
       - 1900:1900/udp
