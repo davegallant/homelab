@@ -11,6 +11,7 @@ services:
       - DB_DATABASE=speedtest_tracker
       - DB_USERNAME={{ speedtest_tracker_db_username }}
       - DB_PASSWORD={{ speedtest_tracker_db_password }}
+      - APP_KEY={{ speedtest_tracker_app_key }}
     volumes:
       - speedtest-app:/config
       - "./web:/etc/ssl/web"
