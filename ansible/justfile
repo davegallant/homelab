@@ -6,4 +6,4 @@ setup:
 
 # Run ansible-playbook
 run argument:
-	ansible-playbook --ask-vault-pass playbooks/main.yml -i inventory {{argument}}
+	ansible-playbook playbooks/main.yml -i inventory {{argument}}
