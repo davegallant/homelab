@@ -10,7 +10,7 @@ services:
     restart: unless-stopped
 
   traefik:
-    image: traefik:v3.0.1
+    image: traefik:v3.0.2
     container_name: traefik
     security_opt:
       - no-new-privileges:true
