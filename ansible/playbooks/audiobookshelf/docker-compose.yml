@@ -24,7 +24,7 @@ services:
     #environment:
     #  - user=1000:1000
   ts-audiobookshelf:
-    image: tailscale/tailscale:v1.66
+    image: tailscale/tailscale:v1.68
     container_name: ts-audiobookshelf
     hostname: audiobookshelf
     environment:
