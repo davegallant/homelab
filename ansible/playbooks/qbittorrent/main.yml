@@ -21,7 +21,7 @@
         mode: "0640"
 
     - name: Copy qbittorrent.conf
-      ansible.builtin.copy:
+      ansible.builtin.template:
         src: ./qbittorrent.conf
         dest: "~/qbittorrent/config/qBittorrent.conf"
         mode: "0640"
