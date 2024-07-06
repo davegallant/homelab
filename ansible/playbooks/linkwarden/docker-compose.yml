@@ -12,7 +12,7 @@ services:
       - NEXTAUTH_SECRET={{ linkwarden_nextauth_secret }}
       - NEXTAUTH_URL=http://localhost:3000/api/v1/auth
     restart: always
-    image: ghcr.io/linkwarden/linkwarden:latest # comment this line to build from source
+    image: ghcr.io/linkwarden/linkwarden:v2.5.2
     ports:
       - 3000:3000
     volumes:
