@@ -14,7 +14,7 @@ services:
       - "/mnt/media/TV Shows:/mnt/media/TV Shows"
       - /mnt/media/Torrents:/downloads
   traefik:
-    image: traefik:v3.0.3
+    image: traefik:v3.0.4
     container_name: traefik
     security_opt:
       - no-new-privileges:true
