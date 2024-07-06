@@ -21,7 +21,7 @@ services:
       - "8191:8191"
     restart: unless-stopped
   traefik:
-    image: traefik:v3.0.3
+    image: traefik:v3.0.4
     container_name: traefik
     security_opt:
       - no-new-privileges:true
