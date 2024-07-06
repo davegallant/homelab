@@ -11,7 +11,7 @@ services:
     volumes:
       - ./data:/data
   traefik:
-    image: traefik:v3.0.3
+    image: traefik:v3.0.4
     container_name: traefik
     security_opt:
       - no-new-privileges:true
