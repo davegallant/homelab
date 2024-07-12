@@ -1,7 +1,7 @@
 
 services:
   miniflux:
-    image: miniflux/miniflux:2.1.3
+    image: miniflux/miniflux:2.1.4
     container_name: miniflux
     depends_on:
       - miniflux-db
