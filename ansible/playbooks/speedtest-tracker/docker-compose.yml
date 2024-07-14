@@ -32,7 +32,7 @@ services:
       - speedtest-db:/var/lib/postgresql/data
   traefik:
     image: traefik:v3.0.4
-    container_name: traefik
+    container_name: traefik-speedtest-tracker
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped

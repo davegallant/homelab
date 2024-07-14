@@ -7,12 +7,13 @@ services:
     volumes:
       - ./pgdata:/var/lib/postgresql/data
   linkwarden:
+    image: ghcr.io/linkwarden/linkwarden:v2.5.3
+    container_name: linkwarden
     environment:
       - DATABASE_URL=postgresql://postgres:{{ linkwarden_postgres_password }}@postgres:5432/postgres
       - NEXTAUTH_SECRET={{ linkwarden_nextauth_secret }}
       - NEXTAUTH_URL=http://localhost:3000/api/v1/auth
     restart: always
-    image: ghcr.io/linkwarden/linkwarden:v2.5.3
     ports:
       - 3000:3000
     volumes:
@@ -21,7 +22,7 @@ services:
       - postgres
   traefik:
     image: traefik:v3.0.4
-    container_name: traefik
+    container_name: traefik-linkwarden
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
