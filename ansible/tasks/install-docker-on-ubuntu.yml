@@ -28,3 +28,28 @@
       - docker-ce-cli
       - docker-compose-plugin
     state: latest
+
+- name: Install loki docker driver
+  community.docker.docker_plugin:
+    plugin_name: grafana/loki-docker-driver
+    alias: loki
+    state: present
+
+- name: Enable loki docker driver
+  community.docker.docker_plugin:
+    plugin_name: loki
+    state: enable
+
+- name: Write docker daemon json
+  ansible.builtin.copy:
+    content: |
+      {
+        "debug" : true,
+        "log-driver": "loki",
+        "log-opts": {
+            "loki-url": "{{ loki_url }}",
+            "loki-batch-size": "400"
+         }
+      }
+    dest: /etc/docker/daemon.json
+    mode: "0644"
