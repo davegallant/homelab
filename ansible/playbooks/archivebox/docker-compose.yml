@@ -1,6 +1,7 @@
 services:
   archivebox:
     image: archivebox/archivebox:sha-62183b4
+    container_name: archivebox
     command: server --quick-init 0.0.0.0:8000
     ports:
       - 8000:8000
@@ -12,7 +13,7 @@ services:
       - ./data:/data
   traefik:
     image: traefik:v3.0.4
-    container_name: traefik
+    container_name: traefik-archivebox
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
