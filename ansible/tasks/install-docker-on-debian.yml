@@ -50,9 +50,3 @@
       }
     dest: /etc/docker/daemon.json
     mode: "0644"
-
-- name: Restart docker
-  ansible.builtin.systemd:
-    name: docker
-    state: restarted
-    enabled: yes
