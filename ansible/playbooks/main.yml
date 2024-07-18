@@ -11,6 +11,7 @@
 - import_playbook: ladder/main.yml
 - import_playbook: lidarr/main.yml
 - import_playbook: linkwarden/main.yml
+- import_playbook: lubelogger/main.yml
 - import_playbook: miniflux/main.yml
 - import_playbook: plex/main.yml
 - import_playbook: qbittorrent/main.yml
