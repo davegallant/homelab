@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: traefik:v3.0.4
+    image: traefik:v3.1.0
     container_name: traefik-synology
     security_opt:
       - no-new-privileges:true

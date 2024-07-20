@@ -21,7 +21,7 @@ services:
     depends_on:
       - postgres
   traefik:
-    image: traefik:v3.0.4
+    image: traefik:v3.1.0
     container_name: traefik-linkwarden
     security_opt:
       - no-new-privileges:true

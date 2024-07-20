@@ -12,7 +12,7 @@ services:
     volumes:
       - ./data:/data
   traefik:
-    image: traefik:v3.0.4
+    image: traefik:v3.1.0
     container_name: traefik-archivebox
     security_opt:
       - no-new-privileges:true
