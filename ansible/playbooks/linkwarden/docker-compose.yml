@@ -7,7 +7,7 @@ services:
     volumes:
       - ./pgdata:/var/lib/postgresql/data
   linkwarden:
-    image: ghcr.io/linkwarden/linkwarden:v2.5.3
+    image: ghcr.io/linkwarden/linkwarden:v2.6.0
     container_name: linkwarden
     environment:
       - DATABASE_URL=postgresql://postgres:{{ linkwarden_postgres_password }}@postgres:5432/postgres
