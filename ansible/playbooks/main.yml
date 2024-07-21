@@ -8,7 +8,6 @@
 - import_playbook: invidious/main.yml
 - import_playbook: jackett/main.yml
 - import_playbook: jellyfin/main.yml
-- import_playbook: ladder/main.yml
 - import_playbook: lidarr/main.yml
 - import_playbook: linkwarden/main.yml
 - import_playbook: lubelogger/main.yml
