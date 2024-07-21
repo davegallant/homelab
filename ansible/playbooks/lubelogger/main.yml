@@ -3,7 +3,7 @@
   hosts: lubelogger
   tasks:
     - ansible.builtin.include_tasks:
-        file: ../../tasks/install-docker-on-debian.yml
+        file: ../../tasks/install-docker-on-ubuntu.yml
 
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-common-dependencies.yml
