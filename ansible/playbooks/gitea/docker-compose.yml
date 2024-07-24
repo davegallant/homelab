@@ -37,7 +37,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
   ts-gitea:
-    image: tailscale/tailscale:v1.68
+    image: tailscale/tailscale:v1.70
     container_name: ts-gitea
     hostname: gitea
     environment:
