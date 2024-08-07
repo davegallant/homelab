@@ -14,7 +14,7 @@ services:
       - "/mnt/media/Music:/music:ro"
     restart: unless-stopped
   traefik:
-    image: traefik:v3.1.1
+    image: traefik:v3.1.2
     container_name: traefik-jellyfin
     security_opt:
       - no-new-privileges:true

@@ -47,7 +47,7 @@ services:
       - invidious
 
   traefik:
-    image: traefik:v3.1.1
+    image: traefik:v3.1.2
     container_name: traefik-invidious
     security_opt:
       - no-new-privileges:true
