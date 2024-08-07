@@ -27,7 +27,7 @@ services:
       interval: 10s
       start_period: 30s
   traefik:
-    image: traefik:v3.1.1
+    image: traefik:v3.1.2
     container_name: traefik-miniflux
     security_opt:
       - no-new-privileges:true
