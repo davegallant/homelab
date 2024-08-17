@@ -3,6 +3,7 @@ services:
   miniflux:
     image: miniflux/miniflux:2.1.4
     container_name: miniflux
+    network_mode: service:ts-miniflux
     depends_on:
       - miniflux-db
     restart: always
@@ -26,19 +27,22 @@ services:
       test: ["CMD", "pg_isready", "-U", "miniflux"]
       interval: 10s
       start_period: 30s
-  traefik:
-    image: traefik:v3.1.2
-    container_name: traefik-miniflux
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
+  ts-miniflux:
+    image: tailscale/tailscale:v1.70
+    container_name: ts-miniflux
+    hostname: miniflux
+    environment:
+      - TS_AUTHKEY={{ miniflux_ts_authkey }}
+      - TS_SERVE_CONFIG=/config/miniflux.json
+      - TS_STATE_DIR=/var/lib/tailscale
     volumes:
-      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
-      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
-      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
+      - ${PWD}/state:/var/lib/tailscale
+      - ${PWD}/config:/config
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
 volumes:
   miniflux-db:
     name: miniflux-db
