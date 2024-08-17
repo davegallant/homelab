@@ -1,7 +1,7 @@
 ---
-
 - import_playbook: archivebox/main.yml
 - import_playbook: audiobookshelf/main.yml
+- import_playbook: calibre-web/main.yml
 - import_playbook: changedetection/main.yml
 - import_playbook: gitea/main.yml
 - import_playbook: homepage/main.yml

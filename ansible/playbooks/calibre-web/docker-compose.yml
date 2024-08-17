@@ -1,0 +1,29 @@
+services:
+  calibre-web:
+    image: lscr.io/linuxserver/calibre-web:nightly-version-4d79c593
+    container_name: calibre-web
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - DOCKER_MODS=linuxserver/mods:universal-calibre #optional
+      - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #optional
+    volumes:
+      - ./config:/config
+      - /mnt/media/Calibre:/books
+    ports:
+      - 8083:8083
+    restart: unless-stopped
+  traefik:
+    image: traefik:v3.1.2
+    container_name: traefik-calibre-web
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
+      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
+      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
