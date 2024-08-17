@@ -3,7 +3,7 @@
   hosts: miniflux
   tasks:
     - ansible.builtin.include_tasks:
-        file: ../../tasks/install-docker-on-debian.yml
+        file: ../../tasks/install-docker-on-ubuntu.yml
 
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-common-dependencies.yml
@@ -14,10 +14,10 @@
         dest: "~/docker-compose.yml"
         mode: "0640"
 
-    - name: Copy traefik data
+    - name: Copy config/miniflux.json
       ansible.builtin.copy:
-        src: ./traefik/
-        dest: "~/traefik/"
+        src: ./config/miniflux.json
+        dest: "~/config/miniflux.json"
         mode: "0640"
 
     - name: Allow https
@@ -26,9 +26,9 @@
         port: https
         proto: tcp
 
-    - name: Deny ssh
+    - name: Allow ssh
       community.general.ufw:
-        rule: deny
+        rule: allow
         port: ssh
         proto: tcp
 
