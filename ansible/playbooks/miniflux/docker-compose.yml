@@ -1,7 +1,7 @@
 
 services:
   miniflux:
-    image: miniflux/miniflux:2.1.4
+    image: miniflux/miniflux:2.2.0
     container_name: miniflux
     network_mode: service:ts-miniflux
     depends_on:
