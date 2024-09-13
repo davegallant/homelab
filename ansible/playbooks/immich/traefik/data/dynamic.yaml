@@ -1,0 +1,14 @@
+http:
+  routers:
+    immich:
+      rule: Host(`immich.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: immich
+      tls:
+        certResolver: myresolver
+  services:
+    immich:
+      loadBalancer:
+        servers:
+          - url: "http://immich:3001"
