@@ -6,6 +6,7 @@
 - import_playbook: gitea/main.yml
 - import_playbook: homepage/main.yml
 - import_playbook: invidious/main.yml
+- import_playbook: immich/main.yml
 - import_playbook: jackett/main.yml
 - import_playbook: jellyfin/main.yml
 - import_playbook: lidarr/main.yml
