@@ -10,7 +10,7 @@ services:
     restart: unless-stopped
 
   traefik:
-    image: traefik:v3.1.3
+    image: traefik:v3.1.2
     container_name: traefik-uptime-kuma
     security_opt:
       - no-new-privileges:true
