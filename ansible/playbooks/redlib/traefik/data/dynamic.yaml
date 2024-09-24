@@ -1,0 +1,14 @@
+http:
+  routers:
+    redlib:
+      rule: Host(`redlib.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: redlib
+      tls:
+        certResolver: myresolver
+  services:
+    redlib:
+      loadBalancer:
+        servers:
+          - url: "http://redlib:8080"
