@@ -5,8 +5,8 @@
 - import_playbook: changedetection/main.yml
 - import_playbook: gitea/main.yml
 - import_playbook: homepage/main.yml
-- import_playbook: invidious/main.yml
 - import_playbook: immich/main.yml
+- import_playbook: invidious/main.yml
 - import_playbook: jackett/main.yml
 - import_playbook: jellyfin/main.yml
 - import_playbook: lidarr/main.yml
@@ -15,6 +15,7 @@
 - import_playbook: plex/main.yml
 - import_playbook: qbittorrent/main.yml
 - import_playbook: radarr/main.yml
+- import_playbook: redlib/main.yml
 - import_playbook: sonarr/main.yml
 - import_playbook: speedtest-tracker/main.yml
 - import_playbook: stirling-pdf/main.yml

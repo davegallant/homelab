@@ -1,6 +1,6 @@
 [homelab]
-audiobookshelf ansible_ssh_user=root ansible_host=192.168.1.119
 archivebox ansible_ssh_user=root
+audiobookshelf ansible_ssh_user=root ansible_host=192.168.1.119
 calibre-web ansible_ssh_user=root
 changedetection ansible_ssh_user=root
 gitea ansible_ssh_user=root ansible_host=192.168.1.144
@@ -15,6 +15,7 @@ miniflux ansible_ssh_user=root ansible_host=192.168.1.139
 plex ansible_ssh_user=root ansible_host=192.168.1.198
 qbittorrent ansible_ssh_user=root
 radarr ansible_ssh_user=root
+redlib ansible_ssh_user=root
 sonarr ansible_ssh_user=root
 speedtest-tracker ansible_ssh_user=root
 stirling-pdf ansible_ssh_user=root ansible_host=192.168.1.124
