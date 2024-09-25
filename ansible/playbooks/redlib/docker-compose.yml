@@ -24,6 +24,9 @@ services:
         ]
       interval: 5m
       timeout: 3s
+    environment:
+      REDLIB_DEFAULT_THEME: dracula
+      REDLIB_DEFAULT_WIDE: on
 
   ts-redlib:
     image: tailscale/tailscale:v1.74
