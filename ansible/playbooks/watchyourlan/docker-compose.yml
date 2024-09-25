@@ -1,0 +1,25 @@
+services:
+  watchyourlan:
+    image: aceberg/watchyourlan:v2
+    network_mode: "host"
+    restart: unless-stopped
+    volumes:
+      - ~/.dockerdata/wyl:/data/WatchYourLAN
+    environment:
+      TZ: America/Toronto
+      IFACES: "eth0"
+      SHOUTRRR_URL: "" # optional, set url to notify
+      THEME: "cosmo"
+      COLOR: "dark"
+
+  traefik:
+    image: traefik:v3.1.2
+    container_name: traefik-watchyourlan
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
+      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
+      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
