@@ -9,15 +9,15 @@
         file: ../../tasks/install-common-dependencies.yml
 
     - name: Copy docker-compose.yml
-      ansible.builtin.copy:
+      ansible.builtin.template:
         src: docker-compose.yml
         dest: "~/docker-compose.yml"
         mode: "0640"
 
-    - name: Copy traefik data
+    - name: Copy config/redlib.json
       ansible.builtin.copy:
-        src: ./traefik/
-        dest: "~/traefik/"
+        src: ./config/redlib.json
+        dest: "~/config/redlib.json"
         mode: "0640"
 
     - name: Allow https
@@ -26,9 +26,9 @@
         port: https
         proto: tcp
 
-    - name: Deny ssh
+    - name: Allow ssh
       community.general.ufw:
-        rule: deny
+        rule: allow
         port: ssh
         proto: tcp
 

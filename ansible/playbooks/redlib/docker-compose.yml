@@ -1,12 +1,10 @@
-
 services:
   redlib:
     # https://quay.io/repository/redlib/redlib?tab=tags&tag=latest
     image: quay.io/redlib/redlib:sha-d5f137c
     restart: always
     container_name: "redlib"
-    ports:
-      - 8080:8080 # Specify `127.0.0.1:8080:8080` instead if using a reverse proxy
+    network_mode: service:ts-redlib
     user: nobody
     read_only: true
     security_opt:
@@ -15,20 +13,31 @@ services:
     cap_drop:
       - ALL
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "--tries=1", "http://localhost:8080/settings"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--spider",
+          "-q",
+          "--tries=1",
+          "http://localhost:8080/settings",
+        ]
       interval: 5m
       timeout: 3s
 
-  traefik:
-    image: traefik:v3.1.2
-    container_name: traefik-redlib
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
+  ts-redlib:
+    image: tailscale/tailscale:v1.74
+    container_name: ts-redlib
+    hostname: redlib
+    environment:
+      - TS_AUTHKEY={{ redlib_ts_authkey }}
+      - TS_SERVE_CONFIG=/config/redlib.json
+      - TS_STATE_DIR=/var/lib/tailscale
     volumes:
-      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
-      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
-      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
+      - ${PWD}/state:/var/lib/tailscale
+      - ${PWD}/config:/config
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
