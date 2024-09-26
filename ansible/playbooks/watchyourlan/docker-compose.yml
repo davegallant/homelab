@@ -8,7 +8,7 @@ services:
     environment:
       TZ: America/Toronto
       IFACES: "eth0"
-      SHOUTRRR_URL: "" # optional, set url to notify
+      SHOUTRRR_URL: "{{ watchyourlan_shoutrr_url }}"
       THEME: "cosmo"
       COLOR: "dark"
 
