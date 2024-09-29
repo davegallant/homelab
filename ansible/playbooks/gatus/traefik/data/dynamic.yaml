@@ -1,0 +1,14 @@
+http:
+  routers:
+    gatus:
+      rule: Host(`gatus.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: gatus
+      tls:
+        certResolver: myresolver
+  services:
+    gatus:
+      loadBalancer:
+        servers:
+          - url: "http://gatus:8080"

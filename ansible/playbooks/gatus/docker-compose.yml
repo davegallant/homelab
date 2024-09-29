@@ -1,0 +1,26 @@
+services:
+  gatus:
+    image: twinproduction/gatus:v5.12.1
+    container_name: gatus
+    user: "999:999"
+    volumes:
+      - ./config:/config
+      - ./data:/data
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  traefik:
+    image: traefik:v3.1.2
+    container_name: traefik-gatus
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
+      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
+      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
+
