@@ -3,6 +3,7 @@ archivebox ansible_ssh_user=root
 audiobookshelf ansible_ssh_user=root ansible_host=192.168.1.119
 calibre-web ansible_ssh_user=root
 changedetection ansible_ssh_user=root
+gatus ansible_ssh_user=root
 gitea ansible_ssh_user=root ansible_host=192.168.1.144
 homepage ansible_ssh_user=root
 immich ansible_ssh_user=root

@@ -3,6 +3,7 @@
 - import_playbook: audiobookshelf/main.yml
 - import_playbook: calibre-web/main.yml
 - import_playbook: changedetection/main.yml
+- import_playbook: gatus/main.yml
 - import_playbook: gitea/main.yml
 - import_playbook: homepage/main.yml
 - import_playbook: immich/main.yml
