@@ -24,4 +24,3 @@ synology ansible_ssh_user=root
 tailscale-exit-node ansible_ssh_user=root
 tailscale-subnet-router ansible_ssh_user=root
 watchyourlan ansible_ssh_user=root
-wazuh ansible_ssh_user=root
