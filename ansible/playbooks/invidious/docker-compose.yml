@@ -1,7 +1,7 @@
 services:
   invidious:
     # https://quay.io/repository/invidious/invidious?tab=tags
-    image: quay.io/invidious/invidious:2024.09.20-a021b93 
+    image: quay.io/invidious/invidious:2024.09.28-53e8a5d
     container_name: invidious
     restart: unless-stopped
     ports:
@@ -19,6 +19,9 @@ services:
           port: 5432
         check_tables: true
         hmac_key: {{ invidious_hmac_key }}
+        signature_server: inv_sig_helper:12999
+        visitor_data: {{ invidious_visitor_data }}
+        po_token: {{ invidious_po_token }}
     healthcheck:
       test: wget -nv --tries=1 --spider http://127.0.0.1:3000/api/v1/comments/jNQXAC9IVRw || exit 1
       interval: 30s
@@ -26,8 +29,20 @@ services:
       retries: 2
     depends_on:
       - invidious-db
-    networks:
-      - invidious
+
+  inv_sig_helper:
+    # https://quay.io/repository/invidious/inv-sig-helper?tab=tags
+    image: quay.io/invidious/inv-sig-helper:master-5025e49
+    init: true
+    command: ["--tcp", "0.0.0.0:12999"]
+    environment:
+      - RUST_LOG=info
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
 
   invidious-db:
     image: docker.io/library/postgres:14
@@ -43,8 +58,6 @@ services:
       POSTGRES_PASSWORD: {{ invidious_db_password }}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-    networks:
-      - invidious
 
   traefik:
     image: traefik:v3.1.2
@@ -59,12 +72,7 @@ services:
       - ./traefik/data/traefik.yaml:/traefik.yaml:ro
       - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
       - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
-    networks:
-      - invidious
 
 volumes:
   postgresdata:
 
-networks:
-  invidious:
-    name: invidious
