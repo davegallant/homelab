@@ -1,0 +1,14 @@
+http:
+  routers:
+    searxng:
+      rule: Host(`searxng.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: searxng
+      tls:
+        certResolver: myresolver
+  services:
+    searxng:
+      loadBalancer:
+        servers:
+          - url: "http://searxng:8080"
