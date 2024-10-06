@@ -9,6 +9,7 @@ services:
       - WB_AUTH=True
       - WB_USERNAME={{ wyze_bridge_username }}
       - WB_PASSWORD={{ wyze_bridge_password }}
+      - ROTATE_DOOR=True
   ts-wyze-bridge:
     image: tailscale/tailscale:v1.74
     container_name: ts-wyze-bridge
