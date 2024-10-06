@@ -1,0 +1,33 @@
+services:
+  wyze-bridge:
+    container_name: wyze-bridge
+    restart: unless-stopped
+    image: mrlt8/wyze-bridge:2.10.3
+    depends_on: [ts-wyze-bridge]
+    network_mode: service:ts-wyze-bridge
+    environment:
+      - WB_AUTH=True
+      - WB_USERNAME={{ wyze_bridge_username }}
+      - WB_PASSWORD={{ wyze_bridge_password }}
+  ts-wyze-bridge:
+    image: tailscale/tailscale:v1.74
+    container_name: ts-wyze-bridge
+    hostname: wyze-bridge
+    restart: unless-stopped
+    ports:
+      - 8554:8554 # RTSP
+      - 8889:8889 #WebRTC
+      - 8189:8189/udp # WebRTC/ICE
+      - 5000:5000 # WEB-UI
+    cap_add:
+      - net_admin
+      - sys_module
+    environment:
+      - TS_AUTHKEY={{ wyze_bridge_ts_authkey }}
+      - TS_EXTRA_ARGS=--accept-routes
+      - TS_USERSPACE=false
+      - TS_SERVE_CONFIG=/config/wyze-bridge.json
+    volumes:
+      - ${PWD}/state:/var/lib/tailscale
+      - ${PWD}/config:/config
+      - /dev/net/tun:/dev/net/tun

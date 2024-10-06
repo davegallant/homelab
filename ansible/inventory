@@ -25,3 +25,4 @@ synology ansible_ssh_user=root
 tailscale-exit-node ansible_ssh_user=root
 tailscale-subnet-router ansible_ssh_user=root
 watchyourlan ansible_ssh_user=root
+wyze-bridge ansible_ssh_user=root ansible_host=192.168.1.143
