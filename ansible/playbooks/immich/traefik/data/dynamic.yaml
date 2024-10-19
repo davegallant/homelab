@@ -11,4 +11,4 @@ http:
     immich:
       loadBalancer:
         servers:
-          - url: "http://immich:3001"
+          - url: "http://immich:2283"
