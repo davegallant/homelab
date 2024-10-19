@@ -29,7 +29,7 @@ services:
       REDLIB_DEFAULT_WIDE: on
 
   ts-redlib:
-    image: tailscale/tailscale:v1.74
+    image: tailscale/tailscale:v1.76
     container_name: ts-redlib
     hostname: redlib
     environment:
