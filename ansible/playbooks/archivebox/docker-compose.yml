@@ -1,14 +1,14 @@
 services:
   archivebox:
-    image: archivebox/archivebox:sha-62183b4
+    image: archivebox/archivebox:0.8.5rc9
     container_name: archivebox
     command: server --quick-init 0.0.0.0:8000
     ports:
       - 8000:8000
     environment:
-      # add any ArchiveBox config options you want here
-      - ALLOWED_HOSTS=*
       - MEDIA_MAX_SIZE=750m
+      - ALLOWED_HOSTS=archivebox.snake-cloud.ts.net
+      - CSRF_TRUSTED_ORIGINS=https://archivebox.snake-cloud.ts.net
     volumes:
       - ./data:/data
   traefik:
