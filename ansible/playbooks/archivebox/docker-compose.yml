@@ -1,6 +1,6 @@
 services:
   archivebox:
-    image: archivebox/archivebox:sha-62183b4
+    image: archivebox/archivebox:0.8.5rc1
     container_name: archivebox
     command: server --quick-init 0.0.0.0:8000
     ports:
