@@ -11,7 +11,7 @@ services:
       - WB_PASSWORD={{ wyze_bridge_password }}
       - ROTATE_DOOR=True
   ts-wyze-bridge:
-    image: tailscale/tailscale:v1.74
+    image: tailscale/tailscale:v1.76
     container_name: ts-wyze-bridge
     hostname: wyze-bridge
     restart: unless-stopped
