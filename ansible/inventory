@@ -21,7 +21,6 @@ searxng ansible_ssh_user=root
 sonarr ansible_ssh_user=root
 speedtest-tracker ansible_ssh_user=root
 stirling-pdf ansible_ssh_user=root ansible_host=192.168.1.124
-synology ansible_ssh_user=root
 tailscale-exit-node ansible_ssh_user=root
 tailscale-subnet-router ansible_ssh_user=root
 watchyourlan ansible_ssh_user=root
