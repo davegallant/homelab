@@ -11,4 +11,4 @@ http:
     suggestarr:
       loadBalancer:
         servers:
-          - url: "http://suggestarr:7878"
+          - url: "http://suggestarr:5000"

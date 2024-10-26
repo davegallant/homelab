@@ -1,13 +1,19 @@
 services:
-  suggestarr:
-    container_name: suggestarr
-    image: ciuse99/suggestarr:1.0.8.2
-    restart: always
+  overseerr:
+    image: sctx/overseerr:1.33.2
+    container_name: overseerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=Asia/Tokyo
+      - PORT=5055 #optional
+    ports:
+      - 5055:5055
     volumes:
-      - ./config_files:/app/config/config_files
+      - /path/to/appdata/config:/app/config
+    restart: unless-stopped
   traefik:
     image: traefik:v3.1.6
-    container_name: traefik-suggestarr
+    container_name: traefik-overseerr
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped

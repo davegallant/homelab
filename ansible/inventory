@@ -13,6 +13,7 @@ jellyfin ansible_ssh_user=root
 lidarr ansible_ssh_user=root
 lubelogger ansible_ssh_user=root
 miniflux ansible_ssh_user=root ansible_host=192.168.1.139
+overseerr ansible_ssh_user=root
 plex ansible_ssh_user=root ansible_host=192.168.1.198
 qbittorrent ansible_ssh_user=root
 radarr ansible_ssh_user=root
