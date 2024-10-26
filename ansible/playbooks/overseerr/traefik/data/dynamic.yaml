@@ -1,0 +1,14 @@
+http:
+  routers:
+    overseerr:
+      rule: Host(`overseerr.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: overseerr
+      tls:
+        certResolver: myresolver
+  services:
+    overseerr:
+      loadBalancer:
+        servers:
+          - url: "http://overseerr:5055"

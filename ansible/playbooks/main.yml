@@ -13,6 +13,7 @@
 - import_playbook: lidarr/main.yml
 - import_playbook: lubelogger/main.yml
 - import_playbook: miniflux/main.yml
+- import_playbook: overseerr/main.yml
 - import_playbook: plex/main.yml
 - import_playbook: qbittorrent/main.yml
 - import_playbook: radarr/main.yml
@@ -21,5 +22,6 @@
 - import_playbook: sonarr/main.yml
 - import_playbook: speedtest-tracker/main.yml
 - import_playbook: stirling-pdf/main.yml
+- import_playbook: suggestarr/main.yml
 - import_playbook: watchyourlan/main.yml
 - import_playbook: wyze-bridge/main.yml
