@@ -2,7 +2,7 @@
 services:
   lidarr:
     container_name: lidarr
-    image: lscr.io/linuxserver/lidarr:2.6.4.4402-ls14
+    image: lscr.io/linuxserver/lidarr:2.7.1
     environment:
       - PUID=1000
       - PGID=1000
