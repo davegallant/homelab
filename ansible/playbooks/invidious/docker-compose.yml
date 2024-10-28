@@ -61,7 +61,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
 
   traefik:
-    image: traefik:v3.1.6
+    image: traefik:v3.2.0
     container_name: traefik-invidious
     security_opt:
       - no-new-privileges:true
