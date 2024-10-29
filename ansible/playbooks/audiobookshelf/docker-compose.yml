@@ -1,7 +1,7 @@
 services:
   audiobookshelf:
     # image: ghcr.io/advplyr/audiobookshelf:2.14.0
-    image: ghcr.io/davegallant/audiobookshelf:2.16.1-cbc-fix
+    image: ghcr.io/davegallant/audiobookshelf:2.16.2-cbc-fix
     container_name: audiobookshelf
     network_mode: service:ts-audiobookshelf
     volumes:
