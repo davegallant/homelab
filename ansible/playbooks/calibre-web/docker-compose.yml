@@ -1,6 +1,6 @@
 services:
   calibre-web:
-    image: linuxserver/calibre-web:nightly-version-4d79c593
+    image: linuxserver/calibre-web:0.6.23
     container_name: calibre-web
     environment:
       - PUID=1000
