@@ -29,7 +29,7 @@ jobs:
           options: |
             --inventory ansible/inventory
       - name: Send failure notification
-        uses: dawidd6/action-send-mail@v3
+        uses: dawidd6/action-send-mail@v4
         if: always() && failure()
         with:
           server_address: smtp.gmail.com
