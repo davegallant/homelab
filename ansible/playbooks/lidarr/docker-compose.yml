@@ -14,7 +14,7 @@ services:
       - /mnt/media/Torrents:/downloads
     restart: always
   traefik:
-    image: traefik:v3.2.0
+    image: traefik:v3.2.1
     container_name: traefik-lidarr
     security_opt:
       - no-new-privileges:true
