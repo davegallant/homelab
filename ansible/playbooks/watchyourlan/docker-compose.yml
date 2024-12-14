@@ -13,7 +13,7 @@ services:
       COLOR: "dark"
 
   traefik:
-    image: traefik:v3.2.1
+    image: traefik:v3.2.2
     container_name: traefik-watchyourlan
     security_opt:
       - no-new-privileges:true
