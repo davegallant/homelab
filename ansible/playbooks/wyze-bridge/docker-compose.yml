@@ -9,7 +9,7 @@ services:
       - WB_PASSWORD={{ wyze_bridge_password }}
       - ROTATE_DOOR=True
   traefik:
-    image: traefik:v3.2.1
+    image: traefik:v3.2.2
     container_name: traefik-wyze-bridge
     security_opt:
       - no-new-privileges:true
