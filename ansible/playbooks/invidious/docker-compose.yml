@@ -32,7 +32,7 @@ services:
 
   inv_sig_helper:
     # https://quay.io/repository/invidious/inv-sig-helper?tab=tags
-    image: quay.io/invidious/inv-sig-helper:master-5025e49
+    image: quay.io/invidious/inv-sig-helper:master-ac0269f
     container_name: invidious-inv-sig-helper
     init: true
     command: ["--tcp", "0.0.0.0:12999"]
