@@ -1,6 +1,6 @@
 services:
   gatus:
-    image: twinproduction/gatus:v5.14.0
+    image: twinproduction/gatus:v5.15.0
     container_name: gatus
     user: "999:999"
     volumes:
