@@ -22,5 +22,6 @@
 - import_playbook: sonarr/main.yml
 - import_playbook: speedtest-tracker/main.yml
 - import_playbook: stirling-pdf/main.yml
+- import_playbook: umami/main.yml
 - import_playbook: watchyourlan/main.yml
 - import_playbook: wyze-bridge/main.yml
