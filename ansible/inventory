@@ -26,6 +26,6 @@ stirling-pdf ansible_host=192.168.1.124
 suggestarr
 tailscale-exit-node
 tailscale-subnet-router
-umami ansible_host=192.168.1.40
+umami ansible_host=192.168.1.140
 watchyourlan
 wyze-bridge
