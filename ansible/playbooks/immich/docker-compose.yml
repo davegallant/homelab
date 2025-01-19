@@ -86,7 +86,7 @@ services:
     restart: always
 
   traefik:
-    image: traefik:v3.3.1
+    image: traefik:v3.3.2
     container_name: traefik-immich
     security_opt:
       - no-new-privileges:true

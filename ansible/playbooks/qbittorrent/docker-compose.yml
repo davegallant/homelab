@@ -17,7 +17,7 @@ services:
     restart: unless-stopped
 
   traefik:
-    image: traefik:v3.3.1
+    image: traefik:v3.3.2
     container_name: traefik-qbittorrent
     security_opt:
       - no-new-privileges:true

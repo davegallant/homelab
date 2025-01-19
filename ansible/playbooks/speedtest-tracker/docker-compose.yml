@@ -31,7 +31,7 @@ services:
     volumes:
       - speedtest-db:/var/lib/postgresql/data
   traefik:
-    image: traefik:v3.3.1
+    image: traefik:v3.3.2
     container_name: traefik-speedtest-tracker
     security_opt:
       - no-new-privileges:true
