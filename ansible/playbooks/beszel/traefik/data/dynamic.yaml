@@ -1,0 +1,14 @@
+http:
+  routers:
+    beszel:
+      rule: Host(`beszel.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: beszel
+      tls:
+        certResolver: myresolver
+  services:
+    beszel:
+      loadBalancer:
+        servers:
+          - url: "http://beszel:8090"
