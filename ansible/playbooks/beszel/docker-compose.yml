@@ -1,0 +1,23 @@
+services:
+
+  beszel:
+    image: henrygd/beszel:latest
+    container_name: beszel
+    volumes:
+      - ${PWD}/beszel-hub/beszel_data:/beszel_data
+    restart: unless-stopped
+
+  traefik:
+    image: traefik:v3.3.1
+    container_name: traefik-beszel
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
+      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
+      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
+
