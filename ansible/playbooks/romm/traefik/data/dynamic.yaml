@@ -1,0 +1,14 @@
+http:
+  routers:
+    romm:
+      rule: Host(`romm.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: romm
+      tls:
+        certResolver: myresolver
+  services:
+    romm:
+      loadBalancer:
+        servers:
+          - url: "http://romm:8080"
