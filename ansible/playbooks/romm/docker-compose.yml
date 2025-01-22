@@ -1,0 +1,65 @@
+services:
+  romm:
+    image: rommapp/romm:3.7.2
+    container_name: romm
+    restart: unless-stopped
+    environment:
+      - DB_HOST=romm-db
+      - DB_NAME=romm # Should match MARIADB_DATABASE in mariadb
+      - DB_USER=romm-user # Should match MARIADB_USER in mariadb
+      - DB_PASSWD={{ romm_db_password }} # Should match MARIADB_PASSWORD in mariadb
+      - ROMM_AUTH_SECRET_KEY={{ romm_auth_secret_key }} # Generate a key with `openssl rand -hex 32`
+      - IGDB_CLIENT_ID={{ romm_igdb_client_id }} # https://api-docs.igdb.com/#account-creation
+      - IGDB_CLIENT_SECRET={{ romm_igdb_client_secret }}
+      # - MOBYGAMES_API_KEY= # https://www.mobygames.com/info/api/
+      - STEAMGRIDDB_API_KEY={{ romm_steamgriddb_api_key }} # https://www.steamgriddb.com/profile/api
+    volumes:
+      - romm_resources:/romm/resources # Resources fetched from IGDB (covers, screenshots, etc.)
+      - romm_redis_data:/redis-data # Cached data for background tasks
+      - /mnt/media/romm:/romm/library
+      - /mnt/media/romm/assets:/romm/assets
+      - ~/config:/romm/config # Path where config.yml is stored
+    ports:
+      - 8080:8080
+    depends_on:
+      romm-db:
+        condition: service_healthy
+        restart: true
+
+  romm-db:
+    image: mariadb:11.6.2
+    container_name: romm-db
+    restart: unless-stopped
+    environment:
+      - MARIADB_ROOT_PASSWORD={{ romm_db_root_password }}
+      - MARIADB_DATABASE=romm
+      - MARIADB_USER=romm-user
+      - MARIADB_PASSWORD={{ romm_db_password }}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 30s
+      start_interval: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  traefik:
+    image: traefik:v3.3.2
+    container_name: traefik-romm
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
+      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
+      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
+
+volumes:
+  mysql_data:
+  romm_resources:
+  romm_redis_data:

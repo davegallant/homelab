@@ -19,6 +19,7 @@ plex ansible_host=192.168.1.198
 qbittorrent
 radarr
 redlib ansible_host=192.168.1.112
+romm
 searxng
 sonarr
 speedtest-tracker
