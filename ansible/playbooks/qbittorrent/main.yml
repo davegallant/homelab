@@ -23,7 +23,7 @@
     - name: Copy qbittorrent.conf
       ansible.builtin.template:
         src: ./qbittorrent.conf
-        dest: "~/qbittorrent/config/qBittorrent.conf"
+        dest: "~/qBittorrent/qBittorrent.conf"
         mode: "0640"
 
     - name: Allow https
