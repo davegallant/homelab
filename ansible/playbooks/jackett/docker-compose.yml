@@ -1,7 +1,7 @@
 services:
   jackett:
     container_name: jackett
-    image: linuxserver/jackett:0.22.1305
+    image: linuxserver/jackett:0.22.1309
     ports:
       - "9117:9117"
     environment:
