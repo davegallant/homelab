@@ -1,0 +1,14 @@
+http:
+  routers:
+    prowlarr:
+      rule: Host(`prowlarr.snake-cloud.ts.net`)
+      entrypoints:
+        - "https"
+      service: prowlarr
+      tls:
+        certResolver: myresolver
+  services:
+    prowlarr:
+      loadBalancer:
+        servers:
+          - url: "http://prowlarr:9696"

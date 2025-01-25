@@ -16,6 +16,7 @@
 - import_playbook: miniflux/main.yml
 - import_playbook: overseerr/main.yml
 - import_playbook: plex/main.yml
+- import_playbook: prowlarr/main.yml
 - import_playbook: qbittorrent/main.yml
 - import_playbook: radarr/main.yml
 - import_playbook: redlib/main.yml
