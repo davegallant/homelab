@@ -1,0 +1,12 @@
+services:
+  bedrock:
+    image: itzg/minecraft-bedrock-server:2024.11.0
+    environment:
+      EULA: "TRUE"
+      LEVEL_SEED: -7516440957484561490
+    ports:
+      - "19132:19132/udp"
+    volumes:
+      - ./data:/data
+    stdin_open: true
+    tty: true

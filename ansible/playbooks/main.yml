@@ -1,6 +1,7 @@
 ---
 - import_playbook: archivebox/main.yml
 - import_playbook: audiobookshelf/main.yml
+- import_playbook: bedrock/main.yml
 - import_playbook: beszel/main.yml
 - import_playbook: calibre-web/main.yml
 - import_playbook: changedetection/main.yml
