@@ -1,6 +1,7 @@
 services:
   bedrock:
     image: itzg/minecraft-bedrock-server:2024.11.0
+    container_name: bedrock
     environment:
       EULA: "TRUE"
       LEVEL_SEED: -7516440957484561490
@@ -10,3 +11,4 @@ services:
       - ./data:/data
     stdin_open: true
     tty: true
+    restart: always
