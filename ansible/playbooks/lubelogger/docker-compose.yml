@@ -19,7 +19,7 @@ services:
       - lubelogger
 
   traefik:
-    image: traefik:v3.3.2
+    image: traefik:v3.3.3
     container_name: traefik-lubelogger
     security_opt:
       - no-new-privileges:true

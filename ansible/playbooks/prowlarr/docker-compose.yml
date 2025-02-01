@@ -12,7 +12,7 @@ services:
       - 9696:9696
     restart: unless-stopped
   traefik:
-    image: traefik:v3.3.2
+    image: traefik:v3.3.3
     container_name: traefik-prowlarr
     security_opt:
       - no-new-privileges:true
