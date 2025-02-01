@@ -4,7 +4,6 @@ services:
     container_name: bedrock
     environment:
       EULA: "TRUE"
-      LEVEL_SEED: -7516440957484561490
     ports:
       - "19132:19132/udp"
     volumes:
