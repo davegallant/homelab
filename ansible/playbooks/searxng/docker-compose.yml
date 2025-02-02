@@ -20,7 +20,7 @@ services:
 
   searxng:
     container_name: searxng
-    image: searxng/searxng:2024.10.4-3e747d049
+    image: searxng/searxng:2025.1.31-6324a9752
     restart: unless-stopped
     ports:
       - "127.0.0.1:8080:8080"
