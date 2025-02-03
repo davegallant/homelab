@@ -16,7 +16,7 @@ services:
     volumes:
       - speedtest-app:/config
       - "./web:/etc/ssl/web"
-    image: linuxserver/speedtest-tracker:1.2.0
+    image: linuxserver/speedtest-tracker:1.2.1
     restart: unless-stopped
     depends_on:
       - speedtest-db
