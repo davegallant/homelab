@@ -28,7 +28,7 @@ services:
       interval: 10s
       start_period: 30s
   ts-miniflux:
-    image: tailscale/tailscale:v1.78
+    image: tailscale/tailscale:v1.80
     container_name: ts-miniflux
     hostname: miniflux
     environment:
