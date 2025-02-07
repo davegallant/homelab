@@ -9,7 +9,7 @@ services:
     environment:
       - DOCKER_ENABLE_SECURITY=false
   ts-stirling-pdf:
-    image: tailscale/tailscale:v1.78
+    image: tailscale/tailscale:v1.80
     container_name: ts-stirling-pdf
     hostname: stirling-pdf
     environment:
