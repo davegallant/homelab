@@ -32,7 +32,7 @@ services:
       timeout: 5s
       retries: 5
   ts-umami:
-    image: tailscale/tailscale:v1.78
+    image: tailscale/tailscale:v1.80
     container_name: ts-umami
     hostname: umami
     environment:
