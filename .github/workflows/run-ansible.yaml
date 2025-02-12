@@ -20,7 +20,7 @@ jobs:
         run: |
           ansible-galaxy collection install -r ansible/requirements.yml
       - name: Run playbook
-        uses: dawidd6/action-ansible-playbook@v2
+        uses: dawidd6/action-ansible-playbook@v3
         with:
           playbook: ansible/playbooks/main.yml
           requirements: ansible/requirements.yml
