@@ -1,7 +1,7 @@
 services:
   redlib:
     # https://quay.io/repository/redlib/redlib?tab=tags&tag=latest
-    image: quay.io/redlib/redlib:sha-d7ec07c 
+    image: quay.io/redlib/redlib:sha-bb20190
     restart: always
     container_name: "redlib"
     network_mode: service:ts-redlib
