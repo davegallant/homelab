@@ -1,0 +1,25 @@
+
+services:
+  gotify:
+    image: gotify/server:2.6.1
+    container_name: gotify
+    network_mode: service:ts-gotify
+    restart: always
+    volumes:
+      - ~/data:/app/data
+  ts-gotify:
+    image: tailscale/tailscale:v1.80
+    container_name: ts-gotify
+    hostname: gotify
+    environment:
+      - TS_AUTHKEY={{ gotify_ts_authkey }}
+      - TS_SERVE_CONFIG=/config/gotify.json
+      - TS_STATE_DIR=/var/lib/tailscale
+    volumes:
+      - ${PWD}/state:/var/lib/tailscale
+      - ${PWD}/config:/config
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
