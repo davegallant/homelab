@@ -29,16 +29,6 @@ jobs:
           options: |
             --inventory ansible/inventory
       - name: Send failure notification
-        uses: dawidd6/action-send-mail@v4
         if: always() && failure()
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          secure: true
-          username: davegallant
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: homelab ansible failed
-          to: davegallant@gmail.com
-          from: Gitea
-          body: |
-            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}
+        run:
+          curl -X POST "https://gotify.snake-cloud.ts.net/message?token=${{ secrets.GOTIFY_TOKEN }}" -F "title=gitea job ${{ github.repository }} failed!" -F "message=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}" -F "priority=5"
