@@ -10,6 +10,7 @@ services:
     volumes:
       - ~:/config
       - /mnt/media/Torrents:/downloads
+      - ~/scripts:/scripts
     ports:
       - 8080:8080
       - 6881:6881
