@@ -7,12 +7,13 @@
 - import_playbook: changedetection/main.yml
 - import_playbook: gatus/main.yml
 - import_playbook: gitea/main.yml
+- import_playbook: gotify/main.yml
 - import_playbook: homepage/main.yml
 - import_playbook: immich/main.yml
 - import_playbook: invidious/main.yml
 - import_playbook: jellyfin/main.yml
-- import_playbook: lidarr/main.yml
 - import_playbook: kiwix/main.yml
+- import_playbook: lidarr/main.yml
 - import_playbook: lubelogger/main.yml
 - import_playbook: miniflux/main.yml
 - import_playbook: overseerr/main.yml
