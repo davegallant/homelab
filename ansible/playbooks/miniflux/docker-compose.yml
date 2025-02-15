@@ -15,7 +15,7 @@ services:
       - ADMIN_PASSWORD={{ miniflux_admin_password }}
       - BASE_URL=https://miniflux.snake-cloud.ts.net
   miniflux-db:
-    image: postgres:15.10
+    image: postgres:15.11
     container_name: miniflux-db
     environment:
       - POSTGRES_USER={{ miniflux_db_user }}
