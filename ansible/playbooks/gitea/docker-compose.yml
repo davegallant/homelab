@@ -12,14 +12,6 @@ services:
       - GITEA__server__HTTP_ADDR=0.0.0.0
       - GITEA__server__LFS_JWT_SECRET={{ gitea_lfs_jwt }}
 
-      - GITEA__mailer__ENABLED=true
-      - GITEA__mailer__SMTP_ADDR=smtp.gmail.com
-      - GITEA__mailer__SMTP_PORT=465
-      - GITEA__mailer__FROM={{ gitea_mailer_from }}
-      - GITEA__mailer__USER=davegallant
-      - GITEA__mailer__PASSWD={{ gitea_mailer_passwd }}
-      - GITEA__mailer__SMTP_PROTOCOL=smtps
-
       - GITEA__service__DISABLE_REGISTRATION=true
 
       - GITEA__ui__DEFAULT_THEME=palenight
