@@ -1,0 +1,2 @@
+ansible
+bitwarden-sdk==1.0.0

@@ -1,0 +1,54 @@
+ansible_user: "{{ lookup('bitwarden.secrets.lookup', '60706445-eece-462e-ac8b-b28a001ec708') }}"
+
+audiobookshelf_ts_authkey: "{{ lookup('bitwarden.secrets.lookup', '529410a2-3e63-45bd-b508-b28a00203b44') }}"
+
+gatus_db_username: "{{ lookup('bitwarden.secrets.lookup', 'ce241542-9156-43a0-ba23-b28a0022f468') }}"
+gatus_db_password: "{{ lookup('bitwarden.secrets.lookup', '1da0b858-e90e-4c16-9a1d-b28a00287270') }}"
+
+gitea_lfs_jwt: "{{ lookup('bitwarden.secrets.lookup', '37cf2167-c380-4161-b25e-b28a00293208') }}"
+gitea_ts_authkey: "{{ lookup('bitwarden.secrets.lookup', 'ef8577ad-fcae-46e4-8fdf-b28a0029ddcc') }}"
+
+gotify_ts_authkey: "{{ lookup('bitwarden.secrets.lookup', 'ec8fbc1f-063c-419a-8ac6-b28a002a04e5') }}"
+
+immich_db_password: "{{ lookup('bitwarden.secrets.lookup', '70f03533-baf0-4b38-a9f8-b28a002b4334') }}"
+immich_db_user: "{{ lookup('bitwarden.secrets.lookup', '9de4c1cc-f483-463a-9294-b28a002b353a') }}"
+
+invidious_db_password: "{{ lookup('bitwarden.secrets.lookup', '7a5ab7e3-abf5-4371-8d06-b28a002aafc6') }}"
+invidious_db_user: "{{ lookup('bitwarden.secrets.lookup', 'e412e91d-622b-4599-b223-b28a002aa133') }}"
+invidious_hmac_key: "{{ lookup('bitwarden.secrets.lookup', '4e164865-5e65-47f0-a169-b28a002ac055') }}"
+invidious_po_token: "{{ lookup('bitwarden.secrets.lookup', 'f065ddef-5bc0-4a76-937c-b28a002acc48') }}"
+invidious_visitor_data: "{{ lookup('bitwarden.secrets.lookup', 'ac2a2e9c-fe51-4bf5-a9d6-b28a002ad5e6') }}"
+
+loki_url: "{{ lookup('bitwarden.secrets.lookup', '9edb4ef5-2414-409f-a3ce-b28a002e7423') }}"
+
+miniflux_admin_password: "{{ lookup('bitwarden.secrets.lookup', '9a75c7a0-9a58-42b2-a2f8-b28a002babf8') }}"
+miniflux_admin_username: "{{ lookup('bitwarden.secrets.lookup', 'ed6330cd-2697-41fb-a9f7-b28a002bb6ba') }}"
+miniflux_db_password: "{{ lookup('bitwarden.secrets.lookup', 'e9a12a9b-7742-4168-be26-b28a002bcfad') }}"
+miniflux_db_user: "{{ lookup('bitwarden.secrets.lookup', '356c0fad-56c9-4b9a-8834-b28a002bdd4f') }}"
+miniflux_ts_authkey: "{{ lookup('bitwarden.secrets.lookup', 'a2c3227c-0090-43d4-a28d-b28a002be9ca') }}"
+
+qbittorrent_webui_password: "{{ lookup('bitwarden.secrets.lookup', '94a25506-51bb-4bf1-82ca-b28a002c3f7c') }}"
+qbittorrent_webui_username: "{{ lookup('bitwarden.secrets.lookup', 'd071dc82-7ee2-4325-99c0-b28a002c4be4') }}"
+
+romm_auth_secret_key: "{{ lookup('bitwarden.secrets.lookup', '318b92e4-00ea-4ff7-a9e9-b28a002c83b8') }}"
+romm_db_password: "{{ lookup('bitwarden.secrets.lookup', '08b3b9e5-1305-4335-8861-b28a002c9701') }}"
+romm_db_root_password: "{{ lookup('bitwarden.secrets.lookup', '80899a68-07d7-4180-a9c2-b28a002ca704') }}"
+romm_igdb_client_id: "{{ lookup('bitwarden.secrets.lookup', 'c6b8d947-c03e-4fdc-b04a-b28a002cb873') }}"
+romm_igdb_client_secret: "{{ lookup('bitwarden.secrets.lookup', 'a9a4eaa5-d0e7-42e5-95c9-b28a002cc4d7') }}"
+romm_steamgriddb_api_key: "{{ lookup('bitwarden.secrets.lookup', 'fcf6a37b-e7fb-41c6-8ab0-b28a002cd079') }}"
+
+speedtest_tracker_app_key: "{{ lookup('bitwarden.secrets.lookup', '0ace7d18-10d5-42a8-959f-b28a002da38a') }}"
+speedtest_tracker_db_password: "{{ lookup('bitwarden.secrets.lookup', 'a751ee37-aa52-4c5f-84f4-b28a002d9389') }}"
+speedtest_tracker_db_username: "{{ lookup('bitwarden.secrets.lookup', '8b514ba2-94a2-49bd-a165-b28a002d84c0') }}"
+
+stirling_pdf_ts_authkey: "{{ lookup('bitwarden.secrets.lookup', '7cd202e5-4c7c-4adb-a91b-b28a002de978') }}"
+
+umami_app_secret: "{{ lookup('bitwarden.secrets.lookup', '567e5a81-fbc5-4ff8-a524-b28a002dfe64') }}"
+umami_db_password: "{{ lookup('bitwarden.secrets.lookup', '5fd7cee5-6f46-4983-9ed1-b28a002e0bf1') }}"
+umami_db_user: "{{ lookup('bitwarden.secrets.lookup', '545bdf9e-0aee-4b80-9546-b28a002e1aa0') }}"
+umami_ts_authkey: "{{ lookup('bitwarden.secrets.lookup', '0ea475ab-b7f5-40ee-8ae0-b28a002e2aaf') }}"
+
+watchyourlan_shoutrr_url: "{{ lookup('bitwarden.secrets.lookup', 'f06ace01-ddf4-4f04-aba7-b28a002effb7') }}"
+
+wyze_bridge_password: "{{ lookup('bitwarden.secrets.lookup', '95863a90-f31f-49c6-a7e5-b28a002eb8b9') }}"
+wyze_bridge_username: "{{ lookup('bitwarden.secrets.lookup', 'f7cb7fbd-5ca1-4c22-860d-b28a002ec0c4') }}"
