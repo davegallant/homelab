@@ -8,6 +8,7 @@
 - import_playbook: gatus/main.yml
 - import_playbook: gitea/main.yml
 - import_playbook: gotify/main.yml
+- import_playbook: grafana/main.yml
 - import_playbook: homepage/main.yml
 - import_playbook: immich/main.yml
 - import_playbook: invidious/main.yml

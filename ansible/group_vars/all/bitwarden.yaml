@@ -5,6 +5,8 @@ audiobookshelf_ts_authkey: "{{ lookup('bitwarden.secrets.lookup', '529410a2-3e63
 gatus_db_username: "{{ lookup('bitwarden.secrets.lookup', 'ce241542-9156-43a0-ba23-b28a0022f468') }}"
 gatus_db_password: "{{ lookup('bitwarden.secrets.lookup', '1da0b858-e90e-4c16-9a1d-b28a00287270') }}"
 
+grafana_admin_password: "{{ lookup('bitwarden.secrets.lookup', '2d28259c-77c2-4aa7-bfd2-b28a0146e5f7') }}"
+
 gitea_lfs_jwt: "{{ lookup('bitwarden.secrets.lookup', '37cf2167-c380-4161-b25e-b28a00293208') }}"
 gitea_ts_authkey: "{{ lookup('bitwarden.secrets.lookup', 'ef8577ad-fcae-46e4-8fdf-b28a0029ddcc') }}"
 
