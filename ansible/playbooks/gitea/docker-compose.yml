@@ -1,6 +1,6 @@
 services:
   gitea:
-    image: gitea/gitea:1.23.3
+    image: gitea/gitea:1.23.4
     container_name: gitea
     network_mode: service:ts-gitea
     environment:
