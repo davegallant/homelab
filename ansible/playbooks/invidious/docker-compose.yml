@@ -50,9 +50,7 @@ services:
     container_name: invidious-db
     restart: unless-stopped
     volumes:
-      - postgresdata:/var/lib/postgresql/data
-      - ./config/sql:/config/sql
-      - ./docker/init-invidious-db.sh:/docker-entrypoint-initdb.d/init-invidious-db.sh
+      - ./postgresdata:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: invidious
       POSTGRES_USER: {{ invidious_db_user }}
@@ -73,7 +71,3 @@ services:
       - ./traefik/data/traefik.yaml:/traefik.yaml:ro
       - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
       - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
-
-volumes:
-  postgresdata:
-

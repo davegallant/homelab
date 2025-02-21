@@ -3,38 +3,11 @@ services:
     image: dgtlmoon/changedetection.io:0.49.2
     container_name: changedetection
     volumes:
-      - changedetection-datastore:/datastore
+      - ./changedetection:/datastore
     environment:
-      - PLAYWRIGHT_DRIVER_URL=ws://playwright-chrome:3000/?stealth=1&--disable-web-security=true
       - HIDE_REFERER=true
-      # - WEBDRIVER_URL=http://playwright-chrome:3000/wd/hub
     restart: always
-    # depends_on:
-    #   playwright-chrome:
-    #     condition: service_started
 
-  # playwright-chrome:
-  #   container_name: playwright-chrome
-  #   image: browserless/chrome:1.60-chrome-stable
-  #   restart: unless-stopped
-  #   environment:
-  #     - SCREEN_WIDTH=1920
-  #     - SCREEN_HEIGHT=1024
-  #     - SCREEN_DEPTH=16
-  #     - ENABLE_DEBUGGER=false
-  #     - PREBOOT_CHROME=true
-  #     - CONNECTION_TIMEOUT=300000
-  #     - MAX_CONCURRENT_SESSIONS=10
-  #     - CHROME_REFRESH_TIME=600000
-  #     - DEFAULT_BLOCK_ADS=true
-  #     - DEFAULT_STEALTH=true
-  #     - DEFAULT_IGNORE_HTTPS_ERRORS=true
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:3000"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 5
-  #     start_period: 10s
   traefik:
     image: traefik:v3.3.3
     container_name: traefik-changedetection
@@ -48,7 +21,3 @@ services:
       - ./traefik/data/traefik.yaml:/traefik.yaml:ro
       - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
       - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
-
-volumes:
-  changedetection-datastore:
-    name: changedetection-datastore
