@@ -14,7 +14,7 @@ services:
       - APP_KEY={{ speedtest_tracker_app_key }}
       - SPEEDTEST_SCHEDULE="*/60 * * * *"
     volumes:
-      - speedtest-app:/config
+      - ./speedtest-app:/config
       - "./web:/etc/ssl/web"
     image: linuxserver/speedtest-tracker:1.2.3
     restart: unless-stopped
@@ -29,7 +29,7 @@ services:
       - POSTGRES_USER={{ speedtest_tracker_db_username }}
       - POSTGRES_PASSWORD={{ speedtest_tracker_db_password }}
     volumes:
-      - speedtest-db:/var/lib/postgresql/data
+      - ./speedtest-db:/var/lib/postgresql/data
   traefik:
     image: traefik:v3.3.3
     container_name: traefik-speedtest-tracker
@@ -43,6 +43,3 @@ services:
       - ./traefik/data/traefik.yaml:/traefik.yaml:ro
       - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
       - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
-volumes:
-  speedtest-app:
-  speedtest-db:
