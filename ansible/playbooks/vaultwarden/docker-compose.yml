@@ -1,0 +1,24 @@
+services:
+  vaultwarden:
+    image: vaultwarden/server:1.33.2
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      DOMAIN: "https://vaultwarden.snake-cloud.ts.net"
+    volumes:
+      - ./vw-data/:/data/
+
+  traefik:
+    image: traefik:v3.3.3
+    container_name: traefik-vaultwarden
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
+      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
+      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
+
