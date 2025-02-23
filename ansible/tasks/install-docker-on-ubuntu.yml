@@ -31,7 +31,7 @@
 
 - name: Install loki docker driver
   community.docker.docker_plugin:
-    plugin_name: grafana/loki-docker-driver
+    plugin_name: grafana/loki-docker-driver:3.4.2-amd64
     alias: loki
     state: present
 
@@ -48,7 +48,11 @@
         "log-driver": "loki",
         "log-opts": {
             "loki-url": "{{ loki_url }}",
-            "loki-batch-size": "400"
+            "loki-batch-size": "400",
+            "mode": "non-blocking",
+            "loki-retries": "2",
+            "loki-max-backoff":"800ms",
+            "loki-timeout":"1s"
          }
       }
     dest: /etc/docker/daemon.json
