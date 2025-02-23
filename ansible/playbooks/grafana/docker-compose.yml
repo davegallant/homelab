@@ -2,6 +2,7 @@ services:
   loki:
     image: grafana/loki:3.4.2
     user: '0'
+    restart: unless-stopped
     ports:
       - "3100:3100"
     volumes:
@@ -12,6 +13,7 @@ services:
     image: grafana/promtail:3.4.2
     volumes:
       - /var/log:/var/log
+    restart: unless-stopped
     command: -config.file=/etc/promtail/config.yml
 
   grafana:
@@ -21,6 +23,7 @@ services:
       - GF_FEATURE_TOGGLES_ENABLE=alertingSimplifiedRouting,alertingQueryAndExpressionsStepMode
       - GF_AUTH_ANONYMOUS_ENABLED=false
       - GF_SECURITY_ADMIN_PASSWORD={{ grafana_admin_password }}
+    restart: unless-stopped
     user: '0'
     entrypoint:
       - sh
