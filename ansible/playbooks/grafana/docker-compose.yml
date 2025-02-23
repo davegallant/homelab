@@ -1,6 +1,7 @@
 services:
   loki:
     image: grafana/loki:3.4.2
+    container_name: loki
     user: '0'
     restart: unless-stopped
     ports:
@@ -11,6 +12,7 @@ services:
 
   promtail:
     image: grafana/promtail:3.4.2
+    container_name: promtail
     volumes:
       - /var/log:/var/log
     restart: unless-stopped
@@ -18,6 +20,7 @@ services:
 
   grafana:
     image: grafana/grafana:11.5.2
+    container_name: grafana
     environment:
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
       - GF_FEATURE_TOGGLES_ENABLE=alertingSimplifiedRouting,alertingQueryAndExpressionsStepMode
@@ -38,7 +41,7 @@ services:
           access: proxy 
           orgId: 1
           url: http://loki:3100
-          basicAuth: false
+          basicAuth: true
           isDefault: true
           version: 1
           editable: false
