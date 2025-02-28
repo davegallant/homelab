@@ -43,7 +43,7 @@ services:
         max-file: "1"
 
   traefik:
-    image: traefik:v3.3.3
+    image: traefik:v3.3.4
     container_name: traefik-searxng
     security_opt:
       - no-new-privileges:true

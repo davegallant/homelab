@@ -9,7 +9,7 @@ services:
     restart: always
 
   traefik:
-    image: traefik:v3.3.3
+    image: traefik:v3.3.4
     container_name: traefik-changedetection
     security_opt:
       - no-new-privileges:true
