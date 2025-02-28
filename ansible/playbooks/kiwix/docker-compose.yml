@@ -7,7 +7,7 @@ services:
     command: "*.zim"
 
   traefik:
-    image: traefik:v3.3.3
+    image: traefik:v3.3.4
     container_name: traefik-kiwix
     security_opt:
       - no-new-privileges:true

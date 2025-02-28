@@ -9,7 +9,7 @@ services:
       - ./vw-data/:/data/
 
   traefik:
-    image: traefik:v3.3.3
+    image: traefik:v3.3.4
     container_name: traefik-vaultwarden
     security_opt:
       - no-new-privileges:true
