@@ -53,7 +53,7 @@ services:
       - './data/grafana:/var/lib/grafana'
 
   traefik:
-    image: traefik:v3.3.3
+    image: traefik:v3.3.4
     container_name: traefik-grafana
     security_opt:
       - no-new-privileges:true
