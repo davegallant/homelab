@@ -1,7 +1,7 @@
 services:
 
   beszel:
-    image: henrygd/beszel:latest
+    image: henrygd/beszel:0.10.1
     container_name: beszel
     volumes:
       - ${PWD}/beszel-hub/beszel_data:/beszel_data
