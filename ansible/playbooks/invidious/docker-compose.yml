@@ -1,7 +1,7 @@
 services:
   invidious:
     # https://quay.io/repository/invidious/invidious?tab=tags
-    image: quay.io/invidious/invidious:2025.01.22-164d764
+    image: quay.io/invidious/invidious:2025.02.26-adcdb8c
     container_name: invidious
     restart: unless-stopped
     ports:
