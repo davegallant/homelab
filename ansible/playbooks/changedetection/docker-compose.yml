@@ -1,6 +1,6 @@
 services:
   changedetection:
-    image: dgtlmoon/changedetection.io:0.49.3
+    image: dgtlmoon/changedetection.io:0.49.4
     container_name: changedetection
     volumes:
       - ./changedetection:/datastore
