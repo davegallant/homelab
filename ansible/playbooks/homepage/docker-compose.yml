@@ -17,6 +17,7 @@ services:
     environment:
       PUID: 1000
       PGID: 1000
+      HOMEPAGE_ALLOWED_HOSTS: homepage.snake-cloud.ts.net
     ports:
       - 3000:3000
     volumes:
