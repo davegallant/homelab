@@ -2,27 +2,12 @@ services:
   jellyfin:
     image: jellyfin/jellyfin:10.10.6
     container_name: jellyfin
-    ports:
-      - 1900:1900/udp
-      - 7359:7359/udp
+    network_mode: host
     environment:
-      - JELLYFIN_PublishedServerUrl=https://jellyfin.snake-cloud.ts.net
+      - JELLYFIN_PublishedServerUrl={{ jellyfin_hostname }}
     volumes:
       - ./config:/config
       - /mnt/media/Movies:/movies:ro
       - "/mnt/media/TV Shows:/tv:ro"
       - "/mnt/media/Music:/music:ro"
     restart: unless-stopped
-  traefik:
-    image: traefik:v3.3.4
-    container_name: traefik-jellyfin
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
-      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
-      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
