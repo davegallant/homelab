@@ -1,6 +1,6 @@
 [homelab]
 archivebox
-audiobookshelf ansible_host=192.168.1.119
+audiobookshelf
 bedrock ansible_host=192.168.1.141
 beszel
 calibre-web
