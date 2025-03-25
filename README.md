@@ -10,4 +10,4 @@ Each host is running on [proxmox](https://proxmox.com) in a LXC container and is
 >
 > Mostly due to the fact that proxmox makes it trivial to both backup and migrate services between proxmox nodes using a single web interface. A similar setup could also be achieved using k8s but I wanted to avoid the complexity for now.
 
-Most of the hosts have tailscale installed on them, with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh) enabled, to make communication between the services convenient and encrypted with TLS. It also makes migrating hosts a lot easier.
+Most hosts have tailscale installed on them, with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh) enabled using either [serve](https://tailscale.com/kb/1242/tailscale-serve) or [funnel](https://tailscale.com/kb/1311/tailscale-funnel) to expose services with [Let's Encrypt](https://letsencrypt.org/) certificates.

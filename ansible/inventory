@@ -6,8 +6,8 @@ beszel
 calibre-web
 changedetection
 gatus
-gitea ansible_host=192.168.1.144
-gotify ansible_host=192.168.1.148
+gitea
+gotify
 grafana
 homepage
 immich
@@ -16,7 +16,7 @@ jellyfin
 kiwix
 lidarr
 lubelogger
-miniflux ansible_host=192.168.1.139
+miniflux
 jellyseerr
 prowlarr
 qbittorrent
@@ -25,11 +25,11 @@ romm
 searxng
 sonarr
 speedtest-tracker
-stirling-pdf ansible_host=192.168.1.124
+stirling-pdf
 suggestarr
 tailscale-exit-node
 tailscale-subnet-router
-umami ansible_host=192.168.1.140
+umami
 vaultwarden
 watchyourlan
 wyze-bridge

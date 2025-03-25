@@ -2,7 +2,8 @@ services:
   gitea:
     image: gitea/gitea:1.23.5
     container_name: gitea
-    network_mode: service:ts-gitea
+    ports:
+      - 3000:3000
     environment:
       - USER_UID=1000
       - USER_GID=1000
@@ -27,20 +28,3 @@ services:
       - ./data:/data
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-
-  ts-gitea:
-    image: tailscale/tailscale:v1.80
-    container_name: ts-gitea
-    hostname: gitea
-    environment:
-      - TS_AUTHKEY={{ gitea_ts_authkey }}
-      - TS_SERVE_CONFIG=/config/gitea.json
-      - TS_STATE_DIR=/var/lib/tailscale
-    volumes:
-      - ${PWD}/state:/var/lib/tailscale
-      - ${PWD}/config:/config
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - net_admin
-      - sys_module
-    restart: unless-stopped
