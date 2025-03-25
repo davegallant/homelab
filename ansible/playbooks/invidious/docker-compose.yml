@@ -57,17 +57,3 @@ services:
       POSTGRES_PASSWORD: {{ invidious_db_password }}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-
-  traefik:
-    image: traefik:v3.3.4
-    container_name: traefik-invidious
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
-      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
-      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock

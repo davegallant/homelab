@@ -4,6 +4,8 @@ services:
     # https://hub.docker.com/r/linuxserver/sonarr/tags
     image: linuxserver/sonarr:4.0.14
     restart: always
+    ports:
+      - 8989:8989
     environment:
       - PUID=1000
       - PGID=1000
@@ -13,16 +15,3 @@ services:
       - ~/sonarr/config:/config
       - "/mnt/media/TV Shows:/mnt/media/TV Shows"
       - /mnt/media/Torrents:/downloads
-  traefik:
-    image: traefik:v3.3.4
-    container_name: traefik-sonarr
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
-      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
-      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
