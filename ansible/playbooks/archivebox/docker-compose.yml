@@ -11,16 +11,3 @@ services:
       - CSRF_TRUSTED_ORIGINS=https://archivebox.snake-cloud.ts.net
     volumes:
       - ./data:/data
-  traefik:
-    image: traefik:v3.3.4
-    container_name: traefik-archivebox
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
-      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
-      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
