@@ -1,6 +1,6 @@
 ---
-- name: Install overseerr
-  hosts: overseerr
+- name: Install jellyseerr
+  hosts: jellyseerr
   tasks:
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-docker-on-ubuntu.yml
