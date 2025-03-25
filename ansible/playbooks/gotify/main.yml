@@ -19,12 +19,6 @@
         path: "~/config"
         state: directory
 
-    - name: Copy config/gotify.json
-      ansible.builtin.copy:
-        src: ./config/gotify.json
-        dest: "~/config/gotify.json"
-        mode: "0640"
-
     - name: Allow https
       community.general.ufw:
         rule: allow

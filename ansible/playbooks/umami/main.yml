@@ -8,12 +8,6 @@
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-common-dependencies.yml
 
-    - name: Copy config/umami.json
-      ansible.builtin.template:
-        src: ./config/umami.json
-        dest: "~/config/umami.json"
-        mode: "0640"
-
     - name: Copy docker-compose.yml
       ansible.builtin.template:
         src: docker-compose.yml

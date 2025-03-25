@@ -14,12 +14,6 @@
         dest: "~/docker-compose.yml"
         mode: "0640"
 
-    - name: Copy config/miniflux.json
-      ansible.builtin.copy:
-        src: ./config/miniflux.json
-        dest: "~/config/miniflux.json"
-        mode: "0640"
-
     - name: Allow https
       community.general.ufw:
         rule: allow

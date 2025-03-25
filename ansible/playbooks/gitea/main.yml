@@ -14,12 +14,6 @@
         dest: "~/docker-compose.yml"
         mode: "0640"
 
-    - name: Copy config/gitea.json
-      ansible.builtin.copy:
-        src: ./config/gitea.json
-        dest: "~/config/gitea.json"
-        mode: "0640"
-
     - name: Allow https
       community.general.ufw:
         rule: allow

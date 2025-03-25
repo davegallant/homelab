@@ -1,6 +1,8 @@
 services:
   wyze-bridge:
     container_name: wyze-bridge
+    ports:
+      - 5000:5000
     restart: unless-stopped
     image: mrlt8/wyze-bridge:2.10.3
     environment:
