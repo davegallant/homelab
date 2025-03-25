@@ -2,22 +2,10 @@ services:
   changedetection:
     image: dgtlmoon/changedetection.io:0.49.7
     container_name: changedetection
+    ports:
+      - 5000:5000
     volumes:
       - ./changedetection:/datastore
     environment:
       - HIDE_REFERER=true
     restart: always
-
-  traefik:
-    image: traefik:v3.3.4
-    container_name: traefik-changedetection
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
-      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
-      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock

@@ -2,6 +2,8 @@ services:
   radarr:
     container_name: radarr
     image: linuxserver/radarr:5.20.2
+    ports:
+      - 7878:7878
     restart: always
     environment:
       - PUID=1000
@@ -12,16 +14,3 @@ services:
       - ~/radarr/config:/config
       - /mnt/media/Movies:/mnt/media/Movies
       - /mnt/media/Torrents:/downloads
-  traefik:
-    image: traefik:v3.3.4
-    container_name: traefik-radarr
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
-      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
-      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock

@@ -2,20 +2,9 @@ services:
   kiwix-serve:
     container_name: kiwix-serve
     image: ghcr.io/kiwix/kiwix-serve:3.7.0
+    ports:
+      - 8080:8080
     volumes:
       - /mnt/media/kiwix:/data
     command: "*.zim"
 
-  traefik:
-    image: traefik:v3.3.4
-    container_name: traefik-kiwix
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
-      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
-      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock

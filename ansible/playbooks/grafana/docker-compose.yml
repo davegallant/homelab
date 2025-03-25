@@ -38,7 +38,7 @@ services:
         datasources:
         - name: Loki
           type: loki
-          access: proxy 
+          access: proxy
           orgId: 1
           url: http://loki:3100
           basicAuth: true
@@ -51,18 +51,3 @@ services:
       - "3000:3000"
     volumes:
       - './data/grafana:/var/lib/grafana'
-
-  traefik:
-    image: traefik:v3.3.4
-    container_name: traefik-grafana
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
-      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
-      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
-

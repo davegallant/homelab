@@ -14,12 +14,6 @@
         dest: "~/docker-compose.yml"
         mode: "0640"
 
-    - name: Copy traefik data
-      ansible.builtin.copy:
-        src: ./traefik/
-        dest: "~/traefik/"
-        mode: "0640"
-
     - name: Deny ssh
       community.general.ufw:
         rule: deny

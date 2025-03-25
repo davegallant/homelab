@@ -18,22 +18,6 @@ services:
     networks:
       - lubelogger
 
-  traefik:
-    image: traefik:v3.3.4
-    container_name: traefik-lubelogger
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
-      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
-      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
-    networks:
-      - lubelogger
-
 volumes:
   config:
   data:

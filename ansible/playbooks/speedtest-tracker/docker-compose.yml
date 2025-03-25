@@ -2,6 +2,8 @@
 services:
   speedtest-tracker:
     container_name: speedtest-tracker
+    ports:
+      - 8080:80
     environment:
       - PUID=1000
       - PGID=1000
@@ -30,16 +32,4 @@ services:
       - POSTGRES_PASSWORD={{ speedtest_tracker_db_password }}
     volumes:
       - ./speedtest-db:/var/lib/postgresql/data
-  traefik:
-    image: traefik:v3.3.4
-    container_name: traefik-speedtest-tracker
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
-      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
-      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
+

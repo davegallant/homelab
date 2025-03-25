@@ -1,16 +1,4 @@
 services:
-  traefik:
-    image: traefik:v3.3.4
-    container_name: traefik-homepage
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    ports:
-      - 443:443
-    volumes:
-      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
-      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
-      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
   homepage:
     image: ghcr.io/gethomepage/homepage:v1.0.4
     container_name: homepage

@@ -14,16 +14,3 @@ services:
     ports:
       - 8083:8083
     restart: unless-stopped
-  traefik:
-    image: traefik:v3.3.4
-    container_name: traefik-calibre-web
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./traefik/data/traefik.yaml:/traefik.yaml:ro
-      - ./traefik/data/dynamic.yaml:/dynamic.yaml:ro
-      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
