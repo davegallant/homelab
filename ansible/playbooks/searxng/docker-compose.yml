@@ -21,7 +21,7 @@ services:
   searxng:
     container_name: searxng
     # https://hub.docker.com/r/searxng/searxng/tags
-    image: searxng/searxng:2025.3.15-a1d5add71
+    image: searxng/searxng:2025.3.28-ecee73eaf
     restart: unless-stopped
     ports:
       - "127.0.0.1:8080:8080"
