@@ -1,7 +1,7 @@
 services:
   invidious:
     # https://quay.io/repository/invidious/invidious?tab=tags
-    image: quay.io/invidious/invidious:2025.03.26-23ff613
+    image: quay.io/invidious/invidious:2025.04.04-0c07e9d
     container_name: invidious
     restart: unless-stopped
     ports:
@@ -32,7 +32,7 @@ services:
 
   inv_sig_helper:
     # https://quay.io/repository/invidious/inv-sig-helper?tab=tags
-    image: quay.io/invidious/inv-sig-helper:master-1c70bf6
+    image: quay.io/invidious/inv-sig-helper:master-9073c15
     container_name: invidious-inv-sig-helper
     init: true
     command: ["--tcp", "0.0.0.0:12999"]
