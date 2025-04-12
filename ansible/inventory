@@ -1,7 +1,7 @@
 [homelab]
 archivebox
 audiobookshelf
-bedrock ansible_host=192.168.1.141
+bedrock
 beszel
 calibre-web
 changedetection
