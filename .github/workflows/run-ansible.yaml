@@ -19,16 +19,12 @@ jobs:
       - name: Install ansible collections
         run: |
           ansible-galaxy collection install -r ansible/requirements.yml --force
-      - name: Run playbook
-        uses: dawidd6/action-ansible-playbook@v3
+      - name: Run Playbook
         env:
+          ANSIBLE_HOST_KEY_CHECKING: False
           BWS_ACCESS_TOKEN: "${{ secrets.BWS_ACCESS_TOKEN }}"
-        with:
-          playbook: ansible/playbooks/main.yml
-          requirements: ansible/requirements.yml
-          key: ${{ secrets.ANSIBLE_SSH_KEY }}
-          options: |
-            --inventory ansible/inventory
+        run: |
+          ansible-playbook -i ansible/inventory ansible/playbooks/main.yml
       - name: Send failure notification
         if: always() && failure()
         run:
