@@ -12,6 +12,7 @@ services:
       - ./config:/config
       - /movies:/movies:ro
       - /tv:/tv:ro
+      - /music:/music:ro
     restart: unless-stopped
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
