@@ -14,7 +14,7 @@ services:
       DATA_DIR: /data # DON'T CHANGE THIS
       # OPENAI_API_KEY: ...
   chrome:
-    image: gcr.io/zenika-hub/alpine-chrome:123
+    image: gcr.io/zenika-hub/alpine-chrome:124
     restart: unless-stopped
     command:
       - --no-sandbox
