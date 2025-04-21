@@ -6,7 +6,7 @@ Each host is running on [proxmox](https://proxmox.com) in a LXC container and is
 
 Why use proxmox rather than a single host with docker compose? Mostly because proxmox makes it trivial to both backup and migrate services between proxmox nodes using a single web interface. A similar setup could also be achieved using k8s but I wanted to avoid the complexity for now.
 
-![Image](https://github.com/user-attachments/assets/babb2574-55f3-4d8c-ba5f-78f31f47971a)
+![Overview](https://github.com/user-attachments/assets/1b86c4b5-026a-494b-acf9-1f936daa1d27)
 
 ## Maintenance
 
