@@ -10,7 +10,7 @@ Why use proxmox rather than a single host with docker compose? Mostly because pr
 
 ## Maintenance
 
-[Proxmox VE Helper-Scripts](https://github.com/community-scripts/ProxmoxVE) are used to cleanup and update containers within proxmox.
+I've cloned [Proxmox VE Helper-Scripts](https://github.com/community-scripts/ProxmoxVE) and run a few of the scripts to cleanup and update LXC containers.
 
 ## Networking
 
