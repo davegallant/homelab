@@ -19,18 +19,6 @@
         path: "~/config"
         state: directory
 
-    - name: Allow https
-      community.general.ufw:
-        rule: allow
-        port: https
-        proto: tcp
-
-    - name: Allow ssh
-      community.general.ufw:
-        rule: allow
-        port: ssh
-        proto: tcp
-
     - name: Enable UFW
       community.general.ufw:
         state: enabled
