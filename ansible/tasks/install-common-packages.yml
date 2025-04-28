@@ -1,4 +1,4 @@
-- name: Install common dependencies
+- name: Install common packages
   ansible.builtin.apt:
     name:
       - curl

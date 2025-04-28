@@ -3,10 +3,10 @@
   hosts: speedtest-tracker
   tasks:
     - ansible.builtin.include_tasks:
-        file: ../../tasks/install-docker-on-ubuntu.yml
+        file: ../../tasks/install-docker.yml
 
     - ansible.builtin.include_tasks:
-        file: ../../tasks/install-common-dependencies.yml
+        file: ../../tasks/install-common-packages.yml
 
     - name: Copy docker-compose.yml
       ansible.builtin.template:
