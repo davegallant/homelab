@@ -3,11 +3,8 @@
     name:
       - python3
       - python3-pip
+      - python3-requests
     state: latest
-
-- name: Install requests
-  pip:
-    name: requests
 
 - name: Add Docker GPG key
   ansible.builtin.apt_key:
