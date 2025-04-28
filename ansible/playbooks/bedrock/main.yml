@@ -20,13 +20,7 @@
         port: https
         proto: tcp
 
-    - name: Allow ssh
-      community.general.ufw:
-        rule: allow
-        port: ssh
-        proto: tcp
-
-    - name: Allow minecraft
+    - name: Allow bedrock port
       community.general.ufw:
         rule: allow
         port: 19132
