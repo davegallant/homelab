@@ -16,7 +16,7 @@
 
 - name: Add Docker APT repository
   ansible.builtin.apt_repository:
-    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu noble stable
     state: present
 
 - name: Install docker
