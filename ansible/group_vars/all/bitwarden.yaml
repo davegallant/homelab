@@ -1,16 +1,11 @@
 ansible_user: "{{ lookup('bitwarden.secrets.lookup', '60706445-eece-462e-ac8b-b28a001ec708') }}"
 
-audiobookshelf_ts_authkey: "{{ lookup('bitwarden.secrets.lookup', '529410a2-3e63-45bd-b508-b28a00203b44') }}"
-
 gatus_db_username: "{{ lookup('bitwarden.secrets.lookup', 'ce241542-9156-43a0-ba23-b28a0022f468') }}"
 gatus_db_password: "{{ lookup('bitwarden.secrets.lookup', '1da0b858-e90e-4c16-9a1d-b28a00287270') }}"
 
 grafana_admin_password: "{{ lookup('bitwarden.secrets.lookup', '2d28259c-77c2-4aa7-bfd2-b28a0146e5f7') }}"
 
 gitea_lfs_jwt: "{{ lookup('bitwarden.secrets.lookup', '37cf2167-c380-4161-b25e-b28a00293208') }}"
-gitea_ts_authkey: "{{ lookup('bitwarden.secrets.lookup', 'ef8577ad-fcae-46e4-8fdf-b28a0029ddcc') }}"
-
-gotify_ts_authkey: "{{ lookup('bitwarden.secrets.lookup', 'ec8fbc1f-063c-419a-8ac6-b28a002a04e5') }}"
 
 immich_db_password: "{{ lookup('bitwarden.secrets.lookup', '70f03533-baf0-4b38-a9f8-b28a002b4334') }}"
 immich_db_user: "{{ lookup('bitwarden.secrets.lookup', '9de4c1cc-f483-463a-9294-b28a002b353a') }}"
@@ -30,7 +25,9 @@ miniflux_admin_password: "{{ lookup('bitwarden.secrets.lookup', '9a75c7a0-9a58-4
 miniflux_admin_username: "{{ lookup('bitwarden.secrets.lookup', 'ed6330cd-2697-41fb-a9f7-b28a002bb6ba') }}"
 miniflux_db_password: "{{ lookup('bitwarden.secrets.lookup', 'e9a12a9b-7742-4168-be26-b28a002bcfad') }}"
 miniflux_db_user: "{{ lookup('bitwarden.secrets.lookup', '356c0fad-56c9-4b9a-8834-b28a002bdd4f') }}"
-miniflux_ts_authkey: "{{ lookup('bitwarden.secrets.lookup', 'a2c3227c-0090-43d4-a28d-b28a002be9ca') }}"
+
+navidrome_lastfm_api_key: "{{ lookup('bitwarden.secrets.lookup', '824afc34-073e-4e49-a73a-b2d401476918') }}"
+navidrome_lastfm_api_secret: "{{ lookup('bitwarden.secrets.lookup', '50519ffa-fc18-492f-b4a1-b2d4014780df') }}"
 
 qbittorrent_webui_password: "{{ lookup('bitwarden.secrets.lookup', '94a25506-51bb-4bf1-82ca-b28a002c3f7c') }}"
 qbittorrent_webui_username: "{{ lookup('bitwarden.secrets.lookup', 'd071dc82-7ee2-4325-99c0-b28a002c4be4') }}"
@@ -46,12 +43,9 @@ speedtest_tracker_app_key: "{{ lookup('bitwarden.secrets.lookup', '0ace7d18-10d5
 speedtest_tracker_db_password: "{{ lookup('bitwarden.secrets.lookup', 'a751ee37-aa52-4c5f-84f4-b28a002d9389') }}"
 speedtest_tracker_db_username: "{{ lookup('bitwarden.secrets.lookup', '8b514ba2-94a2-49bd-a165-b28a002d84c0') }}"
 
-stirling_pdf_ts_authkey: "{{ lookup('bitwarden.secrets.lookup', '7cd202e5-4c7c-4adb-a91b-b28a002de978') }}"
-
 umami_app_secret: "{{ lookup('bitwarden.secrets.lookup', '567e5a81-fbc5-4ff8-a524-b28a002dfe64') }}"
 umami_db_password: "{{ lookup('bitwarden.secrets.lookup', '5fd7cee5-6f46-4983-9ed1-b28a002e0bf1') }}"
 umami_db_user: "{{ lookup('bitwarden.secrets.lookup', '545bdf9e-0aee-4b80-9546-b28a002e1aa0') }}"
-umami_ts_authkey: "{{ lookup('bitwarden.secrets.lookup', '0ea475ab-b7f5-40ee-8ae0-b28a002e2aaf') }}"
 
 watchyourlan_shoutrr_url: "{{ lookup('bitwarden.secrets.lookup', 'f06ace01-ddf4-4f04-aba7-b28a002effb7') }}"
 
