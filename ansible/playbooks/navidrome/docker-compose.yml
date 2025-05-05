@@ -8,6 +8,8 @@ services:
     restart: unless-stopped
     environment:
       - ND_ENABLEINSIGHTSCOLLECTOR=false
+      - ND_LASTFM_APIKEY={{ navidrome_lastfm_api_key }}
+      - ND_LASTFM_SECRET={{ navidrome_lastfm_api_key }}
     volumes:
       - ./data:/data
       - /music:/music:ro
