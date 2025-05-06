@@ -10,6 +10,7 @@ services:
       - ND_ENABLEINSIGHTSCOLLECTOR=false
       - ND_LASTFM_APIKEY={{ navidrome_lastfm_api_key }}
       - ND_LASTFM_SECRET={{ navidrome_lastfm_api_key }}
+      - ND_LISTENBRAINZ_BASEURL=https://maloja.snake-cloud.ts.net/apis/listenbrainz/1/
     volumes:
       - ./data:/data
       - /music:/music:ro
