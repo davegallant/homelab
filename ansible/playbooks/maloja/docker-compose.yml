@@ -1,0 +1,7 @@
+services:
+  maloja:
+    image: krateng/maloja:3.2.4
+    ports:
+    - "42010:42010"
+    volumes:
+    - "$PWD/data:/data"

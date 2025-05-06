@@ -18,6 +18,7 @@
 - import_playbook: kiwix/main.yml
 - import_playbook: lidarr/main.yml
 - import_playbook: lubelogger/main.yml
+- import_playbook: maloja/main.yml
 - import_playbook: miniflux/main.yml
 - import_playbook: navidrome/main.yml
 - import_playbook: prowlarr/main.yml
