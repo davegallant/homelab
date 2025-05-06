@@ -5,3 +5,7 @@ services:
     - "42010:42010"
     volumes:
     - "$PWD/data:/data"
+    environment:
+      - MALOJA_SKIP_SETUP=true
+      - MALOJA_FORCE_PASSWORD=stub
+      - MALOJA_DATA_DIRECTORY=/data
