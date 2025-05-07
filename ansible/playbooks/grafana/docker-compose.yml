@@ -20,7 +20,7 @@ services:
     command: -config.file=/etc/promtail/config.yml
 
   grafana:
-    image: grafana/grafana:11.6.1
+    image: grafana/grafana:12.0.0
     container_name: grafana
     environment:
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
