@@ -2,7 +2,7 @@
 
 This repo contains [ansible playbooks](./ansible/playbooks/) and docker compose files to get a number of self-hosted services up and running on my homelab.
 
-![Overview](https://github.com/user-attachments/assets/1b86c4b5-026a-494b-acf9-1f936daa1d27)
+![Overview](https://github.com/user-attachments/assets/9bcf4b52-f74f-43b9-947e-2059336ee146)
 
 Each host is running on [Proxmox](https://proxmox.com) in a LXC container running Ubuntu 24.04 LTS.
 
