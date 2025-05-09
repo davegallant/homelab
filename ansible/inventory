@@ -5,6 +5,7 @@ bedrock
 beszel
 calibre-web
 changedetection
+excalidraw
 gatus
 gitea
 gotify
@@ -13,6 +14,7 @@ homepage
 immich
 invidious
 jellyfin
+jellyseerr
 karakeep
 kiwix
 lidarr
@@ -20,7 +22,6 @@ lubelogger
 maloja
 miniflux
 navidrome
-jellyseerr
 prowlarr
 qbittorrent
 radarr
