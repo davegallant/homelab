@@ -4,7 +4,7 @@ This repo contains [ansible playbooks](./ansible/playbooks/) and docker compose 
 
 ![Overview](https://github.com/user-attachments/assets/9bcf4b52-f74f-43b9-947e-2059336ee146)
 
-Each host is running on [Proxmox](https://proxmox.com) in a LXC container running Ubuntu 24.04 LTS.
+Each host is running within a [Proxmox](https://proxmox.com) cluster in a LXC container running Ubuntu 24.04 LTS.
 
 Why use Proxmox rather than a single host with docker compose? Mostly because Proxmox makes it trivial to both backup and migrate services between nodes using a single web interface. A similar setup could also be achieved using k8s but I wanted to avoid the complexity for now.
 
