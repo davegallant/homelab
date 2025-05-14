@@ -14,12 +14,6 @@
         dest: "~/docker-compose.yml"
         mode: "0640"
 
-    - name: Copy config data
-      ansible.builtin.copy:
-        src: ./config/
-        dest: "~/config/"
-        mode: "0640"
-
     - name: Enable UFW
       community.general.ufw:
         state: enabled
