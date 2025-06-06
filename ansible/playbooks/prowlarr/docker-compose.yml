@@ -1,6 +1,6 @@
 services:
   prowlarr:
-    image: lscr.io/linuxserver/prowlarr:1.36.3
+    image: lscr.io/linuxserver/prowlarr:1.37.0
     container_name: prowlarr
     environment:
       - PUID=1000
