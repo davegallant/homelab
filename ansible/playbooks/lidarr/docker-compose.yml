@@ -2,7 +2,7 @@
 services:
   lidarr:
     container_name: lidarr
-    image: linuxserver/lidarr:2.11.2
+    image: linuxserver/lidarr:2.12.4
     ports:
       - 8686:8686
     environment:
