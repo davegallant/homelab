@@ -27,7 +27,7 @@ services:
         restart: true
 
   romm-db:
-    image: mariadb:11.7.2
+    image: mariadb:11.8.2
     container_name: romm-db
     restart: unless-stopped
     environment:
