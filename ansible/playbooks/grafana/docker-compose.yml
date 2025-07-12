@@ -1,6 +1,6 @@
 services:
   loki:
-    image: grafana/loki:3.5.1
+    image: grafana/loki:3.5.2
     container_name: loki
     user: '0'
     restart: unless-stopped
