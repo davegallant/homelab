@@ -1,7 +1,7 @@
 
 services:
   miniflux:
-    image: miniflux/miniflux:2.2.12
+    image: miniflux/miniflux:2.2.13
     container_name: miniflux
     ports:
       - 8080:8080
