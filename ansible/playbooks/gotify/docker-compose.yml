@@ -1,10 +1,11 @@
-
 services:
   gotify:
     image: gotify/server:2.7.3
     container_name: gotify
     ports:
-      - 8080:80
+      - 8680:80
     restart: always
     volumes:
       - ~/data:/app/data
+    security_opt:
+      - no-new-privileges:true
