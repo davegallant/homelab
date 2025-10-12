@@ -1,0 +1,21 @@
+services:
+  igotify:
+    container_name: igotify
+    hostname: igotify
+    image: ghcr.io/androidseb25/igotify-notification-assist:v1.5.0.1
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    pull_policy: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/Version"]
+      interval: "3s"
+      timeout: "3s"
+      retries: 5
+    ports:
+      - "8681:8080"
+    volumes:
+      - ~/api-data:/app/data
+    environment:
+      GOTIFY_URLS: "https://gotify.snake-cloud.ts.net"
+      GOTIFY_CLIENT_TOKENS: {{ igotify_gotify_client_tokens }}

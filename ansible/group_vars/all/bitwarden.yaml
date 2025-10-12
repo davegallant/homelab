@@ -16,6 +16,7 @@ invidious_hmac_key: "{{ lookup('bitwarden.secrets.lookup', '4e164865-5e65-47f0-a
 invidious_po_token: "{{ lookup('bitwarden.secrets.lookup', 'f065ddef-5bc0-4a76-937c-b28a002acc48') }}"
 invidious_visitor_data: "{{ lookup('bitwarden.secrets.lookup', 'ac2a2e9c-fe51-4bf5-a9d6-b28a002ad5e6') }}"
 
+igotify_gotify_client_tokens: "{{ lookup('bitwarden.secrets.lookup', '919ebb35-61ba-46a5-b7ce-b374003c3d60') }}"
 
 jellyfin_hostname: "{{ lookup('bitwarden.secrets.lookup', 'f0019fdb-1918-41b8-ad9d-b2a8015636a6') }}"
 
