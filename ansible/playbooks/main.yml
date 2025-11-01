@@ -34,4 +34,3 @@
 - import_playbook: umami/main.yml
 - import_playbook: vaultwarden/main.yml
 - import_playbook: watchyourlan/main.yml
-- import_playbook: wyze-bridge/main.yml
