@@ -1,6 +1,6 @@
 services:
   beszel:
-    image: henrygd/beszel:0.15.3
+    image: henrygd/beszel:0.15.4
     container_name: beszel
     ports:
       - 8090:8090
