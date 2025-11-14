@@ -1,27 +1,8 @@
 services:
-  redis:
-    container_name: redis
-    image: valkey/valkey:9-alpine
-    command: valkey-server --save 30 1 --loglevel warning
-    restart: unless-stopped
-    volumes:
-      - valkey-data2:/data
-    cap_drop:
-      - ALL
-    cap_add:
-      - SETGID
-      - SETUID
-      - DAC_OVERRIDE
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "1m"
-        max-file: "1"
-
   searxng:
     container_name: searxng
     # https://hub.docker.com/r/searxng/searxng/tags
-    image: searxng/searxng:2025.3.28-ecee73eaf
+    image: searxng/searxng:2025.11.14-1e200a110
     restart: unless-stopped
     ports:
       - "127.0.0.1:8080:8080"
@@ -37,6 +18,24 @@ services:
       - CHOWN
       - SETGID
       - SETUID
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+  redis:
+    container_name: redis
+    image: valkey/valkey:9-alpine
+    command: valkey-server --save 30 1 --loglevel warning
+    restart: unless-stopped
+    volumes:
+      - valkey-data2:/data
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
     logging:
       driver: "json-file"
       options:
