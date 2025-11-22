@@ -10,7 +10,7 @@ name: immich
 services:
   immich-server:
     container_name: immich
-    image: ghcr.io/immich-app/immich-server:v2.2.3
+    image: ghcr.io/immich-app/immich-server:v2.3.1
     devices:
      - /dev/dri:/dev/dri
     volumes:
@@ -30,7 +30,7 @@ services:
 
   immich-machine-learning:
     container_name: immich_machine_learning
-    image: ghcr.io/immich-app/immich-machine-learning:v2.2.3
+    image: ghcr.io/immich-app/immich-machine-learning:v2.3.1
     volumes:
       - model-cache:/cache
     env_file:
