@@ -1,6 +1,6 @@
 services:
   stirling-pdf:
-    image: frooodle/s-pdf:1.6.0
+    image: frooodle/s-pdf:2.0.1
     container_name: stirling-pdf
     ports:
       - 8080:8080
