@@ -1,6 +1,6 @@
 services:
   web:
-    image: ghcr.io/karakeep-app/karakeep:0.29.1
+    image: ghcr.io/karakeep-app/karakeep:0.29.3
     container_name: karakeep-web
     restart: unless-stopped
     volumes:
