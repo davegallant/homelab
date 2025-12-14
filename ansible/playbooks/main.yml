@@ -31,7 +31,6 @@
 - import_playbook: searxng/main.yml
 - import_playbook: sonarr/main.yml
 - import_playbook: speedtest-tracker/main.yml
-- import_playbook: stirling-pdf/main.yml
 - import_playbook: umami/main.yml
 - import_playbook: vaultwarden/main.yml
 - import_playbook: watchyourlan/main.yml
