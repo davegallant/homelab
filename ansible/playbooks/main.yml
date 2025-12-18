@@ -6,6 +6,7 @@
 - import_playbook: beszel/main.yml
 - import_playbook: calibre-web/main.yml
 - import_playbook: changedetection/main.yml
+- import_playbook: dispatcharr/main.yml
 - import_playbook: excalidraw/main.yml
 - import_playbook: gatus/main.yml
 - import_playbook: gitea/main.yml
