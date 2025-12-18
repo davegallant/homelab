@@ -1,6 +1,6 @@
 services:
   bedrock:
-    image: itzg/minecraft-bedrock-server:2025.12.0
+    image: itzg/minecraft-bedrock-server:2025.12.1
     container_name: bedrock
     environment:
       EULA: "TRUE"
