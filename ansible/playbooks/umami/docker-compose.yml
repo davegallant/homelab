@@ -1,6 +1,6 @@
 services:
   umami:
-    image: ghcr.io/umami-software/umami:3
+    image: ghcr.io/umami-software/umami:3.0.3
     ports:
       - 3000:3000
     container_name: umami
