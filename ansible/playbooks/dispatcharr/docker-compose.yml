@@ -1,6 +1,6 @@
 services:
   dispatcharr:
-    image: ghcr.io/dispatcharr/dispatcharr:0.14.0
+    image: ghcr.io/dispatcharr/dispatcharr:0.15.0
     container_name: dispatcharr
     ports:
       - 9191:9191
