@@ -4,7 +4,7 @@ services:
     ports:
       - 8080:80
     container_name: vaultwarden
-    restart: unless-stopped
+    restart: always
     environment:
       DOMAIN: "https://vaultwarden.snake-cloud.ts.net"
     volumes:

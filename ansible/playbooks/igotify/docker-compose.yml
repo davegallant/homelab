@@ -3,7 +3,7 @@ services:
     container_name: igotify
     hostname: igotify
     image: ghcr.io/androidseb25/igotify-notification-assist:v1.5.1.2
-    restart: unless-stopped
+    restart: always
     security_opt:
       - no-new-privileges:true
     pull_policy: always

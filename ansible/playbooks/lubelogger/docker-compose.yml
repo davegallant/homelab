@@ -3,7 +3,7 @@ services:
     image: ghcr.io/hargata/lubelogger:v1.4.5
     container_name: lubelogger
     build: .
-    restart: unless-stopped
+    restart: always
     volumes:
       - config:/App/config
       - data:/App/data

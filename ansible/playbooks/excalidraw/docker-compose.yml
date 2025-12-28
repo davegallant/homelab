@@ -4,4 +4,4 @@ services:
     container_name: excalidraw
     ports:
       - "3000:80"
-    restart: on-failure
+    restart: always

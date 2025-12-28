@@ -3,7 +3,7 @@ services:
     image: grafana/loki:3.6.3
     container_name: loki
     user: '0'
-    restart: unless-stopped
+    restart: always
     ports:
       - "3100:3100"
     volumes:
@@ -16,7 +16,7 @@ services:
     container_name: promtail
     volumes:
       - /var/log:/var/log
-    restart: unless-stopped
+    restart: always
     command: -config.file=/etc/promtail/config.yml
 
   grafana:
@@ -27,7 +27,7 @@ services:
       - GF_FEATURE_TOGGLES_ENABLE=alertingSimplifiedRouting,alertingQueryAndExpressionsStepMode
       - GF_AUTH_ANONYMOUS_ENABLED=false
       - GF_SECURITY_ADMIN_PASSWORD={{ grafana_admin_password }}
-    restart: unless-stopped
+    restart: always
     user: '0'
     entrypoint:
       - sh

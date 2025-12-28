@@ -2,7 +2,7 @@ services:
   web:
     image: ghcr.io/karakeep-app/karakeep:0.29.3
     container_name: karakeep-web
-    restart: unless-stopped
+    restart: always
     volumes:
       - ./data:/data
     ports:
@@ -16,7 +16,7 @@ services:
       DISABLE_SIGNUPS: true
   chrome:
     image: gcr.io/zenika-hub/alpine-chrome:124
-    restart: unless-stopped
+    restart: always
     container_name: karakeep-alpine-chrome
     command:
       - --no-sandbox
@@ -27,7 +27,7 @@ services:
       - --hide-scrollbars
   meilisearch:
     image: getmeili/meilisearch:v1.25.0
-    restart: unless-stopped
+    restart: always
     container_name: karakeep-meilisearch
     env_file:
       - .env

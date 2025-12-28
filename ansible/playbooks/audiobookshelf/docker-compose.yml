@@ -19,10 +19,9 @@ services:
       # The config directory needs to be on the same physical machine
       # you are running ABS on
       - ./config:/config
-    restart: unless-stopped
+    restart: always
     # You can use the following environment variable to run the ABS
     # docker container as a specific user. You will need to change
     # the UID and GID to the correct values for your user.
     #environment:
     #  - user=1000:1000
-
