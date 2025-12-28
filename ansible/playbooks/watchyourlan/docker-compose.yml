@@ -2,7 +2,7 @@ services:
   watchyourlan:
     image: aceberg/watchyourlan:v2
     network_mode: "host"
-    restart: unless-stopped
+    restart: always
     volumes:
       - ~/.dockerdata/wyl:/data/WatchYourLAN
     environment:

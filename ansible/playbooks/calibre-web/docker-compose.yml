@@ -13,4 +13,4 @@ services:
       - /mnt/media/Calibre:/books
     ports:
       - 8083:8083
-    restart: unless-stopped
+    restart: always

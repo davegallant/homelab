@@ -13,6 +13,6 @@ services:
       - /movies:/movies:ro
       - /tv:/tv:ro
       - /music:/music:ro
-    restart: unless-stopped
+    restart: always
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128

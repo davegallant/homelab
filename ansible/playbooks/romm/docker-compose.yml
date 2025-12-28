@@ -2,7 +2,7 @@ services:
   romm:
     image: rommapp/romm:4.4.1
     container_name: romm
-    restart: unless-stopped
+    restart: always
     environment:
       - DB_HOST=romm-db
       - DB_NAME=romm # Should match MARIADB_DATABASE in mariadb
@@ -29,7 +29,7 @@ services:
   romm-db:
     image: mariadb:12.1.2
     container_name: romm-db
-    restart: unless-stopped
+    restart: always
     environment:
       - MARIADB_ROOT_PASSWORD={{ romm_db_root_password }}
       - MARIADB_DATABASE=romm

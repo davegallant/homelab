@@ -12,4 +12,4 @@ services:
       - ./config:/app/config
       - ./config/images:/app/public/images
       - ./config/icons:/app/public/icons
-    restart: unless-stopped
+    restart: always

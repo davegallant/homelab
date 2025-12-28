@@ -10,4 +10,4 @@ services:
       - 5055:5055
     volumes:
       - ./config:/app/config
-    restart: unless-stopped
+    restart: always

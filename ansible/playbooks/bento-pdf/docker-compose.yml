@@ -2,6 +2,6 @@ services:
   bentopdf:
     image: bentopdf/bentopdf:v1.15.1
     container_name: bentopdf
-    restart: unless-stopped
+    restart: always
     ports:
       - '8080:8080'

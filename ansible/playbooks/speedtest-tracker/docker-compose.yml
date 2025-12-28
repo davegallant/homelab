@@ -19,7 +19,7 @@ services:
       - ./speedtest-app:/config
       - "./web:/etc/ssl/web"
     image: linuxserver/speedtest-tracker:1.13.4
-    restart: unless-stopped
+    restart: always
     depends_on:
       - speedtest-db
   speedtest-db:
@@ -32,4 +32,3 @@ services:
       - POSTGRES_PASSWORD={{ speedtest_tracker_db_password }}
     volumes:
       - ./speedtest-db:/var/lib/postgresql/data
-
