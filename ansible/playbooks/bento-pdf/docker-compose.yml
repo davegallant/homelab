@@ -1,6 +1,6 @@
 services:
   bentopdf:
-    image: bentopdf/bentopdf:v1.15.1
+    image: bentopdf/bentopdf:v1.15.3
     container_name: bentopdf
     restart: always
     ports:
