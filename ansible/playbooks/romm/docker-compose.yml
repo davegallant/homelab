@@ -1,6 +1,6 @@
 services:
   romm:
-    image: rommapp/romm:4.4.1
+    image: rommapp/romm:4.5.0
     container_name: romm
     restart: always
     environment:
