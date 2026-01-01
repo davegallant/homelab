@@ -3,9 +3,11 @@ ansible_user: "{{ lookup('bitwarden.secrets.lookup', '60706445-eece-462e-ac8b-b2
 gatus_db_username: "{{ lookup('bitwarden.secrets.lookup', 'ce241542-9156-43a0-ba23-b28a0022f468') }}"
 gatus_db_password: "{{ lookup('bitwarden.secrets.lookup', '1da0b858-e90e-4c16-9a1d-b28a00287270') }}"
 
-grafana_admin_password: "{{ lookup('bitwarden.secrets.lookup', '2d28259c-77c2-4aa7-bfd2-b28a0146e5f7') }}"
+gotify_url: "{{ lookup('bitwarden.secrets.lookup', '3deb4652-9754-4f7c-ba27-b3c500e7833c') }}"
 
 gitea_lfs_jwt: "{{ lookup('bitwarden.secrets.lookup', '37cf2167-c380-4161-b25e-b28a00293208') }}"
+
+grafana_admin_password: "{{ lookup('bitwarden.secrets.lookup', '2d28259c-77c2-4aa7-bfd2-b28a0146e5f7') }}"
 
 immich_db_password: "{{ lookup('bitwarden.secrets.lookup', '70f03533-baf0-4b38-a9f8-b28a002b4334') }}"
 immich_db_user: "{{ lookup('bitwarden.secrets.lookup', '9de4c1cc-f483-463a-9294-b28a002b353a') }}"

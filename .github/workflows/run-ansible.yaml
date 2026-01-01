@@ -28,4 +28,4 @@ jobs:
       - name: Send failure notification
         if: always() && failure()
         run:
-          curl -X POST "https://gotify.snake-cloud.ts.net/message?token=${{ secrets.GOTIFY_TOKEN }}" -F "title=gitea job ${{ github.repository }} failed!" -F "message=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}" -F "priority=5"
+          curl -X POST "${{ secrets.GOTIFY_URL }}/message?token=${{ secrets.GOTIFY_TOKEN }}" -F "title=gitea job ${{ github.repository }} failed!" -F "message=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}" -F "priority=5"
