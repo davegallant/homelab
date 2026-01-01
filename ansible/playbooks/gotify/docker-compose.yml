@@ -9,3 +9,12 @@ services:
       - ~/data:/app/data
     security_opt:
       - no-new-privileges:true
+  newt:
+    image: fosrl/newt:1.8.1
+    container_name: newt
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
+      - NEWT_ID={{ gotify_newt_id }}
+      - NEWT_SECRET={{ gotify_newt_secret }}

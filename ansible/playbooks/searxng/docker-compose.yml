@@ -41,6 +41,15 @@ services:
       options:
         max-size: "1m"
         max-file: "1"
+  newt:
+    image: fosrl/newt:1.8.1
+    container_name: newt
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
+      - NEWT_ID={{ searxng_newt_id }}
+      - NEWT_SECRET={{ searxng_newt_secret }}
 
 volumes:
   valkey-data2:
