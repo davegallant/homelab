@@ -6,6 +6,8 @@ gatus_db_password: "{{ lookup('bitwarden.secrets.lookup', '1da0b858-e90e-4c16-9a
 gotify_url: "{{ lookup('bitwarden.secrets.lookup', '3deb4652-9754-4f7c-ba27-b3c500e7833c') }}"
 
 gitea_lfs_jwt: "{{ lookup('bitwarden.secrets.lookup', '37cf2167-c380-4161-b25e-b28a00293208') }}"
+gitea_newt_id: "{{ lookup('bitwarden.secrets.lookup', 'c600e3f2-675d-4715-8237-b3c50139c3e7') }}"
+gitea_newt_secret: "{{ lookup('bitwarden.secrets.lookup', 'bff80322-1e5f-41c1-914a-b3c50139d7e3') }}"
 
 grafana_admin_password: "{{ lookup('bitwarden.secrets.lookup', '2d28259c-77c2-4aa7-bfd2-b28a0146e5f7') }}"
 
@@ -31,6 +33,8 @@ miniflux_db_user: "{{ lookup('bitwarden.secrets.lookup', '356c0fad-56c9-4b9a-883
 
 navidrome_lastfm_api_key: "{{ lookup('bitwarden.secrets.lookup', '824afc34-073e-4e49-a73a-b2d401476918') }}"
 navidrome_lastfm_api_secret: "{{ lookup('bitwarden.secrets.lookup', '50519ffa-fc18-492f-b4a1-b2d4014780df') }}"
+
+pangolin_endpoint: "{{ lookup('bitwarden.secrets.lookup', '52396dd5-0f49-4a1e-8ef3-b3c501398373') }}"
 
 qbittorrent_webui_password: "{{ lookup('bitwarden.secrets.lookup', '94a25506-51bb-4bf1-82ca-b28a002c3f7c') }}"
 qbittorrent_webui_username: "{{ lookup('bitwarden.secrets.lookup', 'd071dc82-7ee2-4325-99c0-b28a002c4be4') }}"
