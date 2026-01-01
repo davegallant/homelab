@@ -14,5 +14,14 @@ services:
       - DISPATCHARR_LOG_LEVEL=info
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
+  newt:
+    image: fosrl/newt:1.8.1
+    container_name: newt
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
+      - NEWT_ID={{ dispatcharr_newt_id }}
+      - NEWT_SECRET={{ dispatcharr_newt_secret }}
 volumes:
   dispatcharr_data:
