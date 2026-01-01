@@ -17,5 +17,5 @@ services:
     volumes:
       - ~/api-data:/app/data
     environment:
-      GOTIFY_URLS: "https://gotify.snake-cloud.ts.net"
+      GOTIFY_URLS: {{ gotify_url }}
       GOTIFY_CLIENT_TOKENS: {{ igotify_gotify_client_tokens }}
