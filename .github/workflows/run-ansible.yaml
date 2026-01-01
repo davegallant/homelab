@@ -22,9 +22,10 @@ jobs:
       - name: Run Playbook
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
-          BWS_ACCESS_TOKEN: "${{ secrets.BWS_ACCESS_TOKEN }}"
+          ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
         run: |
-          ansible-playbook -i ansible/inventory ansible/playbooks/main.yml
+          echo "$ANSIBLE_VAULT_PASSWORD" > .vault_pass
+          ansible-playbook -i ansible/inventory ansible/playbooks/main.yml --vault-password-file .vault_pass
       - name: Send failure notification
         if: always() && failure()
         run:
