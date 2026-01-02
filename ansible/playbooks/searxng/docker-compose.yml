@@ -9,7 +9,6 @@ services:
     volumes:
       - ./searxng:/etc/searxng:rw
     environment:
-      - SEARXNG_BASE_URL=https://searxng.snake-cloud.ts.net
       - UWSGI_WORKERS=4
       - UWSGI_THREADS=4
     cap_drop:
