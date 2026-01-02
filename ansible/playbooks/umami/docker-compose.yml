@@ -33,5 +33,14 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+  newt:
+    image: fosrl/newt:1.8.1
+    container_name: newt
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
+      - NEWT_ID={{ umami_newt_id }}
+      - NEWT_SECRET={{ umami_newt_secret }}
 volumes:
   umami-db-data:
