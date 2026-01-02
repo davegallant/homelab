@@ -15,8 +15,8 @@ services:
 
       - GITEA__service__DISABLE_REGISTRATION=true
 
-      - GITEA__ui__DEFAULT_THEME=palenight
-      - GITEA__ui__THEMES=palenight
+      - GITEA__ui__DEFAULT_THEME=gitea-auto
+      - GITEA__ui__THEMES=gitea-light,gitea-dark,gitea-auto
 
       - GITEA__indexer__REPO_INDEXER_ENABLED=true
       - GITEA__indexer__REPO_INDEXER_PATH=indexers/repos.bleve
