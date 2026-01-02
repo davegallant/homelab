@@ -8,8 +8,8 @@ services:
       - USER_UID=1000
       - USER_GID=1000
 
-      - GITEA__server__DOMAIN=gitea.snake-cloud.ts.net
-      - GITEA__server__ROOT_URL=https://gitea.snake-cloud.ts.net
+      - GITEA__server__DOMAIN=gitea.davegallant.ca
+      - GITEA__server__ROOT_URL=https://gitea.davegallant.ca
       - GITEA__server__HTTP_ADDR=0.0.0.0
       - GITEA__server__LFS_JWT_SECRET={{ gitea_lfs_jwt }}
 
