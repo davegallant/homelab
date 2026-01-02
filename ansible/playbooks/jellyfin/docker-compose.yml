@@ -16,3 +16,12 @@ services:
     restart: always
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
+  newt:
+    image: fosrl/newt:1.8.1
+    container_name: newt
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
+      - NEWT_ID={{ jellyfin_newt_id }}
+      - NEWT_SECRET={{ jellyfin_newt_secret }}
