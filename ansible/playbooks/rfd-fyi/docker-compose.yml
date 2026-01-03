@@ -1,0 +1,12 @@
+services:
+  rfd-fyi-frontend:
+    image: ghcr.io/davegallant/rfd-fyi-frontend
+    container_name: rfd-fyi-frontend
+    network_mode: host
+    restart: unless-stopped
+  rfd-fyi-backend:
+    image: ghcr.io/davegallant/rfd-fyi-backend
+    container_name: rfd-fyi-backend
+    ports:
+      - 8080:8080
+    restart: unless-stopped
