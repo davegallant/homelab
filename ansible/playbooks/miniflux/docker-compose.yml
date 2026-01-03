@@ -28,6 +28,15 @@ services:
       test: ["CMD", "pg_isready", "-U", "miniflux"]
       interval: 10s
       start_period: 30s
+  newt:
+    image: fosrl/newt:1.8.1
+    container_name: newt
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
+      - NEWT_ID={{ miniflux_newt_id }}
+      - NEWT_SECRET={{ miniflux_newt_secret }}
 volumes:
   miniflux-db:
     name: miniflux-db
