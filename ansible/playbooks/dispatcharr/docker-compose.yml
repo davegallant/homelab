@@ -1,6 +1,6 @@
 services:
   dispatcharr:
-    image: ghcr.io/dispatcharr/dispatcharr:0.15.1
+    image: ghcr.io/dispatcharr/dispatcharr:0.16.0
     container_name: dispatcharr
     restart: always
     ports:
