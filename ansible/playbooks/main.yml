@@ -1,4 +1,5 @@
 ---
+
 - import_playbook: archivebox/main.yml
 - import_playbook: audiobookshelf/main.yml
 - import_playbook: bedrock/main.yml
@@ -18,7 +19,6 @@
 - import_playbook: invidious/main.yml
 - import_playbook: jellyfin/main.yml
 - import_playbook: jellyseerr/main.yml
-- import_playbook: karakeep/main.yml
 - import_playbook: kiwix/main.yml
 - import_playbook: lidarr/main.yml
 - import_playbook: lubelogger/main.yml
