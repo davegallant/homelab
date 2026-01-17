@@ -27,6 +27,7 @@
 - import_playbook: navidrome/main.yml
 - import_playbook: prowlarr/main.yml
 - import_playbook: qbittorrent/main.yml
+- import_playbook: qui/main.yml
 - import_playbook: radarr/main.yml
 - import_playbook: rfd-fyi/main.yml
 - import_playbook: romm/main.yml
