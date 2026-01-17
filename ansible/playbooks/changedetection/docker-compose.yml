@@ -1,6 +1,6 @@
 services:
   changedetection:
-    image: dgtlmoon/changedetection.io:0.52.2
+    image: dgtlmoon/changedetection.io:0.52.6
     container_name: changedetection
     ports:
       - 5000:5000
