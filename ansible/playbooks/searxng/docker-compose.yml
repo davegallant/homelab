@@ -41,7 +41,7 @@ services:
         max-size: "1m"
         max-file: "1"
   newt:
-    image: fosrl/newt:1.8.1
+    image: fosrl/newt:1.9.0
     container_name: newt
     restart: unless-stopped
     network_mode: host
