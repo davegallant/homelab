@@ -1,6 +1,6 @@
 services:
   archivebox:
-    image: archivebox/archivebox:0.7.3
+    image: docker.io/archivebox/archivebox:0.7.3
     container_name: archivebox
     command: server --quick-init 0.0.0.0:8000
     restart: always
