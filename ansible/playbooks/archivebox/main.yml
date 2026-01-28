@@ -3,15 +3,15 @@
   hosts: archivebox
   tasks:
     - ansible.builtin.include_tasks:
-        file: ../../tasks/install-docker.yml
+        file: ../../tasks/install-podman.yml
 
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-common-packages.yml
 
-    - name: Copy docker-compose.yml
+    - name: Copy compose.yml
       ansible.builtin.copy:
-        src: docker-compose.yml
-        dest: "~/docker-compose.yml"
+        src: compose.yml
+        dest: "~/compose.yml"
         mode: "0640"
 
     - name: Enable UFW
@@ -19,17 +19,14 @@
         state: enabled
         policy: deny
 
-    - name: Pull and start containers
-      community.docker.docker_compose_v2:
-        project_src: .
-        pull: always
+    - name: Start podman-compose services
+      ansible.builtin.command:
+        cmd: podman-compose up -d --pull-always
 
-    - name: Prune docker images
-      community.docker.docker_prune:
-        containers: false
-        images: true
-        images_filters:
-          dangling: false
-        networks: false
-        volumes: false
-        builder_cache: false
+    - name: Prune containers
+      ansible.builtin.command:
+        cmd: podman container prune -f
+
+    - name: Remove unused images
+      ansible.builtin.command:
+        cmd: podman image prune -af
