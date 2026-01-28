@@ -19,14 +19,5 @@
         state: enabled
         policy: deny
 
-    - name: Start podman-compose services
-      ansible.builtin.command:
-        cmd: podman-compose up -d --pull-always
-
-    - name: Prune containers
-      ansible.builtin.command:
-        cmd: podman container prune -f
-
-    - name: Remove unused images
-      ansible.builtin.command:
-        cmd: podman image prune -af
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/podman-pull.yml
