@@ -1,6 +1,6 @@
 services:
   loki:
-    image: grafana/loki:3.6.4
+    image: docker.io/grafana/loki:3.6.4
     container_name: loki
     user: '0'
     restart: always
@@ -11,16 +11,8 @@ services:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
     command: -config.file=/etc/loki/local-config.yaml
 
-  promtail:
-    image: grafana/promtail:3.6.4
-    container_name: promtail
-    volumes:
-      - /var/log:/var/log
-    restart: always
-    command: -config.file=/etc/promtail/config.yml
-
   grafana:
-    image: grafana/grafana:12.3.2
+    image: docker.io/grafana/grafana:12.3.2
     container_name: grafana
     environment:
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
