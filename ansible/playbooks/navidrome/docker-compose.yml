@@ -3,8 +3,8 @@ services:
     container_name: navidrome
     image: docker.io/deluan/navidrome:0.59.0
     user: 1000:1000 # should be owner of volumes
-    ports:
-      - "4533:4533"
+    networks:
+      - navidrome
     restart: always
     environment:
       - ND_ENABLEINSIGHTSCOLLECTOR=false
@@ -18,8 +18,11 @@ services:
     image: docker.io/fosrl/newt:1.9.0
     container_name: newt
     restart: unless-stopped
-    network_mode: host
+    networks:
+      - navidrome
     environment:
       - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
       - NEWT_ID={{ navidrome_newt_id }}
       - NEWT_SECRET={{ navidrome_newt_secret }}
+networks:
+  navidrome:

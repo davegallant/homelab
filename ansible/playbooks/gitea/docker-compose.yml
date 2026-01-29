@@ -2,8 +2,8 @@ services:
   gitea:
     image: docker.io/gitea/gitea:1.25.4
     container_name: gitea
-    ports:
-      - 3000:3000
+    networks:
+      - gitea
     environment:
       - USER_UID=1000
       - USER_GID=1000
@@ -32,8 +32,11 @@ services:
     image: docker.io/fosrl/newt:1.9.0
     container_name: newt
     restart: unless-stopped
-    network_mode: host
+    networks:
+      - gitea
     environment:
       - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
       - NEWT_ID={{ gitea_newt_id }}
       - NEWT_SECRET={{ gitea_newt_secret }}
+networks:
+  gitea:

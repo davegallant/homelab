@@ -4,8 +4,8 @@ services:
     # https://hub.docker.com/r/searxng/searxng/tags
     image: docker.io/searxng/searxng:2026.1.29-15133c2f2
     restart: always
-    ports:
-      - "127.0.0.1:8080:8080"
+    networks:
+      - searxng
     volumes:
       - ./searxng:/etc/searxng:rw
     environment:
@@ -27,6 +27,8 @@ services:
     image: docker.io/valkey/valkey:9-alpine
     command: valkey-server --save 30 1 --loglevel warning
     restart: always
+    networks:
+      - searxng
     volumes:
       - valkey-data2:/data
     cap_drop:
@@ -44,7 +46,8 @@ services:
     image: docker.io/fosrl/newt:1.9.0
     container_name: newt
     restart: unless-stopped
-    network_mode: host
+    networks:
+      - searxng
     environment:
       - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
       - NEWT_ID={{ searxng_newt_id }}
@@ -52,3 +55,5 @@ services:
 
 volumes:
   valkey-data2:
+networks:
+  searxng:
