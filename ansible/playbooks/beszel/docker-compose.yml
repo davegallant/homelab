@@ -1,6 +1,6 @@
 services:
   beszel:
-    image: henrygd/beszel:0.18.2
+    image: docker.io/henrygd/beszel:0.18.2
     container_name: beszel
     ports:
       - 8090:8090

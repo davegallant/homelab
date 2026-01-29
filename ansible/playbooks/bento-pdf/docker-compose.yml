@@ -1,16 +1,19 @@
 services:
   bentopdf:
-    image: bentopdf/bentopdf:v1.15.3
+    image: docker.io/bentopdf/bentopdf:v1.15.3
     container_name: bentopdf
     restart: always
-    ports:
-      - '8080:8080'
+    networks:
+      - bentopdf
   newt:
     image: docker.io/fosrl/newt:1.9.0
     container_name: newt
     restart: unless-stopped
-    network_mode: host
+    networks:
+      - bentopdf
     environment:
       - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
       - NEWT_ID={{ bentopdf_newt_id }}
       - NEWT_SECRET={{ bentopdf_newt_secret }}
+networks:
+   bentopdf:

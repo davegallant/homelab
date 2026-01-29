@@ -62,8 +62,9 @@
     mode: '0644'
     backup: yes
 
-- name: Restart alloy
+- name: Enable and start alloy
   systemd:
     name: alloy
     daemon_reload: yes
+    enabled: true
     state: restarted
