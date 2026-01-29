@@ -1,6 +1,6 @@
 services:
   gitea:
-    image: gitea/gitea:1.25.4
+    image: docker.io/gitea/gitea:1.25.4
     container_name: gitea
     ports:
       - 3000:3000

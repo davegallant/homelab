@@ -1,7 +1,7 @@
 services:
   navidrome:
     container_name: navidrome
-    image: deluan/navidrome:0.59.0
+    image: docker.io/deluan/navidrome:0.59.0
     user: 1000:1000 # should be owner of volumes
     ports:
       - "4533:4533"

@@ -2,7 +2,7 @@ services:
   searxng:
     container_name: searxng
     # https://hub.docker.com/r/searxng/searxng/tags
-    image: searxng/searxng:2025.11.14-1e200a110
+    image: docker.io/searxng/searxng:2025.11.14-1e200a110
     restart: always
     ports:
       - "127.0.0.1:8080:8080"
@@ -24,7 +24,7 @@ services:
         max-file: "1"
   redis:
     container_name: redis
-    image: valkey/valkey:9-alpine
+    image: docker.io/valkey/valkey:9-alpine
     command: valkey-server --save 30 1 --loglevel warning
     restart: always
     volumes:

@@ -1,7 +1,7 @@
 
 services:
   miniflux:
-    image: miniflux/miniflux:2.2.16
+    image: docker.io/miniflux/miniflux:2.2.16
     container_name: miniflux
     ports:
       - 8080:8080
@@ -16,7 +16,7 @@ services:
       - ADMIN_PASSWORD={{ miniflux_admin_password }}
       - BASE_URL=https://miniflux.snake-cloud.ts.net
   miniflux-db:
-    image: postgres:15.15
+    image: docker.io/postgres:15.15
     container_name: miniflux-db
     environment:
       - POSTGRES_USER={{ miniflux_db_user }}
