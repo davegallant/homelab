@@ -8,6 +8,9 @@
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-common-packages.yml
 
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-alloy.yml
+
     - name: Copy docker-compose.yml
       ansible.builtin.copy:
         src: docker-compose.yml
