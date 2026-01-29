@@ -3,6 +3,8 @@ services:
     image: docker.io/jellyfin/jellyfin:10.11.6
     container_name: jellyfin
     user: 1000:1000
+    networks:
+      - jellyfin
     group_add:
       - "108"
     environment:
