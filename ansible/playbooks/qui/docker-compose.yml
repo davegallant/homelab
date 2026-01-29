@@ -1,6 +1,6 @@
 services:
   qui:
-    image: ghcr.io/autobrr/qui:v1.13.0
+    image: ghcr.io/autobrr/qui:v1.13.1
     container_name: qui
     restart: unless-stopped
     ports:
