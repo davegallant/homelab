@@ -1,13 +1,12 @@
 services:
   calibre-web:
-    image: linuxserver/calibre-web:0.6.25
+    image: docker.io/linuxserver/calibre-web:0.6.25
     container_name: calibre-web
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Etc/UTC
       - DOCKER_MODS=linuxserver/mods:universal-calibre #optional
-      - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #optional
     volumes:
       - ./config:/config
       - /mnt/media/Calibre:/books

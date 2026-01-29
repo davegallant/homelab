@@ -1,11 +1,11 @@
 services:
   invidious:
     # https://quay.io/repository/invidious/invidious?tab=tags
-    image: quay.io/invidious/invidious:2025.09.30-710b3f2
+    image: quay.io/invidious/invidious:2026.01.19-7e36cfb
     container_name: invidious
     restart: always
-    ports:
-      - "0.0.0.0:3000:3000"
+    networks:
+      - invidious
     environment:
       # Please read the following file for a comprehensive list of all available
       # configuration options and their associated syntax:
@@ -31,6 +31,8 @@ services:
     image: docker.io/library/postgres:14
     container_name: invidious-db
     restart: always
+    networks:
+      - invidious
     volumes:
       - ./postgresdata:/var/lib/postgresql/data
     environment:
@@ -43,8 +45,11 @@ services:
     image: docker.io/fosrl/newt:1.9.0
     container_name: newt
     restart: unless-stopped
-    network_mode: host
+    networks:
+      - invidious
     environment:
       - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
       - NEWT_ID={{ invidious_newt_id }}
       - NEWT_SECRET={{ invidious_newt_secret }}
+networks:
+  invidious:
