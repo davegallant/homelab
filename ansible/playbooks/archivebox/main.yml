@@ -3,15 +3,16 @@
   hosts: archivebox
   tasks:
     - ansible.builtin.include_tasks:
-        file: ../../tasks/install-podman.yml
-
-    - ansible.builtin.include_tasks:
         file: ../../tasks/install-common-packages.yml
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-docker.yml
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-alloy.yml
 
     - name: Copy compose.yml
       ansible.builtin.copy:
-        src: compose.yml
-        dest: "~/compose.yml"
+        src: docker-compose.yml
+        dest: "~/docker-compose.yml"
         mode: "0640"
 
     - name: Enable UFW
@@ -20,4 +21,4 @@
         policy: deny
 
     - ansible.builtin.include_tasks:
-        file: ../../tasks/podman-pull.yml
+        file: ../../tasks/docker-pull.yml

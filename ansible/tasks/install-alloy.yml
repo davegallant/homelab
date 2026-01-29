@@ -1,0 +1,69 @@
+- name: Install gpg
+  apt:
+    name:
+      - gpg
+    state: present
+    update_cache: yes
+
+- name: Ensure /etc/apt/keyrings directory exists
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download Grafana GPG key
+  get_url:
+    url: https://apt.grafana.com/gpg-full.key
+    dest: /etc/apt/keyrings/grafana.asc
+    mode: '0644'
+
+- name: Add Grafana APT repository
+  apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/grafana.asc] https://apt.grafana.com stable main"
+    filename: grafana
+    state: present
+
+- name: Install alloy
+  apt:
+    name:
+      - alloy
+    state: present
+    update_cache: yes
+
+- name: Create /etc/alloy directory
+  file:
+    path: /etc/alloy
+    state: directory
+    mode: '0755'
+
+- name: Deploy Alloy configuration file
+  copy:
+    dest: /etc/alloy/config.alloy
+    content: |
+      loki.source.journal "all" {
+        forward_to = [loki.relabel.add_labels.receiver]
+        path = "/var/log/journal"
+        labels = { job = "journald" }
+      }
+
+      loki.relabel "add_labels" {
+        forward_to = [loki.write.loki.receiver]
+
+        rule {
+          target_label  = "host"
+          replacement   = constants.hostname
+        }
+      }
+      loki.write "loki" {
+        endpoint {
+          url = "{{ loki_url }}"
+        }
+      }
+    mode: '0644'
+    backup: yes
+
+- name: Restart alloy
+  systemd:
+    name: alloy
+    daemon_reload: yes
+    state: restarted

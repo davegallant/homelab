@@ -2,12 +2,11 @@ services:
   audiobookshelf:
     image: ghcr.io/advplyr/audiobookshelf:2.32.1
     container_name: audiobookshelf
-    ports:
-      - 13378:80
+    networks:
+      - audiobookshelf
     volumes:
       - /mnt/media/Audiobooks:/audiobooks
       - /mnt/media/Podcasts:/podcasts
-      # The metadata directory can be stored anywhere on your computer
       - ./metadata:/metadata
       - ./config:/config
     restart: always
@@ -15,8 +14,11 @@ services:
     image: docker.io/fosrl/newt:1.9.0
     container_name: newt
     restart: unless-stopped
-    network_mode: host
+    networks:
+      - audiobookshelf
     environment:
       - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
       - NEWT_ID={{ audiobookshelf_newt_id }}
       - NEWT_SECRET={{ audiobookshelf_newt_secret }}
+networks:
+   audiobookshelf:
