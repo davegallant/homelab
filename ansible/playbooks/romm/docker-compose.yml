@@ -1,6 +1,6 @@
 services:
   romm:
-    image: rommapp/romm:4.6.1
+    image: docker.io/rommapp/romm:4.6.1
     container_name: romm
     restart: always
     environment:
@@ -27,7 +27,7 @@ services:
         restart: true
 
   romm-db:
-    image: mariadb:12.1.2
+    image: docker.io/mariadb:12.1.2
     container_name: romm-db
     restart: always
     environment:
