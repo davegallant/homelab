@@ -26,31 +26,11 @@
       - docker-compose-plugin
     state: latest
 
-- name: Install loki docker driver
-  community.docker.docker_plugin:
-    plugin_name: grafana/loki-docker-driver:3.4.2-amd64
-    alias: loki
-    state: present
-
-- name: Enable loki docker driver
-  community.docker.docker_plugin:
-    plugin_name: loki
-    state: enable
-
 - name: Write docker daemon json
   ansible.builtin.copy:
     content: |
       {
-        "debug" : true,
-        "log-driver": "loki",
-        "log-opts": {
-            "loki-url": "{{ loki_url }}",
-            "loki-batch-size": "400",
-            "mode": "non-blocking",
-            "loki-retries": "2",
-            "loki-max-backoff":"800ms",
-            "loki-timeout":"1s"
-         }
+        "log-driver": "journald"
       }
     dest: /etc/docker/daemon.json
     mode: "0644"
