@@ -40,7 +40,7 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
   newt:
-    image: fosrl/newt:1.9.0
+    image: docker.io/fosrl/newt:1.9.0
     container_name: newt
     restart: unless-stopped
     network_mode: host
