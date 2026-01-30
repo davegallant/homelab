@@ -1,6 +1,6 @@
 services:
   bentopdf:
-    image: docker.io/bentopdf/bentopdf:v1.15.3
+    image: ghcr.io/alam00000/bentopdf:v1.16.1
     container_name: bentopdf
     restart: always
     networks:
