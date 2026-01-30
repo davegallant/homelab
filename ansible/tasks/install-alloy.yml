@@ -40,21 +40,27 @@
   copy:
     dest: /etc/alloy/config.alloy
     content: |
-      loki.source.journal "all" {
-        forward_to = [loki.relabel.add_labels.receiver]
-        path = "/var/log/journal"
-        labels = { job = "journald" }
-      }
-
-      loki.relabel "add_labels" {
-        forward_to = [loki.write.loki.receiver]
+      loki.relabel "journal" {
+        forward_to = []
 
         rule {
           target_label  = "host"
           replacement   = constants.hostname
         }
+
+        rule {
+          source_labels = ["__journal__systemd_unit"]
+          target_label  = "unit"
+        }
       }
-      loki.write "loki" {
+
+      loki.source.journal "read"  {
+        forward_to    = [loki.write.endpoint.receiver]
+        relabel_rules = loki.relabel.journal.rules
+        labels        = {component = "loki.source.journal"}
+      }
+
+      loki.write "endpoint" {
         endpoint {
           url = "{{ loki_url }}"
         }
