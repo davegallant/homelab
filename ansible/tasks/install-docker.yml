@@ -25,12 +25,3 @@
       - docker-ce-cli
       - docker-compose-plugin
     state: latest
-
-- name: Write docker daemon json
-  ansible.builtin.copy:
-    content: |
-      {
-        "log-driver": "journald"
-      }
-    dest: /etc/docker/daemon.json
-    mode: "0644"

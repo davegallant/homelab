@@ -30,6 +30,17 @@
     state: present
     update_cache: yes
 
+- name: Ensure docker group exists
+  ansible.builtin.group:
+    name: docker
+    state: present
+
+- name: Add alloy user to docker group
+  ansible.builtin.user:
+    name: alloy
+    groups: docker
+    append: yes
+
 - name: Create /etc/alloy directory
   file:
     path: /etc/alloy
@@ -58,6 +69,32 @@
         forward_to    = [loki.write.endpoint.receiver]
         relabel_rules = loki.relabel.journal.rules
         labels        = {component = "loki.source.journal"}
+      }
+
+      loki.relabel "docker" {
+        forward_to = []
+
+        rule {
+          target_label  = "host"
+          replacement   = constants.hostname
+        }
+        rule {
+          source_labels = ["__meta_docker_container_name"]
+          regex         = "/(.*)"
+          target_label  = "container"
+        }
+      }
+
+      discovery.docker "linux" {
+        host = "unix:///var/run/docker.sock"
+      }
+
+      loki.source.docker "default" {
+        host       = "unix:///var/run/docker.sock"
+        targets    = discovery.docker.linux.targets
+        labels     = {"app" = "docker"}
+        relabel_rules = loki.relabel.docker.rules
+        forward_to = [loki.write.endpoint.receiver]
       }
 
       loki.write "endpoint" {
