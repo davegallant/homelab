@@ -45,3 +45,4 @@ volumes:
     name: miniflux-db
 networks:
   miniflux:
+    name: miniflux

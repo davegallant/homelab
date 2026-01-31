@@ -49,3 +49,4 @@ volumes:
   umami-db-data:
 networks:
   umami:
+    name: umami

@@ -29,3 +29,4 @@ services:
       - NEWT_SECRET={{ jellyfin_newt_secret }}
 networks:
   jellyfin:
+    name: jellyfin

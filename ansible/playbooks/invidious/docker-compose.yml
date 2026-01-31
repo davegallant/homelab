@@ -74,3 +74,4 @@ services:
       - NEWT_SECRET={{ invidious_newt_secret }}
 networks:
   invidious:
+    name: invidious

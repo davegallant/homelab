@@ -21,3 +21,4 @@ services:
       - NEWT_SECRET={{ gotify_newt_secret }}
 networks:
   gotify:
+    name: gotify
