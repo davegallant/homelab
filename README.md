@@ -14,7 +14,7 @@ All hosts have tailscale installed on them, with [Tailscale SSH](https://tailsca
 
 ## Logging
 
-Each LXC runs an instance of [Alloy](https://github.com/grafana/alloy) managed by systemd alloying for all journald and docker logs to be collected, labelled and sent to Grafana Loki.
+Each LXC runs an instance of [Alloy](https://github.com/grafana/alloy) managed by systemd allowing for all journald and docker logs to be collected, labelled and sent to Grafana Loki.
 
 ## Maintenance
 
