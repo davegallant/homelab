@@ -40,3 +40,4 @@ services:
       - NEWT_SECRET={{ gitea_newt_secret }}
 networks:
   gitea:
+    name: gitea

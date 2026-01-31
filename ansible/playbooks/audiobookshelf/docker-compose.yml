@@ -22,3 +22,4 @@ services:
       - NEWT_SECRET={{ audiobookshelf_newt_secret }}
 networks:
    audiobookshelf:
+     name: audiobookshelf

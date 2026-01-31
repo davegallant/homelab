@@ -28,3 +28,4 @@ volumes:
   dispatcharr_data:
 networks:
   dispatcharr:
+    name: dispatcharr
