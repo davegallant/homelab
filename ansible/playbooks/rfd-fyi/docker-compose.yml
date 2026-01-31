@@ -2,11 +2,26 @@ services:
   rfd-fyi-frontend:
     image: ghcr.io/davegallant/rfd-fyi-frontend
     container_name: rfd-fyi-frontend
-    network_mode: host
+    networks:
+      - rfd-fyi
     restart: unless-stopped
   rfd-fyi-backend:
     image: ghcr.io/davegallant/rfd-fyi-backend
     container_name: rfd-fyi-backend
-    ports:
-      - 8080:8080
     restart: unless-stopped
+    networks:
+      - rfd-fyi
+  newt:
+    image: docker.io/fosrl/newt:1.9.0
+    container_name: newt
+    restart: unless-stopped
+    networks:
+      - rfd-fyi
+    environment:
+      - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
+      - NEWT_ID={{ rfdfyi_newt_id }}
+      - NEWT_SECRET={{ rfdfyi_newt_secret }}
+
+networks:
+  rfd-fyi:
+    name: rfd-fyi
