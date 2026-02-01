@@ -1,0 +1,14 @@
+---
+- name: Install openclaw
+  hosts: openclaw
+  tasks:
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-common-packages.yml
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-alloy.yml
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+        policy: deny
