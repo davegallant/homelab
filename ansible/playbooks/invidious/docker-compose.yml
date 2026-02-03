@@ -29,7 +29,7 @@ services:
 
   companion:
       # https://quay.io/repository/invidious/invidious-companion?tab=tags
-      image: quay.io/invidious/invidious-companion:master-05cd859
+      image: quay.io/invidious/invidious-companion:master-607cb8d
       container_name: invidious-companion
       environment:
         - SERVER_SECRET_KEY={{ invidious_companion_secret_key }}
