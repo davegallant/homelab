@@ -6,4 +6,11 @@
       - neovim
       - ripgrep
       - ufw
+      - unattended-upgrades
     state: latest
+
+- name: Enable unattended-upgrades
+  ansible.builtin.systemd_service:
+    name: unattended-upgrades
+    enabled: true
+    state: started
