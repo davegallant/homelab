@@ -1,6 +1,6 @@
 services:
   loki:
-    image: docker.io/grafana/loki:3.6.4
+    image: docker.io/grafana/loki:3.6.5
     container_name: loki
     user: '0'
     restart: always
