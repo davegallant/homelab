@@ -25,6 +25,7 @@
 - import_playbook: maloja/main.yml
 - import_playbook: miniflux/main.yml
 - import_playbook: navidrome/main.yml
+- import_playbook: paperless-ngx/main.yml
 - import_playbook: prowlarr/main.yml
 - import_playbook: qbittorrent/main.yml
 - import_playbook: qui/main.yml

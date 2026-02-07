@@ -1,0 +1,73 @@
+services:
+  paperless-redis:
+    image: docker.io/library/redis:8
+    container_name: paperless-redis
+    restart: unless-stopped
+    networks:
+      - paperless
+    volumes:
+      - ./redis-data:/data
+  paperless-ngx:
+    image: docker.io/paperlessngx/paperless-ngx:2.20.6
+    container_name: paperless-ngx
+    restart: always
+    networks:
+      - paperless
+    environment:
+      - PAPERLESS_SECRET_KEY={{ paperless_secret_key }}
+      - PAPERLESS_ADMIN_USER={{ paperless_admin_user }}
+      - PAPERLESS_ADMIN_PASSWORD={{ paperless_admin_password }}
+      - PAPERLESS_URL={{ paperless_url }}
+      - PAPERLESS_ALLOWED_HOSTS=https://{{ paperless_url }}
+      - PAPERLESS_CSRF_TRUSTED_ORIGINS=https://{{ paperless_url }}
+      - PAPERLESS_CORS_ALLOWED_ORIGINS=https://{{ paperless_url }}
+      - PAPERLESS_TIME_ZONE=UTC
+      - PAPERLESS_DBENGINE=postgresql
+      - POSTGRES_DB=paperless
+      - POSTGRES_USER={{ paperless_db_user }}
+      - POSTGRES_PASSWORD={{ paperless_db_password }}
+      - POSTGRES_HOST=paperless-db
+      - PAPERLESS_REDIS=redis://paperless-redis:6379
+    volumes:
+      - ./data:/data
+      - ./consume:/consume
+      - ./media:/media
+      - ./export:/export
+    depends_on:
+      - paperless-db
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "-o", "/dev/null", "-w", "%{http_code}", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  paperless-db:
+    image: docker.io/library/postgres:15-alpine
+    container_name: paperless-db
+    restart: always
+    networks:
+      - paperless
+    environment:
+      - POSTGRES_DB=paperless
+      - POSTGRES_USER={{ paperless_db_user }}
+      - POSTGRES_PASSWORD={{ paperless_db_password }}
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+
+  newt:
+    image: docker.io/fosrl/newt:1.9.0
+    container_name: paperless-newt
+    restart: unless-stopped
+    networks:
+      - paperless
+    environment:
+      - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
+      - NEWT_ID={{ paperless_newt_id }}
+      - NEWT_SECRET={{ paperless_newt_secret }}
+
+networks:
+  paperless:
+    name: paperless
