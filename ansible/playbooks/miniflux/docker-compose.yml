@@ -32,7 +32,7 @@ services:
       start_period: 30s
   newt:
     image: docker.io/fosrl/newt:1.9.0
-    container_name: newt
+    container_name: newt-miniflux
     restart: unless-stopped
     networks:
       - miniflux

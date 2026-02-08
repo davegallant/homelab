@@ -64,7 +64,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
   newt:
     image: docker.io/fosrl/newt:1.9.0
-    container_name: newt
+    container_name: newt-invidious
     restart: unless-stopped
     networks:
       - invidious
