@@ -1,0 +1,32 @@
+services:
+  redlib:
+    # https://quay.io/repository/redlib/redlib?tab=tags
+    image: quay.io/redlib/redlib:sha-ba98178
+    container_name: redlib
+    user: nobody
+    networks:
+      - redlib
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      - REDLIB_DEFAULT_THEME=system
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "--tries=1", "http://localhost:8080/settings"]
+      interval: 5m
+      timeout: 3s
+  newt:
+    image: docker.io/fosrl/newt:1.9.0
+    container_name: newt-redlib
+    restart: unless-stopped
+    networks:
+      - redlib
+    environment:
+      - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
+      - NEWT_ID={{ redlib_newt_id }}
+      - NEWT_SECRET={{ redlib_newt_secret }}
+networks:
+  redlib:
+    name: redlib
