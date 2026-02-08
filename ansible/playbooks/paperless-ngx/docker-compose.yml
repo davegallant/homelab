@@ -18,9 +18,6 @@ services:
       - PAPERLESS_ADMIN_USER={{ paperless_admin_user }}
       - PAPERLESS_ADMIN_PASSWORD={{ paperless_admin_password }}
       - PAPERLESS_URL={{ paperless_url }}
-      - PAPERLESS_ALLOWED_HOSTS=https://{{ paperless_url }}
-      - PAPERLESS_CSRF_TRUSTED_ORIGINS=https://{{ paperless_url }}
-      - PAPERLESS_CORS_ALLOWED_ORIGINS=https://{{ paperless_url }}
       - PAPERLESS_TIME_ZONE=UTC
       - PAPERLESS_DBENGINE=postgresql
       - POSTGRES_DB=paperless
