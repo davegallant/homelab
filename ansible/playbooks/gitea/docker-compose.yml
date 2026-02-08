@@ -30,7 +30,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
   newt:
     image: docker.io/fosrl/newt:1.9.0
-    container_name: newt
+    container_name: newt-gitea
     restart: unless-stopped
     networks:
       - gitea
