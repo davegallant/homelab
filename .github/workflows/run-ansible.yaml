@@ -59,6 +59,7 @@ jobs:
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
           ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+          ANSIBLE_PYTHON_INTERPRETER: /usr/bin/python3.12
         run: |
           echo "$ANSIBLE_VAULT_PASSWORD" > .vault_pass
           ansible-playbook -i ansible/inventory ansible/playbooks/${{ matrix.playbook }}/main.yml --vault-password-file .vault_pass
