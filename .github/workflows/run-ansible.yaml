@@ -7,26 +7,70 @@ on:
     - cron: "@daily"
 
 jobs:
-  run-ansible-playbook:
+  run-ansible:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        playbook:
+          - archivebox
+          - audiobookshelf
+          - bedrock
+          - bento-pdf
+          - beszel
+          - calibre-web
+          - changedetection
+          - dispatcharr
+          - excalidraw
+          - gatus
+          - gitea
+          - gotify
+          - grafana
+          - homepage
+          - igotify
+          - immich
+          - invidious
+          - jellyfin
+          - jellyseerr
+          - kiwix
+          - lidarr
+          - lubelogger
+          - maloja
+          - miniflux
+          - navidrome
+          - paperless-ngx
+          - prowlarr
+          - qbittorrent
+          - qui
+          - radarr
+          - rfd-fyi
+          - redlib
+          - romm
+          - searxng
+          - sonarr
+          - speedtest-tracker
+          - umami
+          - vaultwarden
+          - watchyourlan
+      fail-fast: false
     steps:
       - name: Check out repository code
         uses: actions/checkout@v6
-      - name: Install ansible
-        run: |
-          apt update && apt install python3-pip -y
-          python3 -m pip install -r ansible/requirements.txt
-      - name: Install ansible collections
-        run: |
-          ansible-galaxy collection install -r ansible/requirements.yml --force
-      - name: Run Playbook
+      - name: Run playbook
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
           ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
         run: |
           echo "$ANSIBLE_VAULT_PASSWORD" > .vault_pass
-          ansible-playbook -i ansible/inventory ansible/playbooks/main.yml --vault-password-file .vault_pass
+          ansible-playbook -i ansible/inventory ansible/playbooks/${{ matrix.playbook }}/main.yml --vault-password-file .vault_pass
+
+  notify-failure:
+    needs: run-ansible
+    runs-on: ubuntu-latest
+    if: failure()
+    steps:
       - name: Send failure notification
-        if: always() && failure()
-        run:
-          curl -X POST "${{ secrets.GOTIFY_URL }}/message?token=${{ secrets.GOTIFY_TOKEN }}" -F "title=gitea job ${{ github.repository }} failed!" -F "message=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}" -F "priority=5"
+        run: |
+          curl -X POST "${{ secrets.GOTIFY_URL }}/message?token=${{ secrets.GOTIFY_TOKEN }}" \
+            -F "title=Ansible playbooks failed in ${{ github.repository }}!" \
+            -F "message=One or more playbooks failed. Check workflow details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}" \
+            -F "priority=5"
