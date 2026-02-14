@@ -1,6 +1,6 @@
 services:
   gotify:
-    image: docker.io/gotify/server:2.8.0
+    image: docker.io/gotify/server:2.9.0
     container_name: gotify
     networks:
       - gotify
