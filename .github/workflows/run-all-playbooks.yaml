@@ -1,4 +1,4 @@
-name: Run ansible
+name: Run all playbooks
 on:
   push:
     branches:
@@ -9,6 +9,7 @@ on:
 jobs:
   run-ansible:
     runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.host == '' }}
     strategy:
       matrix:
         playbook:
