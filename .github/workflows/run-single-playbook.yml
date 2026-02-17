@@ -1,0 +1,35 @@
+name: Run single playbook
+on:
+  workflow_dispatch:
+    inputs:
+      host:
+        description: "Name of the host to execute"
+        required: false
+        default: ""
+
+jobs:
+  run-ansible:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.host != '' }}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v6
+      - name: Run specified playbook
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: False
+          ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+          ANSIBLE_PYTHON_INTERPRETER: /usr/bin/python3.12
+        run: |
+          echo "$ANSIBLE_VAULT_PASSWORD" > .vault_pass
+          ansible-playbook -i ansible/inventory ansible/playbooks/${{ github.event.inputs.host }}/main.yml --vault-password-file .vault_pass
+  notify-failure:
+    needs: run-ansible
+    runs-on: ubuntu-latest
+    if: failure()
+    steps:
+      - name: Send failure notification
+        run: |
+          curl -X POST "${{ secrets.GOTIFY_URL }}/message?token=${{ secrets.GOTIFY_TOKEN }}" \
+            -F "title=Ansible playbooks failed in ${{ github.repository }}!" \
+            -F "message=One or more playbooks failed. Check workflow details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}" \
+            -F "priority=5"
