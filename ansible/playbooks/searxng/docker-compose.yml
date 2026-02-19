@@ -2,7 +2,7 @@ services:
   searxng:
     container_name: searxng
     # https://hub.docker.com/r/searxng/searxng/tags
-    image: docker.io/searxng/searxng:2026.1.29-15133c2f2
+    image: docker.io/searxng/searxng:2026.2.19-17544140f
     restart: always
     networks:
       - searxng
