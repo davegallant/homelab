@@ -15,7 +15,7 @@ services:
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
   newt:
-    image: docker.io/fosrl/newt:1.9.0
+    image: docker.io/fosrl/newt:1.9.1
     container_name: newt-dispatcharr
     restart: unless-stopped
     networks:
