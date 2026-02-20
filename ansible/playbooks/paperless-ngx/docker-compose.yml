@@ -55,7 +55,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
 
   newt:
-    image: docker.io/fosrl/newt:1.9.0
+    image: docker.io/fosrl/newt:1.9.1
     container_name: newt-paperless
     restart: unless-stopped
     networks:

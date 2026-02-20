@@ -15,7 +15,7 @@ services:
       - ./data:/data
       - /music:/music:ro
   newt:
-    image: docker.io/fosrl/newt:1.9.0
+    image: docker.io/fosrl/newt:1.9.1
     container_name: newt-navidrome
     restart: unless-stopped
     networks:

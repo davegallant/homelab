@@ -6,7 +6,7 @@ services:
     networks:
       - bentopdf
   newt:
-    image: docker.io/fosrl/newt:1.9.0
+    image: docker.io/fosrl/newt:1.9.1
     container_name: newt-bentopdf
     restart: unless-stopped
     networks:
