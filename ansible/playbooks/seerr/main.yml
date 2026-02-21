@@ -1,6 +1,6 @@
 ---
-- name: Install jellyseerr
-  hosts: jellyseerr
+- name: Install seerr
+  hosts: seerr
   tasks:
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-docker.yml

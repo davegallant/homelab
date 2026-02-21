@@ -31,7 +31,7 @@ jobs:
           - immich
           - invidious
           - jellyfin
-          - jellyseerr
+          - seerr
           - kiwix
           - lidarr
           - lubelogger
