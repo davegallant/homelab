@@ -1,6 +1,6 @@
 services:
   qbittorrent:
-    image: docker.io/linuxserver/qbittorrent:5.1.4
+    image: docker.io/linuxserver/qbittorrent:20.04.1
     container_name: qbittorrent
     environment:
       - PUID=1000
