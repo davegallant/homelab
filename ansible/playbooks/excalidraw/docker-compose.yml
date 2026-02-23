@@ -1,7 +1,0 @@
-services:
-  excalidraw:
-    image: docker.io/excalidraw/excalidraw:latest
-    container_name: excalidraw
-    ports:
-      - "3000:80"
-    restart: always
