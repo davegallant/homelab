@@ -1,16 +1,10 @@
 services:
-  rfd-fyi-frontend:
-    image: ghcr.io/davegallant/rfd-fyi-frontend
-    container_name: rfd-fyi-frontend
+  rfd-fyi:
+    image: ghcr.io/davegallant/rfd-fyi
+    container_name: rfd-fyi
     networks:
       - rfd-fyi
     restart: unless-stopped
-  rfd-fyi-backend:
-    image: ghcr.io/davegallant/rfd-fyi-backend
-    container_name: rfd-fyi-backend
-    restart: unless-stopped
-    networks:
-      - rfd-fyi
   newt:
     image: docker.io/fosrl/newt:1.9.1
     container_name: newt-rfdfyi
