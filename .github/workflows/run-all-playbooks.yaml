@@ -21,7 +21,6 @@ jobs:
           - calibre-web
           - changedetection
           - dispatcharr
-          - excalidraw
           - gatus
           - gitea
           - gotify
