@@ -10,7 +10,7 @@ services:
     security_opt:
       - no-new-privileges:true
   newt:
-    image: docker.io/fosrl/newt:1.9.1
+    image: docker.io/fosrl/newt:1.10.0
     container_name: newt-gotify
     restart: unless-stopped
     networks:

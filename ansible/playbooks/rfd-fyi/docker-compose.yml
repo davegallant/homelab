@@ -6,7 +6,7 @@ services:
       - rfd-fyi
     restart: unless-stopped
   newt:
-    image: docker.io/fosrl/newt:1.9.1
+    image: docker.io/fosrl/newt:1.10.0
     container_name: newt-rfdfyi
     restart: unless-stopped
     networks:
