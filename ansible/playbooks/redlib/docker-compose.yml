@@ -18,7 +18,7 @@ services:
       interval: 5m
       timeout: 3s
   newt:
-    image: docker.io/fosrl/newt:1.10.0
+    image: docker.io/fosrl/newt:1.10.1
     container_name: newt-redlib
     restart: unless-stopped
     networks:

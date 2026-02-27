@@ -43,7 +43,7 @@ services:
         max-size: "1m"
         max-file: "1"
   newt:
-    image: docker.io/fosrl/newt:1.10.0
+    image: docker.io/fosrl/newt:1.10.1
     container_name: newt-searxng
     restart: unless-stopped
     networks:

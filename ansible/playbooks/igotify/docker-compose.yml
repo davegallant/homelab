@@ -19,7 +19,7 @@ services:
       GOTIFY_URLS: {{ gotify_url }}
       GOTIFY_CLIENT_TOKENS: {{ igotify_gotify_client_tokens }}
   newt:
-    image: docker.io/fosrl/newt:1.10.0
+    image: docker.io/fosrl/newt:1.10.1
     container_name: newt-igotify
     restart: unless-stopped
     networks:
