@@ -1,6 +1,6 @@
 services:
   bedrock:
-    image: docker.io/itzg/minecraft-bedrock-server:2026.2.1
+    image: docker.io/itzg/minecraft-bedrock-server:2026.2.2
     container_name: bedrock
     environment:
       EULA: "TRUE"
