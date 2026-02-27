@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - "**/docker-compose.yml"
+  pull_request:
+    paths:
+      - "**/docker-compose.yml"
 
 jobs:
   update-readme:
