@@ -49,7 +49,7 @@ services:
         - no-new-privileges:true
 
   invidious-db:
-    image: docker.io/library/postgres:14
+    image: docker.io/library/postgres:18
     container_name: invidious-db
     restart: always
     networks:
