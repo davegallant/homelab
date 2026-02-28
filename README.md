@@ -18,7 +18,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/dgtlmoon/changedetection.io | 0.54.2 |
 | docker.io/fosrl/newt | 1.10.1 |
 | docker.io/gitea/gitea | 1.25.4 |
-| docker.io/gotify/server | 2.9.0 |
+| docker.io/gotify/server | 2.9.1 |
 | docker.io/grafana/grafana | 12.4.0 |
 | docker.io/grafana/loki | 3.6.7 |
 | docker.io/henrygd/beszel | 0.18.4 |
