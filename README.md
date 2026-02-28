@@ -57,7 +57,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | ghcr.io/immich-app/immich-machine-learning | v2.5.6 |
 | ghcr.io/immich-app/immich-server | v2.5.6 |
 | ghcr.io/kiwix/kiwix-serve | 3.8.1 |
-| ghcr.io/seerr-team/seerr | v3.0.1 |
+| ghcr.io/seerr-team/seerr | v3.1.0 |
 | ghcr.io/umami-software/umami | 3.0.3 |
 | lscr.io/linuxserver/prowlarr | 2.3.0 |
 | quay.io/invidious/invidious | 2026.02.16-e7f8b15 |
