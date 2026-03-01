@@ -4,6 +4,7 @@ services:
     container_name: bedrock
     environment:
       EULA: "TRUE"
+      LEVEL_NAME: "Bedrock level"
     ports:
       - "19132:19132/udp"
     volumes:
