@@ -24,7 +24,7 @@ services:
       - speedtest-db
   speedtest-db:
     container_name: speedtest-db
-    image: docker.io/postgres:15
+    image: docker.io/postgres:18
     restart: always
     environment:
       - POSTGRES_DB=speedtest_tracker
