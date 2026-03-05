@@ -16,7 +16,7 @@ services:
       - ADMIN_PASSWORD={{ miniflux_admin_password }}
       - BASE_URL=https://miniflux.snake-cloud.ts.net
   miniflux-db:
-    image: docker.io/postgres:15.17
+    image: docker.io/postgres:18.3
     container_name: miniflux-db
     networks:
       - miniflux
