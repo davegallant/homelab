@@ -51,7 +51,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | ghcr.io/androidseb25/igotify-notification-assist | v1.5.1.3 |
 | ghcr.io/autobrr/qui | v1.14.1 |
 | ghcr.io/davegallant/rfd-fyi | latest |
-| ghcr.io/dispatcharr/dispatcharr | 0.20.1 |
+| ghcr.io/dispatcharr/dispatcharr | 0.20.2 |
 | ghcr.io/gethomepage/homepage | v1.10.1 |
 | ghcr.io/hargata/lubelogger | v1.4.5 |
 | ghcr.io/immich-app/immich-machine-learning | v2.5.6 |
