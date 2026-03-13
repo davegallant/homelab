@@ -46,7 +46,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/twinproduction/gatus | v5.35.0 |
 | docker.io/valkey/valkey | 9 |
 | docker.io/vaultwarden/server | 1.35.4 |
-| ghcr.io/advplyr/audiobookshelf | 2.32.1 |
+| ghcr.io/advplyr/audiobookshelf | 2.33.0 |
 | ghcr.io/alam00000/bentopdf | 2.4.1 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.5.1.3 |
 | ghcr.io/autobrr/qui | v1.14.1 |
