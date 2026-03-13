@@ -13,13 +13,13 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 |-------|---------|
 | docker.io/aceberg/watchyourlan | v2 |
 | docker.io/archivebox/archivebox | 0.7.3 |
-| docker.io/caronc/apprise | v1.3.1 |
+| docker.io/caronc/apprise | v1.3.2 |
 | docker.io/deluan/navidrome | 0.60.3 |
-| docker.io/dgtlmoon/changedetection.io | 0.54.4 |
+| docker.io/dgtlmoon/changedetection.io | 0.54.5 |
 | docker.io/fosrl/newt | 1.10.2 |
-| docker.io/gitea/gitea | 1.25.4 |
+| docker.io/gitea/gitea | 1.25.5 |
 | docker.io/gotify/server | 2.9.1 |
-| docker.io/grafana/grafana | 12.4.0 |
+| docker.io/grafana/grafana | 12.4.1 |
 | docker.io/grafana/loki | 3.6.7 |
 | docker.io/henrygd/beszel | 0.18.4 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.3.0 |
@@ -33,7 +33,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/linuxserver/qbittorrent | 5.1.4 |
 | docker.io/linuxserver/radarr | 6.0.4 |
 | docker.io/linuxserver/sonarr | 4.0.16 |
-| docker.io/linuxserver/speedtest-tracker | 1.13.10 |
+| docker.io/linuxserver/speedtest-tracker | 1.13.11 |
 | docker.io/mariadb | 12.2.2 |
 | docker.io/miniflux/miniflux | 2.2.17 |
 | docker.io/paperlessngx/paperless-ngx | 2.20.10 |
@@ -46,8 +46,8 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/twinproduction/gatus | v5.35.0 |
 | docker.io/valkey/valkey | 9 |
 | docker.io/vaultwarden/server | 1.35.4 |
-| ghcr.io/advplyr/audiobookshelf | 2.32.1 |
 | ghcr.io/alam00000/bentopdf | 2.5.0 |
+| ghcr.io/advplyr/audiobookshelf | 2.33.0 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.5.1.3 |
 | ghcr.io/autobrr/qui | v1.14.1 |
 | ghcr.io/davegallant/rfd-fyi | latest |

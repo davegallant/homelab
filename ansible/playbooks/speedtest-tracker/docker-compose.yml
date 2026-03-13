@@ -18,7 +18,7 @@ services:
     volumes:
       - ./speedtest-app:/config
       - "./web:/etc/ssl/web"
-    image: docker.io/linuxserver/speedtest-tracker:1.13.10
+    image: docker.io/linuxserver/speedtest-tracker:1.13.11
     restart: always
     depends_on:
       - speedtest-db
@@ -33,7 +33,7 @@ services:
     volumes:
       - ./speedtest-db:/var/lib/postgresql/data
   apprise:
-    image: docker.io/caronc/apprise:v1.3.1
+    image: docker.io/caronc/apprise:v1.3.2
     container_name: apprise
     ports:
       - "8000:8000"
