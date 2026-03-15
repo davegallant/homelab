@@ -1,7 +1,7 @@
 
 services:
   miniflux:
-    image: docker.io/miniflux/miniflux:2.2.17
+    image: docker.io/miniflux/miniflux:2.2.18
     container_name: miniflux
     networks:
       - miniflux
