@@ -30,6 +30,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/library/redis | 8 |
 | docker.io/linuxserver/calibre-web | 0.6.26 |
 | docker.io/linuxserver/lidarr | 3.1.0 |
+| docker.io/linuxserver/prowlarr | 2.3.0 |
 | docker.io/linuxserver/qbittorrent | 5.1.4 |
 | docker.io/linuxserver/radarr | 6.0.4 |
 | docker.io/linuxserver/sonarr | 4.0.16 |
@@ -59,7 +60,6 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | ghcr.io/kiwix/kiwix-serve | 3.8.2 |
 | ghcr.io/seerr-team/seerr | v3.1.0 |
 | ghcr.io/umami-software/umami | 3.0.3 |
-| lscr.io/linuxserver/prowlarr | 2.3.0 |
 | quay.io/invidious/invidious | 2026.02.16-e7f8b15 |
 | quay.io/invidious/invidious-companion | master-6c76cab |
 | quay.io/redlib/redlib | sha-ba98178 |
