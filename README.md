@@ -50,7 +50,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | ghcr.io/advplyr/audiobookshelf | 2.33.1 |
 | ghcr.io/alam00000/bentopdf | 2.6.0 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.5.1.3 |
-| ghcr.io/autobrr/qui | v1.14.1 |
+| ghcr.io/autobrr/qui | v1.15.0 |
 | ghcr.io/davegallant/rfd-fyi | 0.1.0 |
 | ghcr.io/dispatcharr/dispatcharr | 0.21.1 |
 | ghcr.io/gethomepage/homepage | v1.11.0 |
