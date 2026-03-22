@@ -33,7 +33,7 @@ services:
     volumes:
       - ./speedtest-db:/var/lib/postgresql/data
   apprise:
-    image: docker.io/caronc/apprise:v1.3.2
+    image: docker.io/caronc/apprise:v1.3.3
     container_name: apprise
     ports:
       - "8000:8000"
