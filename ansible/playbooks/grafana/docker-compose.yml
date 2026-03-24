@@ -40,7 +40,6 @@ services:
           editable: false
         EOF
         /run.sh
-    ports:
-      - "3000:3000"
+    network_mode: host
     volumes:
       - './data/grafana:/var/lib/grafana'
