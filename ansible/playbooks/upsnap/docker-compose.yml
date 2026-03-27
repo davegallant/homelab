@@ -1,0 +1,14 @@
+services:
+  upsnap:
+    image: ghcr.io/seriousm4x/upsnap:5.3.1
+    container_name: upsnap
+    network_mode: host
+    restart: always
+    cap_add:
+      - NET_RAW
+    cap_drop:
+      - ALL
+    volumes:
+      - ./data:/app/pb_data
+    environment:
+      - TZ=America/Toronto
