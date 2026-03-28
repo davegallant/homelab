@@ -20,7 +20,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/gitea/gitea | 1.25.5 |
 | docker.io/gotify/server | 2.9.1 |
 | docker.io/grafana/grafana | 12.4.2 |
-| docker.io/grafana/loki | 3.6.7 |
+| docker.io/grafana/loki | 3.7.1 |
 | docker.io/henrygd/beszel | 0.18.5 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.3.1 |
 | docker.io/jellyfin/jellyfin | 10.11.6 |
@@ -34,7 +34,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/linuxserver/qbittorrent | 5.1.4 |
 | docker.io/linuxserver/radarr | 6.0.4 |
 | docker.io/linuxserver/sonarr | 4.0.17 |
-| docker.io/linuxserver/speedtest-tracker | 1.13.11 |
+| docker.io/linuxserver/speedtest-tracker | 1.13.12 |
 | docker.io/mariadb | 12.2.2 |
 | docker.io/miniflux/miniflux | 2.2.18 |
 | docker.io/paperlessngx/paperless-ngx | 2.20.13 |
@@ -48,10 +48,10 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/valkey/valkey | 9 |
 | docker.io/vaultwarden/server | 1.35.4 |
 | ghcr.io/advplyr/audiobookshelf | 2.33.1 |
-| ghcr.io/alam00000/bentopdf | 2.6.0 |
+| ghcr.io/alam00000/bentopdf | 2.7.0 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.5.1.3 |
 | ghcr.io/autobrr/qui | v1.15.0 |
-| ghcr.io/davegallant/rfd-fyi | 0.1.0 |
+| ghcr.io/davegallant/rfd-fyi | 0.1.1 |
 | ghcr.io/dispatcharr/dispatcharr | 0.21.1 |
 | ghcr.io/gethomepage/homepage | v1.11.0 |
 | ghcr.io/hargata/lubelogger | v1.4.5 |
