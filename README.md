@@ -21,7 +21,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/gotify/server | 2.9.1 |
 | docker.io/grafana/grafana | 12.4.2 |
 | docker.io/grafana/loki | 3.7.1 |
-| docker.io/henrygd/beszel | 0.18.5 |
+| docker.io/henrygd/beszel | 0.18.6 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.3.1 |
 | docker.io/jellyfin/jellyfin | 10.11.6 |
 | docker.io/krateng/maloja | 3.2.4 |
