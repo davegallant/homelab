@@ -14,7 +14,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/aceberg/watchyourlan | v2 |
 | docker.io/archivebox/archivebox | 0.7.3 |
 | docker.io/caronc/apprise | v1.3.3 |
-| docker.io/deluan/navidrome | 0.60.3 |
+| docker.io/deluan/navidrome | 0.61.0 |
 | docker.io/dgtlmoon/changedetection.io | 0.54.7 |
 | docker.io/fosrl/newt | 1.10.4 |
 | docker.io/gitea/gitea | 1.25.5 |
@@ -23,7 +23,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/grafana/loki | 3.7.1 |
 | docker.io/henrygd/beszel | 0.18.6 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.3.1 |
-| docker.io/jellyfin/jellyfin | 10.11.6 |
+| docker.io/jellyfin/jellyfin | 10.11.7 |
 | docker.io/krateng/maloja | 3.2.4 |
 | docker.io/library/postgres | 14 |
 | docker.io/library/postgres | 15-alpine |
@@ -53,7 +53,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | ghcr.io/autobrr/qui | v1.15.0 |
 | ghcr.io/davegallant/rfd-fyi | 0.1.1 |
 | ghcr.io/dispatcharr/dispatcharr | 0.22.0 |
-| ghcr.io/gethomepage/homepage | v1.12.1 |
+| ghcr.io/gethomepage/homepage | v1.12.2 |
 | ghcr.io/hargata/lubelogger | v1.4.5 |
 | ghcr.io/immich-app/immich-machine-learning | v2.6.3 |
 | ghcr.io/immich-app/immich-server | v2.6.3 |
