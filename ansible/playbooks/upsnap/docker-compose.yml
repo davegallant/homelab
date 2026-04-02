@@ -1,6 +1,6 @@
 services:
   upsnap:
-    image: ghcr.io/seriousm4x/upsnap:5.3.1
+    image: ghcr.io/seriousm4x/upsnap:5.3.2
     container_name: upsnap
     network_mode: host
     restart: always
