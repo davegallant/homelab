@@ -35,6 +35,7 @@
 - import_playbook: searxng/main.yml
 - import_playbook: sonarr/main.yml
 - import_playbook: speedtest-tracker/main.yml
+- import_playbook: tunarr/main.yml
 - import_playbook: umami/main.yml
 - import_playbook: upsnap/main.yml
 - import_playbook: vaultwarden/main.yml
