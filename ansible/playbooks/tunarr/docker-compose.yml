@@ -3,6 +3,8 @@ services:
     container_name: tunarr
     image: docker.io/chrisbenincasa/tunarr:1.2.10
     restart: always
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
     ports:
       - 8000:8000
     environment:
