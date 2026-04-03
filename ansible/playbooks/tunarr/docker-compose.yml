@@ -1,0 +1,11 @@
+services:
+  tunarr:
+    container_name: tunarr
+    image: chrisbenincasa/tunarr:1.2.10
+    restart: always
+    ports:
+      - 8000:8000
+    environment:
+      - TZ=America/New_York
+    volumes:
+      - ./tunarr-data:/config/tunarr
