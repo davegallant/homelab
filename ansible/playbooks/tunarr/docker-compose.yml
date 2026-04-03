@@ -9,5 +9,6 @@ services:
       - 8000:8000
     environment:
       - TZ=America/New_York
+      - TUNARR_SERVER_TRUST_PROXY=true
     volumes:
       - ./tunarr-data:/config/tunarr
