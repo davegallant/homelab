@@ -1,7 +1,7 @@
 services:
   tunarr:
     container_name: tunarr
-    image: chrisbenincasa/tunarr:1.2.10
+    image: docker.io/chrisbenincasa/tunarr:1.2.10
     restart: always
     ports:
       - 8000:8000
