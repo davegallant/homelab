@@ -1,6 +1,6 @@
 services:
   romm:
-    image: docker.io/rommapp/romm:4.8.0
+    image: docker.io/rommapp/romm:4.8.1
     container_name: romm
     restart: always
     environment:
