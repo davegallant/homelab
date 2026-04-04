@@ -1,6 +1,6 @@
 services:
   gatus:
-    image: docker.io/twinproduction/gatus:v5.35.0
+    image: docker.io/twinproduction/gatus:v5.35.0@sha256:21609f31be8c4e680ce3004b24276305666239c99aff58391503f3fb6142f39d
     container_name: gatus
     user: "999:999"
     volumes:

@@ -1,7 +1,7 @@
 services:
   invidious:
     # https://quay.io/repository/invidious/invidious?tab=tags
-    image: quay.io/invidious/invidious:2026.02.16-e7f8b15
+    image: quay.io/invidious/invidious:2026.02.16-e7f8b15@sha256:94a0f075c42dbd9ab15988731d44218e4e3baa504894cd55c01a5fd157218359
     container_name: invidious
     restart: always
     networks:
@@ -29,7 +29,7 @@ services:
 
   companion:
       # https://quay.io/repository/invidious/invidious-companion?tab=tags
-      image: quay.io/invidious/invidious-companion:master-6c76cab
+      image: quay.io/invidious/invidious-companion:master-6c76cab@sha256:aaec4e18b3cffb5457633f427c834299677f2c2a7e27b598404ab815643c3747
       container_name: invidious-companion
       environment:
         - SERVER_SECRET_KEY={{ invidious_companion_secret_key }}
@@ -49,7 +49,7 @@ services:
         - no-new-privileges:true
 
   invidious-db:
-    image: docker.io/library/postgres:14
+    image: docker.io/library/postgres:14@sha256:705a5d5b5836f3fcba0d02c4d281e6a7dd9ed2dd4078640f08a1e1e9896e097d
     container_name: invidious-db
     restart: always
     networks:
@@ -63,7 +63,7 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
   newt:
-    image: docker.io/fosrl/newt:1.11.0
+    image: docker.io/fosrl/newt:1.11.0@sha256:ea9e2bc53850d4a8b2c6019d97172a2b3e3cb1a15412babb4a0f4adc522f4a79
     container_name: newt-invidious
     restart: unless-stopped
     networks:

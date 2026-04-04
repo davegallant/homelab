@@ -1,6 +1,6 @@
 services:
   watchyourlan:
-    image: docker.io/aceberg/watchyourlan:v2
+    image: docker.io/aceberg/watchyourlan:v2@sha256:f77532ca7c3c9a4398cb094df7674013a3d7fcf4699386f1e456c24df6fef00e
     network_mode: "host"
     restart: always
     volumes:

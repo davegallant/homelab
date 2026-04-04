@@ -18,13 +18,13 @@ services:
     volumes:
       - ./speedtest-app:/config
       - "./web:/etc/ssl/web"
-    image: docker.io/linuxserver/speedtest-tracker:1.13.12
+    image: docker.io/linuxserver/speedtest-tracker:1.13.12@sha256:0c1f69a593703918c1a194ec71d8ac905361ca46ec38ba70582235c469a1b71f
     restart: always
     depends_on:
       - speedtest-db
   speedtest-db:
     container_name: speedtest-db
-    image: docker.io/postgres:15
+    image: docker.io/postgres:15@sha256:c635fa3e3b7421a659d34abdfd6d492f679cbe8149e261a501237b55c5a94212
     restart: always
     environment:
       - POSTGRES_DB=speedtest_tracker
@@ -33,7 +33,7 @@ services:
     volumes:
       - ./speedtest-db:/var/lib/postgresql/data
   apprise:
-    image: docker.io/caronc/apprise:v1.3.3
+    image: docker.io/caronc/apprise:v1.3.3@sha256:4bfeac268ba87b8e08e308c9aa0182fe99e9501ec464027afc333d1634e65977
     container_name: apprise
     ports:
       - "8000:8000"

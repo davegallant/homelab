@@ -1,6 +1,6 @@
 services:
   paperless-redis:
-    image: docker.io/library/redis:8
+    image: docker.io/library/redis:8@sha256:009cc37796fbdbe1b631b4cc0582bed167e5e403ed8bcd06f77eb6cb5aeb6f93
     container_name: paperless-redis
     restart: unless-stopped
     networks:
@@ -8,7 +8,7 @@ services:
     volumes:
       - ./redis-data:/data
   paperless-ngx:
-    image: docker.io/paperlessngx/paperless-ngx:2.20.13
+    image: docker.io/paperlessngx/paperless-ngx:2.20.13@sha256:4b05bcd28e6923768000b5d247cbf2c66fd49bdc3f3b05955bd4f6790a638b01
     container_name: paperless-ngx
     restart: always
     networks:
@@ -40,7 +40,7 @@ services:
       start_period: 40s
 
   paperless-db:
-    image: docker.io/library/postgres:15-alpine
+    image: docker.io/library/postgres:15-alpine@sha256:fceb6f86328c36f2438fae3b851b0cc57c4a7e69a58c866d9ce24281f2cf0c9c
     container_name: paperless-db
     restart: always
     networks:
@@ -55,7 +55,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
 
   newt:
-    image: docker.io/fosrl/newt:1.11.0
+    image: docker.io/fosrl/newt:1.11.0@sha256:ea9e2bc53850d4a8b2c6019d97172a2b3e3cb1a15412babb4a0f4adc522f4a79
     container_name: newt-paperless
     restart: unless-stopped
     networks:

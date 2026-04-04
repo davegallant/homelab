@@ -1,12 +1,12 @@
 services:
   rfd-fyi:
-    image: ghcr.io/davegallant/rfd-fyi:0.2.0
+    image: ghcr.io/davegallant/rfd-fyi:0.2.0@sha256:03207742aa6ec86d0f9e27a9a44db17953264d5f98f74d33bc6c4491b7d0b43a
     container_name: rfd-fyi
     networks:
       - rfd-fyi
     restart: unless-stopped
   newt:
-    image: docker.io/fosrl/newt:1.11.0
+    image: docker.io/fosrl/newt:1.11.0@sha256:ea9e2bc53850d4a8b2c6019d97172a2b3e3cb1a15412babb4a0f4adc522f4a79
     container_name: newt-rfdfyi
     restart: unless-stopped
     networks:
