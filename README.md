@@ -78,3 +78,5 @@ Each host runs an instance of [Alloy](https://github.com/grafana/alloy) managed 
 ## Maintenance
 
 I've cloned [Proxmox VE Helper-Scripts](https://github.com/community-scripts/ProxmoxVE) and run a few of the scripts to cleanup and update LXC containers.
+
+Also, renovate is used to update dependencies and [pin digests](https://docs.renovatebot.com/presets-docker/#dockerpindigests).
