@@ -1,6 +1,6 @@
 services:
   gotify:
-    image: docker.io/gotify/server:2.9.1
+    image: docker.io/gotify/server:2.9.1@sha256:a3af47067ce6aad76aadf5ba32d6ddfecd1ae576a961359f039fd1831e8b7652
     container_name: gotify
     networks:
       - gotify
@@ -10,7 +10,7 @@ services:
     security_opt:
       - no-new-privileges:true
   newt:
-    image: docker.io/fosrl/newt:1.11.0
+    image: docker.io/fosrl/newt:1.11.0@sha256:ea9e2bc53850d4a8b2c6019d97172a2b3e3cb1a15412babb4a0f4adc522f4a79
     container_name: newt-gotify
     restart: unless-stopped
     networks:

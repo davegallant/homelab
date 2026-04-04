@@ -1,7 +1,7 @@
 
 services:
   miniflux:
-    image: docker.io/miniflux/miniflux:2.2.18
+    image: docker.io/miniflux/miniflux:2.2.18@sha256:a3ca6bbc1f744b7b262c8ebf286b37ce938770d6d4d62e8bd73cce7f3939d887
     container_name: miniflux
     networks:
       - miniflux
@@ -16,7 +16,7 @@ services:
       - ADMIN_PASSWORD={{ miniflux_admin_password }}
       - BASE_URL=https://miniflux.snake-cloud.ts.net
   miniflux-db:
-    image: docker.io/postgres:15.17
+    image: docker.io/postgres:15.17@sha256:c635fa3e3b7421a659d34abdfd6d492f679cbe8149e261a501237b55c5a94212
     container_name: miniflux-db
     networks:
       - miniflux
@@ -31,7 +31,7 @@ services:
       interval: 10s
       start_period: 30s
   newt:
-    image: docker.io/fosrl/newt:1.11.0
+    image: docker.io/fosrl/newt:1.11.0@sha256:ea9e2bc53850d4a8b2c6019d97172a2b3e3cb1a15412babb4a0f4adc522f4a79
     container_name: newt-miniflux
     restart: unless-stopped
     networks:

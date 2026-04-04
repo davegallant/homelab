@@ -1,7 +1,7 @@
 services:
   kiwix-serve:
     container_name: kiwix-serve
-    image: ghcr.io/kiwix/kiwix-serve:3.8.2
+    image: ghcr.io/kiwix/kiwix-serve:3.8.2@sha256:acdab28186a66b51bfd4202210c6732931ea95cf41c711148a0c9770b9fcc9e1
     ports:
       - 8080:8080
     volumes:

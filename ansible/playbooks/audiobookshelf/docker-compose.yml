@@ -1,6 +1,6 @@
 services:
   audiobookshelf:
-    image: ghcr.io/advplyr/audiobookshelf:2.33.1
+    image: ghcr.io/advplyr/audiobookshelf:2.33.1@sha256:a4a5841bba093d81e5f4ad1eaedb4da3fda6dbb2528c552349da50ad1f7ae708
     container_name: audiobookshelf
     networks:
       - audiobookshelf
@@ -11,7 +11,7 @@ services:
       - ./config:/config
     restart: always
   newt:
-    image: docker.io/fosrl/newt:1.11.0
+    image: docker.io/fosrl/newt:1.11.0@sha256:ea9e2bc53850d4a8b2c6019d97172a2b3e3cb1a15412babb4a0f4adc522f4a79
     container_name: newt-audiobookshelf
     restart: unless-stopped
     networks:

@@ -1,7 +1,7 @@
 services:
   navidrome:
     container_name: navidrome
-    image: docker.io/deluan/navidrome:0.61.0
+    image: docker.io/deluan/navidrome:0.61.0@sha256:b14a6acb5cd5ee73f3a13d63d8d68ede82dedb796aa522fbada94769d990cf0b
     user: 1000:1000 # should be owner of volumes
     networks:
       - navidrome
@@ -15,7 +15,7 @@ services:
       - ./data:/data
       - /music:/music:ro
   newt:
-    image: docker.io/fosrl/newt:1.11.0
+    image: docker.io/fosrl/newt:1.11.0@sha256:ea9e2bc53850d4a8b2c6019d97172a2b3e3cb1a15412babb4a0f4adc522f4a79
     container_name: newt-navidrome
     restart: unless-stopped
     networks:

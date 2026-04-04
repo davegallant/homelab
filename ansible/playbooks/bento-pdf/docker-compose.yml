@@ -1,12 +1,12 @@
 services:
   bentopdf:
-    image: ghcr.io/alam00000/bentopdf:2.8.1
+    image: ghcr.io/alam00000/bentopdf:2.8.1@sha256:5716012cf1952e560a7f0a1f82b2852e9c1c32495044565f6c4173f23686ed5b
     container_name: bentopdf
     restart: always
     networks:
       - bentopdf
   newt:
-    image: docker.io/fosrl/newt:1.11.0
+    image: docker.io/fosrl/newt:1.11.0@sha256:ea9e2bc53850d4a8b2c6019d97172a2b3e3cb1a15412babb4a0f4adc522f4a79
     container_name: newt-bentopdf
     restart: unless-stopped
     networks:

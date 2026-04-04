@@ -1,6 +1,6 @@
 services:
   dispatcharr:
-    image: ghcr.io/dispatcharr/dispatcharr:0.22.0
+    image: ghcr.io/dispatcharr/dispatcharr:0.22.0@sha256:06189b5f338fe2c8bd2527ab9e2751bc8a1b32b955a44c1bc16cc0768ae290e6
     container_name: dispatcharr
     restart: always
     networks:
@@ -15,7 +15,7 @@ services:
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
   newt:
-    image: docker.io/fosrl/newt:1.11.0
+    image: docker.io/fosrl/newt:1.11.0@sha256:ea9e2bc53850d4a8b2c6019d97172a2b3e3cb1a15412babb4a0f4adc522f4a79
     container_name: newt-dispatcharr
     restart: unless-stopped
     networks:
