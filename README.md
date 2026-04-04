@@ -69,7 +69,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 
 ## Networking
 
-All hosts have tailscale installed on them, with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh) enabled using either [serve](https://tailscale.com/kb/1242/tailscale-serve) or [funnel](https://tailscale.com/kb/1311/tailscale-funnel) to expose services with [Let's Encrypt](https://letsencrypt.org/) certificates.
+All hosts have tailscale installed on them, with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh). In some cases, [tailscale serve](https://tailscale.com/kb/1242/tailscale-serve) is used to expose services with [Let's Encrypt](https://letsencrypt.org/) certificates.
 
 ## Logging
 
