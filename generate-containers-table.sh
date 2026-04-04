@@ -22,7 +22,8 @@ generate_table() {
     yq eval '.services | keys' "$compose_file" | sed 's/^- //' | while read -r service; do
       image=$(yq eval ".services.\"$service\".image" "$compose_file" 2>/dev/null)
       if [[ -n "$image" && "$image" != "null" ]]; then
-        version=$(echo "$image" | awk -F':' '{print $2}' | cut -d'@' -f1)
+        no_digest="${image%@*}"
+        version="${no_digest##*:}"
         version=${version:-"latest"}
         image=$(echo "$image" | awk -F':' '{print $1}')
         echo "| $image | $version |"
