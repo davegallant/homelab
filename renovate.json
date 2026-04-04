@@ -1,6 +1,6 @@
 {
   "extends": [
-    "config:recommended"
+    "config:recommended",
     "helpers:pinGitHubActionDigests"
   ],
   "schedule": [
@@ -14,7 +14,7 @@
         "pin",
         "digest"
       ],
-      "automerge": true
+      "pinDigests": true
     }
   ]
 }
