@@ -1,7 +1,7 @@
 services:
   redlib:
     # https://quay.io/repository/redlib/redlib?tab=tags
-    image: quay.io/redlib/redlib:sha-ba98178
+    image: quay.io/redlib/redlib:sha-ba98178@sha256:dffb6c5a22f889d47d8e28e33411db0fb6c5694599f72cf740c912c12f5fc1c6
     container_name: redlib
     user: nobody
     networks:
@@ -18,7 +18,7 @@ services:
       interval: 5m
       timeout: 3s
   newt:
-    image: docker.io/fosrl/newt:1.11.0
+    image: docker.io/fosrl/newt:1.11.0@sha256:ea9e2bc53850d4a8b2c6019d97172a2b3e3cb1a15412babb4a0f4adc522f4a79
     container_name: newt-redlib
     restart: unless-stopped
     networks:

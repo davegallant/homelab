@@ -2,7 +2,7 @@ services:
   searxng:
     container_name: searxng
     # https://hub.docker.com/r/searxng/searxng/tags
-    image: docker.io/searxng/searxng:2026.2.19-17544140f
+    image: docker.io/searxng/searxng:2026.2.19-17544140f@sha256:52cdbc6697de3c263799363bf6d4788005b0e3386bfbbf4e060a9177e4493d57
     restart: always
     networks:
       - searxng
@@ -24,7 +24,7 @@ services:
         max-file: "1"
   redis:
     container_name: redis
-    image: docker.io/valkey/valkey:9
+    image: docker.io/valkey/valkey:9@sha256:3b55fbaa0cd93cf0d9d961f405e4dfcc70efe325e2d84da207a0a8e6d8fde4f9
     command: valkey-server --save 30 1 --loglevel warning
     restart: always
     networks:
@@ -43,7 +43,7 @@ services:
         max-size: "1m"
         max-file: "1"
   newt:
-    image: docker.io/fosrl/newt:1.11.0
+    image: docker.io/fosrl/newt:1.11.0@sha256:ea9e2bc53850d4a8b2c6019d97172a2b3e3cb1a15412babb4a0f4adc522f4a79
     container_name: newt-searxng
     restart: unless-stopped
     networks:
