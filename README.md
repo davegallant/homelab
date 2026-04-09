@@ -43,7 +43,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/postgres | 15-alpine |
 | docker.io/postgres | 15.17 |
 | docker.io/rommapp/romm | 4.8.1 |
-| docker.io/searxng/searxng | 2026.2.19-17544140f |
+| docker.io/searxng/searxng | 2026.4.7-08ef7a63d |
 | docker.io/tensorchord/pgvecto-rs | pg14-v0.2.0 |
 | docker.io/twinproduction/gatus | v5.35.0 |
 | docker.io/valkey/valkey | 9 |
