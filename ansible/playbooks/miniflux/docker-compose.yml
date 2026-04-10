@@ -16,7 +16,7 @@ services:
       - ADMIN_PASSWORD={{ miniflux_admin_password }}
       - BASE_URL=https://miniflux.snake-cloud.ts.net
   miniflux-db:
-    image: docker.io/postgres:15.17@sha256:c635fa3e3b7421a659d34abdfd6d492f679cbe8149e261a501237b55c5a94212
+    image: docker.io/postgres:18.3@sha256:52e6ffd11fddd081ae63880b635b2a61c14008c17fc98cdc7ce5472265516dd0
     container_name: miniflux-db
     networks:
       - miniflux
@@ -24,7 +24,7 @@ services:
       - POSTGRES_USER={{ miniflux_db_user }}
       - POSTGRES_PASSWORD={{ miniflux_db_password }}
     volumes:
-      - miniflux-db:/var/lib/postgresql/data
+      - miniflux-db:/var/lib/postgresql
     restart: always
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "miniflux"]
