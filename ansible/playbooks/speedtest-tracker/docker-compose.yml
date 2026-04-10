@@ -24,14 +24,14 @@ services:
       - speedtest-db
   speedtest-db:
     container_name: speedtest-db
-    image: docker.io/postgres:15.17@sha256:c635fa3e3b7421a659d34abdfd6d492f679cbe8149e261a501237b55c5a94212
+    image: docker.io/postgres:18.3@sha256:52e6ffd11fddd081ae63880b635b2a61c14008c17fc98cdc7ce5472265516dd0
     restart: always
     environment:
       - POSTGRES_DB=speedtest_tracker
       - POSTGRES_USER={{ speedtest_tracker_db_username }}
       - POSTGRES_PASSWORD={{ speedtest_tracker_db_password }}
     volumes:
-      - ./speedtest-db:/var/lib/postgresql/data
+      - ./speedtest-db:/var/lib/postgresql
   apprise:
     image: docker.io/caronc/apprise:v1.3.3@sha256:4bfeac268ba87b8e08e308c9aa0182fe99e9501ec464027afc333d1634e65977
     container_name: apprise
