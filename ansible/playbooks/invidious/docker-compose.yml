@@ -1,7 +1,7 @@
 services:
   invidious:
     # https://quay.io/repository/invidious/invidious?tab=tags
-    image: quay.io/invidious/invidious:2026.02.16-e7f8b15@sha256:94a0f075c42dbd9ab15988731d44218e4e3baa504894cd55c01a5fd157218359
+    image: quay.io/invidious/invidious:2026.04.09-606467c@sha256:513fe4f87b7cb90a9f71888f61b7cda120eed7e5665fcec520549388841eec18
     container_name: invidious
     restart: always
     networks:
@@ -49,7 +49,7 @@ services:
         - no-new-privileges:true
 
   invidious-db:
-    image: docker.io/library/postgres:14@sha256:705a5d5b5836f3fcba0d02c4d281e6a7dd9ed2dd4078640f08a1e1e9896e097d
+    image: docker.io/postgres:15.17@sha256:c635fa3e3b7421a659d34abdfd6d492f679cbe8149e261a501237b55c5a94212
     container_name: invidious-db
     restart: always
     networks:
