@@ -40,7 +40,7 @@ services:
       start_period: 40s
 
   paperless-db:
-    image: docker.io/library/postgres:15-alpine@sha256:fceb6f86328c36f2438fae3b851b0cc57c4a7e69a58c866d9ce24281f2cf0c9c
+    image: docker.io/postgres:15.17@sha256:c635fa3e3b7421a659d34abdfd6d492f679cbe8149e261a501237b55c5a94212
     container_name: paperless-db
     restart: always
     networks:
