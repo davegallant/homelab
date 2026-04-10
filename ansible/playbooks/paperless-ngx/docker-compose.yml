@@ -26,10 +26,10 @@ services:
       - POSTGRES_HOST=paperless-db
       - PAPERLESS_REDIS=redis://paperless-redis:6379
     volumes:
-      - ./data:/data
-      - ./consume:/consume
-      - ./media:/media
-      - ./export:/export
+      - ./data:/usr/src/paperless/data
+      - ./consume:/usr/src/paperless/consume
+      - ./media:/usr/src/paperless/media
+      - ./export:/usr/src/paperless/export
     depends_on:
       - paperless-db
     healthcheck:
@@ -40,7 +40,7 @@ services:
       start_period: 40s
 
   paperless-db:
-    image: docker.io/postgres:15.17@sha256:c635fa3e3b7421a659d34abdfd6d492f679cbe8149e261a501237b55c5a94212
+    image: docker.io/postgres:18.3@sha256:52e6ffd11fddd081ae63880b635b2a61c14008c17fc98cdc7ce5472265516dd0
     container_name: paperless-db
     restart: always
     networks:
@@ -50,7 +50,7 @@ services:
       - POSTGRES_USER={{ paperless_db_user }}
       - POSTGRES_PASSWORD={{ paperless_db_password }}
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - ./pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
 
