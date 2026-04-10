@@ -27,7 +27,6 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/jellyfin/jellyfin | 10.11.8 |
 | docker.io/krateng/maloja | 3.2.4 |
 | docker.io/library/postgres | 14 |
-| docker.io/library/postgres | 15-alpine |
 | docker.io/library/redis | 8 |
 | docker.io/linuxserver/calibre-web | 0.6.26 |
 | docker.io/linuxserver/lidarr | 3.1.0 |
@@ -39,8 +38,6 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/mariadb | 12.2.2 |
 | docker.io/miniflux/miniflux | 2.2.19 |
 | docker.io/paperlessngx/paperless-ngx | 2.20.13 |
-| docker.io/postgres | 15 |
-| docker.io/postgres | 15-alpine |
 | docker.io/postgres | 15.17 |
 | docker.io/rommapp/romm | 4.8.1 |
 | docker.io/searxng/searxng | 2026.4.7-08ef7a63d |
