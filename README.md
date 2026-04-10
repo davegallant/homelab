@@ -26,7 +26,6 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/itzg/minecraft-bedrock-server | 2026.4.0 |
 | docker.io/jellyfin/jellyfin | 10.11.8 |
 | docker.io/krateng/maloja | 3.2.4 |
-| docker.io/library/postgres | 14 |
 | docker.io/library/redis | 8 |
 | docker.io/linuxserver/calibre-web | 0.6.26 |
 | docker.io/linuxserver/lidarr | 3.1.0 |
@@ -59,7 +58,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | ghcr.io/seerr-team/seerr | v3.1.0 |
 | ghcr.io/seriousm4x/upsnap | 5.3.2 |
 | ghcr.io/umami-software/umami | 3.0.3 |
-| quay.io/invidious/invidious | 2026.02.16-e7f8b15 |
+| quay.io/invidious/invidious | 2026.04.09-606467c |
 | quay.io/invidious/invidious-companion | master-6c76cab |
 | quay.io/redlib/redlib | sha-ba98178 |
 <!-- DOCKER_SERVICES_END -->
