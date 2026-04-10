@@ -49,13 +49,13 @@ services:
         - no-new-privileges:true
 
   invidious-db:
-    image: docker.io/postgres:15.17@sha256:c635fa3e3b7421a659d34abdfd6d492f679cbe8149e261a501237b55c5a94212
+    image: docker.io/postgres:18.3@sha256:52e6ffd11fddd081ae63880b635b2a61c14008c17fc98cdc7ce5472265516dd0
     container_name: invidious-db
     restart: always
     networks:
       - invidious
     volumes:
-      - ./postgresdata:/var/lib/postgresql/data
+      - ./postgresdata:/var/lib/postgresql
     environment:
       POSTGRES_DB: invidious
       POSTGRES_USER: "{{ invidious_db_user }}"
