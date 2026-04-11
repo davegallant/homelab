@@ -1,7 +1,7 @@
 services:
   tunarr:
     container_name: tunarr
-    image: docker.io/chrisbenincasa/tunarr:1.2.10@sha256:ed65c4f762e085c69cf936ec48c2c7f1036a113b11b18434ef098a8e02d47ac1
+    image: docker.io/chrisbenincasa/tunarr:1.2.11@sha256:b836037815521f6c6ba18a7edc97ab6dbc51de5815ec4750edddec047c646a5d
     restart: always
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
