@@ -43,7 +43,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/tensorchord/pgvecto-rs | pg14-v0.2.0 |
 | docker.io/twinproduction/gatus | v5.35.0 |
 | docker.io/valkey/valkey | 9 |
-| docker.io/vaultwarden/server | 1.35.5 |
+| docker.io/vaultwarden/server | 1.35.6 |
 | ghcr.io/advplyr/audiobookshelf | 2.33.1 |
 | ghcr.io/alam00000/bentopdf | 2.8.2 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.5.1.3 |
