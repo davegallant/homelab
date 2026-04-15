@@ -1,6 +1,6 @@
 services:
   rfd-fyi:
-    image: ghcr.io/davegallant/rfd-fyi:0.4.3@sha256:7a747c9f4dfb8f7561bfb5c23b2c816fd9c0268649cad98a4cc19f5dba670285
+    image: ghcr.io/davegallant/rfd-fyi:0.5.0@sha256:c9ead96e609de634425c5b67e758bff3996287eecfee21d2e2a4a9f59c6f865f
     container_name: rfd-fyi
     networks:
       - rfd-fyi
