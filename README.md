@@ -20,7 +20,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/fosrl/newt | 1.11.0 |
 | docker.io/gitea/gitea | 1.25.5 |
 | docker.io/gotify/server | 2.9.1 |
-| docker.io/grafana/grafana | 13.0.0 |
+| docker.io/grafana/grafana | 13.0.1 |
 | docker.io/grafana/loki | 3.7.1 |
 | docker.io/henrygd/beszel | 0.18.7 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.4.3 |
