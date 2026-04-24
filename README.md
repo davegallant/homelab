@@ -62,7 +62,6 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | ghcr.io/umami-software/umami | 3.1.0 |
 | quay.io/invidious/invidious | 2026.04.09-606467c |
 | quay.io/invidious/invidious-companion | master-6c76cab |
-| quay.io/redlib/redlib | sha-ba98178 |
 <!-- DOCKER_SERVICES_END -->
 
 ## Networking

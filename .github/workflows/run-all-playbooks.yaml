@@ -43,7 +43,7 @@ jobs:
           - qui
           - radarr
           - rfd-fyi
-          - redlib
+
           - romm
           - searxng
           - sonarr
