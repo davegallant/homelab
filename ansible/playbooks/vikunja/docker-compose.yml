@@ -1,0 +1,55 @@
+services:
+  vikunja:
+    image: docker.io/vikunja/vikunja:2.3.0
+    container_name: vikunja
+    environment:
+      - VIKUNJA_SERVICE_PUBLICURL={{ vikunja_public_url }}
+      - VIKUNJA_DATABASE_HOST=db
+      - VIKUNJA_DATABASE_PASSWORD={{ vikunja_db_password }}
+      - VIKUNJA_DATABASE_TYPE=postgres
+      - VIKUNJA_DATABASE_USER=vikunja
+      - VIKUNJA_DATABASE_DATABASE=vikunja
+      - VIKUNJA_SERVICE_JWTSECRET={{ vikunja_jwt_secret }}
+      - VIKUNJA_SERVICE_ENABLEREGISTRATION=false
+    ports:
+      - "3456:3456"
+    volumes:
+      - ./files:/app/vikunja/files
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - vikunja
+
+  db:
+    image: docker.io/library/postgres:18 # pin to 18, use full registry
+    container_name: vikunja-db
+    environment:
+      - POSTGRES_PASSWORD={{ vikunja_db_password }}
+      - POSTGRES_USER=vikunja
+      - POSTGRES_DB=vikunja
+    volumes:
+      - ./db:/var/lib/postgresql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U $$POSTGRES_USER"]
+      interval: 2s
+      start_period: 30s
+    networks:
+      - vikunja
+
+  newt:
+    image: docker.io/fosrl/newt:1.11.0
+    container_name: newt-vikunja
+    restart: unless-stopped
+    networks:
+      - vikunja
+    environment:
+      - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
+      - NEWT_ID={{ vikunja_newt_id }}
+      - NEWT_SECRET={{ vikunja_newt_secret }}
+
+networks:
+  vikunja:
+    name: vikunja
