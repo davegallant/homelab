@@ -1,6 +1,6 @@
 services:
   vikunja:
-    image: docker.io/vikunja/vikunja:2.3.0
+    image: docker.io/vikunja/vikunja:2.3.0@sha256:f6b80393c1998cd5cd0dc38d24762c59ab4c10000a6f1032ef5b554e262cab93
     container_name: vikunja
     environment:
       - VIKUNJA_SERVICE_PUBLICURL={{ vikunja_public_url }}
@@ -23,7 +23,7 @@ services:
       - vikunja
 
   db:
-    image: docker.io/library/postgres:18 # pin to 18, use full registry
+    image: docker.io/library/postgres:18@sha256:78481659c47e862334611ccdaf7c369c986b3046da9857112f3b309114a65fb4 # pin to 18, use full registry
     container_name: vikunja-db
     environment:
       - POSTGRES_PASSWORD={{ vikunja_db_password }}
@@ -40,7 +40,7 @@ services:
       - vikunja
 
   newt:
-    image: docker.io/fosrl/newt:1.11.0
+    image: docker.io/fosrl/newt:1.11.0@sha256:ea9e2bc53850d4a8b2c6019d97172a2b3e3cb1a15412babb4a0f4adc522f4a79
     container_name: newt-vikunja
     restart: unless-stopped
     networks:
