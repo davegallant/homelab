@@ -26,6 +26,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/itzg/minecraft-bedrock-server | 2026.4.3 |
 | docker.io/jellyfin/jellyfin | 10.11.8 |
 | docker.io/krateng/maloja | 3.2.4 |
+| docker.io/library/postgres | 18 |
 | docker.io/library/redis | 8 |
 | docker.io/linuxserver/calibre-web | 0.6.26 |
 | docker.io/linuxserver/lidarr | 3.1.0 |
@@ -44,6 +45,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/twinproduction/gatus | v5.35.0 |
 | docker.io/valkey/valkey | 9 |
 | docker.io/vaultwarden/server | 1.35.7 |
+| docker.io/vikunja/vikunja | 2.3.0 |
 | ghcr.io/advplyr/audiobookshelf | 2.33.2 |
 | ghcr.io/alam00000/bentopdf | 2.8.4 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.5.1.3 |
