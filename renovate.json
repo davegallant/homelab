@@ -1,4 +1,5 @@
 {
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
     "helpers:pinGitHubActionDigests"
@@ -22,8 +23,15 @@
       "pinDigests": true
     },
     {
-      "matchPackageNames": [
+      "matchDepNames": [
         "docker.io/searxng/searxng"
+      ],
+      "versioning": "regex:^(?<major>\\d{4})\\.(?<minor>\\d+)\\.(?<patch>\\d+)-[a-f0-9]+$"
+    },
+    {
+      "matchDepNames": [
+        "quay.io/invidious/invidious",
+        "quay.io/invidious/invidious-companion"
       ],
       "versioning": "regex:^(?<major>\\d{4})\\.(?<minor>\\d+)\\.(?<patch>\\d+)-[a-f0-9]+$"
     }
