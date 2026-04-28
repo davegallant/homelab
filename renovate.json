@@ -20,6 +20,12 @@
         "docker"
       ],
       "pinDigests": true
+    },
+    {
+      "matchPackageNames": [
+        "searxng/searxng"
+      ],
+      "versioning": "loose"
     }
   ]
 }
