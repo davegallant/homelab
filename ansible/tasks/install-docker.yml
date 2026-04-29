@@ -6,15 +6,33 @@
       - python3-requests
     state: latest
 
-- name: Add Docker GPG key
-  ansible.builtin.apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
+- name: Ensure /etc/apt/keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
 
-- name: Add Docker APT repository
-  ansible.builtin.apt_repository:
-    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu noble stable
-    state: present
+- name: Download Docker GPG key to keyring
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+    force: true
+
+- name: Add Docker repository sources file (with keyring)
+  ansible.builtin.template:
+    src: docker.sources.j2
+    dest: /etc/apt/sources.list.d/docker.sources
+    mode: "0644"
+
+- name: Remove legacy Docker .list file to prevent Signed-By conflicts
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/download_docker_com_linux_ubuntu.list
+    state: absent
+
+- name: Update apt cache to load Docker repo
+  ansible.builtin.apt:
+    update_cache: true
 
 - name: Install docker
   ansible.builtin.apt:
