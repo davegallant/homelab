@@ -40,7 +40,7 @@ services:
       - vikunja
 
   newt:
-    image: docker.io/fosrl/newt:1.11.0@sha256:ea9e2bc53850d4a8b2c6019d97172a2b3e3cb1a15412babb4a0f4adc522f4a79
+    image: docker.io/fosrl/newt:1.12.2@sha256:b1af30d7031e3019fda2b3861944704d9f41639aa796f58eeb7074c2b5f0f166
     container_name: newt-vikunja
     restart: unless-stopped
     networks:
