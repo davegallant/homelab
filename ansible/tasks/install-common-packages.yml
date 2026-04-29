@@ -21,3 +21,10 @@
     mode: "0644"
     state: file
   when: ansible_facts['os_family'] == 'Debian'
+
+- name: Remove APT Ubuntu Pro/ESM nag (empty 20apt-esm-hook.conf)
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20apt-esm-hook.conf
+    content: ""
+    mode: "0644"
+  when: ansible_facts['os_family'] == 'Debian'
