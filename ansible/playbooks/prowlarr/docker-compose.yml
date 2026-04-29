@@ -1,6 +1,6 @@
 services:
   prowlarr:
-    image: docker.io/linuxserver/prowlarr:2.3.5@sha256:6df73ab9e99d0dbaad27c39d8a47c600333eebea80fcb56253a0bb8b630c8115
+    image: docker.io/linuxserver/prowlarr:2.3.5@sha256:b4204e18666179472225935b443a99cf6c66dcb7bbc2d35034427a3851f13135
     container_name: prowlarr
     environment:
       - PUID=1000
