@@ -6,7 +6,7 @@ services:
     networks:
       - bentopdf
   newt:
-    image: docker.io/fosrl/newt:1.12.2@sha256:b1af30d7031e3019fda2b3861944704d9f41639aa796f58eeb7074c2b5f0f166
+    image: docker.io/fosrl/newt:1.12.3@sha256:414e1a7618cadba03aace19abe2fd5feaa1d7922b95d359d6c1e8329d3fa964c
     container_name: newt-bentopdf
     restart: unless-stopped
     networks:
