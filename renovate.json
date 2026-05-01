@@ -15,7 +15,6 @@
         "pin",
         "digest"
       ],
-      "automerge": true
     },
     {
       "matchDatasources": [
