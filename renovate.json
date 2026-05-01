@@ -14,7 +14,8 @@
         "patch",
         "pin",
         "digest"
-      ]
+      ],
+      "automerge": true
     },
     {
       "matchDatasources": [
