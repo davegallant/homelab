@@ -1,6 +1,6 @@
 services:
   calibre-web:
-    image: docker.io/linuxserver/calibre-web:0.6.26@sha256:561456bd634893293f7038cf24e1297d7fad0c7268682fa36036f400d8ff3760
+    image: docker.io/linuxserver/calibre-web:0.6.26@sha256:c1b0068188fd9bb5237988623a8a930401384b183e073e193ef8ec1e136aef8d
     container_name: calibre-web
     environment:
       - PUID=1000
