@@ -1,0 +1,123 @@
+---
+- name: Install hermes
+  hosts: hermes
+  tasks:
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-common-packages.yml
+
+    - name: Install packages
+      ansible.builtin.apt:
+        name:
+          - mergerfs
+          - nfs-kernel-server
+        state: present
+        update_cache: true
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-alloy.yml
+
+    - name: Configure Alloy
+      ansible.builtin.copy:
+        dest: /etc/alloy/config.alloy
+        content: |
+          loki.relabel "journal" {
+            forward_to = []
+
+            rule {
+              target_label  = "host"
+              replacement   = constants.hostname
+            }
+
+            rule {
+              source_labels = ["__journal__systemd_unit"]
+              target_label  = "unit"
+            }
+          }
+
+          loki.source.journal "read" {
+            forward_to    = [loki.write.endpoint.receiver]
+            relabel_rules = loki.relabel.journal.rules
+            labels        = {component = "loki.source.journal"}
+          }
+
+          loki.write "endpoint" {
+            endpoint {
+              url = "{{ loki_url }}"
+            }
+          }
+        mode: "0644"
+        backup: true
+
+    - name: Restart alloy to apply config
+      ansible.builtin.systemd_service:
+        name: alloy
+        state: restarted
+
+    - name: Create /mnt/wdred1 mount point
+      ansible.builtin.file:
+        path: /mnt/wdred1
+        state: directory
+        mode: "0755"
+
+    - name: Create /mnt/wdred2 mount point
+      ansible.builtin.file:
+        path: /mnt/wdred1
+        state: directory
+        mode: "0755"
+
+    - name: Mount wdred1
+      ansible.posix.mount:
+        path: /mnt/wdred1
+        src: LABEL=wdred1
+        fstype: ext4
+        opts: defaults,nofail
+        state: mounted
+
+    - name: Mount wdred2
+      ansible.posix.mount:
+        path: /mnt/wdred2
+        src: LABEL=wdred2
+        fstype: ext4
+        opts: defaults,nofail
+        state: mounted
+
+    - name: Create /mnt/pool mount point
+      ansible.builtin.file:
+        path: /mnt/pool
+        state: directory
+        mode: "0755"
+
+    - name: Mount mergerfs pool
+      ansible.posix.mount:
+        path: /mnt/pool
+        src: /mnt/wdred1:/mnt/wdred2
+        fstype: fuse.mergerfs
+        opts: defaults,nonempty,allow_other,use_ino,cache.files=off,moveonenospc=true,category.create=mfs,dropcacheonclose=true,minfreespace=250G,fsname=mergerfs
+        state: mounted
+
+    - name: Deploy /etc/exports
+      ansible.builtin.template:
+        src: exports.j2
+        dest: /etc/exports
+        mode: "0644"
+
+    - name: Enable and start nfs-server
+      ansible.builtin.systemd_service:
+        name: nfs-server
+        enabled: true
+        state: started
+
+    - name: Reload NFS exports
+      ansible.builtin.command:
+        cmd: exportfs -ra
+
+    - name: Allow NFS port
+      community.general.ufw:
+        rule: allow
+        port: "2049"
+        proto: tcp
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+        policy: deny
