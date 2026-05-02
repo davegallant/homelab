@@ -1,5 +1,4 @@
 ---
-
 - import_playbook: archivebox/main.yml
 - import_playbook: audiobookshelf/main.yml
 - import_playbook: bedrock/main.yml
@@ -12,6 +11,7 @@
 - import_playbook: gitea/main.yml
 - import_playbook: gotify/main.yml
 - import_playbook: grafana/main.yml
+- import_playbook: hermes/main.yml
 - import_playbook: homepage/main.yml
 - import_playbook: igotify/main.yml
 - import_playbook: immich/main.yml
