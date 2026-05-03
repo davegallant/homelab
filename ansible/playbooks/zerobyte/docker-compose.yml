@@ -1,0 +1,20 @@
+services:
+  zerobyte:
+    image: ghcr.io/nicotsx/zerobyte:v0.35
+    container_name: zerobyte
+    restart: unless-stopped
+    cap_add:
+      - SYS_ADMIN
+    ports:
+      - "4096:4096"
+    devices:
+      - /dev/fuse:/dev/fuse
+    environment:
+      - TZ=America/Toronto
+      - BASE_URL={{ zerobyte_base_url }}
+      - APP_SECRET={{ zerobyte_app_secret }}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/lib/zerobyte:/var/lib/zerobyte
+      - /mnt:/mnt:ro
+      - ~/.config/rclone:/root/.config/rclone:ro
