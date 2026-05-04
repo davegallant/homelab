@@ -12,7 +12,7 @@ services:
       - TP_COMMUNITY_THEME=true
     volumes:
       - ~:/config
-      - /mnt/media/Torrents:/downloads
+      - /mnt/media/torrents:/downloads
       - ~/scripts:/scripts
     ports:
       - 8080:8080
