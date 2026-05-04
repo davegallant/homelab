@@ -1,0 +1,27 @@
+services:
+  server:
+    image: codeberg.org/forgejo/forgejo:14
+    container_name: forgejo
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - FORGEJO__server__ROOT_URL={{ forgejo_root_url }}
+    restart: always
+    networks:
+      - forgejo
+    volumes:
+      - ./forgejo:/data
+      - /etc/localtime:/etc/localtime:ro
+  pangolin:
+    image: docker.io/fosrl/newt:1.12.3@sha256:414e1a7618cadba03aace19abe2fd5feaa1d7922b95d359d6c1e8329d3fa964c
+    container_name: pangolin-forgejo
+    restart: unless-stopped
+    networks:
+      - forgejo
+    environment:
+      - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
+      - NEWT_ID={{ forgejo_newt_id }}
+      - NEWT_SECRET={{ forgejo_newt_secret }}
+networks:
+  forgejo:
+    name: forgejo
