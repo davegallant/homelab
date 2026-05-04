@@ -9,7 +9,7 @@ on:
 
 jobs:
   run-ansible:
-    runs-on: ubuntu-latest
+    runs-on: host
     if: ${{ github.event.inputs.host != '' }}
     steps:
       - name: Check out repository code

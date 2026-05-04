@@ -8,7 +8,7 @@ on:
 
 jobs:
   run-ansible:
-    runs-on: ubuntu-latest
+    runs-on: host
     if: ${{ github.event.inputs.host == '' }}
     strategy:
       matrix:
@@ -43,7 +43,6 @@ jobs:
           - qui
           - radarr
           - rfd-fyi
-
           - romm
           - searxng
           - sonarr
