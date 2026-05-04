@@ -1,6 +1,12 @@
 services:
-  server:
-    image: codeberg.org/forgejo/forgejo:14
+  docker-in-docker:
+    image: docker:dind
+    container_name: "docker_dind"
+    privileged: "true"
+    command: ["dockerd", "-H", "tcp://0.0.0.0:2375", "--tls=false"]
+    restart: "unless-stopped"
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:15.0.1
     container_name: forgejo
     environment:
       - USER_UID=1000
@@ -12,6 +18,37 @@ services:
     volumes:
       - ./forgejo:/data
       - /etc/localtime:/etc/localtime:ro
+  runner-1:
+    image: "data.forgejo.org/forgejo/runner:12"
+    links:
+      - docker-in-docker
+    depends_on:
+      docker-in-docker:
+        condition: service_started
+    container_name: forgejo-runner-1
+    environment:
+      DOCKER_HOST: tcp://docker-in-docker:2375
+    # User without root privileges, but with access to `./data`.
+    user: 1001:1001
+    volumes:
+      - ./runner1/data:/data
+    restart: "unless-stopped"
+    command: "forgejo-runner daemon --config runner-config.yml"
+  runner-2:
+    image: data.forgejo.org/forgejo/runner:12
+    links:
+      - docker-in-docker
+    container_name: forgejo-runner-2
+    depends_on:
+      - docker-in-docker
+      - forgejo
+    environment:
+      DOCKER_HOST: tcp://docker-in-docker:2375
+    user: 1001:1001
+    volumes:
+      - ./runner2/data:/data
+    restart: "unless-stopped"
+    command: "forgejo-runner daemon --config /data/runner-config.yml"
   pangolin:
     image: docker.io/fosrl/newt:1.12.3@sha256:414e1a7618cadba03aace19abe2fd5feaa1d7922b95d359d6c1e8329d3fa964c
     container_name: pangolin-forgejo

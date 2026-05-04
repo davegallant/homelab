@@ -17,3 +17,7 @@ run-parallel:
 	done
 	wait
 	echo "All playbooks completed"
+
+# Edit secrets with ansible-vault edit
+edit-secrets:
+  ansible-vault edit group_vars/all/secrets.yaml --vault-password-file .vault_pass
