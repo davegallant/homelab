@@ -22,7 +22,6 @@ jobs:
           - changedetection
           - dispatcharr
           - gatus
-          - gitea
           - gotify
           - grafana
           - homepage

@@ -9,7 +9,6 @@
 - import_playbook: dispatcharr/main.yml
 - import_playbook: forgejo/main.yml
 - import_playbook: gatus/main.yml
-- import_playbook: gitea/main.yml
 - import_playbook: gotify/main.yml
 - import_playbook: grafana/main.yml
 - import_playbook: hermes/main.yml
