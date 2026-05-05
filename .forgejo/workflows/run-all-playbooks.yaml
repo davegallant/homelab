@@ -7,49 +7,26 @@ on:
     - cron: "@daily"
 
 jobs:
-  run-ansible:
+  discover:
     runs-on: host
+    outputs:
+      playbooks: ${{ steps.list.outputs.playbooks }}
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v4
+      - id: list
+        run: |
+          playbooks=$(find ansible/playbooks -name "main.yml" -mindepth 2 -maxdepth 2 \
+            | xargs -I{} dirname {} | xargs -I{} basename {} \
+            | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "playbooks=$playbooks" >> $FORGEJO_OUTPUT
+
+  run-ansible:
+    needs: discover
     if: ${{ github.event.inputs.host == '' }}
+    runs-on: host
     strategy:
       matrix:
-        playbook:
-          - archivebox
-          - audiobookshelf
-          - bedrock
-          - bento-pdf
-          - beszel
-          - calibre-web
-          - changedetection
-          - dispatcharr
-          - gatus
-          - gotify
-          - grafana
-          - homepage
-          - igotify
-          - immich
-          - invidious
-          - jellyfin
-          - seerr
-          - kiwix
-          - lidarr
-          - lubelogger
-          - maloja
-          - miniflux
-          - navidrome
-          - paperless-ngx
-          - prowlarr
-          - qbittorrent
-          - qui
-          - radarr
-          - rfd-fyi
-          - romm
-          - searxng
-          - sonarr
-          - speedtest-tracker
-          - umami
-          - vaultwarden
-          - watchyourlan
-          - zerobyte
+        playbook: ${{ fromJson(needs.discover.outputs.playbooks) }}
       fail-fast: false
     steps:
       - name: Check out repository code
