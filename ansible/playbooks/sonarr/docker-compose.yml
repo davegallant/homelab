@@ -14,4 +14,4 @@ services:
     volumes:
       - ~/sonarr/config:/config
       - "/mnt/media/TV Shows:/mnt/media/TV Shows"
-      - /mnt/media/Torrents:/downloads
+      - /mnt/media/torrents:/downloads

@@ -1,4 +1,3 @@
-
 services:
   lidarr:
     container_name: lidarr
@@ -13,5 +12,5 @@ services:
     volumes:
       - ~/lidarr/config:/config
       - /mnt/media/Music:/mnt/media/Music
-      - /mnt/media/Torrents:/downloads
+      - /mnt/media/torrents:/downloads
     restart: always
