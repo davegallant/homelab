@@ -1,26 +1,9 @@
 # AGENTS.md
 
-Docker-based homelab managed with Ansible. Provisions ~38 self-hosted services, each
+Docker-based homelab managed with Ansible. Provisions self-hosted services, each
 in a Proxmox LXC container on Ubuntu 24.04 LTS. Each service gets Docker installed
 via Ansible, then a `docker-compose.yml` is deployed and started. Networking is via
 Tailscale. Logging is centralized via Grafana Alloy to Loki.
-
-## Project Structure
-
-```
-ansible/
-  justfile                      # Task runner (just)
-  inventory                     # Ansible INI inventory ([homelab] group)
-  requirements.yml              # Ansible Galaxy collections
-  group_vars/all/secrets.yaml   # Ansible Vault encrypted secrets
-  tasks/                        # Shared tasks: install-docker, install-common-packages,
-                                #   install-alloy, docker-pull
-  playbooks/
-    main.yml                    # Master playbook importing all services
-    <service>/main.yml          # Service playbook
-    <service>/docker-compose.yml  # Compose file (often Jinja2 templated)
-.github/workflows/              # CI: run playbooks, update README table
-```
 
 ## Build / Run Commands
 
@@ -29,7 +12,6 @@ All commands are run from the `ansible/` directory using [just](https://github.c
 ```sh
 just setup                              # Install Ansible Galaxy collections
 just run "--limit grafana"              # Run all playbooks limited to one host
-just run-parallel                       # Run all playbooks in parallel
 # Run a single service playbook directly:
 ansible-playbook playbooks/grafana/main.yml -i inventory --vault-password-file .vault_pass
 ```
