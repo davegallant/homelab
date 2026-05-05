@@ -49,6 +49,7 @@ jobs:
           - umami
           - vaultwarden
           - watchyourlan
+          - zerobyte
       fail-fast: false
     steps:
       - name: Check out repository code
