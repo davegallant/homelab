@@ -6,6 +6,7 @@ on:
         description: "Name of the host to execute"
         required: false
         default: ""
+        type: string
 
 jobs:
   run-ansible:
