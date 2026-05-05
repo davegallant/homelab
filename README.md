@@ -13,13 +13,13 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 |-------|---------|
 | codeberg.org/forgejo/forgejo | 15.0.1 |
 | data.forgejo.org/forgejo/runner | 12 |
-| docker | dind |
 | docker.io/aceberg/watchyourlan | v2 |
 | docker.io/archivebox/archivebox | 0.7.3 |
 | docker.io/caronc/apprise | v1.4.0 |
 | docker.io/chrisbenincasa/tunarr | 1.2.15 |
 | docker.io/deluan/navidrome | 0.61.2 |
 | docker.io/dgtlmoon/changedetection.io | 0.55.3 |
+| docker.io/docker | 29.4.1-dind |
 | docker.io/fosrl/newt | 1.12.3 |
 | docker.io/gotify/server | 2.9.1 |
 | docker.io/grafana/grafana | 13.0.1 |
