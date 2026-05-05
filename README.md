@@ -16,7 +16,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/aceberg/watchyourlan | v2 |
 | docker.io/archivebox/archivebox | 0.7.3 |
 | docker.io/caronc/apprise | v1.4.1 |
-| docker.io/chrisbenincasa/tunarr | 1.2.15 |
+| docker.io/chrisbenincasa/tunarr | 1.2.17 |
 | docker.io/deluan/navidrome | 0.61.2 |
 | docker.io/dgtlmoon/changedetection.io | 0.55.3 |
 | docker.io/docker | 29.4.1-dind |
