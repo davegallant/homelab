@@ -18,4 +18,4 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /var/lib/zerobyte:/var/lib/zerobyte
       - /mnt:/mnt:ro
-      - ~/.config/rclone:/root/.config/rclone:ro
+      - ~/.config/rclone:/root/.config/rclone:rw
