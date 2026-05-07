@@ -13,6 +13,7 @@ services:
       - TZ=America/Toronto
       - BASE_URL={{ zerobyte_base_url }}
       - APP_SECRET={{ zerobyte_app_secret }}
+      - WEBHOOK_ALLOWED_ORIGINS= {{ zerobyte_webhook_allowed_origins }}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/lib/zerobyte:/var/lib/zerobyte
