@@ -33,7 +33,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/linuxserver/calibre-web | 0.6.26 |
 | docker.io/linuxserver/lidarr | 3.1.0 |
 | docker.io/linuxserver/prowlarr | 2.3.5 |
-| docker.io/linuxserver/qbittorrent | 5.1.4 |
+| docker.io/linuxserver/qbittorrent | 5.2.0 |
 | docker.io/linuxserver/radarr | 6.1.1 |
 | docker.io/linuxserver/sonarr | 4.0.17 |
 | docker.io/linuxserver/speedtest-tracker | 1.14.0 |
