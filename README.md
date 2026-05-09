@@ -19,13 +19,13 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/chrisbenincasa/tunarr | 1.2.17 |
 | docker.io/deluan/navidrome | 0.61.2 |
 | docker.io/dgtlmoon/changedetection.io | 0.55.3 |
-| docker.io/docker | 29.4.1-dind |
 | docker.io/fosrl/newt | 1.12.5 |
+| docker.io/docker | 29.4.3-dind |
 | docker.io/gotify/server | 2.9.1 |
 | docker.io/grafana/grafana | 13.0.1 |
 | docker.io/grafana/loki | 3.7.1 |
 | docker.io/henrygd/beszel | 0.18.7 |
-| docker.io/itzg/minecraft-bedrock-server | 2026.5.0 |
+| docker.io/itzg/minecraft-bedrock-server | 2026.5.1 |
 | docker.io/jellyfin/jellyfin | 10.11.8 |
 | docker.io/krateng/maloja | 3.2.4 |
 | docker.io/library/postgres | 18 |
@@ -33,7 +33,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/linuxserver/calibre-web | 0.6.26 |
 | docker.io/linuxserver/lidarr | 3.1.0 |
 | docker.io/linuxserver/prowlarr | 2.3.5 |
-| docker.io/linuxserver/qbittorrent | 5.1.4 |
+| docker.io/linuxserver/qbittorrent | 5.2.0 |
 | docker.io/linuxserver/radarr | 6.1.1 |
 | docker.io/linuxserver/sonarr | 4.0.17 |
 | docker.io/linuxserver/speedtest-tracker | 1.14.0 |
@@ -42,7 +42,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/paperlessngx/paperless-ngx | 2.20.15 |
 | docker.io/postgres | 18.3 |
 | docker.io/rommapp/romm | 4.8.1 |
-| docker.io/searxng/searxng | 2026.5.5-0ac5254b8 |
+| docker.io/searxng/searxng | 2026.5.9-0cba32c15 |
 | docker.io/tensorchord/pgvecto-rs | pg14-v0.2.0 |
 | docker.io/twinproduction/gatus | v5.35.0 |
 | docker.io/valkey/valkey | 9 |
@@ -54,7 +54,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | ghcr.io/autobrr/qui | v1.18.0 |
 | ghcr.io/davegallant/rfd-fyi | 0.5.0 |
 | ghcr.io/dispatcharr/dispatcharr | 0.24.0 |
-| ghcr.io/gethomepage/homepage | v1.12.3 |
+| ghcr.io/gethomepage/homepage | v1.13.0 |
 | ghcr.io/hargata/lubelogger | v1.4.5 |
 | ghcr.io/immich-app/immich-machine-learning | v2.7.5 |
 | ghcr.io/immich-app/immich-server | v2.7.5 |
