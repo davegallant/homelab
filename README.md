@@ -38,7 +38,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/linuxserver/sonarr | 4.0.17 |
 | docker.io/linuxserver/speedtest-tracker | 1.14.0 |
 | docker.io/mariadb | 12.2.2 |
-| docker.io/miniflux/miniflux | 2.2.19 |
+| docker.io/miniflux/miniflux | 2.3.0 |
 | docker.io/paperlessngx/paperless-ngx | 2.20.15 |
 | docker.io/postgres | 18.3 |
 | docker.io/rommapp/romm | 4.8.1 |
