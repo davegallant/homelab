@@ -31,20 +31,20 @@ fi
 # Services that use Pangolin sidecars
 SERVICES=(
   audiobookshelf
-  # bento-pdf
-  # dispatcharr
-  # forgejo
-  # gotify
-  # igotify
-  # invidious
-  # jellyfin
-  # miniflux
-  # navidrome
-  # paperless-ngx
-  # rfd-fyi
-  # searxng
-  # umami
-  # vikunja
+  bento-pdf
+  dispatcharr
+  forgejo
+  gotify
+  igotify
+  invidious
+  jellyfin
+  miniflux
+  navidrome
+  paperless-ngx
+  rfd-fyi
+  searxng
+  umami
+  vikunja
 )
 
 FAILED=0
