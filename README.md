@@ -71,12 +71,14 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 
 All hosts have tailscale installed on them, with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh). In some cases, [tailscale serve](https://tailscale.com/kb/1242/tailscale-serve) is used to expose services with [Let's Encrypt](https://letsencrypt.org/) certificates.
 
+Tailscale ACLs are used to tag and restrict nodes from accessing eachother.
+
 ## Logging
 
 Each host runs an instance of [Alloy](https://github.com/grafana/alloy) managed by systemd allowing for all journald and docker logs to be collected, labelled and sent to Grafana Loki.
 
 ## Maintenance
 
-I've cloned [Proxmox VE Helper-Scripts](https://github.com/community-scripts/ProxmoxVE) and run a few of the scripts to cleanup and update LXC containers.
+[ProxMenux](https://github.com/MacRimi/ProxMenux) is used to run update scripts and monitor key vitals of running proxmox nodes.
 
-Also, renovate is used to update dependencies and [pin digests](https://docs.renovatebot.com/presets-docker/#dockerpindigests).
+Renovate is used to update dependencies and [pin digests](https://docs.renovatebot.com/presets-docker/#dockerpindigests).
