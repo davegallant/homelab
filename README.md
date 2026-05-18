@@ -14,7 +14,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | codeberg.org/forgejo/forgejo | 15.0.2 |
 | data.forgejo.org/forgejo/runner | 12 |
 | docker.io/aceberg/watchyourlan | v2 |
-| docker.io/archivebox/archivebox | 0.7.3 |
+| docker.io/archivebox/archivebox | 0.7.4 |
 | docker.io/caronc/apprise | v1.4.1 |
 | docker.io/chrisbenincasa/tunarr | 1.2.20 |
 | docker.io/deluan/navidrome | 0.61.2 |
