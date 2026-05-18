@@ -7,12 +7,9 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
       - WEBUI_PORT=8080
-      - DOCKER_MODS=ghcr.io/themepark-dev/theme.park:qbittorrent
-      - TP_THEME=catppuccin-mocha
-      - TP_COMMUNITY_THEME=true
     volumes:
       - ~:/config
-      - /mnt/media/torrents:/downloads
+      - /mnt/torrents:/mnt/torrents
       - ~/scripts:/scripts
     ports:
       - 8080:8080

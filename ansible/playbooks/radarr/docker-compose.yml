@@ -12,5 +12,5 @@ services:
       - TZ=Etc/UTC
     volumes:
       - ~/radarr/config:/config
-      - /mnt/media/Movies:/mnt/media/Movies
-      - /mnt/media/torrents:/downloads
+      - /mnt/movies:/mnt/media/Movies
+      - /mnt/torrents:/mnt/torrents

@@ -13,5 +13,5 @@ services:
       - TZ=Etc/UTC
     volumes:
       - ~/sonarr/config:/config
-      - "/mnt/media/TV Shows:/mnt/media/TV Shows"
-      - /mnt/media/torrents:/downloads
+      - /mnt/tv:/mnt/tv
+      - /mnt/torrents:/mnt/torrents
