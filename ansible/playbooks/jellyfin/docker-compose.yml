@@ -11,8 +11,7 @@ services:
       - JELLYFIN_PublishedServerUrl={{ jellyfin_hostname }}
     volumes:
       - ./config:/config
-      - /mnt/movies:/mnt/movies:ro
-      - /mnt/tv:/mnt/tv:ro
+      - /mnt:/mnt:ro
     restart: always
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
