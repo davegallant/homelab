@@ -53,6 +53,17 @@
         name: alloy
         state: restarted
 
+    - name: Allow NFS port
+      community.general.ufw:
+        rule: allow
+        port: "2049"
+        proto: tcp
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+        policy: deny
+
     - name: Create /mnt/wdred1 mount point
       ansible.builtin.file:
         path: /mnt/wdred1
@@ -61,7 +72,7 @@
 
     - name: Create /mnt/wdred2 mount point
       ansible.builtin.file:
-        path: /mnt/wdred1
+        path: /mnt/wdred2
         state: directory
         mode: "0755"
 
@@ -92,14 +103,8 @@
         path: /mnt/pool
         src: /mnt/wdred1:/mnt/wdred2
         fstype: fuse.mergerfs
-        opts: defaults,nonempty,allow_other,use_ino,cache.files=off,moveonenospc=true,category.create=mfs,dropcacheonclose=true,minfreespace=250G,fsname=mergerfs
-        state: mounted
-
-    - name: Deploy /etc/exports
-      ansible.builtin.template:
-        src: exports.j2
-        dest: /etc/exports
-        mode: "0644"
+        opts: defaults,nonempty,allow_other,use_ino,cache.files=off,moveonenospc=true,category.create=mfs,dropcacheonclose=true,minfreespace=250G,inodecalc=path-hash,func.getattr=newest,fsname=mergerfs
+        state: present
 
     - name: Enable and start nfs-server
       ansible.builtin.systemd_service:
@@ -107,17 +112,14 @@
         enabled: true
         state: started
 
-    - name: Reload NFS exports
+    - name: Deploy /etc/exports
+      ansible.builtin.template:
+        src: exports.j2
+        dest: /etc/exports
+        mode: "0644"
+      notify: reload exports
+
+  handlers:
+    - name: reload exports
       ansible.builtin.command:
         cmd: exportfs -ra
-
-    - name: Allow NFS port
-      community.general.ufw:
-        rule: allow
-        port: "2049"
-        proto: tcp
-
-    - name: Enable UFW
-      community.general.ufw:
-        state: enabled
-        policy: deny
