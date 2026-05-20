@@ -1,6 +1,6 @@
 services:
   paperless-redis:
-    image: docker.io/library/redis:8@sha256:0c341492924cad6f5483f9133e43bd6c51ecdecbcadfac5b51657393b6a7936c
+    image: docker.io/library/redis:8@sha256:e628485c98f8cfe942d8b6f34d461dabf069884bf18932ccbdd9dd9af20b1acc
     container_name: paperless-redis
     restart: unless-stopped
     networks:
@@ -40,7 +40,7 @@ services:
       start_period: 40s
 
   paperless-db:
-    image: docker.io/postgres:18.4@sha256:f7ce845ee6873dd84be93c9828fe0d1fab0f9707dc9ac569694657398b290bce
+    image: docker.io/postgres:18.4@sha256:7aba8c66107ee218ddbaacb30eae46d774bf5e34ab77a917be819b4e227493c4
     container_name: paperless-db
     restart: always
     networks:

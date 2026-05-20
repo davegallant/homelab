@@ -19,7 +19,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/chrisbenincasa/tunarr | 1.2.21 |
 | docker.io/deluan/navidrome | 0.61.2 |
 | docker.io/dgtlmoon/changedetection.io | 0.55.5 |
-| docker.io/docker | 29.4.3-dind |
+| docker.io/docker | 29.5.1-dind |
 | docker.io/fosrl/newt | 1.12.5 |
 | docker.io/gotify/server | 2.9.1 |
 | docker.io/grafana/grafana | 13.0.1 |
@@ -44,7 +44,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/rommapp/romm | 4.8.1 |
 | docker.io/searxng/searxng | 2026.5.17-d7e8b7cd1 |
 | docker.io/tensorchord/pgvecto-rs | pg14-v0.2.0 |
-| docker.io/twinproduction/gatus | v5.35.0 |
+| docker.io/twinproduction/gatus | v5.36.0 |
 | docker.io/valkey/valkey | 9 |
 | docker.io/vaultwarden/server | 1.36.0 |
 | docker.io/vikunja/vikunja | 2.3.0 |
@@ -63,7 +63,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | ghcr.io/seerr-team/seerr | v3.2.0 |
 | ghcr.io/seriousm4x/upsnap | 5.3.5 |
 | ghcr.io/umami-software/umami | 3.1.0 |
-| quay.io/invidious/invidious | 2026.05.17-103f80e |
+| quay.io/invidious/invidious | 2026.05.19-e82ac67 |
 | quay.io/invidious/invidious-companion | master-6c76cab |
 <!-- DOCKER_SERVICES_END -->
 
