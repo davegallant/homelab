@@ -12,4 +12,5 @@ services:
     volumes:
       - ~/lidarr/config:/config
       - /mnt:/mnt
+      - /music:/music
     restart: always
