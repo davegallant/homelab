@@ -11,6 +11,5 @@ services:
       - TZ=Etc/UTC
     volumes:
       - ~/lidarr/config:/config
-      - /mnt/music:/mnt/music
-      - /mnt/torrents:/mnt/torrents
+      - /mnt:/mnt
     restart: always
