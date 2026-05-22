@@ -18,7 +18,7 @@ services:
     volumes:
       - ./speedtest-app:/config
       - "./web:/etc/ssl/web"
-    image: docker.io/linuxserver/speedtest-tracker:1.14.1@sha256:bf18a04f9e61573cefb0112ca9604a93a82451ada74050a6b30b41e30651d9a1
+    image: docker.io/linuxserver/speedtest-tracker:1.14.2@sha256:3f75c5ec7a14c232f91af1ddda4248543bb2e8f0aeb18fec64c34d2f42dd00ce
     restart: always
     depends_on:
       - speedtest-db
