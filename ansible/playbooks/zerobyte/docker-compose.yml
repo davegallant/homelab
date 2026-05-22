@@ -1,6 +1,6 @@
 services:
   zerobyte:
-    image: ghcr.io/nicotsx/zerobyte:v0.36@sha256:1bf6a7770d468c02f55e3655bb4d7e9a8da0291cdd8479f815faa6c1126bc14d
+    image: ghcr.io/nicotsx/zerobyte:v0.37@sha256:f3b9c936abb8bf49ab4340e6d8daa458b378f2bfe238d60bda398214e844d58d
     container_name: zerobyte
     restart: unless-stopped
     cap_add:
