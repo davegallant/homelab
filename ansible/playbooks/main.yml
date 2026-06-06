@@ -1,4 +1,5 @@
 ---
+- import_playbook: adguard-home/main.yml
 - import_playbook: archivebox/main.yml
 - import_playbook: audiobookshelf/main.yml
 - import_playbook: bedrock/main.yml

@@ -1,0 +1,9 @@
+services:
+  adguard-home:
+    image: docker.io/adguard/adguardhome:v0.107.65@sha256:19de22a99aa993014cf93d5dc30b65538c2188e950ae8c885511a4df6303d7e5
+    container_name: adguard-home
+    network_mode: host
+    restart: always
+    volumes:
+      - ./work:/opt/adguardhome/work
+      - ./conf:/opt/adguardhome/conf

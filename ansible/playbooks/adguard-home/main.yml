@@ -1,0 +1,74 @@
+---
+- name: Install adguard-home
+  hosts: adguard-home
+  tasks:
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-docker.yml
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-common-packages.yml
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-alloy.yml
+
+    - name: Copy docker-compose.yml
+      ansible.builtin.template:
+        src: docker-compose.yml
+        dest: "~/docker-compose.yml"
+        mode: "0640"
+
+    - name: Allow DNS over TCP
+      community.general.ufw:
+        rule: allow
+        port: "53"
+        proto: tcp
+
+    - name: Allow DNS over UDP
+      community.general.ufw:
+        rule: allow
+        port: "53"
+        proto: udp
+
+    - name: Allow AdGuard Home web port
+      community.general.ufw:
+        rule: allow
+        port: "80"
+        proto: tcp
+
+    - name: Allow AdGuard Home setup port
+      community.general.ufw:
+        rule: allow
+        port: "3000"
+        proto: tcp
+
+    - name: Allow DNS-over-HTTPS port
+      community.general.ufw:
+        rule: allow
+        port: "443"
+        proto: tcp
+
+    - name: Allow DNS-over-QUIC port
+      community.general.ufw:
+        rule: allow
+        port: "443"
+        proto: udp
+
+    - name: Allow DNS-over-TLS port
+      community.general.ufw:
+        rule: allow
+        port: "853"
+        proto: tcp
+
+    - name: Allow DNS-over-QUIC alternate port
+      community.general.ufw:
+        rule: allow
+        port: "853"
+        proto: udp
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+        policy: deny
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/docker-pull.yml
