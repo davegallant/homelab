@@ -4,7 +4,7 @@ pangolin_version := `ssh pangolin "grep -oP 'fosrl/pangolin:\\K[0-9]+\\.[0-9]+\\
 
 date := `date +%Y%m%d`
 backup_file := "pangolin-" + pangolin_version + "-" + date + ".tar.gz"
-local_dir := "/mnt/synology-2b/backups/pangolin"
+local_dir := "/Volumes/Backups/pangolin"
 
 # Show available recipes
 default:
