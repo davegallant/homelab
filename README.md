@@ -41,7 +41,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/miniflux/miniflux | 2.3.1 |
 | docker.io/paperlessngx/paperless-ngx | 2.20.15 |
 | docker.io/postgres | 18.4 |
-| docker.io/rommapp/romm | 4.9.0 |
+| docker.io/rommapp/romm | 4.9.1 |
 | docker.io/searxng/searxng | 2026.6.11-4dd0bf486 |
 | docker.io/tensorchord/pgvecto-rs | pg14-v0.2.0 |
 | docker.io/twinproduction/gatus | v5.36.0 |
