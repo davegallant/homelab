@@ -1,4 +1,3 @@
-
 services:
   miniflux:
     image: docker.io/miniflux/miniflux:2.3.1@sha256:42f14382a035e9d9bbc33910ca53f72d47177f75c3c638d2c5a85adf5582d538
@@ -14,7 +13,7 @@ services:
       - CREATE_ADMIN=1
       - ADMIN_USERNAME={{ miniflux_admin_username }}
       - ADMIN_PASSWORD={{ miniflux_admin_password }}
-      - BASE_URL=https://miniflux.snake-cloud.ts.net
+      - BASE_URL={{ miniflux_base_url }}
   miniflux-db:
     image: docker.io/postgres:18.4@sha256:8ff36f3c66371cba71d20ceedccfc3de9669a68737607888c4ef0af93abe8e39
     container_name: miniflux-db
