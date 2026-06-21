@@ -7,6 +7,10 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
       - WEBUI_PORT=8080
+      - DOCKER_MODS=ghcr.io/themepark-dev/theme.park:qbittorrent
+      - QBITTORRENT_VERSION=5.2.2
+      - TP_COMMUNITY_THEME=true
+      - TP_THEME=catppuccin-frappe
     volumes:
       - ~:/config
       - /mnt:/mnt
