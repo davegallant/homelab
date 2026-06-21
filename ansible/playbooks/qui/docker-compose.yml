@@ -1,9 +1,0 @@
-services:
-  qui:
-    image: ghcr.io/autobrr/qui:v1.20.0@sha256:946e96a158d847a01b5d0055aeadfc1998fff021974d0d5b1e61ccd7fb199450
-    container_name: qui
-    restart: unless-stopped
-    ports:
-      - "7476:7476"
-    volumes:
-      - ./qui:/config
