@@ -41,7 +41,6 @@ SERVICES=(
   miniflux
   navidrome
   paperless-ngx
-  rfd-fyi
   searxng
   umami
   vikunja
