@@ -105,6 +105,14 @@
     mode: '0644'
     backup: yes
 
+- name: Disable Alloy reporting
+  ansible.builtin.lineinfile:
+    path: /etc/default/alloy
+    regexp: "^CUSTOM_ARGS="
+    line: "CUSTOM_ARGS=--disable-reporting"
+    create: true
+    mode: "0644"
+
 - name: Enable and start alloy
   systemd:
     name: alloy
