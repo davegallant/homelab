@@ -38,4 +38,3 @@
 - import_playbook: upsnap/main.yml
 - import_playbook: watchyourlan/main.yml
 - import_playbook: vikunja/main.yml
-- import_playbook: zerobyte/main.yml
