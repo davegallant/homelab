@@ -1,0 +1,17 @@
+[global]
+  server string = hermes
+  workgroup = WORKGROUP
+  security = user
+  server min protocol = SMB2
+  hosts allow = 192.168.1. 100.64.0.0/255.192.0.0 127.
+  hosts deny = ALL
+
+[hermes]
+  path = /mnt/pool
+  browseable = yes
+  read only = no
+  guest ok = no
+  valid users = {{ hermes_samba_username }}
+  force user = root
+  create mask = 0664
+  directory mask = 0775
