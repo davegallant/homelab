@@ -24,7 +24,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/fosrl/newt | 1.13.0 |
 | docker.io/gotify/server | 2.9.1 |
 | docker.io/grafana/grafana | 13.0.2 |
-| docker.io/grafana/loki | 3.7.2 |
+| docker.io/grafana/loki | 3.7.3 |
 | docker.io/henrygd/beszel | 0.18.7 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.5.2 |
 | docker.io/jellyfin/jellyfin | 10.11.11 |
@@ -35,10 +35,10 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/linuxserver/prowlarr | 2.4.0 |
 | docker.io/linuxserver/qbittorrent | 5.2.2 |
 | docker.io/linuxserver/radarr | 6.2.1 |
-| docker.io/linuxserver/sonarr | 4.0.17 |
 | docker.io/linuxserver/speedtest-tracker | 1.14.5 |
+| docker.io/linuxserver/sonarr | 4.0.19 |
 | docker.io/mariadb | 12.2.2 |
-| docker.io/miniflux/miniflux | 2.3.1 |
+| docker.io/miniflux/miniflux | 2.3.2 |
 | docker.io/paperlessngx/paperless-ngx | 2.20.15 |
 | docker.io/postgres | 18.4 |
 | docker.io/rommapp/romm | 4.9.1 |
@@ -58,7 +58,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | ghcr.io/kiwix/kiwix-serve | 3.8.2 |
 | ghcr.io/seerr-team/seerr | v3.3.0 |
 | ghcr.io/seriousm4x/upsnap | 5.4.1 |
-| ghcr.io/umami-software/umami | 3.1.0 |
+| ghcr.io/umami-software/umami | 3.2.0 |
 | quay.io/invidious/invidious | 2026.06.15-c435dc1 |
 | quay.io/invidious/invidious-companion | master-6c76cab |
 <!-- DOCKER_SERVICES_END -->
