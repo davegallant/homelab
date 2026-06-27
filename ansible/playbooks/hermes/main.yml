@@ -10,6 +10,7 @@
         name:
           - mergerfs
           - nfs-kernel-server
+          - samba
         state: present
         update_cache: true
 
@@ -59,6 +60,20 @@
         port: "2049"
         proto: tcp
 
+    - name: Allow SMB port from LAN
+      community.general.ufw:
+        rule: allow
+        port: "445"
+        proto: tcp
+        from_ip: 192.168.1.0/24
+
+    - name: Allow SMB port from Tailscale
+      community.general.ufw:
+        rule: allow
+        port: "445"
+        proto: tcp
+        from_ip: 100.64.0.0/10
+
     - name: Enable UFW
       community.general.ufw:
         state: enabled
@@ -106,6 +121,39 @@
         opts: defaults,nonempty,allow_other,use_ino,cache.files=off,moveonenospc=true,category.create=mfs,dropcacheonclose=true,minfreespace=250G,inodecalc=path-hash,func.getattr=newest,fsname=mergerfs
         state: present
 
+    - name: Create Samba user
+      ansible.builtin.user:
+        name: "{{ hermes_samba_username }}"
+        system: true
+        shell: /usr/sbin/nologin
+        create_home: false
+
+    - name: Configure Samba password
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          if pdbedit -L -u "{{ hermes_samba_username }}" >/dev/null 2>&1; then
+            printf '%s\n%s\n' "{{ hermes_samba_password }}" "{{ hermes_samba_password }}" | smbpasswd -s "{{ hermes_samba_username }}"
+          else
+            printf '%s\n%s\n' "{{ hermes_samba_password }}" "{{ hermes_samba_password }}" | smbpasswd -s -a "{{ hermes_samba_username }}"
+          fi
+        executable: /usr/bin/bash
+      changed_when: true
+      no_log: true
+
+    - name: Deploy /etc/samba/smb.conf
+      ansible.builtin.template:
+        src: smb.conf.j2
+        dest: /etc/samba/smb.conf
+        mode: "0644"
+      notify: restart smbd
+
+    - name: Enable and start smbd
+      ansible.builtin.systemd_service:
+        name: smbd
+        enabled: true
+        state: started
+
     - name: Enable and start nfs-server
       ansible.builtin.systemd_service:
         name: nfs-server
@@ -123,3 +171,8 @@
     - name: reload exports
       ansible.builtin.command:
         cmd: exportfs -ra
+
+    - name: restart smbd
+      ansible.builtin.systemd_service:
+        name: smbd
+        state: restarted
