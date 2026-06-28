@@ -1,3 +1,9 @@
+- name: Remove stale implicit Compose network
+  community.docker.docker_network:
+    name: "root_{{ inventory_hostname }}"
+    state: absent
+  failed_when: false
+
 - name: Pull missing images and start containers
   community.docker.docker_compose_v2:
     project_src: .
