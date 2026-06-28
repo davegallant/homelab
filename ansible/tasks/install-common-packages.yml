@@ -7,7 +7,7 @@
       - ripgrep
       - ufw
       - unattended-upgrades
-    state: latest
+    state: present
 
 - name: Enable unattended-upgrades
   ansible.builtin.systemd_service:

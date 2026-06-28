@@ -4,7 +4,7 @@
       - python3
       - python3-pip
       - python3-requests
-    state: latest
+    state: present
 
 - name: Ensure /etc/apt/keyrings directory exists
   ansible.builtin.file:
@@ -42,4 +42,4 @@
       - docker-ce
       - docker-ce-cli
       - docker-compose-plugin
-    state: latest
+    state: present
