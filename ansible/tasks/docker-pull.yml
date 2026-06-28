@@ -1,7 +1,7 @@
 - name: Pull missing images and start containers
   community.docker.docker_compose_v2:
     project_src: .
-    project_name: "{{ inventory_hostname }}"
+    project_name: root
     pull: missing
 
 - name: Prune docker images
