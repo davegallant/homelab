@@ -1,6 +1,6 @@
 ---
-- name: Install hermes
-  hosts: hermes
+- name: Install cinema
+  hosts: cinema
   tasks:
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-common-packages.yml
@@ -123,7 +123,7 @@
 
     - name: Create Samba user
       ansible.builtin.user:
-        name: "{{ hermes_samba_username }}"
+        name: "{{ cinema_samba_username }}"
         system: true
         shell: /usr/sbin/nologin
         create_home: false
@@ -132,10 +132,10 @@
       ansible.builtin.shell:
         cmd: |
           set -o pipefail
-          if pdbedit -L -u "{{ hermes_samba_username }}" >/dev/null 2>&1; then
-            printf '%s\n%s\n' "{{ hermes_samba_password }}" "{{ hermes_samba_password }}" | smbpasswd -s "{{ hermes_samba_username }}"
+          if pdbedit -L -u "{{ cinema_samba_username }}" >/dev/null 2>&1; then
+            printf '%s\n%s\n' "{{ cinema_samba_password }}" "{{ cinema_samba_password }}" | smbpasswd -s "{{ cinema_samba_username }}"
           else
-            printf '%s\n%s\n' "{{ hermes_samba_password }}" "{{ hermes_samba_password }}" | smbpasswd -s -a "{{ hermes_samba_username }}"
+            printf '%s\n%s\n' "{{ cinema_samba_password }}" "{{ cinema_samba_password }}" | smbpasswd -s -a "{{ cinema_samba_username }}"
           fi
         executable: /usr/bin/bash
       changed_when: true
