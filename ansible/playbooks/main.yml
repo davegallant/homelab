@@ -7,12 +7,12 @@
 - import_playbook: beszel/main.yml
 - import_playbook: calibre-web/main.yml
 - import_playbook: changedetection/main.yml
+- import_playbook: cinema/main.yml
 - import_playbook: dispatcharr/main.yml
 - import_playbook: forgejo/main.yml
 - import_playbook: gatus/main.yml
 - import_playbook: gotify/main.yml
 - import_playbook: grafana/main.yml
-- import_playbook: hermes/main.yml
 - import_playbook: homepage/main.yml
 - import_playbook: igotify/main.yml
 - import_playbook: immich/main.yml
