@@ -19,7 +19,7 @@ services:
       - ./forgejo:/data
       - /etc/localtime:/etc/localtime:ro
   runner-1:
-    image: "data.forgejo.org/forgejo/runner:12@sha256:379b324d6942824b7487706c0a06be4d63e546c17b62bece4ae18c74364a8fae"
+    image: "data.forgejo.org/forgejo/runner:12@sha256:268ad0d1d24bd7ecf2386b7c44e8211398dc014ca81d4fd5fbad96fe79af18f5"
     links:
       - docker-in-docker
     depends_on:
@@ -35,7 +35,7 @@ services:
     restart: "unless-stopped"
     command: "forgejo-runner daemon --config runner-config.yml"
   runner-2:
-    image: data.forgejo.org/forgejo/runner:12@sha256:379b324d6942824b7487706c0a06be4d63e546c17b62bece4ae18c74364a8fae
+    image: data.forgejo.org/forgejo/runner:12@sha256:268ad0d1d24bd7ecf2386b7c44e8211398dc014ca81d4fd5fbad96fe79af18f5
     links:
       - docker-in-docker
     container_name: forgejo-runner-2
