@@ -47,7 +47,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/valkey/valkey | 9 |
 | docker.io/vikunja/vikunja | 2.3.0 |
 | ghcr.io/advplyr/audiobookshelf | 2.35.1 |
-| ghcr.io/alam00000/bentopdf | 2.8.5 |
+| ghcr.io/alam00000/bentopdf | 2.8.6 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.5.1.3 |
 | ghcr.io/dispatcharr/dispatcharr | 0.27.2 |
 | ghcr.io/gethomepage/homepage | v1.13.2 |
