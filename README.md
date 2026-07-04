@@ -42,7 +42,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/paperlessngx/paperless-ngx | 2.20.15 |
 | docker.io/postgres | 18.4 |
 | docker.io/rommapp/romm | 4.9.1 |
-| docker.io/searxng/searxng | 2026.6.20-fd42d4fda |
+| docker.io/searxng/searxng | 2026.7.3-747cec4c2 |
 | docker.io/twinproduction/gatus | v5.36.0 |
 | docker.io/valkey/valkey | 9 |
 | docker.io/vikunja/vikunja | 2.3.0 |
