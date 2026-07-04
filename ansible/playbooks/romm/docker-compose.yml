@@ -1,6 +1,6 @@
 services:
   romm:
-    image: docker.io/rommapp/romm:4.9.1@sha256:447850c35ee142c0cc97076ae9c4396975e15141750cb591f4da98c2878cbfeb
+    image: docker.io/rommapp/romm:4.9.2@sha256:c81778afcafe7c865bdf156d1c62349aec3dfca3aca5ec0d6c2c2e8bfa9fb071
     container_name: romm
     restart: always
     environment:
