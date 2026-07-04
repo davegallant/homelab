@@ -26,7 +26,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/grafana/grafana | 13.1.0 |
 | docker.io/grafana/loki | 3.7.3 |
 | docker.io/henrygd/beszel | 0.18.7 |
-| docker.io/itzg/minecraft-bedrock-server | 2026.5.2 |
+| docker.io/itzg/minecraft-bedrock-server | 2026.6.2 |
 | docker.io/jellyfin/jellyfin | 10.11.11 |
 | docker.io/krateng/maloja | 3.2.4 |
 | docker.io/library/redis | 8 |
@@ -42,7 +42,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/paperlessngx/paperless-ngx | 2.20.15 |
 | docker.io/postgres | 18.4 |
 | docker.io/rommapp/romm | 4.9.2 |
-| docker.io/searxng/searxng | 2026.6.20-fd42d4fda |
+| docker.io/searxng/searxng | 2026.7.3-747cec4c2 |
 | docker.io/twinproduction/gatus | v5.36.0 |
 | docker.io/valkey/valkey | 9 |
 | docker.io/vikunja/vikunja | 2.3.0 |
