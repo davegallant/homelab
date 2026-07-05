@@ -43,7 +43,6 @@ SERVICES=(
   paperless-ngx
   searxng
   umami
-  vikunja
 )
 
 FAILED=0

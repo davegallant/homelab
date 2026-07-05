@@ -36,4 +36,3 @@
 - import_playbook: tunarr/main.yml
 - import_playbook: umami/main.yml
 - import_playbook: watchyourlan/main.yml
-- import_playbook: vikunja/main.yml

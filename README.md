@@ -45,7 +45,6 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/searxng/searxng | 2026.7.3-747cec4c2 |
 | docker.io/twinproduction/gatus | v5.36.0 |
 | docker.io/valkey/valkey | 9 |
-| docker.io/vikunja/vikunja | 2.3.0 |
 | ghcr.io/advplyr/audiobookshelf | 2.35.1 |
 | ghcr.io/alam00000/bentopdf | 2.8.6 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.5.1.3 |
