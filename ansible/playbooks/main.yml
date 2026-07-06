@@ -5,7 +5,6 @@
 - import_playbook: bedrock/main.yml
 - import_playbook: bento-pdf/main.yml
 - import_playbook: beszel/main.yml
-- import_playbook: calibre-web/main.yml
 - import_playbook: changedetection/main.yml
 - import_playbook: cinema/main.yml
 - import_playbook: dispatcharr/main.yml
