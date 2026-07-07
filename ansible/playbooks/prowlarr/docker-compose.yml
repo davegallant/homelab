@@ -11,3 +11,13 @@ services:
     ports:
       - 9696:9696
     restart: always
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:v3.4.1
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - CAPTCHA_SOLVER=none
+      - TZ=Etc/UTC
+    restart: unless-stopped
