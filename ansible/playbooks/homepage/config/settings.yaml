@@ -1,0 +1,22 @@
+# For configuration options and examples, please see:
+# https://gethomepage.dev/latest/configs/settings
+
+title: DG's homepage
+
+cardBlur: sm
+
+quicklaunch:
+  searchDescriptions: true
+  hideInternetSearch: true
+  hideVisitURL: true
+
+providers:
+  openweathermap: "{% raw %}{{HOMEPAGE_VAR_OPENWEATHERMAP_API_KEY}}{% endraw %}"
+
+layout:
+  Stats:
+    style: row
+    columns: 3
+  Quick Links:
+    style: row
+    columns: 4

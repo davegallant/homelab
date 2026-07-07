@@ -11,10 +11,28 @@
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-alloy.yml
 
+    - name: Create Homepage config directory
+      ansible.builtin.file:
+        path: "~/config"
+        state: directory
+        mode: "0755"
+
     - name: Copy docker-compose.yml
-      ansible.builtin.copy:
+      ansible.builtin.template:
         src: docker-compose.yml
         dest: "~/docker-compose.yml"
+        mode: "0640"
+
+    - name: Copy services.yaml
+      ansible.builtin.template:
+        src: config/services.yaml
+        dest: "~/config/services.yaml"
+        mode: "0640"
+
+    - name: Copy settings.yaml
+      ansible.builtin.template:
+        src: config/settings.yaml
+        dest: "~/config/settings.yaml"
         mode: "0640"
 
     - name: Enable UFW

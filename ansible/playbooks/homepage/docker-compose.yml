@@ -3,13 +3,52 @@ services:
     image: ghcr.io/gethomepage/homepage:v1.13.2@sha256:a0b71c8e757298d02560186bab9fbe3fc2d375c523a62cc1019177b37e48aa28
     container_name: homepage
     environment:
-      PUID: 1000
-      PGID: 1000
-      HOMEPAGE_ALLOWED_HOSTS: homepage.snake-cloud.ts.net
+      - PUID=1000
+      - PGID=1000
+      - HOMEPAGE_ALLOWED_HOSTS=homepage.snake-cloud.ts.net
+      - "HOMEPAGE_VAR_GOTIFY_API_KEY={{ homepage_gotify_api_key }}"
+      - "HOMEPAGE_VAR_IMMICH_API_KEY={{ homepage_immich_api_key }}"
+      - "HOMEPAGE_VAR_ADGUARD_HOME_USERNAME={{ homepage_adguard_home_username }}"
+      - "HOMEPAGE_VAR_ADGUARD_HOME_PASSWORD={{ homepage_adguard_home_password }}"
+      - "HOMEPAGE_VAR_TRUENAS_API_KEY={{ homepage_truenas_api_key }}"
+      - "HOMEPAGE_VAR_OPENWEATHERMAP_API_KEY={{ homepage_openweathermap_api_key }}"
+      - "HOMEPAGE_VAR_GATUS_URL={{ homepage_gatus_url }}"
+      - "HOMEPAGE_VAR_SPEEDTEST_TRACKER_URL={{ homepage_speedtest_tracker_url }}"
+      - "HOMEPAGE_VAR_JELLYFIN_URL={{ homepage_jellyfin_url }}"
+      - "HOMEPAGE_VAR_GOTIFY_URL={{ homepage_gotify_url }}"
+      - "HOMEPAGE_VAR_IMMICH_URL={{ homepage_immich_url }}"
+      - "HOMEPAGE_VAR_ADGUARD_HOME_URL={{ homepage_adguard_home_url }}"
+      - "HOMEPAGE_VAR_TRUENAS_URL={{ homepage_truenas_url }}"
+      - "HOMEPAGE_VAR_PROXMOX_URL={{ homepage_proxmox_url }}"
+      - "HOMEPAGE_VAR_OPNSENSE_URL={{ homepage_opnsense_url }}"
+      - "HOMEPAGE_VAR_HOMEASSISTANT_URL={{ homepage_homeassistant_url }}"
+      - "HOMEPAGE_VAR_AUDIOBOOKSHELF_URL={{ homepage_audiobookshelf_url }}"
+      - "HOMEPAGE_VAR_MALOJA_URL={{ homepage_maloja_url }}"
+      - "HOMEPAGE_VAR_FORGEJO_URL={{ homepage_forgejo_url }}"
+      - "HOMEPAGE_VAR_NAVIDROME_URL={{ homepage_navidrome_url }}"
+      - "HOMEPAGE_VAR_INVIDIOUS_URL={{ homepage_invidious_url }}"
+      - "HOMEPAGE_VAR_CHANGEDETECTION_URL={{ homepage_changedetection_url }}"
+      - "HOMEPAGE_VAR_BENTOPDF_URL={{ homepage_bentopdf_url }}"
+      - "HOMEPAGE_VAR_ARCHIVEBOX_URL={{ homepage_archivebox_url }}"
+      - "HOMEPAGE_VAR_LUBELOGGER_URL={{ homepage_lubelogger_url }}"
+      - "HOMEPAGE_VAR_GRAFANA_URL={{ homepage_grafana_url }}"
+      - "HOMEPAGE_VAR_WATCHYOURLAN_URL={{ homepage_watchyourlan_url }}"
+      - "HOMEPAGE_VAR_BESZEL_URL={{ homepage_beszel_url }}"
+      - "HOMEPAGE_VAR_PROWLARR_URL={{ homepage_prowlarr_url }}"
+      - "HOMEPAGE_VAR_UMAMI_URL={{ homepage_umami_url }}"
+      - "HOMEPAGE_VAR_ROMM_URL={{ homepage_romm_url }}"
+      - "HOMEPAGE_VAR_MINIFLUX_URL={{ homepage_miniflux_url }}"
+      - "HOMEPAGE_VAR_SONARR_URL={{ homepage_sonarr_url }}"
+      - "HOMEPAGE_VAR_RADARR_URL={{ homepage_radarr_url }}"
+      - "HOMEPAGE_VAR_LIDARR_URL={{ homepage_lidarr_url }}"
+      - "HOMEPAGE_VAR_DISPATCHARR_URL={{ homepage_dispatcharr_url }}"
+      - "HOMEPAGE_VAR_QBITTORRENT_URL={{ homepage_qbittorrent_url }}"
+      - "HOMEPAGE_VAR_SEERR_URL={{ homepage_seerr_url }}"
+      - "HOMEPAGE_VAR_PAPERLESS_NGX_URL={{ homepage_paperless_ngx_url }}"
+      - "HOMEPAGE_VAR_GL_MT3000_URL={{ homepage_gl_mt3000_url }}"
     ports:
       - 3000:3000
     volumes:
       - ./config:/app/config
-      - ./config/images:/app/public/images
       - ./config/icons:/app/public/icons
     restart: always
