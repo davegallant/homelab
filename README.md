@@ -48,7 +48,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | ghcr.io/alam00000/bentopdf | 2.8.6 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.5.1.3 |
 | ghcr.io/dispatcharr/dispatcharr | 0.27.2 |
-| ghcr.io/flaresolverr/flaresolverr | v3.4.1 |
+| ghcr.io/flaresolverr/flaresolverr | v3.5.0 |
 | ghcr.io/gethomepage/homepage | v1.13.2 |
 | ghcr.io/hargata/lubelogger | v1.4.5 |
 | ghcr.io/immich-app/immich-machine-learning | v3.0.1 |
