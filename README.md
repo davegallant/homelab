@@ -19,7 +19,7 @@ Why use Proxmox rather than a single host with docker compose? Mostly because Pr
 | docker.io/caronc/apprise | v1.5.0 |
 | docker.io/chrisbenincasa/tunarr | 1.3.8 |
 | docker.io/deluan/navidrome | 0.62.0 |
-| docker.io/dgtlmoon/changedetection.io | 0.55.5 |
+| docker.io/dgtlmoon/changedetection.io | 0.55.7 |
 | docker.io/docker | 29.5.2-dind |
 | docker.io/fosrl/newt | 1.14.0 |
 | docker.io/gotify/server | 2.9.1 |
