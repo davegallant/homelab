@@ -12,7 +12,7 @@
         file: ../../tasks/install-alloy.yml
 
     - name: Copy docker-compose.yml
-      ansible.builtin.copy:
+      ansible.builtin.template:
         src: docker-compose.yml
         dest: "~/docker-compose.yml"
         mode: "0640"
