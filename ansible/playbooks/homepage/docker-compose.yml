@@ -45,6 +45,7 @@ services:
       - "HOMEPAGE_VAR_QBITTORRENT_URL={{ homepage_qbittorrent_url }}"
       - "HOMEPAGE_VAR_SEERR_URL={{ homepage_seerr_url }}"
       - "HOMEPAGE_VAR_PAPERLESS_NGX_URL={{ homepage_paperless_ngx_url }}"
+      - "HOMEPAGE_VAR_UPSNAP_URL={{ homepage_upsnap_url }}"
       - "HOMEPAGE_VAR_GL_MT3000_URL={{ homepage_gl_mt3000_url }}"
     ports:
       - 3000:3000
