@@ -1,34 +1,34 @@
 - name: Install gpg
-  apt:
+  ansible.builtin.apt:
     name:
       - gpg
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: Ensure /etc/apt/keyrings directory exists
-  file:
+  ansible.builtin.file:
     path: /etc/apt/keyrings
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Download Grafana GPG key
-  get_url:
+  ansible.builtin.get_url:
     url: https://apt.grafana.com/gpg-full.key
     dest: /etc/apt/keyrings/grafana.asc
-    mode: '0644'
+    mode: "0644"
 
 - name: Add Grafana APT repository
-  apt_repository:
+  ansible.builtin.apt_repository:
     repo: "deb [signed-by=/etc/apt/keyrings/grafana.asc] https://apt.grafana.com stable main"
     filename: grafana
     state: present
 
 - name: Install alloy
-  apt:
+  ansible.builtin.apt:
     name:
       - alloy
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: Ensure docker group exists
   ansible.builtin.group:
@@ -39,16 +39,16 @@
   ansible.builtin.user:
     name: alloy
     groups: docker
-    append: yes
+    append: true
 
 - name: Create /etc/alloy directory
-  file:
+  ansible.builtin.file:
     path: /etc/alloy
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Deploy Alloy configuration file
-  copy:
+  ansible.builtin.copy:
     dest: /etc/alloy/config.alloy
     content: |
       loki.relabel "journal" {
@@ -102,8 +102,8 @@
           url = "{{ loki_url }}"
         }
       }
-    mode: '0644'
-    backup: yes
+    mode: "0644"
+    backup: true
 
 - name: Disable Alloy reporting
   ansible.builtin.lineinfile:
@@ -114,8 +114,8 @@
     mode: "0644"
 
 - name: Enable and start alloy
-  systemd:
+  ansible.builtin.systemd:
     name: alloy
-    daemon_reload: yes
+    daemon_reload: true
     enabled: true
     state: restarted
