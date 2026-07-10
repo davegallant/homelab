@@ -1,6 +1,6 @@
 services:
   qbittorrent:
-    image: docker.io/linuxserver/qbittorrent:5.2.2@sha256:bca2cf536c00900f0b8fb62ca3dcbed8ee64293165d41c8240d2cc952d4ef048
+    image: docker.io/linuxserver/qbittorrent:5.2.3@sha256:2e074403c7b72e6d89cee3d0d41a47f7b5708c6a9e5316f3958c90765cbe12ce
     container_name: qbittorrent
     environment:
       - PUID=1000
