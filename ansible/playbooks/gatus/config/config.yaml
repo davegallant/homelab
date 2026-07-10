@@ -1,0 +1,163 @@
+storage:
+  type: sqlite
+  path: /data/data.db
+
+alerting:
+  gotify:
+    server-url: "{{ gotify_server_url }}"
+    token: "{{ gatus_gotify_token }}"
+    default-alert:
+      description: "Health Check Failed"
+      send-on-resolved: true
+      failure-threshold: 3
+      success-threshold: 2
+
+endpoint-defaults: &defaults
+  interval: 30s
+  client:
+    timeout: 10s
+  conditions:
+    - "[STATUS] == 200"
+    - "[RESPONSE_TIME] < 5000"
+  alerts:
+    - type: gotify
+
+endpoints:
+  - name: changedetection
+    url: "{{ changedetection_url }}"
+    <<: *defaults
+
+  - name: homepage
+    url: "{{ homepage_url }}"
+    <<: *defaults
+
+  - name: immich
+    url: "{{ immich_url }}"
+    <<: *defaults
+
+  - name: prowlarr
+    url: "{{ prowlarr_url }}health"
+    <<: *defaults
+
+  - name: lidarr
+    url: "{{ lidarr_url }}"
+    <<: *defaults
+
+  - name: qbittorrent
+    url: "{{ qbittorrent_url }}"
+    <<: *defaults
+
+  - name: radarr
+    url: "{{ radarr_url }}"
+    <<: *defaults
+
+  - name: sonarr
+    url: "{{ sonarr_url }}"
+    <<: *defaults
+
+  - name: seerr
+    url: "{{ seerr_url }}"
+    <<: *defaults
+
+  - name: speedtest-tracker
+    url: "{{ speedtest_tracker_url }}/admin/login"
+    <<: *defaults
+
+  - name: bento-pdf
+    url: "{{ bentopdf_url }}"
+    <<: *defaults
+
+  - name: watchyourlan
+    url: "{{ watchyourlan_url }}"
+    <<: *defaults
+
+  - name: lubelogger
+    url: "{{ lubelogger_url }}"
+    <<: *defaults
+
+  - name: navidrome
+    url: "{{ navidrome_url }}"
+    <<: *defaults
+
+  - name: maloja
+    url: "{{ maloja_url }}"
+    <<: *defaults
+
+  - name: archivebox
+    url: "{{ archivebox_url }}"
+    <<: *defaults
+
+  - name: beszel
+    url: "{{ beszel_url }}"
+    <<: *defaults
+
+  - name: homeassistant
+    url: "{{ homeassistant_url }}"
+    <<: *defaults
+
+  - name: upsnap
+    url: "{{ upsnap_url }}"
+    <<: *defaults
+
+  - name: umami
+    url: "{{ umami_url }}"
+    <<: *defaults
+
+  - name: dispatcharr
+    url: "{{ dispatcharr_url }}"
+    <<: *defaults
+
+  - name: jellyfin
+    url: "{{ jellyfin_url }}"
+    <<: *defaults
+
+  - name: adguard-home
+    url: "{{ adguard_home_url }}"
+    <<: *defaults
+
+  - name: truenas
+    url: "{{ truenas_url }}"
+    <<: *defaults
+    client:
+      timeout: 10s
+      insecure: true
+
+  - name: proxmox
+    url: "{{ proxmox_url }}"
+    <<: *defaults
+
+  - name: opnsense
+    url: "{{ opnsense_url }}"
+    <<: *defaults
+
+  - name: audiobookshelf
+    url: "{{ audiobookshelf_url }}"
+    <<: *defaults
+
+  - name: forgejo
+    url: "{{ forgejo_url }}"
+    <<: *defaults
+
+  - name: invidious
+    url: "{{ invidious_url }}"
+    <<: *defaults
+
+  - name: grafana
+    url: "{{ grafana_url }}"
+    <<: *defaults
+
+  - name: romm
+    url: "{{ romm_url }}"
+    <<: *defaults
+
+  - name: miniflux
+    url: "{{ miniflux_url }}"
+    <<: *defaults
+
+  - name: paperless-ngx
+    url: "{{ paperless_ngx_url }}"
+    <<: *defaults
+
+  - name: gl-mt3000
+    url: "{{ gl_mt3000_url }}"
+    <<: *defaults
