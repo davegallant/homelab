@@ -285,6 +285,6 @@ The vault password is injected via `secrets.ANSIBLE_VAULT_PASSWORD`.
 | ghcr.io/kiwix/kiwix-serve | 3.8.2 |
 | ghcr.io/seerr-team/seerr | v3.3.0 |
 | ghcr.io/umami-software/umami | 3.2.0 |
-| quay.io/invidious/invidious | 2026.06.30-77ad416 |
+| quay.io/invidious/invidious | 2026.07.07-6373ac7 |
 | quay.io/invidious/invidious-companion | master-6c76cab |
 <!-- DOCKER_SERVICES_END -->
