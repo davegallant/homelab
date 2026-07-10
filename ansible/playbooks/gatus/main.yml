@@ -11,11 +11,35 @@
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-alloy.yml
 
+    - name: Create gatus config directory
+      ansible.builtin.file:
+        path: "~/config"
+        state: directory
+        mode: "0750"
+        owner: "999"
+        group: "999"
+
+    - name: Create gatus data directory
+      ansible.builtin.file:
+        path: "~/data"
+        state: directory
+        mode: "0750"
+        owner: "999"
+        group: "999"
+
     - name: Copy docker-compose.yml
       ansible.builtin.template:
         src: docker-compose.yml
         dest: "~/docker-compose.yml"
         mode: "0640"
+
+    - name: Copy config.yaml
+      ansible.builtin.template:
+        src: config/config.yaml
+        dest: "~/config/config.yaml"
+        mode: "0640"
+        owner: "999"
+        group: "999"
 
     - name: Enable UFW
       community.general.ufw:
