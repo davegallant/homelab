@@ -158,6 +158,10 @@
         icon: paperless-ngx
         href: "{% raw %}{{HOMEPAGE_VAR_PAPERLESS_NGX_URL}}{% endraw %}"
         description: document management
+    - upsnap:
+        icon: upsnap
+        href: "{% raw %}{{HOMEPAGE_VAR_UPSNAP_URL}}{% endraw %}"
+        description: wake on lan
     - GL-MT3000:
         icon: router
         href: "{% raw %}{{HOMEPAGE_VAR_GL_MT3000_URL}}{% endraw %}"
