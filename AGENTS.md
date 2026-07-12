@@ -57,7 +57,7 @@ Every service playbook follows this exact pattern:
         policy: deny
 
     - ansible.builtin.include_tasks:
-        file: ../../tasks/docker-pull.yml
+        file: ../../tasks/docker-compose-up.yml
 ```
 
 ### Style rules
@@ -87,7 +87,7 @@ Every service playbook follows this exact pattern:
 4. Copy compose file(s) and any extra config files
 5. UFW allow rules for specific ports (if needed)
 6. Enable UFW with deny-all policy
-7. Include `docker-pull.yml` (always last)
+7. Include `docker-compose-up.yml` (always last)
 
 ## Docker Compose Conventions
 
