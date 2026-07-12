@@ -1,7 +1,7 @@
 services:
   navidrome:
     container_name: navidrome
-    image: docker.io/deluan/navidrome:0.63.1@sha256:7c43af9f651654e97278be871705aae85a4ee0fa4b310337989699a8ada9b3ed
+    image: docker.io/deluan/navidrome:0.63.2@sha256:9012939114fbb1bb641b81cf96dec5ded15f0aafefe8d47a511d7cb919658e40
     user: 1000:1000 # should be owner of volumes
     networks:
       - navidrome
