@@ -11,6 +11,9 @@
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-alloy.yml
 
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-beszel-agent.yml
+
     - name: Copy docker-compose.yml
       ansible.builtin.template:
         src: docker-compose.yml
