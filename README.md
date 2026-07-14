@@ -92,16 +92,11 @@ Each LXC container runs:
 | [LubeLogger](https://lubelogger.com) | Vehicle maintenance tracker |
 | [Bento PDF](https://github.com/alam00000/bentopdf) | PDF manipulation tool |
 
-### 🏠 Home Dashboard & Monitoring
+### 🏠 Home Dashboard
 
 | Service | Description |
 |---|---|
 | [Homepage](https://gethomepage.dev) | Highly customizable services dashboard with live widget integrations |
-| [Gatus](https://gatus.io) | Automated service health monitoring with alerting |
-| [Beszel](https://github.com/henrygd/beszel) | Lightweight server monitoring hub |
-| [Speedtest Tracker](https://github.com/linuxserver/docker-speedtest-tracker) | Scheduled internet speed history |
-| [WatchYourLAN](https://github.com/aceberg/watchyourlan) | Network IP scanner and device tracker |
-| [ChangeDetection.io](https://changedetection.io) | Website change monitoring and alerting |
 
 ### 🔔 Notifications
 
@@ -116,15 +111,12 @@ Each LXC container runs:
 | Service | Description |
 |---|---|
 | [AdGuard Home](https://adguard.com/adguard-home.html) | Network-wide DNS ad and tracker blocking |
-| [Tailscale Exit Node](https://tailscale.com/kb/1103/exit-nodes/) | Routes internet traffic through the homelab |
-| [Tailscale Subnet Router](https://tailscale.com/kb/1019/subnets/) | Exposes local subnets to the Tailnet |
 
 ### 🔧 Developer Tools
 
 | Service | Description |
 |---|---|
 | [Forgejo](https://forgejo.org) | Self-hosted Git service (Gitea fork) |
-| [Forgejo Runner](https://code.forgejo.org/forgejo/runner) | CI runner for Forgejo Actions |
 | [Umami](https://umami.is) | Privacy-focused website analytics |
 
 ### 📊 Observability Stack
@@ -133,6 +125,11 @@ Each LXC container runs:
 |---|---|
 | [Grafana](https://grafana.com) | Metrics and log dashboards |
 | [Loki](https://grafana.com/oss/loki/) | Log aggregation backend, receives from all Alloy agents |
+| [Gatus](https://gatus.io) | Automated service health monitoring with alerting |
+| [Beszel](https://github.com/henrygd/beszel) | Lightweight server monitoring hub |
+| [Speedtest Tracker](https://github.com/linuxserver/docker-speedtest-tracker) | Scheduled internet speed history |
+| [WatchYourLAN](https://github.com/aceberg/watchyourlan) | Network IP scanner and device tracker |
+| [ChangeDetection.io](https://changedetection.io) | Website change monitoring and alerting |
 
 ---
 
