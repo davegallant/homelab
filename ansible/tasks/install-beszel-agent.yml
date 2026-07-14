@@ -1,0 +1,39 @@
+- name: Download beszel-agent package
+  ansible.builtin.get_url:
+    # version must match the beszel hub image tag in playbooks/beszel/docker-compose.yml
+    url: "https://github.com/henrygd/beszel/releases/download/v0.18.7/beszel-agent_0.18.7_linux_amd64.deb"
+    dest: /tmp/beszel-agent.deb
+    mode: "0644"
+
+- name: Install beszel-agent package
+  ansible.builtin.apt:
+    deb: /tmp/beszel-agent.deb
+
+- name: Remove downloaded beszel-agent package
+  ansible.builtin.file:
+    path: /tmp/beszel-agent.deb
+    state: absent
+
+- name: Configure beszel-agent
+  ansible.builtin.copy:
+    dest: /etc/beszel-agent.conf
+    content: |
+      KEY={{ beszel_key }}
+      TOKEN={{ beszel_token }}
+      HUB_URL={{ beszel_hub_url }}
+    owner: beszel
+    group: beszel
+    mode: "0600"
+
+- name: Reset failed state from the package's own first-boot start attempt
+  ansible.builtin.command:
+    cmd: systemctl reset-failed beszel-agent
+  changed_when: false
+  failed_when: false
+
+- name: Enable and start beszel-agent
+  ansible.builtin.systemd:
+    name: beszel-agent
+    daemon_reload: true
+    enabled: true
+    state: restarted
