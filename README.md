@@ -242,7 +242,7 @@ The vault password is injected via `secrets.ANSIBLE_VAULT_PASSWORD`.
 | docker.io/adguard/adguardhome | v0.107.77 |
 | docker.io/archivebox/archivebox | 0.7.4 |
 | docker.io/caronc/apprise | v1.5.1 |
-| docker.io/chrisbenincasa/tunarr | 1.3.8 |
+| docker.io/chrisbenincasa/tunarr | 1.3.9 |
 | docker.io/deluan/navidrome | 0.63.2 |
 | docker.io/dgtlmoon/changedetection.io | 0.55.7 |
 | docker.io/docker | 29.6.1-dind |
