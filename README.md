@@ -284,5 +284,5 @@ The vault password is injected via `secrets.ANSIBLE_VAULT_PASSWORD`.
 | ghcr.io/seriousm4x/upsnap | 5.4.3 |
 | ghcr.io/umami-software/umami | 3.2.0 |
 | quay.io/invidious/invidious | 2026.07.14-c84acc1 |
-| quay.io/invidious/invidious-companion | 2026.07.14-d9b5379 |
+| quay.io/invidious/invidious-companion | 2026.07.17-2be5720 |
 <!-- DOCKER_SERVICES_END -->
