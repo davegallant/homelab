@@ -40,7 +40,7 @@ graph TD
     end
 
     alloy -->|"journald + Docker logs"| grafana
-    beszelagent -->|"system metrics"| beszel["Beszel"]
+    beszelagent -->|"system metrics"| beszel
 ```
 
 Each LXC container runs:
