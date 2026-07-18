@@ -21,13 +21,11 @@ graph TD
         end
         subgraph N2["Node 2"]
             grafana["grafana + loki"]
+            beszel["beszel"]
             homepage["homepage"]
-            n2etc["..."]
-        end
-        subgraph N3["Node 3"]
             jellyfin["jellyfin"]
             sonarr["sonarr / radarr"]
-            n3etc["..."]
+            n2etc["..."]
         end
     end
 
@@ -38,15 +36,18 @@ graph TD
     subgraph PerHost["Every LXC container runs"]
         docker["Docker"]
         alloy["Grafana Alloy\n(systemd)"]
+        beszelagent["beszel-agent\n(systemd)"]
         ufw["UFW\n(deny-all)"]
     end
 
     alloy -->|"journald + Docker logs"| grafana
+    beszelagent -->|"system metrics"| beszel["Beszel"]
 ```
 
 Each LXC container runs:
 - **Docker** (installed via Ansible)
 - **Grafana Alloy** (systemd service — ships journald + Docker logs → central Loki)
+- **beszel-agent** (systemd service — reports system metrics → central Beszel)
 - **UFW** (deny-all inbound; only Tailscale traffic is accepted)
 
 ---
