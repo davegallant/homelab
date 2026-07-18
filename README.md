@@ -266,7 +266,7 @@ The vault password is injected via `secrets.ANSIBLE_VAULT_PASSWORD`.
 | docker.io/paperlessngx/paperless-ngx | 2.20.15 |
 | docker.io/postgres | 18.4 |
 | docker.io/rommapp/romm | 4.9.2 |
-| docker.io/searxng/searxng | 2026.7.12-c19d86faa |
+| docker.io/searxng/searxng | 2026.7.17-81c9c2386 |
 | docker.io/twinproduction/gatus | v5.36.0 |
 | docker.io/valkey/valkey | 9 |
 | ghcr.io/advplyr/audiobookshelf | 2.35.1 |
