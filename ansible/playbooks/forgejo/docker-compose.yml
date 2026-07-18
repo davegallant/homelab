@@ -1,12 +1,12 @@
 services:
   docker-in-docker:
-    image: docker.io/docker:29.6.1-dind@sha256:66d292e5c26bd33a6f6f61cacb880de2186339a524ecba1ce098dbbaceed6515
+    image: docker.io/docker:29.6.2-dind@sha256:bfec1f5159c63a81ca6fdedbd81404d2c0e16378ed0feec3bb3fbf3998847659
     container_name: "docker_dind"
     privileged: "true"
     command: ["dockerd", "-H", "tcp://0.0.0.0:2375", "--tls=false"]
     restart: "unless-stopped"
   forgejo:
-    image: codeberg.org/forgejo/forgejo:15.0.4@sha256:9e14382433760127c87cb78c4dbc44b45abbb0c09c8479812c8e99b3dc893429
+    image: codeberg.org/forgejo/forgejo:15.0.5@sha256:eda2e378442d2f18cfa563994f8ad66e71f04ac9c3bb4259cc57bdd641890f5c
     container_name: forgejo
     environment:
       - USER_UID=1000

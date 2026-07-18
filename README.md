@@ -236,16 +236,16 @@ The vault password is injected via `secrets.ANSIBLE_VAULT_PASSWORD`.
 <!-- DOCKER_SERVICES_START -->
 | Image | Version |
 |-------|---------|
-| codeberg.org/forgejo/forgejo | 15.0.4 |
+| codeberg.org/forgejo/forgejo | 15.0.5 |
 | data.forgejo.org/forgejo/runner | 12 |
 | docker.io/aceberg/watchyourlan | v2 |
-| docker.io/adguard/adguardhome | v0.107.77 |
+| docker.io/adguard/adguardhome | v0.107.78 |
 | docker.io/archivebox/archivebox | 0.7.4 |
 | docker.io/caronc/apprise | v1.5.1 |
 | docker.io/chrisbenincasa/tunarr | 1.3.8 |
 | docker.io/deluan/navidrome | 0.63.2 |
 | docker.io/dgtlmoon/changedetection.io | 0.55.7 |
-| docker.io/docker | 29.6.1-dind |
+| docker.io/docker | 29.6.2-dind |
 | docker.io/fosrl/newt | 1.14.0 |
 | docker.io/gotify/server | 2.9.1 |
 | docker.io/grafana/grafana | 13.1.0 |
@@ -276,13 +276,13 @@ The vault password is injected via `secrets.ANSIBLE_VAULT_PASSWORD`.
 | ghcr.io/flaresolverr/flaresolverr | v3.5.0 |
 | ghcr.io/gethomepage/homepage | v1.13.2 |
 | ghcr.io/hargata/lubelogger | v1.4.5 |
-| ghcr.io/immich-app/immich-machine-learning | v3.0.2 |
-| ghcr.io/immich-app/immich-server | v3.0.2 |
+| ghcr.io/immich-app/immich-machine-learning | v3.0.3 |
+| ghcr.io/immich-app/immich-server | v3.0.3 |
 | ghcr.io/immich-app/postgres | 14-vectorchord0.4.3-pgvectors0.2.0 |
 | ghcr.io/kiwix/kiwix-serve | 3.8.2 |
 | ghcr.io/seerr-team/seerr | v3.3.0 |
-| ghcr.io/seriousm4x/upsnap | 5.4.2 |
+| ghcr.io/seriousm4x/upsnap | 5.4.3 |
 | ghcr.io/umami-software/umami | 3.2.0 |
-| quay.io/invidious/invidious | 2026.07.07-6373ac7 |
+| quay.io/invidious/invidious | 2026.07.14-c84acc1 |
 | quay.io/invidious/invidious-companion | 2026.07.17-2be5720 |
 <!-- DOCKER_SERVICES_END -->
