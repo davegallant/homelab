@@ -140,17 +140,6 @@ All hosts run **Tailscale** with [Tailscale SSH](https://tailscale.com/kb/1193/t
 
 For public-facing services, a **[Pangolin](https://github.com/fosrl/pangolin)** reverse proxy is provisioned separately. Each service that needs public exposure runs a **Newt** sidecar container that tunnels traffic outward from Pangolin — no inbound firewall rules required:
 
-```yaml
-newt:
-  image: docker.io/fosrl/newt:1.14.0
-  container_name: newt-<service>
-  restart: unless-stopped
-  environment:
-    - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
-    - NEWT_ID={{ service_newt_id }}
-    - NEWT_SECRET={{ service_newt_secret }}
-```
-
 For Tailnet-only services, [tailscale serve](https://tailscale.com/kb/1242/tailscale-serve) provides HTTPS with automatic Let's Encrypt certificates.
 
 ---
@@ -209,18 +198,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 3. Create `ansible/playbooks/<service>/docker-compose.yml` following [compose conventions](./AGENTS.md#docker-compose-conventions)
 4. Add an `import_playbook` line to `ansible/playbooks/main.yml`
 5. Reference secrets via `{{ variable }}` and define them in `group_vars/all/secrets.yaml` (Ansible Vault encrypted)
-
----
-
-## CI/CD
-
-| Trigger | Action |
-|---|---|
-| Push to `main` | All playbooks run via GitHub Actions matrix against real infrastructure |
-| Manual dispatch | Run a single playbook by name via `run-single-playbook.yml` |
-| Compose file change | `update-containers-table.yml` regenerates the image index below |
-
-The vault password is injected via `secrets.ANSIBLE_VAULT_PASSWORD`.
 
 ---
 
