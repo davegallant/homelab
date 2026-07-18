@@ -151,7 +151,7 @@ Every host runs **[Grafana Alloy](https://grafana.com/docs/alloy/)** as a system
 - **journald** — all systemd unit logs, labelled with `host` and `unit`
 - **Docker** — all container logs, labelled with `host` and `container` name
 
-Any service's logs are searchable in Grafana within seconds of emission, across all hosts in a single LogQL query.
+Any service's logs are searchable in Grafana.
 
 ---
 
