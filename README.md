@@ -236,7 +236,7 @@ The vault password is injected via `secrets.ANSIBLE_VAULT_PASSWORD`.
 <!-- DOCKER_SERVICES_START -->
 | Image | Version |
 |-------|---------|
-| codeberg.org/forgejo/forgejo | 15.0.4 |
+| codeberg.org/forgejo/forgejo | 15.0.5 |
 | data.forgejo.org/forgejo/runner | 12 |
 | docker.io/aceberg/watchyourlan | v2 |
 | docker.io/adguard/adguardhome | v0.107.77 |
