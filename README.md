@@ -191,16 +191,6 @@ just run "--limit immich"
 ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .vault_pass
 ```
 
-### Adding a New Service
-
-1. Add the hostname to `ansible/inventory` under `[homelab]` (alphabetical order)
-2. Create `ansible/playbooks/<service>/main.yml` following the [canonical structure](./AGENTS.md#playbook-structure-canonical-form)
-3. Create `ansible/playbooks/<service>/docker-compose.yml` following [compose conventions](./AGENTS.md#docker-compose-conventions)
-4. Add an `import_playbook` line to `ansible/playbooks/main.yml`
-5. Reference secrets via `{{ variable }}` and define them in `group_vars/all/secrets.yaml` (Ansible Vault encrypted)
-
----
-
 ## Maintenance
 
 [Renovate](https://docs.renovatebot.com) monitors all Docker image versions and opens PRs with updates. All images are pinned to specific versions **and** SHA digests (e.g., `image:v1.2.3@sha256:abc123`) to prevent silent supply-chain drift. Custom versioning rules handle date-versioned images like SearXNG and Invidious.
