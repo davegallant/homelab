@@ -240,7 +240,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | ghcr.io/advplyr/audiobookshelf | 2.35.1 |
 | ghcr.io/alam00000/bentopdf | 2.8.6 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.5.1.3 |
-| ghcr.io/dispatcharr/dispatcharr | 0.27.2 |
+| ghcr.io/dispatcharr/dispatcharr | 0.28.0 |
 | ghcr.io/flaresolverr/flaresolverr | v3.5.0 |
 | ghcr.io/gethomepage/homepage | v1.13.2 |
 | ghcr.io/hargata/lubelogger | v1.4.5 |
