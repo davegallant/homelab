@@ -29,15 +29,14 @@ graph TD
         end
     end
 
-    Proxmox -->|"Tailscale mesh VPN\n(SSH + ACLs)"| ts["Tailscale Network"]
-    ts --> pangolin["Pangolin\nReverse Proxy"]
-    pangolin -->|"Newt tunnel sidecar\n(per service)"| internet["Public Internet\n(HTTPS)"]
+    Proxmox -->|"Tailscale mesh VPN\n(SSH + ACLs)"| ts["Tailnet"]
+    Proxmox -->|"Newt tunnel sidecar\n(per service)"| pangolin["Pangolin\nReverse Proxy\n(VPS)"]
+    pangolin -->|"HTTPS"| internet["Public Internet"]
 
     subgraph PerHost["Every LXC container runs"]
         docker["Docker"]
         alloy["Grafana Alloy\n(systemd)"]
         beszelagent["beszel-agent\n(systemd)"]
-        ufw["UFW\n(deny-all)"]
     end
 
     alloy -->|"journald + Docker logs"| grafana
@@ -48,7 +47,6 @@ Each LXC container runs:
 - **Docker** (installed via Ansible)
 - **Grafana Alloy** (systemd service — ships journald + Docker logs → central Loki)
 - **beszel-agent** (systemd service — reports system metrics → central Beszel)
-- **UFW** (deny-all inbound; only Tailscale traffic is accepted)
 
 ---
 
@@ -138,7 +136,7 @@ Each LXC container runs:
 
 All hosts run **Tailscale** with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh) enabled — there are no open SSH ports on the public internet. Tailscale ACLs tag and restrict which nodes can reach each other.
 
-For public-facing services, a **[Pangolin](https://github.com/fosrl/pangolin)** reverse proxy is provisioned separately. Each service that needs public exposure runs a **Newt** sidecar container that tunnels traffic outward from Pangolin — no inbound firewall rules required:
+For public-facing services, a **[Pangolin](https://github.com/fosrl/pangolin)** reverse proxy runs on a separate VPS. It has no dependency on Tailscale — each service that needs public exposure runs a **Newt** sidecar container that tunnels directly from the Proxmox cluster to Pangolin, no inbound firewall rules required:
 
 For Tailnet-only services, [tailscale serve](https://tailscale.com/kb/1242/tailscale-serve) provides HTTPS with automatic Let's Encrypt certificates.
 
