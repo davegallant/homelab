@@ -19,40 +19,18 @@ services:
       - PAPERLESS_ADMIN_PASSWORD={{ paperless_admin_password }}
       - PAPERLESS_URL={{ paperless_url }}
       - PAPERLESS_TIME_ZONE=UTC
-      - PAPERLESS_DBENGINE=postgresql
-      - POSTGRES_DB=paperless
-      - POSTGRES_USER={{ paperless_db_user }}
-      - POSTGRES_PASSWORD={{ paperless_db_password }}
-      - POSTGRES_HOST=paperless-db
       - PAPERLESS_REDIS=redis://paperless-redis:6379
     volumes:
       - ./data:/usr/src/paperless/data
       - ./consume:/usr/src/paperless/consume
       - ./media:/usr/src/paperless/media
       - ./export:/usr/src/paperless/export
-    depends_on:
-      - paperless-db
     healthcheck:
       test: ["CMD", "curl", "-fs", "-o", "/dev/null", "-w", "%{http_code}", "http://localhost:8000"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 40s
-
-  paperless-db:
-    image: docker.io/postgres:18.4@sha256:8ff36f3c66371cba71d20ceedccfc3de9669a68737607888c4ef0af93abe8e39
-    container_name: paperless-db
-    restart: always
-    networks:
-      - paperless
-    environment:
-      - POSTGRES_DB=paperless
-      - POSTGRES_USER={{ paperless_db_user }}
-      - POSTGRES_PASSWORD={{ paperless_db_password }}
-    volumes:
-      - ./pgdata:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
 
   newt:
     image: docker.io/fosrl/newt:1.15.0@sha256:d69d047c816ca7721eae90d5f3cd3be53b615b3d498678be21488d666538ee5c
