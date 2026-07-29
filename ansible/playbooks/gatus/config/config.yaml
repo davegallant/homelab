@@ -11,6 +11,7 @@ alerting:
       send-on-resolved: true
       failure-threshold: 3
       success-threshold: 2
+      minimum-reminder-interval: 1h
 
 endpoint-defaults: &defaults
   interval: 30s
