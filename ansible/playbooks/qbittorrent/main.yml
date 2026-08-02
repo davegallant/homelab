@@ -25,6 +25,17 @@
         path: "~/qBittorrent"
         state: directory
 
+    - name: Create 'scripts' directory
+      ansible.builtin.file:
+        path: "~/scripts"
+        state: directory
+
+    - name: Copy block-malware.sh
+      ansible.builtin.copy:
+        src: scripts/block-malware.sh
+        dest: "~/scripts/block-malware.sh"
+        mode: "0750"
+
     - name: Check whether qbittorrent.conf would change
       ansible.builtin.template:
         src: ./qbittorrent.conf
