@@ -25,11 +25,42 @@
         path: "~/qBittorrent"
         state: directory
 
+    - name: Check whether qbittorrent.conf would change
+      ansible.builtin.template:
+        src: ./qbittorrent.conf
+        dest: "~/qBittorrent/qBittorrent.conf"
+        mode: "0640"
+      check_mode: true
+      register: qbittorrent_conf_check
+
+    - name: Stop qbittorrent container before config change
+      community.docker.docker_container:
+        name: qbittorrent
+        state: stopped
+      when: qbittorrent_conf_check is changed
+
     - name: Copy qbittorrent.conf
       ansible.builtin.template:
         src: ./qbittorrent.conf
         dest: "~/qBittorrent/qBittorrent.conf"
         mode: "0640"
+
+    - name: Ensure git is installed
+      ansible.builtin.apt:
+        name: git
+        state: present
+
+    - name: Mark dracula directory as safe for git
+      ansible.builtin.command:
+        cmd: git config --global --add safe.directory {{ ansible_user_dir }}/qBittorrent/dracula
+      changed_when: false
+
+    - name: Clone Dracula WebUI theme
+      ansible.builtin.git:
+        repo: https://github.com/dracula/qbittorrent.git
+        dest: "~/qBittorrent/dracula"
+        version: 9020f6eb457087270179beb86d45914d434adb6b
+        force: true
 
     - name: Enable UFW
       community.general.ufw:
