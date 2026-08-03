@@ -242,8 +242,8 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | ghcr.io/flaresolverr/flaresolverr | v3.5.0 |
 | ghcr.io/gethomepage/homepage | v1.13.2 |
 | ghcr.io/hargata/lubelogger | v1.4.5 |
-| ghcr.io/immich-app/immich-machine-learning | v3.0.3 |
-| ghcr.io/immich-app/immich-server | v3.0.3 |
+| ghcr.io/immich-app/immich-machine-learning | v3.1.0 |
+| ghcr.io/immich-app/immich-server | v3.1.0 |
 | ghcr.io/immich-app/postgres | 14-vectorchord0.4.3-pgvectors0.2.0 |
 | ghcr.io/kiwix/kiwix-serve | 3.8.2 |
 | ghcr.io/seerr-team/seerr | v3.3.0 |
