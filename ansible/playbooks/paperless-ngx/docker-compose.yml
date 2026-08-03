@@ -1,6 +1,6 @@
 services:
   paperless-redis:
-    image: docker.io/library/redis:8@sha256:077ba791400f390cb96d9d419d90259d5e72e697fca7abc3bbde6d83285d7346
+    image: docker.io/library/redis:8@sha256:a7efd4ed5037dcfe1543c0e50b9f06293d3e88827005544bf37f381eea5f01cf
     container_name: paperless-redis
     restart: unless-stopped
     networks:
@@ -8,7 +8,7 @@ services:
     volumes:
       - ./redis-data:/data
   paperless-ngx:
-    image: docker.io/paperlessngx/paperless-ngx:3.0.3@sha256:17312f00bac06f8dad09d67c6c8c069fc5c076c0c22313241c673102dfaf8ee9
+    image: docker.io/paperlessngx/paperless-ngx:3.0.5@sha256:65a4cabf0169ea7fbd90ab7bb28ba3f8b5909613635acda1a03ad606f34b456b
     container_name: paperless-ngx
     restart: always
     networks:

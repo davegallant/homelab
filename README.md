@@ -203,12 +203,12 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | Image | Version |
 |-------|---------|
 | codeberg.org/forgejo/forgejo | 16.0.1 |
-| data.forgejo.org/forgejo/runner | 12 |
+| data.forgejo.org/forgejo/runner | 13 |
 | docker.io/aceberg/watchyourlan | v2 |
 | docker.io/adguard/adguardhome | v0.107.78 |
 | docker.io/archivebox/archivebox | 0.7.4 |
 | docker.io/caronc/apprise | v1.5.1 |
-| docker.io/chrisbenincasa/tunarr | 1.3.9 |
+| docker.io/chrisbenincasa/tunarr | 1.3.10 |
 | docker.io/deluan/navidrome | 0.63.2 |
 | docker.io/dgtlmoon/changedetection.io | 0.55.8 |
 | docker.io/docker | 29.6.2-dind |
@@ -217,7 +217,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/grafana/grafana | 13.1.1 |
 | docker.io/grafana/loki | 3.7.4 |
 | docker.io/henrygd/beszel | 0.18.7 |
-| docker.io/itzg/minecraft-bedrock-server | 2026.7.3 |
+| docker.io/itzg/minecraft-bedrock-server | 2026.7.6 |
 | docker.io/jellyfin/jellyfin | 10.11.11 |
 | docker.io/krateng/maloja | 3.2.4 |
 | docker.io/library/redis | 8 |
@@ -229,26 +229,26 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/linuxserver/speedtest-tracker | 1.14.6 |
 | docker.io/mariadb | 12.2.2 |
 | docker.io/miniflux/miniflux | 2.3.3 |
-| docker.io/paperlessngx/paperless-ngx | 3.0.3 |
+| docker.io/paperlessngx/paperless-ngx | 3.0.5 |
 | docker.io/postgres | 18.4 |
 | docker.io/rommapp/romm | 5.0.0 |
-| docker.io/searxng/searxng | 2026.7.25-0909dbc9e |
+| docker.io/searxng/searxng | 2026.8.3-aa059419f |
 | docker.io/twinproduction/gatus | v5.36.0 |
 | docker.io/valkey/valkey | 9 |
-| ghcr.io/advplyr/audiobookshelf | 2.35.1 |
+| ghcr.io/advplyr/audiobookshelf | 2.36.0 |
 | ghcr.io/alam00000/bentopdf | 2.8.7 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.5.1.3 |
 | ghcr.io/dispatcharr/dispatcharr | 0.28.2 |
 | ghcr.io/flaresolverr/flaresolverr | v3.5.0 |
 | ghcr.io/gethomepage/homepage | v1.13.2 |
 | ghcr.io/hargata/lubelogger | v1.4.5 |
-| ghcr.io/immich-app/immich-machine-learning | v3.0.3 |
-| ghcr.io/immich-app/immich-server | v3.0.3 |
+| ghcr.io/immich-app/immich-machine-learning | v3.1.0 |
+| ghcr.io/immich-app/immich-server | v3.1.0 |
 | ghcr.io/immich-app/postgres | 14-vectorchord0.4.3-pgvectors0.2.0 |
 | ghcr.io/kiwix/kiwix-serve | 3.8.2 |
-| ghcr.io/seerr-team/seerr | v3.3.0 |
+| ghcr.io/seerr-team/seerr | v3.4.1 |
 | ghcr.io/seriousm4x/upsnap | 5.4.4 |
 | ghcr.io/umami-software/umami | 3.2.0 |
 | quay.io/invidious/invidious | 2026.08.03-47b5d79 |
-| quay.io/invidious/invidious-companion | 2026.07.27-bea1290 |
+| quay.io/invidious/invidious-companion | 2026.08.03-438c668 |
 <!-- DOCKER_SERVICES_END -->
