@@ -96,10 +96,6 @@ endpoints:
     url: "{{ homeassistant_url }}"
     <<: *defaults
 
-  - name: upsnap
-    url: "{{ upsnap_url }}"
-    <<: *defaults
-
   - name: umami
     url: "{{ umami_url }}"
     <<: *defaults

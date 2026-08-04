@@ -247,7 +247,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | ghcr.io/immich-app/postgres | 14-vectorchord0.4.3-pgvectors0.2.0 |
 | ghcr.io/kiwix/kiwix-serve | 3.8.2 |
 | ghcr.io/seerr-team/seerr | v3.4.1 |
-| ghcr.io/seriousm4x/upsnap | 5.4.4 |
 | ghcr.io/umami-software/umami | 3.2.0 |
 | quay.io/invidious/invidious | 2026.08.03-47b5d79 |
 | quay.io/invidious/invidious-companion | 2026.08.03-438c668 |
