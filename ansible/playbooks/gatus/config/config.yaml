@@ -155,3 +155,7 @@ endpoints:
   - name: gl-mt3000
     url: "{{ gl_mt3000_url }}"
     <<: *defaults
+    # self-signed cert, overrides the merged client block
+    client:
+      timeout: 10s
+      insecure: true
