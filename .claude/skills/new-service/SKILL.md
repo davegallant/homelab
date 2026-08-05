@@ -15,6 +15,15 @@ This repo shares URL variables between the two -- see
    Service": inventory entry, `main.yml`, `docker-compose.yml`, import line
    in `ansible/playbooks/main.yml`.
 
+   Two conventions are enforced by `just lint` (and by the `Lint` workflow),
+   so getting them wrong fails CI:
+   - In map-form `environment:` blocks, **quote** Jinja values:
+     `APP_SECRET: "{{ service_secret }}"`. Bare `KEY: {{ var }}` is a YAML
+     flow mapping -- the file does not parse, and the rendered value breaks
+     if the secret contains `:` or `#`.
+   - `ansible.builtin.file` with `state: directory` needs an explicit
+     `mode:` (`"0755"`).
+
 2. **Add (or reuse) a shared URL secret.**
    - Decrypt the vault to a scratch file, edit, re-encrypt -- do not try to
      hand-edit the encrypted file:
@@ -100,7 +109,11 @@ This repo shares URL variables between the two -- see
    Then run `ansible-playbook playbooks/gatus/main.yml --syntax-check
    --vault-password-file .vault_pass` and the same for `homepage/main.yml`.
 
-6. **Sandbox note.** If `ansible-vault`/`ansible-playbook` fail with
+6. **Lint before opening a PR.** From the repo root, `just lint` runs
+   yamllint, ansible-lint (production profile) and shellcheck. The `Lint`
+   workflow runs the same three on every pull request.
+
+7. **Sandbox note.** If `ansible-vault`/`ansible-playbook` fail with
    `DEFAULT_LOCAL_TMP` permission errors, set
    `ANSIBLE_LOCAL_TEMP`/`ANSIBLE_REMOTE_TEMP` to a writable scratch dir
    before invoking them.

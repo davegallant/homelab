@@ -3,10 +3,10 @@
   hosts: audiobookshelf
   tasks:
     - ansible.builtin.include_tasks:
-        file: ../../tasks/install-common-packages.yml
+        file: ../../tasks/install-docker.yml
 
     - ansible.builtin.include_tasks:
-        file: ../../tasks/install-docker.yml
+        file: ../../tasks/install-common-packages.yml
 
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-alloy.yml
@@ -14,7 +14,7 @@
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-beszel-agent.yml
 
-    - name: Copy compose.yml
+    - name: Copy docker-compose.yml
       ansible.builtin.template:
         src: docker-compose.yml
         dest: "~/docker-compose.yml"
