@@ -6,3 +6,12 @@
 # playbooks/beszel/docker-compose.yml (hub image tag). Keep them in lockstep.
 # renovate: datasource=github-releases depName=henrygd/beszel
 beszel_version: "0.18.7"
+
+homelab_lan_subnet: 192.168.1.0/24
+
+# Sources allowed to reach published container ports (see the DOCKER-USER block
+# in tasks/install-docker.yml). Docker's own bridge networks (172.16.0.0/12) are
+# always allowed. Services that genuinely need to be reachable off the tailnet
+# override this in their play's vars: (see bedrock and jellyfin).
+ufw_docker_allowed_sources:
+  - 100.64.0.0/10  # Tailscale (CGNAT range)
