@@ -90,7 +90,11 @@
     cmd: ufw reload
   when: ufw_docker_rules is changed
   changed_when: true
-  # On a host being provisioned for the first time ufw is not enabled yet, so
-  # reload has nothing to reload. The "Enable UFW" task later in the playbook
-  # loads after.rules when it turns ufw on.
-  failed_when: false
+  register: ufw_reload
+  # A host being provisioned for the first time has no firewall to reload yet;
+  # the "Enable UFW" task later in the playbook loads after.rules when it turns
+  # ufw on. Anything else -- a malformed rule in the block above, say -- must
+  # fail loudly rather than leave the rules silently unloaded.
+  failed_when:
+    - ufw_reload.rc != 0
+    - "'not enabled' not in (ufw_reload.stdout | default('')) ~ (ufw_reload.stderr | default(''))"
