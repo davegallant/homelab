@@ -7,7 +7,7 @@ services:
     environment:
       DATABASE_URL: postgresql://{{ umami_db_user}}:{{ umami_db_password }}@db:5432/umami
       DATABASE_TYPE: postgresql
-      APP_SECRET: {{ umami_app_secret }}
+      APP_SECRET: "{{ umami_app_secret }}"
     depends_on:
       db:
         condition: service_healthy
@@ -25,8 +25,8 @@ services:
       - umami
     environment:
       POSTGRES_DB: umami
-      POSTGRES_USER: {{ umami_db_user }}
-      POSTGRES_PASSWORD: {{ umami_db_password }}
+      POSTGRES_USER: "{{ umami_db_user }}"
+      POSTGRES_PASSWORD: "{{ umami_db_password }}"
     volumes:
       - umami-db-data:/var/lib/postgresql
     restart: always

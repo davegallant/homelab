@@ -4,9 +4,9 @@ services:
     container_name: maloja
     restart: always
     ports:
-    - "42010:42010"
+      - "42010:42010"
     volumes:
-    - "$PWD/data:/data"
+      - "$PWD/data:/data"
     environment:
       - MALOJA_SKIP_SETUP=true
       - MALOJA_FORCE_PASSWORD=stub

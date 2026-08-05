@@ -35,12 +35,23 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Run playbook
         env:
-          ANSIBLE_HOST_KEY_CHECKING: False
+          ANSIBLE_HOST_KEY_CHECKING: "False"
           ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
           ANSIBLE_PYTHON_INTERPRETER: /usr/bin/python3.12
+          PLAYBOOK: ${{ matrix.playbook }}
         run: |
-          echo "$ANSIBLE_VAULT_PASSWORD" > .vault_pass
-          ansible-playbook -i ansible/inventory ansible/playbooks/${{ matrix.playbook }}/main.yml --vault-password-file .vault_pass
+          set -euo pipefail
+          # Remove the plaintext vault password left behind by earlier runs.
+          rm -f .vault_pass
+          # Ansible executes the password file and reads stdout, so the vault
+          # password never touches disk on this persistent runner.
+          VAULT_PASS_FILE="$(mktemp)"
+          trap 'rm -f "$VAULT_PASS_FILE"' EXIT
+          chmod 700 "$VAULT_PASS_FILE"
+          printf '#!/bin/sh\nprintf %%s "$ANSIBLE_VAULT_PASSWORD"\n' > "$VAULT_PASS_FILE"
+          ansible-playbook -i ansible/inventory \
+            "ansible/playbooks/$PLAYBOOK/main.yml" \
+            --vault-password-file "$VAULT_PASS_FILE"
 
   notify-failure:
     needs: run-ansible
@@ -48,8 +59,10 @@ jobs:
     if: failure()
     steps:
       - name: Send failure notification
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}
         run: |
           curl -X POST "${{ secrets.GOTIFY_URL }}/message?token=${{ secrets.GOTIFY_TOKEN }}" \
             -F "title=Ansible playbooks failed in ${{ github.repository }}!" \
-            -F "message=One or more playbooks failed. Check workflow details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}" \
+            -F "message=One or more playbooks failed. Check workflow details: ${RUN_URL}" \
             -F "priority=5"

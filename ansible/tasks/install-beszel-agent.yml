@@ -1,7 +1,9 @@
 - name: Download beszel-agent package
   ansible.builtin.get_url:
-    # version must match the beszel hub image tag in playbooks/beszel/docker-compose.yml
-    url: "https://github.com/henrygd/beszel/releases/download/v0.18.7/beszel-agent_0.18.7_linux_amd64.deb"
+    # beszel_version is defined in group_vars/all/vars.yaml and is shared with
+    # the beszel hub image tag in playbooks/beszel/docker-compose.yml
+    url: "https://github.com/henrygd/beszel/releases/download/v{{ beszel_version }}/beszel-agent_{{ beszel_version }}_linux_amd64.deb"
+    checksum: "sha256:https://github.com/henrygd/beszel/releases/download/v{{ beszel_version }}/beszel_{{ beszel_version }}_checksums.txt"
     dest: /tmp/beszel-agent.deb
     mode: "0644"
 

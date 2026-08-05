@@ -26,7 +26,10 @@
           default = pkgs.mkShell {
             packages = with pkgs; [
               ansible
+              ansible-lint
               just
+              shellcheck
+              yamllint
             ];
           };
         }

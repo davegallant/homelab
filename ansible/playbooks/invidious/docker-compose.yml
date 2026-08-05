@@ -10,15 +10,15 @@ services:
       INVIDIOUS_CONFIG: |
         db:
           dbname: invidious
-          user: {{ invidious_db_user }}
-          password: {{ invidious_db_password }}
+          user: "{{ invidious_db_user }}"
+          password: "{{ invidious_db_password }}"
           host: invidious-db
           port: 5432
         check_tables: true
         invidious_companion:
           - private_url: "http://companion:8282/companion"
-        invidious_companion_key: {{ invidious_companion_secret_key }}
-        hmac_key: {{ invidious_hmac_key }}
+        invidious_companion_key: "{{ invidious_companion_secret_key }}"
+        hmac_key: "{{ invidious_hmac_key }}"
     healthcheck:
       test: wget -nv --tries=1 --spider http://127.0.0.1:3000/api/v1/comments/jNQXAC9IVRw || exit 1
       interval: 30s
@@ -28,25 +28,25 @@ services:
       - invidious-db
 
   companion:
-      # https://quay.io/repository/invidious/invidious-companion?tab=tags
-      image: quay.io/invidious/invidious-companion:2026.08.03-438c668@sha256:b7dddeebff7fded099a61abe73624891cf9b3d4565f4ad6d93686ec13b1f07a4
-      container_name: invidious-companion
-      environment:
-        - SERVER_SECRET_KEY={{ invidious_companion_secret_key }}
-      restart: unless-stopped
-      networks:
-        - invidious
-      logging:
-        options:
-          max-size: "1G"
-          max-file: "4"
-      cap_drop:
-        - ALL
-      read_only: true
-      volumes:
-        - ./companioncache:/var/tmp/youtubei.js:rw
-      security_opt:
-        - no-new-privileges:true
+    # https://quay.io/repository/invidious/invidious-companion?tab=tags
+    image: quay.io/invidious/invidious-companion:2026.08.03-438c668@sha256:b7dddeebff7fded099a61abe73624891cf9b3d4565f4ad6d93686ec13b1f07a4
+    container_name: invidious-companion
+    environment:
+      - SERVER_SECRET_KEY={{ invidious_companion_secret_key }}
+    restart: unless-stopped
+    networks:
+      - invidious
+    logging:
+      options:
+        max-size: "1G"
+        max-file: "4"
+    cap_drop:
+      - ALL
+    read_only: true
+    volumes:
+      - ./companioncache:/var/tmp/youtubei.js:rw
+    security_opt:
+      - no-new-privileges:true
 
   invidious-db:
     image: docker.io/postgres:18.4@sha256:3a82e1f56c8f0f5616a11103ac3d47e632c3938698946a7ad26da0df1334744a

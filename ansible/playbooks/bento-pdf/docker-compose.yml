@@ -16,5 +16,5 @@ services:
       - NEWT_ID={{ bentopdf_newt_id }}
       - NEWT_SECRET={{ bentopdf_newt_secret }}
 networks:
-   bentopdf:
-     name: bento-pdf
+  bentopdf:
+    name: bento-pdf
