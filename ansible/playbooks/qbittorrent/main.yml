@@ -24,11 +24,13 @@
       ansible.builtin.file:
         path: "~/qBittorrent"
         state: directory
+        mode: "0755"
 
     - name: Create 'scripts' directory
       ansible.builtin.file:
         path: "~/scripts"
         state: directory
+        mode: "0755"
 
     - name: Copy block-malware.sh
       ansible.builtin.copy:
@@ -44,7 +46,7 @@
       check_mode: true
       register: qbittorrent_conf_check
 
-    - name: Stop qbittorrent container before config change
+    - name: Stop qbittorrent container before config change # noqa: no-handler
       community.docker.docker_container:
         name: qbittorrent
         state: stopped
@@ -61,7 +63,7 @@
         name: git
         state: present
 
-    - name: Mark dracula directory as safe for git
+    - name: Mark dracula directory as safe for git # noqa: command-instead-of-module
       ansible.builtin.command:
         cmd: git config --global --add safe.directory {{ ansible_user_dir }}/qBittorrent/dracula
       changed_when: false

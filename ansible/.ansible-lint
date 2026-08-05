@@ -1,0 +1,19 @@
+---
+profile: production
+
+exclude_paths:
+  - group_vars/all/secrets.yaml
+
+skip_list:
+  # Playbooks include shared task files without a name by convention; the
+  # included file's own tasks are named. See AGENTS.md.
+  - name[missing]
+  # playbooks/main.yml is a list of import_playbook entries; each imported
+  # playbook names its own play.
+  - name[play]
+
+# docker-compose.yml files are Jinja templates rendered by ansible.builtin.template,
+# not Ansible content. yamllint covers them instead.
+kinds:
+  - yaml: "**/docker-compose.yml"
+  - yaml: "**/loki-config.yaml"

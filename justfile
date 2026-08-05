@@ -10,6 +10,12 @@ local_dir := "/Volumes/Backups/pangolin"
 default:
     @just --list
 
+# Lint YAML, Ansible content and shell scripts
+lint:
+    yamllint -c .yamllint.yaml ansible/ .forgejo/ .github/
+    cd ansible && ansible-lint
+    shellcheck generate-containers-table.sh scripts/*.sh
+
 # Backup pangolin config from remote host and pull locally
 backup-pangolin:
     ssh {{pangolin_host}} "cd {{pangolin_dir}} && docker compose stop pangolin && tar -czvf {{backup_file}} config/ docker-compose.yml; [ $? -le 1 ] && docker compose start pangolin && exit 0"

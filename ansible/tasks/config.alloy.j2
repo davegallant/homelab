@@ -1,0 +1,53 @@
+loki.relabel "journal" {
+  forward_to = []
+
+  rule {
+    target_label  = "host"
+    replacement   = constants.hostname
+  }
+
+  rule {
+    source_labels = ["__journal__systemd_unit"]
+    target_label  = "unit"
+  }
+}
+
+loki.source.journal "read" {
+  forward_to    = [loki.write.endpoint.receiver]
+  relabel_rules = loki.relabel.journal.rules
+  labels        = {component = "loki.source.journal"}
+}
+{% if alloy_docker_discovery | default(true) %}
+
+loki.relabel "docker" {
+  forward_to = []
+
+  rule {
+    target_label  = "host"
+    replacement   = constants.hostname
+  }
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+}
+
+discovery.docker "linux" {
+  host = "unix:///var/run/docker.sock"
+}
+
+loki.source.docker "default" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.docker.linux.targets
+  labels     = {"app" = "docker"}
+  relabel_rules = loki.relabel.docker.rules
+  forward_to = [loki.write.endpoint.receiver]
+}
+{% endif %}
+
+loki.write "endpoint" {
+  endpoint {
+    url = "{{ loki_url }}"
+  }
+}
