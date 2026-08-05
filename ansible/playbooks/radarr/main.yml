@@ -15,7 +15,7 @@
         file: ../../tasks/install-beszel-agent.yml
 
     - name: Copy docker-compose.yml
-      ansible.builtin.copy:
+      ansible.builtin.template:
         src: docker-compose.yml
         dest: "~/docker-compose.yml"
         mode: "0640"
