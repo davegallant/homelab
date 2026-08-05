@@ -24,12 +24,14 @@
   ],
   "packageRules": [
     {
+      "description": "Nothing auto-merges: a merge to main applies to live hosts",
       "matchUpdateTypes": [
         "minor",
         "patch",
         "pin",
         "digest"
-      ]
+      ],
+      "automerge": false
     },
     {
       "matchDatasources": [

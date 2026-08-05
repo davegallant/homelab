@@ -43,3 +43,54 @@
       - docker-ce-cli
       - docker-compose-plugin
     state: present
+
+- name: Ensure ufw is installed
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+
+- name: Restrict Docker published ports to trusted sources
+  # `ufw: policy: deny` does not cover published container ports: Docker DNATs
+  # in nat/PREROUTING and jumps to DOCKER-USER at the top of FORWARD, both
+  # before ufw's ufw-user-forward chain is consulted. Filtering has to happen
+  # in DOCKER-USER, which Docker leaves alone for exactly this purpose.
+  ansible.builtin.blockinfile:
+    path: /etc/ufw/after.rules
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: docker"
+    mode: "0640"
+    block: |
+      *filter
+      :DOCKER-USER - [0:0]
+      :ufw-docker-logging-deny - [0:0]
+
+      # Replies to connections that were allowed on the way in.
+      -A DOCKER-USER -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
+
+      # Container-to-container traffic and container egress.
+      -A DOCKER-USER -s 172.16.0.0/12 -j RETURN
+      {% for source in ufw_docker_allowed_sources %}
+      -A DOCKER-USER -s {{ source }} -j RETURN
+      {% endfor %}
+
+      # Anything else headed for a container network is dropped and logged.
+      -A DOCKER-USER -d 172.16.0.0/12 -j ufw-docker-logging-deny
+
+      # Forwarded traffic that is not Docker's business is left alone.
+      -A DOCKER-USER -j RETURN
+
+      -A ufw-docker-logging-deny -m limit --limit 3/min --limit-burst 10 -j LOG --log-prefix "[UFW DOCKER BLOCK] "
+      -A ufw-docker-logging-deny -j DROP
+      COMMIT
+  register: ufw_docker_rules
+
+- name: Reload ufw to apply the Docker rules # noqa: no-handler
+  # Not a handler: handlers have to be declared in the play, and this is a
+  # shared task file included by every Docker host.
+  ansible.builtin.command:
+    cmd: ufw reload
+  when: ufw_docker_rules is changed
+  changed_when: true
+  # On a host being provisioned for the first time ufw is not enabled yet, so
+  # reload has nothing to reload. The "Enable UFW" task later in the playbook
+  # loads after.rules when it turns ufw on.
+  failed_when: false

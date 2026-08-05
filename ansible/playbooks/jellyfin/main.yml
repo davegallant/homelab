@@ -1,6 +1,12 @@
 ---
 - name: Install jellyfin
   hosts: jellyfin
+  vars:
+    # DLNA (1900/udp) and Jellyfin client auto-discovery (7359/udp) are
+    # LAN-only protocols, and TVs are not on the tailnet.
+    ufw_docker_allowed_sources:
+      - 100.64.0.0/10
+      - "{{ homelab_lan_subnet }}"
   tasks:
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-docker.yml
@@ -20,12 +26,14 @@
         dest: "~/docker-compose.yml"
         mode: "0640"
 
-    - community.general.ufw:
+    - name: Allow DLNA discovery port
+      community.general.ufw:
         rule: allow
         port: "1900"
         proto: udp
 
-    - community.general.ufw:
+    - name: Allow Jellyfin client discovery port
+      community.general.ufw:
         rule: allow
         port: "7359"
         proto: udp

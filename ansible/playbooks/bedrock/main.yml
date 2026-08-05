@@ -1,6 +1,11 @@
 ---
 - name: Install bedrock
   hosts: bedrock
+  vars:
+    # Minecraft Bedrock clients (consoles, phones) are not on the tailnet.
+    ufw_docker_allowed_sources:
+      - 100.64.0.0/10
+      - "{{ homelab_lan_subnet }}"
   tasks:
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-docker.yml

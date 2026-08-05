@@ -151,7 +151,8 @@ Every service playbook follows this exact pattern:
 
 ## Dependency Management
 
-- **Renovate** auto-merges minor/patch/pin/digest updates on weekends (`renovate.json`)
+- **Renovate** opens PRs monthly (`renovate.json`). Nothing auto-merges -- merging
+  to `main` applies to live hosts, so every update is reviewed and merged by hand
 - Container image versions are pinned in each `docker-compose.yml`
 - Ansible Galaxy collections: `ansible.posix`, `community.docker`, `community.general`
 
@@ -174,3 +175,23 @@ Every service playbook follows this exact pattern:
 - `beszel_version` -- shared by the agent `.deb` URL in
   `tasks/install-beszel-agent.yml` and the hub image tag in
   `playbooks/beszel/docker-compose.yml`; Renovate bumps both in one PR
+- `ufw_docker_allowed_sources` -- sources allowed to reach published container
+  ports, defaulting to the tailnet only. Override in a play's `vars:` for a
+  service that must be reachable from the LAN (see `bedrock`, `jellyfin`)
+- `homelab_lan_subnet` -- the LAN range, for UFW rules
+
+## Firewalling Published Container Ports
+
+`community.general.ufw` with `policy: deny` does **not** cover ports published
+by Docker. Docker DNATs in `nat/PREROUTING` and jumps to `DOCKER-USER` at the
+top of `FORWARD`, both before ufw's `ufw-user-forward` chain is consulted.
+
+`tasks/install-docker.yml` therefore manages a `DOCKER-USER` block in
+`/etc/ufw/after.rules` that allows Docker's own bridge networks plus
+`ufw_docker_allowed_sources`, and drops everything else headed for a container
+network. Services using `network_mode: host` (adguard-home, watchyourlan) are
+unaffected -- their traffic hits `INPUT`, where the ufw rules do apply.
+
+A `ufw: rule: allow` task on its own only opens a *host* port. If a service
+needs to be reachable from the LAN, it also needs `ufw_docker_allowed_sources`
+widened in its play.
