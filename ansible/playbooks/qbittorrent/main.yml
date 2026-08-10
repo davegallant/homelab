@@ -65,7 +65,7 @@
 
     - name: Mark dracula directory as safe for git # noqa: command-instead-of-module
       ansible.builtin.command:
-        cmd: git config --global --add safe.directory {{ ansible_user_dir }}/qBittorrent/dracula
+        cmd: git config --global --add safe.directory {{ ansible_facts['user_dir'] }}/qBittorrent/dracula
       changed_when: false
 
     - name: Clone Dracula WebUI theme
