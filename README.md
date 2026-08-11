@@ -208,10 +208,10 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/adguard/adguardhome | v0.107.78 |
 | docker.io/archivebox/archivebox | 0.7.4 |
 | docker.io/caronc/apprise | v1.5.1 |
-| docker.io/chrisbenincasa/tunarr | 1.3.10 |
+| docker.io/chrisbenincasa/tunarr | 1.3.11 |
 | docker.io/deluan/navidrome | 0.63.2 |
 | docker.io/dgtlmoon/changedetection.io | 0.55.8 |
-| docker.io/docker | 29.6.2-dind |
+| docker.io/docker | 29.7.2-dind |
 | docker.io/fosrl/newt | 1.15.0 |
 | docker.io/gotify/server | 2.9.1 |
 | docker.io/grafana/grafana | 13.1.3 |
@@ -219,7 +219,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/henrygd/beszel | 0.18.7 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.7.6 |
 | docker.io/jellyfin/jellyfin | 10.11.11 |
-| docker.io/krateng/maloja | 3.2.4 |
+| docker.io/krateng/maloja | 3.2.5 |
 | docker.io/library/redis | 8 |
 | docker.io/linuxserver/lidarr | 3.1.0 |
 | docker.io/linuxserver/prowlarr | 2.5.2 |
@@ -232,13 +232,13 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/paperlessngx/paperless-ngx | 3.0.5 |
 | docker.io/postgres | 18.4 |
 | docker.io/rommapp/romm | 5.1.0 |
-| docker.io/searxng/searxng | 2026.8.5-1689cb1b5 |
+| docker.io/searxng/searxng | 2026.8.11-e8e710e42 |
 | docker.io/twinproduction/gatus | v5.36.0 |
 | docker.io/valkey/valkey | 9 |
 | ghcr.io/advplyr/audiobookshelf | 2.36.0 |
 | ghcr.io/alam00000/bentopdf | 2.8.7 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.5.1.3 |
-| ghcr.io/dispatcharr/dispatcharr | 0.28.2 |
+| ghcr.io/dispatcharr/dispatcharr | 0.29.0 |
 | ghcr.io/flaresolverr/flaresolverr | v3.5.0 |
 | ghcr.io/gethomepage/homepage | v1.13.2 |
 | ghcr.io/hargata/lubelogger | v1.4.5 |
@@ -248,6 +248,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | ghcr.io/kiwix/kiwix-serve | 3.8.2 |
 | ghcr.io/seerr-team/seerr | v3.4.1 |
 | ghcr.io/umami-software/umami | 3.2.0 |
-| quay.io/invidious/invidious | 2026.08.06-d6e4022 |
 | quay.io/invidious/invidious-companion | 2026.08.10-0b9b9ea |
+| quay.io/invidious/invidious | 2026.08.09-c2c75d2 |
 <!-- DOCKER_SERVICES_END -->
