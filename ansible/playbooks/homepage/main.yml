@@ -26,6 +26,12 @@
         dest: "~/docker-compose.yml"
         mode: "0640"
 
+    - name: Create Homepage icons directory
+      ansible.builtin.file:
+        path: "~/config/icons"
+        state: directory
+        mode: "0755"
+
     - name: Copy services.yaml
       ansible.builtin.template:
         src: config/services.yaml
@@ -37,6 +43,12 @@
         src: config/settings.yaml
         dest: "~/config/settings.yaml"
         mode: "0640"
+
+    - name: Copy custom icons
+      ansible.builtin.copy:
+        src: config/icons/
+        dest: "~/config/icons/"
+        mode: "0644"
 
     - name: Enable UFW
       community.general.ufw:
