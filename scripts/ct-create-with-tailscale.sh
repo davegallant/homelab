@@ -132,4 +132,4 @@ if ! pct_exec "${node}" "${vmid}" "curl -fsSL https://tailscale.com/install.sh |
 fi
 
 echo "tailscale installed on ${ctname}. Bring it up with:"
-echo "  ssh ${node} \"pct exec ${vmid} -- tailscale up\""
+echo "  ssh ${node} \"pct exec ${vmid} -- tailscale up --ssh\""
