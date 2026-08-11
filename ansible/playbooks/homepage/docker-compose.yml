@@ -35,6 +35,7 @@ services:
       - "HOMEPAGE_VAR_ARCHIVEBOX_URL={{ archivebox_url }}"
       - "HOMEPAGE_VAR_LUBELOGGER_URL={{ lubelogger_url }}"
       - "HOMEPAGE_VAR_GRAFANA_URL={{ grafana_url }}"
+      - "HOMEPAGE_VAR_LAN_ORANGUTAN_URL={{ lan_orangutan_url }}"
       - "HOMEPAGE_VAR_WATCHYOURLAN_URL={{ watchyourlan_url }}"
       - "HOMEPAGE_VAR_BESZEL_URL={{ beszel_url }}"
       - "HOMEPAGE_VAR_PROWLARR_URL={{ prowlarr_url }}"
