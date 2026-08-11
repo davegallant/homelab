@@ -7,6 +7,9 @@
 # renovate: datasource=github-releases depName=henrygd/beszel
 beszel_version: "0.18.7"
 
+# renovate: datasource=github-releases depName=291-Group/LAN-Orangutan
+lan_orangutan_version: "3.3.8"
+
 homelab_lan_subnet: 192.168.1.0/24
 
 # Sources allowed to reach published container ports (see the DOCKER-USER block
