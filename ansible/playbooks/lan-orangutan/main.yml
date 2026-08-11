@@ -1,12 +1,16 @@
 ---
 - name: Install lan-orangutan
   hosts: lan-orangutan
+  vars:
+    alloy_docker_discovery: false
   tasks:
     - ansible.builtin.include_tasks:
-        file: ../../tasks/install-docker.yml
-
-    - ansible.builtin.include_tasks:
         file: ../../tasks/install-common-packages.yml
+
+    - name: Install nmap
+      ansible.builtin.apt:
+        name: nmap
+        state: present
 
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-alloy.yml
@@ -14,11 +18,46 @@
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-beszel-agent.yml
 
-    - name: Copy docker-compose.yml
+    - name: Create config directory
+      ansible.builtin.file:
+        path: /etc/lan-orangutan
+        state: directory
+        mode: "0755"
+
+    - name: Copy config.ini
       ansible.builtin.template:
-        src: docker-compose.yml
-        dest: "~/docker-compose.yml"
+        src: config.ini.j2
+        dest: /etc/lan-orangutan/config.ini
         mode: "0640"
+
+    - name: Download lan-orangutan package
+      ansible.builtin.get_url:
+        url: "https://github.com/291-Group/LAN-Orangutan/releases/download/v{{ lan_orangutan_version }}/lan-orangutan_{{ lan_orangutan_version }}_amd64.deb"
+        checksum: "sha256:https://github.com/291-Group/LAN-Orangutan/releases/download/v{{ lan_orangutan_version }}/SHA256SUMS.txt"
+        dest: /tmp/lan-orangutan.deb
+        mode: "0644"
+
+    - name: Install lan-orangutan package
+      ansible.builtin.apt:
+        deb: /tmp/lan-orangutan.deb
+
+    - name: Re-copy config.ini after package install
+      ansible.builtin.template:
+        src: config.ini.j2
+        dest: /etc/lan-orangutan/config.ini
+        mode: "0640"
+
+    - name: Remove downloaded package
+      ansible.builtin.file:
+        path: /tmp/lan-orangutan.deb
+        state: absent
+
+    - name: Enable and start lan-orangutan
+      ansible.builtin.systemd:
+        name: lan-orangutan
+        daemon_reload: true
+        enabled: true
+        state: restarted
 
     - name: Allow LAN Orangutan web port
       community.general.ufw:
@@ -31,6 +70,3 @@
       community.general.ufw:
         state: enabled
         policy: deny
-
-    - ansible.builtin.include_tasks:
-        file: ../../tasks/docker-compose-up.yml
