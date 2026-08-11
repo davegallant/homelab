@@ -68,6 +68,10 @@ endpoints:
     url: "{{ bentopdf_url }}"
     <<: *defaults
 
+  - name: lan-orangutan
+    url: "{{ lan_orangutan_url }}/static/orangutan.svg"
+    <<: *defaults
+
   - name: watchyourlan
     url: "{{ watchyourlan_url }}"
     <<: *defaults

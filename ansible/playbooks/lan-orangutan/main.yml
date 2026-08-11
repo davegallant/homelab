@@ -1,0 +1,36 @@
+---
+- name: Install lan-orangutan
+  hosts: lan-orangutan
+  tasks:
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-docker.yml
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-common-packages.yml
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-alloy.yml
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-beszel-agent.yml
+
+    - name: Copy docker-compose.yml
+      ansible.builtin.template:
+        src: docker-compose.yml
+        dest: "~/docker-compose.yml"
+        mode: "0640"
+
+    - name: Allow LAN Orangutan web port
+      community.general.ufw:
+        rule: allow
+        port: "291"
+        proto: tcp
+        from_ip: 100.64.0.0/10
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+        policy: deny
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/docker-compose-up.yml
