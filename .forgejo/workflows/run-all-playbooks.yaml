@@ -24,7 +24,6 @@ jobs:
 
   run-ansible:
     needs: discover
-    if: ${{ github.event.inputs.host == '' }}
     runs-on: host
     strategy:
       matrix:
@@ -56,7 +55,7 @@ jobs:
   notify-failure:
     needs: run-ansible
     runs-on: ubuntu-latest
-    if: failure()
+    if: ${{ always() && needs.run-ansible.result == 'failure' }}
     steps:
       - name: Send failure notification
         env:
