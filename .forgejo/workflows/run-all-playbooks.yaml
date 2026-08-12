@@ -7,6 +7,7 @@ on:
       - 'ansible/**'
   schedule:
     - cron: "@daily"
+  workflow_dispatch:
 
 jobs:
   discover:
@@ -52,16 +53,13 @@ jobs:
             "ansible/playbooks/$PLAYBOOK/main.yml" \
             --vault-password-file "$VAULT_PASS_FILE"
 
-  notify-failure:
-    needs: run-ansible
-    runs-on: ubuntu-latest
-    if: ${{ always() && needs.run-ansible.result == 'failure' }}
-    steps:
-      - name: Send failure notification
+      - name: Notify failure
+        if: failure()
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}
+          PLAYBOOK: ${{ matrix.playbook }}
         run: |
           curl -X POST "${{ secrets.GOTIFY_URL }}/message?token=${{ secrets.GOTIFY_TOKEN }}" \
-            -F "title=Ansible playbooks failed in ${{ github.repository }}!" \
-            -F "message=One or more playbooks failed. Check workflow details: ${RUN_URL}" \
+            -F "title=Ansible playbook '$PLAYBOOK' failed in ${{ github.repository }}" \
+            -F "message=A playbook failed. Check workflow details: ${RUN_URL}" \
             -F "priority=5"
