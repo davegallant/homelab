@@ -39,16 +39,13 @@ jobs:
           ansible-playbook -i ansible/inventory \
             "ansible/playbooks/$PLAYBOOK_HOST/main.yml" \
             --vault-password-file "$VAULT_PASS_FILE"
-  notify-failure:
-    needs: run-ansible
-    runs-on: ubuntu-latest
-    if: ${{ always() && needs.run-ansible.result == 'failure' }}
-    steps:
-      - name: Send failure notification
+      - name: Notify failure
+        if: failure()
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}
+          PLAYBOOK_HOST: ${{ github.event.inputs.host }}
         run: |
           curl -X POST "${{ secrets.GOTIFY_URL }}/message?token=${{ secrets.GOTIFY_TOKEN }}" \
-            -F "title=Ansible playbooks failed in ${{ github.repository }}!" \
-            -F "message=One or more playbooks failed. Check workflow details: ${RUN_URL}" \
+            -F "title=Ansible playbook '$PLAYBOOK_HOST' failed in ${{ github.repository }}" \
+            -F "message=Playbook failed. Check workflow details: ${RUN_URL}" \
             -F "priority=5"
