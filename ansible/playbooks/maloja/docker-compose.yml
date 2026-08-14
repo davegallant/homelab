@@ -1,6 +1,6 @@
 services:
   maloja:
-    image: docker.io/krateng/maloja:3.2.5@sha256:6013039eab0a1c8a0edbc7df7aeb9c9449ccb55186d9efa3bf16704957dbe7ff
+    image: docker.io/krateng/maloja:3.2.6@sha256:1ccc7f4f78256242ada110efffe255617c974714455199c59a1fb0696ab23734
     container_name: maloja
     restart: always
     ports:
