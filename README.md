@@ -219,7 +219,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/henrygd/beszel | 0.18.7 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.7.6 |
 | docker.io/jellyfin/jellyfin | 10.11.11 |
-| docker.io/krateng/maloja | 3.2.5 |
+| docker.io/krateng/maloja | 3.2.6 |
 | docker.io/library/redis | 8 |
 | docker.io/linuxserver/lidarr | 3.1.0 |
 | docker.io/linuxserver/prowlarr | 2.5.2 |
@@ -232,7 +232,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/paperlessngx/paperless-ngx | 3.0.5 |
 | docker.io/postgres | 18.4 |
 | docker.io/rommapp/romm | 5.1.0 |
-| docker.io/searxng/searxng | 2026.8.11-e8e710e42 |
+| docker.io/searxng/searxng | 2026.8.14-094c33d40 |
 | docker.io/twinproduction/gatus | v5.36.0 |
 | docker.io/valkey/valkey | 9 |
 | ghcr.io/advplyr/audiobookshelf | 2.36.0 |
@@ -247,7 +247,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | ghcr.io/immich-app/postgres | 14-vectorchord0.4.3-pgvectors0.2.0 |
 | ghcr.io/kiwix/kiwix-serve | 3.8.2 |
 | ghcr.io/seerr-team/seerr | v3.4.1 |
-| ghcr.io/umami-software/umami | 3.2.0 |
+| ghcr.io/umami-software/umami | 3.3.0 |
 | quay.io/invidious/invidious | 2026.08.12-fc3c75e |
 | quay.io/invidious/invidious-companion | 2026.08.10-0b9b9ea |
 <!-- DOCKER_SERVICES_END -->
