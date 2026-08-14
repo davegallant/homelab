@@ -1,7 +1,7 @@
 services:
   invidious:
     # https://quay.io/repository/invidious/invidious?tab=tags
-    image: quay.io/invidious/invidious:2026.08.09-c2c75d2@sha256:121ebd45f760b7aafdbfed5bd88fb1602c47727997818bf2b1ed4d2f11830bca
+    image: quay.io/invidious/invidious:2026.08.12-fc3c75e@sha256:5feefaabd835e4acdbda84f1fbddb7f286cfd3ac90e9d45159e4b7a6e1ea5303
     container_name: invidious
     restart: always
     networks:
