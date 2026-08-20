@@ -1,7 +1,7 @@
 services:
   invidious:
     # https://quay.io/repository/invidious/invidious?tab=tags
-    image: quay.io/invidious/invidious:2026.07.14-c84acc1@sha256:82aee731c9191cdb8de339de29eebef3b65d57cc24a4207827ea080436458342
+    image: quay.io/invidious/invidious:2026.08.12-fc3c75e@sha256:5feefaabd835e4acdbda84f1fbddb7f286cfd3ac90e9d45159e4b7a6e1ea5303
     container_name: invidious
     restart: always
     networks:
@@ -10,15 +10,15 @@ services:
       INVIDIOUS_CONFIG: |
         db:
           dbname: invidious
-          user: {{ invidious_db_user }}
-          password: {{ invidious_db_password }}
+          user: "{{ invidious_db_user }}"
+          password: "{{ invidious_db_password }}"
           host: invidious-db
           port: 5432
         check_tables: true
         invidious_companion:
           - private_url: "http://companion:8282/companion"
-        invidious_companion_key: {{ invidious_companion_secret_key }}
-        hmac_key: {{ invidious_hmac_key }}
+        invidious_companion_key: "{{ invidious_companion_secret_key }}"
+        hmac_key: "{{ invidious_hmac_key }}"
     healthcheck:
       test: wget -nv --tries=1 --spider http://127.0.0.1:3000/api/v1/comments/jNQXAC9IVRw || exit 1
       interval: 30s
@@ -28,28 +28,28 @@ services:
       - invidious-db
 
   companion:
-      # https://quay.io/repository/invidious/invidious-companion?tab=tags
-      image: quay.io/invidious/invidious-companion:2026.07.17-2be5720@sha256:0851ee074bb9668b8a1c854cd30c9f0d5582360ffc38abbefbcb4f91ff2c108d
-      container_name: invidious-companion
-      environment:
-        - SERVER_SECRET_KEY={{ invidious_companion_secret_key }}
-      restart: unless-stopped
-      networks:
-        - invidious
-      logging:
-        options:
-          max-size: "1G"
-          max-file: "4"
-      cap_drop:
-        - ALL
-      read_only: true
-      volumes:
-        - ./companioncache:/var/tmp/youtubei.js:rw
-      security_opt:
-        - no-new-privileges:true
+    # https://quay.io/repository/invidious/invidious-companion?tab=tags
+    image: quay.io/invidious/invidious-companion:2026.08.10-0b9b9ea@sha256:8ef815960c75f56d52c3ff07dc1e99a68a797a0ef1e89874e9ea8cd3c3c1dceb
+    container_name: invidious-companion
+    environment:
+      - SERVER_SECRET_KEY={{ invidious_companion_secret_key }}
+    restart: unless-stopped
+    networks:
+      - invidious
+    logging:
+      options:
+        max-size: "1G"
+        max-file: "4"
+    cap_drop:
+      - ALL
+    read_only: true
+    volumes:
+      - ./companioncache:/var/tmp/youtubei.js:rw
+    security_opt:
+      - no-new-privileges:true
 
   invidious-db:
-    image: docker.io/postgres:18.4@sha256:8ff36f3c66371cba71d20ceedccfc3de9669a68737607888c4ef0af93abe8e39
+    image: docker.io/postgres:18.4@sha256:3a82e1f56c8f0f5616a11103ac3d47e632c3938698946a7ad26da0df1334744a
     container_name: invidious-db
     restart: always
     networks:
@@ -63,7 +63,7 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
   newt:
-    image: docker.io/fosrl/newt:1.14.0@sha256:60c78391e3b5cb8a260490fb26b8b7329ed5448077629da89a564af80d3a9fad
+    image: docker.io/fosrl/newt:1.15.0@sha256:d69d047c816ca7721eae90d5f3cd3be53b615b3d498678be21488d666538ee5c
     container_name: newt-invidious
     restart: unless-stopped
     networks:

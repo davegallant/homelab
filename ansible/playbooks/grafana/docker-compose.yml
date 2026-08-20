@@ -1,6 +1,6 @@
 services:
   loki:
-    image: docker.io/grafana/loki:3.7.3@sha256:70b9f699fc9bb868b62f1cfd4f787dfa50242f1fd92e6089787d5d7daea75fe8
+    image: docker.io/grafana/loki:3.7.6@sha256:efd47c67f9bac88ca29bcf8cb997d9ab29d1848bd0aff579282295542a745952
     container_name: loki
     user: "0"
     restart: always
@@ -12,7 +12,7 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
 
   grafana:
-    image: docker.io/grafana/grafana:13.1.0@sha256:121a7a9ece6dc10b969f1f96eed64b4f07dfac0d0b8abc070f7cb83bbde86f63
+    image: docker.io/grafana/grafana:13.1.3@sha256:ab5cb380e3ff3172d6c8bd2e7cfd31cce977d2881b260e1f5bc089bf0b759b43
     container_name: grafana
     environment:
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning

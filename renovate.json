@@ -7,20 +7,45 @@
   "schedule": [
     "on the 1st day of the month"
   ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Version pins annotated with a renovate: comment",
+      "managerFilePatterns": [
+        "/^ansible/group_vars/all/vars\\.yaml$/",
+        "/^\\.github/workflows/[^/]+\\.yml$/"
+      ],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)\\s+depName=(?<depName>[^\\s]+)\\s*\\n\\s*[A-Za-z_]+:\\s*\"?(?<currentValue>[^\"\\s]+)\"?"
+      ],
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v?(?<version>.*)$"
+    }
+  ],
   "packageRules": [
     {
+      "description": "Nothing auto-merges: a merge to main applies to live hosts",
       "matchUpdateTypes": [
         "minor",
         "patch",
         "pin",
         "digest"
       ],
+      "automerge": false
     },
     {
       "matchDatasources": [
         "docker"
       ],
       "pinDigests": true
+    },
+    {
+      "description": "Keep the beszel agent .deb and the beszel hub image in lockstep",
+      "matchPackageNames": [
+        "henrygd/beszel",
+        "docker.io/henrygd/beszel"
+      ],
+      "groupName": "beszel"
     },
     {
       "matchDepNames": [

@@ -54,6 +54,18 @@
         href: "{% raw %}{{HOMEPAGE_VAR_PROXMOX_URL}}{% endraw %}"
         description: Virtualization
         icon: proxmox
+    - PVE Apollo Monitor:
+        href: "{% raw %}{{HOMEPAGE_VAR_PROXMENUX_APOLLO_URL}}{% endraw %}"
+        description: ProxMenux Monitor
+        icon: proxmox
+    - PVE G3-1 Monitor:
+        href: "{% raw %}{{HOMEPAGE_VAR_PROXMENUX_G3_1_URL}}{% endraw %}"
+        description: ProxMenux Monitor
+        icon: proxmox
+    - PVE G3-2 Monitor:
+        href: "{% raw %}{{HOMEPAGE_VAR_PROXMENUX_G3_2_URL}}{% endraw %}"
+        description: ProxMenux Monitor
+        icon: proxmox
     - OPNsense:
         href: "{% raw %}{{HOMEPAGE_VAR_OPNSENSE_URL}}{% endraw %}"
         icon: opnsense
@@ -106,6 +118,10 @@
         icon: grafana
         href: "{% raw %}{{HOMEPAGE_VAR_GRAFANA_URL}}{% endraw %}"
         description: Visualization
+    - LAN Orangutan:
+        icon: /icons/lan-orangutan.png
+        href: "{% raw %}{{HOMEPAGE_VAR_LAN_ORANGUTAN_URL}}{% endraw %}"
+        description: Network scanner
     - WatchYourLAN:
         icon: watchyourlan
         href: "{% raw %}{{HOMEPAGE_VAR_WATCHYOURLAN_URL}}{% endraw %}"
@@ -158,10 +174,6 @@
         icon: paperless-ngx
         href: "{% raw %}{{HOMEPAGE_VAR_PAPERLESS_NGX_URL}}{% endraw %}"
         description: document management
-    - upsnap:
-        icon: upsnap
-        href: "{% raw %}{{HOMEPAGE_VAR_UPSNAP_URL}}{% endraw %}"
-        description: wake on lan
     - GL-MT3000:
         icon: router
         href: "{% raw %}{{HOMEPAGE_VAR_GL_MT3000_URL}}{% endraw %}"

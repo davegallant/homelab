@@ -11,6 +11,7 @@ alerting:
       send-on-resolved: true
       failure-threshold: 3
       success-threshold: 2
+      minimum-reminder-interval: 1h
 
 endpoint-defaults: &defaults
   interval: 30s
@@ -67,6 +68,10 @@ endpoints:
     url: "{{ bentopdf_url }}"
     <<: *defaults
 
+  - name: lan-orangutan
+    url: "{{ lan_orangutan_url }}/static/orangutan.svg"
+    <<: *defaults
+
   - name: watchyourlan
     url: "{{ watchyourlan_url }}"
     <<: *defaults
@@ -93,10 +98,6 @@ endpoints:
 
   - name: homeassistant
     url: "{{ homeassistant_url }}"
-    <<: *defaults
-
-  - name: upsnap
-    url: "{{ upsnap_url }}"
     <<: *defaults
 
   - name: umami
@@ -153,8 +154,4 @@ endpoints:
 
   - name: paperless-ngx
     url: "{{ paperless_ngx_url }}"
-    <<: *defaults
-
-  - name: gl-mt3000
-    url: "{{ gl_mt3000_url }}"
     <<: *defaults

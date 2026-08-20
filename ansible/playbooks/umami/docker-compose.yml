@@ -1,13 +1,13 @@
 services:
   umami:
-    image: ghcr.io/umami-software/umami:3.2.0@sha256:8edfe4beaef13f9d1300619fa264ef250a3688df9cc54d24ca830ca31cb475ec
+    image: ghcr.io/umami-software/umami:3.3.0@sha256:87312d334d009ee67ee0d2fba8fed01435547cc468e452243aef5133a9984d48
     container_name: umami
     networks:
       - umami
     environment:
       DATABASE_URL: postgresql://{{ umami_db_user}}:{{ umami_db_password }}@db:5432/umami
       DATABASE_TYPE: postgresql
-      APP_SECRET: {{ umami_app_secret }}
+      APP_SECRET: "{{ umami_app_secret }}"
     depends_on:
       db:
         condition: service_healthy
@@ -19,14 +19,14 @@ services:
       timeout: 5s
       retries: 5
   db:
-    image: docker.io/postgres:18.4@sha256:8ff36f3c66371cba71d20ceedccfc3de9669a68737607888c4ef0af93abe8e39
+    image: docker.io/postgres:18.4@sha256:3a82e1f56c8f0f5616a11103ac3d47e632c3938698946a7ad26da0df1334744a
     container_name: umami-db
     networks:
       - umami
     environment:
       POSTGRES_DB: umami
-      POSTGRES_USER: {{ umami_db_user }}
-      POSTGRES_PASSWORD: {{ umami_db_password }}
+      POSTGRES_USER: "{{ umami_db_user }}"
+      POSTGRES_PASSWORD: "{{ umami_db_password }}"
     volumes:
       - umami-db-data:/var/lib/postgresql
     restart: always
@@ -36,7 +36,7 @@ services:
       timeout: 5s
       retries: 5
   newt:
-    image: docker.io/fosrl/newt:1.14.0@sha256:60c78391e3b5cb8a260490fb26b8b7329ed5448077629da89a564af80d3a9fad
+    image: docker.io/fosrl/newt:1.15.0@sha256:d69d047c816ca7721eae90d5f3cd3be53b615b3d498678be21488d666538ee5c
     container_name: newt-umami
     restart: unless-stopped
     networks:

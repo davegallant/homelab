@@ -7,6 +7,7 @@ on:
       - 'ansible/**'
   schedule:
     - cron: "@daily"
+  workflow_dispatch:
 
 jobs:
   discover:
@@ -14,7 +15,7 @@ jobs:
     outputs:
       playbooks: ${{ steps.list.outputs.playbooks }}
     steps:
-      - uses: https://code.forgejo.org/actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - id: list
         run: |
           playbooks=$(find ansible/playbooks -name "main.yml" -mindepth 2 -maxdepth 2 \
@@ -24,7 +25,6 @@ jobs:
 
   run-ansible:
     needs: discover
-    if: ${{ github.event.inputs.host == '' }}
     runs-on: host
     strategy:
       matrix:
@@ -32,24 +32,34 @@ jobs:
       fail-fast: false
     steps:
       - name: Check out repository code
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Run playbook
         env:
-          ANSIBLE_HOST_KEY_CHECKING: False
+          ANSIBLE_HOST_KEY_CHECKING: "False"
           ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
           ANSIBLE_PYTHON_INTERPRETER: /usr/bin/python3.12
+          PLAYBOOK: ${{ matrix.playbook }}
         run: |
-          echo "$ANSIBLE_VAULT_PASSWORD" > .vault_pass
-          ansible-playbook -i ansible/inventory ansible/playbooks/${{ matrix.playbook }}/main.yml --vault-password-file .vault_pass
+          set -euo pipefail
+          # Remove the plaintext vault password left behind by earlier runs.
+          rm -f .vault_pass
+          # Ansible executes the password file and reads stdout, so the vault
+          # password never touches disk on this persistent runner.
+          VAULT_PASS_FILE="$(mktemp)"
+          trap 'rm -f "$VAULT_PASS_FILE"' EXIT
+          chmod 700 "$VAULT_PASS_FILE"
+          printf '#!/bin/sh\nprintf %%s "$ANSIBLE_VAULT_PASSWORD"\n' > "$VAULT_PASS_FILE"
+          ansible-playbook -i ansible/inventory \
+            "ansible/playbooks/$PLAYBOOK/main.yml" \
+            --vault-password-file "$VAULT_PASS_FILE"
 
-  notify-failure:
-    needs: run-ansible
-    runs-on: ubuntu-latest
-    if: failure()
-    steps:
-      - name: Send failure notification
+      - name: Notify failure
+        if: failure()
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}
+          PLAYBOOK: ${{ matrix.playbook }}
         run: |
           curl -X POST "${{ secrets.GOTIFY_URL }}/message?token=${{ secrets.GOTIFY_TOKEN }}" \
-            -F "title=Ansible playbooks failed in ${{ github.repository }}!" \
-            -F "message=One or more playbooks failed. Check workflow details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}" \
+            -F "title=Ansible playbook '$PLAYBOOK' failed in ${{ github.repository }}" \
+            -F "message=A playbook failed. Check workflow details: ${RUN_URL}" \
             -F "priority=5"

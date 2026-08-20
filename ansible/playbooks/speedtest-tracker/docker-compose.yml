@@ -1,4 +1,3 @@
-
 services:
   speedtest-tracker:
     container_name: speedtest-tracker
@@ -18,13 +17,13 @@ services:
     volumes:
       - ./speedtest-app:/config
       - "./web:/etc/ssl/web"
-    image: docker.io/linuxserver/speedtest-tracker:1.14.5@sha256:4c698dc3a5d989c8d92512600d303f23ff2e6e789c89674adb083372ac67fe2c
+    image: docker.io/linuxserver/speedtest-tracker:1.14.7@sha256:e095f60b019819ea5a265e220bfb16d4e620c767f25005a065d73cab7c187c49
     restart: always
     depends_on:
       - speedtest-db
   speedtest-db:
     container_name: speedtest-db
-    image: docker.io/postgres:18.4@sha256:8ff36f3c66371cba71d20ceedccfc3de9669a68737607888c4ef0af93abe8e39
+    image: docker.io/postgres:18.4@sha256:3a82e1f56c8f0f5616a11103ac3d47e632c3938698946a7ad26da0df1334744a
     restart: always
     environment:
       - POSTGRES_DB=speedtest_tracker

@@ -19,6 +19,7 @@ invidious
 jellyfin
 seerr
 kiwix
+lan-orangutan
 lidarr
 lubelogger
 maloja
@@ -36,5 +37,4 @@ tailscale-exit-node
 tailscale-subnet-router
 tunarr
 umami
-upsnap
 watchyourlan

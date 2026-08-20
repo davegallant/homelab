@@ -1,0 +1,28 @@
+---
+extends: default
+
+ignore:
+  - .direnv/
+  - ansible/group_vars/all/secrets.yaml
+
+rules:
+  # Playbook main.yml files start with ---; shared task files and
+  # docker-compose files do not (see AGENTS.md).
+  document-start: disable
+  line-length:
+    max: 160
+    allow-non-breakable-words: true
+  indentation:
+    spaces: 2
+    indent-sequences: consistent
+  truthy:
+    # Booleans are true/false, but GitHub/Forgejo workflows use a bare `on:` key.
+    allowed-values: ["true", "false"]
+    check-keys: false
+  comments:
+    min-spaces-from-content: 1
+  braces:
+    # Jinja expressions in templated compose files look like flow mappings.
+    forbid: false
+    min-spaces-inside: 0
+    max-spaces-inside: 1

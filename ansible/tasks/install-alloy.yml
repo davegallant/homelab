@@ -1,7 +1,8 @@
-- name: Install gpg
+- name: Install gpg and python3-debian
   ansible.builtin.apt:
     name:
       - gpg
+      - python3-debian
     state: present
     update_cache: true
 
@@ -18,9 +19,13 @@
     mode: "0644"
 
 - name: Add Grafana APT repository
-  ansible.builtin.apt_repository:
-    repo: "deb [signed-by=/etc/apt/keyrings/grafana.asc] https://apt.grafana.com stable main"
-    filename: grafana
+  ansible.builtin.deb822_repository:
+    name: grafana
+    types: deb
+    uris: https://apt.grafana.com
+    suites: stable
+    components: main
+    signed_by: /etc/apt/keyrings/grafana.asc
     state: present
 
 - name: Install alloy
@@ -34,12 +39,14 @@
   ansible.builtin.group:
     name: docker
     state: present
+  when: alloy_docker_discovery | default(true)
 
 - name: Add alloy user to docker group
   ansible.builtin.user:
     name: alloy
     groups: docker
     append: true
+  when: alloy_docker_discovery | default(true)
 
 - name: Create /etc/alloy directory
   ansible.builtin.file:
@@ -48,60 +55,11 @@
     mode: "0755"
 
 - name: Deploy Alloy configuration file
-  ansible.builtin.copy:
+  ansible.builtin.template:
+    # Hosts without Docker (e.g. cinema) set alloy_docker_discovery: false
+    # to ship journal logs only.
+    src: config.alloy.j2
     dest: /etc/alloy/config.alloy
-    content: |
-      loki.relabel "journal" {
-        forward_to = []
-
-        rule {
-          target_label  = "host"
-          replacement   = constants.hostname
-        }
-
-        rule {
-          source_labels = ["__journal__systemd_unit"]
-          target_label  = "unit"
-        }
-      }
-
-      loki.source.journal "read"  {
-        forward_to    = [loki.write.endpoint.receiver]
-        relabel_rules = loki.relabel.journal.rules
-        labels        = {component = "loki.source.journal"}
-      }
-
-      loki.relabel "docker" {
-        forward_to = []
-
-        rule {
-          target_label  = "host"
-          replacement   = constants.hostname
-        }
-        rule {
-          source_labels = ["__meta_docker_container_name"]
-          regex         = "/(.*)"
-          target_label  = "container"
-        }
-      }
-
-      discovery.docker "linux" {
-        host = "unix:///var/run/docker.sock"
-      }
-
-      loki.source.docker "default" {
-        host       = "unix:///var/run/docker.sock"
-        targets    = discovery.docker.linux.targets
-        labels     = {"app" = "docker"}
-        relabel_rules = loki.relabel.docker.rules
-        forward_to = [loki.write.endpoint.receiver]
-      }
-
-      loki.write "endpoint" {
-        endpoint {
-          url = "{{ loki_url }}"
-        }
-      }
     mode: "0644"
     backup: true
 

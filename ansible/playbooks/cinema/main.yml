@@ -1,6 +1,9 @@
 ---
 - name: Install cinema
   hosts: cinema
+  vars:
+    # No Docker on this host: ship journal logs only.
+    alloy_docker_discovery: false
   tasks:
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-common-packages.yml
@@ -20,43 +23,6 @@
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-beszel-agent.yml
 
-    - name: Configure Alloy
-      ansible.builtin.copy:
-        dest: /etc/alloy/config.alloy
-        content: |
-          loki.relabel "journal" {
-            forward_to = []
-
-            rule {
-              target_label  = "host"
-              replacement   = constants.hostname
-            }
-
-            rule {
-              source_labels = ["__journal__systemd_unit"]
-              target_label  = "unit"
-            }
-          }
-
-          loki.source.journal "read" {
-            forward_to    = [loki.write.endpoint.receiver]
-            relabel_rules = loki.relabel.journal.rules
-            labels        = {component = "loki.source.journal"}
-          }
-
-          loki.write "endpoint" {
-            endpoint {
-              url = "{{ loki_url }}"
-            }
-          }
-        mode: "0644"
-        backup: true
-
-    - name: Restart alloy to apply config
-      ansible.builtin.systemd_service:
-        name: alloy
-        state: restarted
-
     - name: Allow NFS port
       community.general.ufw:
         rule: allow
@@ -68,7 +34,7 @@
         rule: allow
         port: "445"
         proto: tcp
-        from_ip: 192.168.1.0/24
+        from_ip: "{{ homelab_lan_subnet }}"
 
     - name: Allow SMB port from Tailscale
       community.general.ufw:
@@ -121,6 +87,7 @@
         path: /mnt/pool
         src: /mnt/wdred1:/mnt/wdred2
         fstype: fuse.mergerfs
+        # yamllint disable-line rule:line-length
         opts: defaults,nonempty,allow_other,use_ino,cache.files=off,moveonenospc=true,category.create=mfs,dropcacheonclose=true,minfreespace=250G,inodecalc=path-hash,func.getattr=newest,fsname=mergerfs
         state: present
 
@@ -149,7 +116,7 @@
         src: smb.conf.j2
         dest: /etc/samba/smb.conf
         mode: "0644"
-      notify: restart smbd
+      notify: Restart smbd
 
     - name: Enable and start smbd
       ansible.builtin.systemd_service:
@@ -168,14 +135,15 @@
         src: exports.j2
         dest: /etc/exports
         mode: "0644"
-      notify: reload exports
+      notify: Reload exports
 
   handlers:
-    - name: reload exports
+    - name: Reload exports
       ansible.builtin.command:
         cmd: exportfs -ra
+      changed_when: true
 
-    - name: restart smbd
+    - name: Restart smbd
       ansible.builtin.systemd_service:
         name: smbd
         state: restarted

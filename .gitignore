@@ -1,3 +1,4 @@
 .vscode
 .vault_pass
 .direnv/
+logs/

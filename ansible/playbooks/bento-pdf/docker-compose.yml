@@ -1,12 +1,12 @@
 services:
   bentopdf:
-    image: ghcr.io/alam00000/bentopdf:2.8.6@sha256:eaeea1e447205a79cb61d7efdc6966f37311dc1bc9c36a3a5c897bf79107c2c3
+    image: ghcr.io/alam00000/bentopdf:2.8.7@sha256:165113f4579cc61ea353ad0597ed510cc2101ef879ec5e91875a3df0c0b219a0
     container_name: bentopdf
     restart: always
     networks:
       - bentopdf
   newt:
-    image: docker.io/fosrl/newt:1.14.0@sha256:60c78391e3b5cb8a260490fb26b8b7329ed5448077629da89a564af80d3a9fad
+    image: docker.io/fosrl/newt:1.15.0@sha256:d69d047c816ca7721eae90d5f3cd3be53b615b3d498678be21488d666538ee5c
     container_name: newt-bentopdf
     restart: unless-stopped
     networks:
@@ -16,5 +16,5 @@ services:
       - NEWT_ID={{ bentopdf_newt_id }}
       - NEWT_SECRET={{ bentopdf_newt_secret }}
 networks:
-   bentopdf:
-     name: bento-pdf
+  bentopdf:
+    name: bento-pdf

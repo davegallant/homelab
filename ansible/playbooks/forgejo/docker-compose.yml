@@ -1,12 +1,12 @@
 services:
   docker-in-docker:
-    image: docker.io/docker:29.6.2-dind@sha256:bfec1f5159c63a81ca6fdedbd81404d2c0e16378ed0feec3bb3fbf3998847659
+    image: docker.io/docker:29.7.2-dind@sha256:12e683a161823b2a839aeea999b9d960e6e1f9a97b1679ad6b441982e2d9cf07
     container_name: "docker_dind"
     privileged: "true"
     command: ["dockerd", "-H", "tcp://0.0.0.0:2375", "--tls=false"]
     restart: "unless-stopped"
   forgejo:
-    image: codeberg.org/forgejo/forgejo:15.0.5@sha256:eda2e378442d2f18cfa563994f8ad66e71f04ac9c3bb4259cc57bdd641890f5c
+    image: codeberg.org/forgejo/forgejo:16.0.2@sha256:2fdfe28b5c68f82f49580e227b84e2afb43af0250e0631a54a386ef3b1d9b759
     container_name: forgejo
     environment:
       - USER_UID=1000
@@ -19,7 +19,7 @@ services:
       - ./forgejo:/data
       - /etc/localtime:/etc/localtime:ro
   runner-1:
-    image: "data.forgejo.org/forgejo/runner:12@sha256:379b324d6942824b7487706c0a06be4d63e546c17b62bece4ae18c74364a8fae"
+    image: "data.forgejo.org/forgejo/runner:13@sha256:7fb853bfe73c229be6349398359c0a7bd01fadfd17c106607b2221150b799ed2"
     links:
       - docker-in-docker
     depends_on:
@@ -35,7 +35,7 @@ services:
     restart: "unless-stopped"
     command: "forgejo-runner daemon --config runner-config.yml"
   runner-2:
-    image: data.forgejo.org/forgejo/runner:12@sha256:379b324d6942824b7487706c0a06be4d63e546c17b62bece4ae18c74364a8fae
+    image: data.forgejo.org/forgejo/runner:13@sha256:7fb853bfe73c229be6349398359c0a7bd01fadfd17c106607b2221150b799ed2
     links:
       - docker-in-docker
     container_name: forgejo-runner-2
@@ -50,7 +50,7 @@ services:
     restart: "unless-stopped"
     command: "forgejo-runner daemon --config /data/runner-config.yml"
   pangolin:
-    image: docker.io/fosrl/newt:1.14.0@sha256:60c78391e3b5cb8a260490fb26b8b7329ed5448077629da89a564af80d3a9fad
+    image: docker.io/fosrl/newt:1.15.0@sha256:d69d047c816ca7721eae90d5f3cd3be53b615b3d498678be21488d666538ee5c
     container_name: pangolin-forgejo
     restart: unless-stopped
     networks:

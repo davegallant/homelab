@@ -10,13 +10,26 @@ run argument:
 
 # Run all playbooks in parallel
 run-parallel:
-	#!/bin/sh
-	playbooks=$(find playbooks -maxdepth 1 -type d -not -name playbooks | sed 's|playbooks/||' | sort)
-	for playbook in $playbooks; do
-		ansible-playbook playbooks/$playbook/main.yml -i inventory --vault-password-file .vault_pass &
+	#!/usr/bin/env bash
+	set -o pipefail
+	pids=""
+	for playbook in $(find playbooks -mindepth 1 -maxdepth 1 -type d | sed 's|playbooks/||' | sort); do
+		ansible-playbook "playbooks/$playbook/main.yml" -i inventory --vault-password-file .vault_pass &
+		pids="$pids $!:$playbook"
 	done
-	wait
-	echo "All playbooks completed"
+	failed=""
+	total=0
+	for entry in $pids; do
+		total=$((total + 1))
+		if ! wait "${entry%%:*}"; then
+			failed="$failed ${entry#*:}"
+		fi
+	done
+	if [ -n "$failed" ]; then
+		echo "FAILED playbooks:$failed" >&2
+		exit 1
+	fi
+	echo "All $total playbooks completed successfully"
 
 # Edit secrets with ansible-vault edit
 edit-secrets:

@@ -1,10 +1,9 @@
 services:
   kiwix-serve:
     container_name: kiwix-serve
-    image: ghcr.io/kiwix/kiwix-serve:3.8.2@sha256:3448ca74298f226c4b44f72e52cf25c7b4e7f7542d7a44b4a3f105562e94859b
+    image: ghcr.io/kiwix/kiwix-serve:3.8.2@sha256:57baa553c46cd30770905df15a9a687258aa5471c30c8edaefe278f1784e1aa8
     ports:
       - 8080:8080
     volumes:
       - /mnt/media/kiwix:/data
     command: "*.zim"
-

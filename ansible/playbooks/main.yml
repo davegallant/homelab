@@ -19,6 +19,7 @@
 - import_playbook: jellyfin/main.yml
 - import_playbook: seerr/main.yml
 - import_playbook: kiwix/main.yml
+- import_playbook: lan-orangutan/main.yml
 - import_playbook: lidarr/main.yml
 - import_playbook: lubelogger/main.yml
 - import_playbook: maloja/main.yml
@@ -34,5 +35,4 @@
 - import_playbook: speedtest-tracker/main.yml
 - import_playbook: tunarr/main.yml
 - import_playbook: umami/main.yml
-- import_playbook: upsnap/main.yml
 - import_playbook: watchyourlan/main.yml

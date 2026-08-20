@@ -1,6 +1,6 @@
 services:
   miniflux:
-    image: docker.io/miniflux/miniflux:2.3.2@sha256:cd353a6af9ce663291f405eddef26fa0d567f486b521c5d34e3fb50e41938b9a
+    image: docker.io/miniflux/miniflux:2.3.3@sha256:49d7b60987616387c306a8023087b31f2c9b7b21288b523026cb04058e8b6dbb
     container_name: miniflux
     networks:
       - miniflux
@@ -15,7 +15,7 @@ services:
       - ADMIN_PASSWORD={{ miniflux_admin_password }}
       - BASE_URL={{ miniflux_base_url }}
   miniflux-db:
-    image: docker.io/postgres:18.4@sha256:8ff36f3c66371cba71d20ceedccfc3de9669a68737607888c4ef0af93abe8e39
+    image: docker.io/postgres:18.4@sha256:3a82e1f56c8f0f5616a11103ac3d47e632c3938698946a7ad26da0df1334744a
     container_name: miniflux-db
     networks:
       - miniflux
@@ -30,7 +30,7 @@ services:
       interval: 10s
       start_period: 30s
   newt:
-    image: docker.io/fosrl/newt:1.14.0@sha256:60c78391e3b5cb8a260490fb26b8b7329ed5448077629da89a564af80d3a9fad
+    image: docker.io/fosrl/newt:1.15.0@sha256:d69d047c816ca7721eae90d5f3cd3be53b615b3d498678be21488d666538ee5c
     container_name: newt-miniflux
     restart: unless-stopped
     networks:

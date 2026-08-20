@@ -24,6 +24,7 @@
       ansible.builtin.file:
         path: "~/config"
         state: directory
+        mode: "0755"
 
     - name: Enable UFW
       community.general.ufw:

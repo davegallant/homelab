@@ -12,18 +12,33 @@ All commands are run from the `ansible/` directory using [just](https://github.c
 ```sh
 just setup                              # Install Ansible Galaxy collections
 just run "--limit grafana"              # Run all playbooks limited to one host
+just run-parallel                       # Run every playbook concurrently
+just edit-secrets                       # ansible-vault edit group_vars/all/secrets.yaml
 # Run a single service playbook directly:
 ansible-playbook playbooks/grafana/main.yml -i inventory --vault-password-file .vault_pass
 ```
 
+From the **repo root**:
+
+```sh
+just lint                               # yamllint + ansible-lint + shellcheck
+```
+
 ### CI/CD
 
-- **On push to `main`**: all 38 playbooks run in a GitHub Actions matrix
+- **On push to `main` (paths `ansible/**`) and daily via cron**: every playbook
+  runs in a Forgejo Actions matrix (`.forgejo/workflows/run-all-playbooks.yaml`)
 - **Manual dispatch**: run a single playbook by name via `run-single-playbook.yml`
 - **On compose file changes**: `update-containers-table.yml` regenerates the README table
+- **On every pull request**: `lint.yml` runs yamllint, ansible-lint and shellcheck
 
 There are no unit tests or integration tests. CI runs the actual Ansible playbooks
-against real infrastructure. The vault password is injected from `secrets.ANSIBLE_VAULT_PASSWORD`.
+against real infrastructure. The vault password is injected from
+`secrets.ANSIBLE_VAULT_PASSWORD` via an executable vault password file, so it is
+never written to the runner's disk.
+
+Because a push to `main` under `ansible/**` applies to live hosts (and the daily
+cron re-applies within 24h), land changes on a branch and merge deliberately.
 
 ## Ansible Playbook Conventions
 
@@ -71,7 +86,9 @@ Every service playbook follows this exact pattern:
 - **Module names**: always use Fully Qualified Collection Names (FQCNs):
   `ansible.builtin.template`, `community.general.ufw`, `community.docker.docker_compose_v2`
 - **Booleans**: use `true`/`false`, never `yes`/`no`
-- **File mode**: always a quoted string: `"0640"`, `"0644"`, `"0755"`
+- **File mode**: always a quoted string: `"0640"`, `"0644"`, `"0755"`. Required
+  on `ansible.builtin.file` with `state: directory` too (ansible-lint
+  `risky-file-permissions`)
 - **Variable references**: `{{ var }}` with spaces inside braces
 - **Privilege escalation**: not specified (hosts are accessed as root via Tailscale SSH)
 - **Task directive order**: `name:` first, then module with parameters, then conditionals
@@ -100,7 +117,10 @@ Every service playbook follows this exact pattern:
 - **`restart`**: `always` for primary services, `unless-stopped` for sidecars/helpers
 - **Volumes**: short string syntax (`./data:/data`), read-only with `:ro` suffix
 - **Environment variables**: prefer list form (`- KEY=value`); map form (`KEY: value`)
-  is acceptable but less common
+  is acceptable but less common. In map form, **quote** Jinja values:
+  `APP_SECRET: "{{ umami_app_secret }}"`. Bare `KEY: {{ var }}` is a YAML flow
+  mapping, so the file does not parse and the rendered value breaks on a secret
+  containing `:` or `#`
 - **Networks**: named networks matching the service name, used when a Newt reverse proxy
   sidecar is present
 - **Newt sidecar pattern** (for Pangolin reverse proxy tunneling):
@@ -131,7 +151,8 @@ Every service playbook follows this exact pattern:
 
 ## Dependency Management
 
-- **Renovate** auto-merges minor/patch/pin/digest updates on weekends (`renovate.json`)
+- **Renovate** opens PRs monthly (`renovate.json`). Nothing auto-merges -- merging
+  to `main` applies to live hosts, so every update is reviewed and merged by hand
 - Container image versions are pinned in each `docker-compose.yml`
 - Ansible Galaxy collections: `ansible.posix`, `community.docker`, `community.general`
 
@@ -141,4 +162,36 @@ Every service playbook follows this exact pattern:
 2. Create `ansible/playbooks/<service>/main.yml` following the canonical structure above
 3. Create `ansible/playbooks/<service>/docker-compose.yml` following compose conventions
 4. Add an import line in `ansible/playbooks/main.yml`
-5. If using secrets, reference via `{{ variable }}` and define in `group_vars/all/secrets.yaml`
+5. If using secrets, reference via `{{ variable }}` and define in `group_vars/all/secrets.yaml`.
+   Non-secret shared values go in `group_vars/all/vars.yaml` (unencrypted)
+6. Run `just lint` from the repo root before opening a PR
+
+## Shared Variables
+
+- `group_vars/all/secrets.yaml` -- ansible-vault encrypted; edit with `just edit-secrets`
+- `group_vars/all/vars.yaml` -- plaintext, non-secret values shared by every host
+- `alloy_docker_discovery` -- set `false` in a play's `vars:` for hosts without
+  Docker, so `tasks/config.alloy.j2` renders a journal-only Alloy config
+- `beszel_version` -- shared by the agent `.deb` URL in
+  `tasks/install-beszel-agent.yml` and the hub image tag in
+  `playbooks/beszel/docker-compose.yml`; Renovate bumps both in one PR
+- `ufw_docker_allowed_sources` -- sources allowed to reach published container
+  ports, defaulting to the tailnet only. Override in a play's `vars:` for a
+  service that must be reachable from the LAN (see `bedrock`, `jellyfin`)
+- `homelab_lan_subnet` -- the LAN range, for UFW rules
+
+## Firewalling Published Container Ports
+
+`community.general.ufw` with `policy: deny` does **not** cover ports published
+by Docker. Docker DNATs in `nat/PREROUTING` and jumps to `DOCKER-USER` at the
+top of `FORWARD`, both before ufw's `ufw-user-forward` chain is consulted.
+
+`tasks/install-docker.yml` therefore manages a `DOCKER-USER` block in
+`/etc/ufw/after.rules` that allows Docker's own bridge networks plus
+`ufw_docker_allowed_sources`, and drops everything else headed for a container
+network. Services using `network_mode: host` (adguard-home, watchyourlan) are
+unaffected -- their traffic hits `INPUT`, where the ufw rules do apply.
+
+A `ufw: rule: allow` task on its own only opens a *host* port. If a service
+needs to be reachable from the LAN, it also needs `ufw_docker_allowed_sources`
+widened in its play.

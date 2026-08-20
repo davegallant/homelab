@@ -1,6 +1,6 @@
 services:
   paperless-redis:
-    image: docker.io/library/redis:8@sha256:2838d5524559494f6f1cd66e97e76b200d64a633a8614200620755ed395daf32
+    image: docker.io/library/redis:8@sha256:a7efd4ed5037dcfe1543c0e50b9f06293d3e88827005544bf37f381eea5f01cf
     container_name: paperless-redis
     restart: unless-stopped
     networks:
@@ -8,7 +8,7 @@ services:
     volumes:
       - ./redis-data:/data
   paperless-ngx:
-    image: docker.io/paperlessngx/paperless-ngx:2.20.15@sha256:6c86cad803970ea782683a8e80e7403444c5bf3cf70de63b4d3c8e87500db92f
+    image: docker.io/paperlessngx/paperless-ngx:3.0.5@sha256:65a4cabf0169ea7fbd90ab7bb28ba3f8b5909613635acda1a03ad606f34b456b
     container_name: paperless-ngx
     restart: always
     networks:
@@ -19,19 +19,12 @@ services:
       - PAPERLESS_ADMIN_PASSWORD={{ paperless_admin_password }}
       - PAPERLESS_URL={{ paperless_url }}
       - PAPERLESS_TIME_ZONE=UTC
-      - PAPERLESS_DBENGINE=postgresql
-      - POSTGRES_DB=paperless
-      - POSTGRES_USER={{ paperless_db_user }}
-      - POSTGRES_PASSWORD={{ paperless_db_password }}
-      - POSTGRES_HOST=paperless-db
       - PAPERLESS_REDIS=redis://paperless-redis:6379
     volumes:
       - ./data:/usr/src/paperless/data
       - ./consume:/usr/src/paperless/consume
       - ./media:/usr/src/paperless/media
       - ./export:/usr/src/paperless/export
-    depends_on:
-      - paperless-db
     healthcheck:
       test: ["CMD", "curl", "-fs", "-o", "/dev/null", "-w", "%{http_code}", "http://localhost:8000"]
       interval: 30s
@@ -39,23 +32,8 @@ services:
       retries: 5
       start_period: 40s
 
-  paperless-db:
-    image: docker.io/postgres:18.4@sha256:8ff36f3c66371cba71d20ceedccfc3de9669a68737607888c4ef0af93abe8e39
-    container_name: paperless-db
-    restart: always
-    networks:
-      - paperless
-    environment:
-      - POSTGRES_DB=paperless
-      - POSTGRES_USER={{ paperless_db_user }}
-      - POSTGRES_PASSWORD={{ paperless_db_password }}
-    volumes:
-      - ./pgdata:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-
   newt:
-    image: docker.io/fosrl/newt:1.14.0@sha256:60c78391e3b5cb8a260490fb26b8b7329ed5448077629da89a564af80d3a9fad
+    image: docker.io/fosrl/newt:1.15.0@sha256:d69d047c816ca7721eae90d5f3cd3be53b615b3d498678be21488d666538ee5c
     container_name: newt-paperless
     restart: unless-stopped
     networks:

@@ -20,6 +20,9 @@ services:
       - "HOMEPAGE_VAR_ADGUARD_HOME_URL={{ adguard_home_url }}"
       - "HOMEPAGE_VAR_TRUENAS_URL={{ truenas_url }}"
       - "HOMEPAGE_VAR_PROXMOX_URL={{ proxmox_url }}"
+      - "HOMEPAGE_VAR_PROXMENUX_APOLLO_URL={{ proxmenux_apollo_url }}"
+      - "HOMEPAGE_VAR_PROXMENUX_G3_1_URL={{ proxmenux_g3_1_url }}"
+      - "HOMEPAGE_VAR_PROXMENUX_G3_2_URL={{ proxmenux_g3_2_url }}"
       - "HOMEPAGE_VAR_OPNSENSE_URL={{ opnsense_url }}"
       - "HOMEPAGE_VAR_HOMEASSISTANT_URL={{ homeassistant_url }}"
       - "HOMEPAGE_VAR_AUDIOBOOKSHELF_URL={{ audiobookshelf_url }}"
@@ -32,6 +35,7 @@ services:
       - "HOMEPAGE_VAR_ARCHIVEBOX_URL={{ archivebox_url }}"
       - "HOMEPAGE_VAR_LUBELOGGER_URL={{ lubelogger_url }}"
       - "HOMEPAGE_VAR_GRAFANA_URL={{ grafana_url }}"
+      - "HOMEPAGE_VAR_LAN_ORANGUTAN_URL={{ lan_orangutan_url }}"
       - "HOMEPAGE_VAR_WATCHYOURLAN_URL={{ watchyourlan_url }}"
       - "HOMEPAGE_VAR_BESZEL_URL={{ beszel_url }}"
       - "HOMEPAGE_VAR_PROWLARR_URL={{ prowlarr_url }}"
@@ -45,7 +49,6 @@ services:
       - "HOMEPAGE_VAR_QBITTORRENT_URL={{ qbittorrent_url }}"
       - "HOMEPAGE_VAR_SEERR_URL={{ seerr_url }}"
       - "HOMEPAGE_VAR_PAPERLESS_NGX_URL={{ paperless_ngx_url }}"
-      - "HOMEPAGE_VAR_UPSNAP_URL={{ upsnap_url }}"
       - "HOMEPAGE_VAR_GL_MT3000_URL={{ gl_mt3000_url }}"
     ports:
       - 3000:3000
