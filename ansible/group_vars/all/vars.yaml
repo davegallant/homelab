@@ -5,7 +5,7 @@
 # Used by both tasks/install-beszel-agent.yml (agent .deb) and
 # playbooks/beszel/docker-compose.yml (hub image tag). Keep them in lockstep.
 # renovate: datasource=github-releases depName=henrygd/beszel
-beszel_version: "0.18.7"
+beszel_version: "0.18.8"
 
 # renovate: datasource=github-releases depName=291-Group/LAN-Orangutan
 lan_orangutan_version: "3.3.8"
