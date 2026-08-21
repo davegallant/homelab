@@ -207,7 +207,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/aceberg/watchyourlan | v2 |
 | docker.io/adguard/adguardhome | v0.107.78 |
 | docker.io/archivebox/archivebox | 0.7.4 |
-| docker.io/caronc/apprise | v1.5.1 |
+| docker.io/caronc/apprise | v1.5.2 |
 | docker.io/chrisbenincasa/tunarr | 1.3.11 |
 | docker.io/deluan/navidrome | 0.63.2 |
 | docker.io/dgtlmoon/changedetection.io | 0.55.8 |
