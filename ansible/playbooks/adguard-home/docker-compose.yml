@@ -1,6 +1,6 @@
 services:
   adguard-home:
-    image: docker.io/adguard/adguardhome:v0.107.78@sha256:2c127294fa5f96151d9d3a433fb9d66c17e4d18cf698c2b04372a80e26fdd26f
+    image: docker.io/adguard/adguardhome:v0.107.79@sha256:abadc6ec47f8ca385cb38f2abfeb11ca6a2b0277964967b1954c63e11b517f4f
     container_name: adguard-home
     network_mode: host
     restart: always
