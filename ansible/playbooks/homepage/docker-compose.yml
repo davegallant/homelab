@@ -13,6 +13,7 @@ services:
       - "HOMEPAGE_VAR_TRUENAS_API_KEY={{ homepage_truenas_api_key }}"
       - "HOMEPAGE_VAR_OPENWEATHERMAP_API_KEY={{ homepage_openweathermap_api_key }}"
       - "HOMEPAGE_VAR_GATUS_URL={{ gatus_url }}"
+      - "HOMEPAGE_VAR_FLOPPY_URL={{ floppy_url }}"
       - "HOMEPAGE_VAR_SPEEDTEST_TRACKER_URL={{ speedtest_tracker_url }}"
       - "HOMEPAGE_VAR_JELLYFIN_URL={{ jellyfin_url }}"
       - "HOMEPAGE_VAR_GOTIFY_URL={{ gotify_server_url }}"
