@@ -221,6 +221,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/jellyfin/jellyfin | 10.11.11 |
 | docker.io/krateng/maloja | 3.2.6 |
 | docker.io/library/redis | 8 |
+| docker.io/library/redis | 8.2.3-alpine |
 | docker.io/linuxserver/lidarr | 3.1.0 |
 | docker.io/linuxserver/prowlarr | 2.5.2 |
 | docker.io/linuxserver/qbittorrent | 5.2.3 |
@@ -238,6 +239,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | ghcr.io/advplyr/audiobookshelf | 2.36.0 |
 | ghcr.io/alam00000/bentopdf | 2.8.7 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.5.1.3 |
+| ghcr.io/dannyvfilms/floppy | 26.8.20 |
 | ghcr.io/dispatcharr/dispatcharr | 0.29.0 |
 | ghcr.io/flaresolverr/flaresolverr | v3.5.0 |
 | ghcr.io/gethomepage/homepage | v1.13.2 |
