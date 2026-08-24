@@ -28,6 +28,10 @@ endpoints:
     url: "{{ changedetection_url }}"
     <<: *defaults
 
+  - name: floppy
+    url: "{{ floppy_url }}"
+    <<: *defaults
+
   - name: homepage
     url: "{{ homepage_url }}"
     <<: *defaults

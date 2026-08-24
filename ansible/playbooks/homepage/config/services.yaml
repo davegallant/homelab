@@ -90,6 +90,10 @@
         icon: forgejo
         href: "{% raw %}{{HOMEPAGE_VAR_FORGEJO_URL}}{% endraw %}"
         description: Git server
+    - Floppy:
+        icon: mdi-movie-open
+        href: "{% raw %}{{HOMEPAGE_VAR_FLOPPY_URL}}{% endraw %}"
+        description: Media tracker
     - Navidrome:
         icon: navidrome
         href: "{% raw %}{{HOMEPAGE_VAR_NAVIDROME_URL}}{% endraw %}"

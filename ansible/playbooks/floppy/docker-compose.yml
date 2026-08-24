@@ -1,0 +1,31 @@
+services:
+  floppy:
+    image: ghcr.io/dannyvfilms/floppy:26.8.20
+    container_name: floppy
+    restart: always
+    depends_on:
+      - redis
+    environment:
+      - ALLOWED_HOSTS=floppy.snake-cloud.ts.net
+      - DEMO_ACCOUNT_ENABLED=False
+      - DEBUG=False
+      - REDIS_URL=redis://redis:6379
+      - REGISTRATION=True
+      - "SECRET={{ floppy_secret }}"
+      - TZ=America/Toronto
+      - "URLS={{ floppy_url }}"
+    volumes:
+      - ./db:/floppy/db
+    ports:
+      - "8000:8000"
+
+  redis:
+    image: docker.io/library/redis:8.2.3-alpine
+    container_name: floppy-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --save "" --maxmemory 256mb --maxmemory-policy volatile-lru
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:
