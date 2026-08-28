@@ -217,7 +217,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/grafana/grafana | 13.1.3 |
 | docker.io/grafana/loki | 3.7.6 |
 | docker.io/henrygd/beszel | 0.18.8 |
-| docker.io/itzg/minecraft-bedrock-server | 2026.7.6 |
+| docker.io/itzg/minecraft-bedrock-server | 2026.8.2 |
 | docker.io/jellyfin/jellyfin | 10.11.11 |
 | docker.io/krateng/maloja | 3.2.6 |
 | docker.io/library/redis | 8 |
