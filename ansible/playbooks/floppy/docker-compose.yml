@@ -1,6 +1,6 @@
 services:
   floppy:
-    image: ghcr.io/dannyvfilms/floppy:26.8.20
+    image: ghcr.io/dannyvfilms/floppy:26.8.27@sha256:790eeaea6d23caa91457cb73e675ab6bdb39e36f03a64beb80a04904543142e1
     container_name: floppy
     restart: always
     depends_on:
