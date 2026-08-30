@@ -34,3 +34,33 @@
     name: rsyslog
     state: absent
     purge: true
+
+- name: Ensure journald configuration directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    mode: "0755"
+
+- name: Limit persistent journal disk usage
+  ansible.builtin.copy:
+    dest: /etc/systemd/journald.conf.d/10-homelab-retention.conf
+    content: |
+      [Journal]
+      SystemMaxUse=200M
+    mode: "0644"
+  register: journald_retention
+
+- name: Restart journald to apply retention policy # noqa: no-handler
+  ansible.builtin.systemd_service:
+    name: systemd-journald
+    state: restarted
+  when: journald_retention is changed
+
+- name: Vacuum existing journals # noqa: no-changed-when no-handler
+  ansible.builtin.command:
+    cmd: journalctl --vacuum-size=200M
+  when: journald_retention is changed
+
+- name: Clean APT package cache
+  ansible.builtin.apt:
+    clean: true
