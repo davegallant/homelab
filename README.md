@@ -219,7 +219,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/jellyfin/jellyfin | 10.11.11 |
 | docker.io/krateng/maloja | 3.2.6 |
 | docker.io/library/redis | 8 |
-| docker.io/library/redis | 8.2.3-alpine |
 | docker.io/linuxserver/lidarr | 3.1.0 |
 | docker.io/linuxserver/prowlarr | 2.5.2 |
 | docker.io/linuxserver/qbittorrent | 5.2.3 |
