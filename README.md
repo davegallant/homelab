@@ -67,7 +67,6 @@ Each LXC container runs:
 | [Jellyfin](https://jellyfin.org) | Open-source media server for movies, TV, and music |
 | [Navidrome](https://navidrome.org) | Subsonic-compatible music streaming server |
 | [Audiobookshelf](https://www.audiobookshelf.org) | Self-hosted audiobook and podcast server |
-| [Tunarr](https://github.com/chrisbenincasa/tunarr) | Create custom IPTV channels from local media |
 | [Dispatcharr](https://github.com/Dispatcharr/Dispatcharr) | IPTV playlist and EPG manager |
 | [Invidious](https://invidious.io) | Privacy-respecting YouTube frontend |
 | [RomM](https://github.com/rommapp/romm) | ROM manager and game library for retro games |
@@ -208,7 +207,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/adguard/adguardhome | v0.107.79 |
 | docker.io/archivebox/archivebox | 0.7.4 |
 | docker.io/caronc/apprise | v1.5.2 |
-| docker.io/chrisbenincasa/tunarr | 1.3.13 |
 | docker.io/deluan/navidrome | 0.63.2 |
 | docker.io/dgtlmoon/changedetection.io | 0.55.8 |
 | docker.io/docker | 29.7.2-dind |
