@@ -1,7 +1,7 @@
 services:
   lidarr:
     container_name: lidarr
-    image: docker.io/linuxserver/lidarr:3.1.0@sha256:60be9a1faad3dfba5a711163fc18526845e2ce7b50b463dd9effae7f766c9beb
+    image: docker.io/linuxserver/lidarr:3.1.0@sha256:c74c32408fdf6e7926ad62641fc1a5544206ee65c33f2188bb179edb30e28f5a
     ports:
       - 8686:8686
     environment:
