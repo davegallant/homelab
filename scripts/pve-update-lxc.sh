@@ -53,7 +53,7 @@ for node in "${NODES[@]}"; do
       "pct exec ${ct} -- sh -c 'command -v apt-get >/dev/null 2>&1'" 2>/dev/null; then
       echo "updating..."
       if ssh -n "root@${node}" \
-        "pct exec ${ct} -- sh -c 'apt-get update -y && apt-get upgrade -y'" \
+        "pct exec ${ct} -- sh -c 'apt-get update && DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get upgrade -y -o Dpkg::Options::=--force-confold'" \
         2>&1 | tee "${log_file}"; then
         echo "  ✓ done"
         UPDATED=$((UPDATED + 1))
