@@ -26,6 +26,7 @@ services:
       - "HOMEPAGE_VAR_OPNSENSE_URL={{ opnsense_url }}"
       - "HOMEPAGE_VAR_HOMEASSISTANT_URL={{ homeassistant_url }}"
       - "HOMEPAGE_VAR_AUDIOBOOKSHELF_URL={{ audiobookshelf_url }}"
+      - "HOMEPAGE_VAR_PINEPODS_URL={{ pinepods_url }}"
       - "HOMEPAGE_VAR_MALOJA_URL={{ maloja_url }}"
       - "HOMEPAGE_VAR_FORGEJO_URL={{ forgejo_url }}"
       - "HOMEPAGE_VAR_NAVIDROME_URL={{ navidrome_url }}"

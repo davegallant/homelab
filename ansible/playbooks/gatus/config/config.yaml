@@ -155,3 +155,7 @@ endpoints:
   - name: paperless-ngx
     url: "{{ paperless_ngx_url }}"
     <<: *defaults
+
+  - name: pinepods
+    url: "{{ pinepods_url }}"
+    <<: *defaults

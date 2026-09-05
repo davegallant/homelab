@@ -1,0 +1,76 @@
+services:
+  pinepods:
+    image: docker.io/madeofpendletonwool/pinepods:0.9.0
+    container_name: pinepods
+    networks:
+      - pinepods
+    depends_on:
+      pinepods-db:
+        condition: service_healthy
+      pinepods-valkey:
+        condition: service_started
+    environment:
+      - SEARCH_API_URL=https://search.pinepods.online/api/search
+      - PEOPLE_API_URL=https://people.pinepods.online
+      - HOSTNAME={{ pinepods_url }}
+      - DB_TYPE=postgresql
+      - DB_HOST=pinepods-db
+      - DB_PORT=5432
+      - DB_USER=pinepods
+      - DB_PASSWORD={{ pinepods_db_password }}
+      - DB_NAME=pinepods
+      - VALKEY_HOST=pinepods-valkey
+      - VALKEY_PORT=6379
+      - DEBUG_MODE=false
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Toronto
+    volumes:
+      - /mnt/media/Podcasts:/opt/pinepods/downloads
+      - ./backups:/opt/pinepods/backups
+    restart: always
+
+  pinepods-db:
+    image: docker.io/library/postgres:18.6@sha256:4ef4dbc939d61acea57712655ddb4b4ab27419c913f94cca0cd57cb3ea3c2280
+    container_name: pinepods-db
+    networks:
+      - pinepods
+    environment:
+      - POSTGRES_DB=pinepods
+      - POSTGRES_USER=pinepods
+      - POSTGRES_PASSWORD={{ pinepods_db_password }}
+      - PGDATA=/var/lib/pgdata/pgdata
+    volumes:
+      - pinepods-db:/var/lib/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pinepods -d pinepods"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  pinepods-valkey:
+    image: docker.io/valkey/valkey:9@sha256:475ee65cc75c327407458f5096cdd36954b3de3fc83f4c8ac31a4a8edecbf49e
+    container_name: pinepods-valkey
+    networks:
+      - pinepods
+    restart: always
+
+  newt:
+    image: docker.io/fosrl/newt:1.16.0@sha256:345fdeb369be6608d82c41d70637636c78b2c04a6112ff6ec20fc21c48afc899
+    container_name: newt-pinepods
+    restart: unless-stopped
+    networks:
+      - pinepods
+    environment:
+      - PANGOLIN_ENDPOINT={{ pangolin_endpoint }}
+      - NEWT_ID={{ pinepods_newt_id }}
+      - NEWT_SECRET={{ pinepods_newt_secret }}
+
+volumes:
+  pinepods-db:
+    name: pinepods-db
+
+networks:
+  pinepods:
+    name: pinepods
