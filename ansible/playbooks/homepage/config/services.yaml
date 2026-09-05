@@ -82,6 +82,10 @@
         icon: audiobookshelf
         href: "{% raw %}{{HOMEPAGE_VAR_AUDIOBOOKSHELF_URL}}{% endraw %}"
         description: Podcast and Audio books
+    - PinePods:
+        icon: pinepods
+        href: "{% raw %}{{HOMEPAGE_VAR_PINEPODS_URL}}{% endraw %}"
+        description: Podcast manager
     - Maloja:
         icon: maloja
         href: "{% raw %}{{HOMEPAGE_VAR_MALOJA_URL}}{% endraw %}"

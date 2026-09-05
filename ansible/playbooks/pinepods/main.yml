@@ -1,0 +1,29 @@
+---
+- name: Install pinepods
+  hosts: pinepods
+  tasks:
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-docker.yml
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-common-packages.yml
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-alloy.yml
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-beszel-agent.yml
+
+    - name: Copy docker-compose.yml
+      ansible.builtin.template:
+        src: docker-compose.yml
+        dest: "~/docker-compose.yml"
+        mode: "0640"
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+        policy: deny
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/docker-compose-up.yml
