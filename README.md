@@ -226,7 +226,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/linuxserver/radarr | 6.3.0 |
 | docker.io/linuxserver/sonarr | 4.0.19 |
 | docker.io/linuxserver/speedtest-tracker | 1.15.0 |
-| docker.io/madeofpendletonwool/pinepods | 0.9.0 |
 | docker.io/mariadb | 12.3.3 |
 | docker.io/miniflux/miniflux | 2.3.3 |
 | docker.io/paperlessngx/paperless-ngx | 3.1.3 |
@@ -238,6 +237,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | ghcr.io/advplyr/audiobookshelf | 2.36.0 |
 | ghcr.io/alam00000/bentopdf | 2.8.8 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.6.0.1 |
+| ghcr.io/davegallant/pinepods | ios-range-fix |
 | ghcr.io/dispatcharr/dispatcharr | 0.30.0 |
 | ghcr.io/flaresolverr/flaresolverr | v3.5.0 |
 | ghcr.io/gethomepage/homepage | v2.2.0 |
