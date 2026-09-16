@@ -240,7 +240,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | ghcr.io/davegallant/pinepods | ios-range-fix |
 | ghcr.io/dispatcharr/dispatcharr | 0.31.0 |
 | ghcr.io/flaresolverr/flaresolverr | v3.5.2 |
-| ghcr.io/gethomepage/homepage | v2.2.0 |
+| ghcr.io/gethomepage/homepage | v2.3.0 |
 | ghcr.io/hargata/lubelogger | v1.4.5 |
 | ghcr.io/immich-app/immich-machine-learning | v3.1.0 |
 | ghcr.io/immich-app/immich-server | v3.1.0 |
