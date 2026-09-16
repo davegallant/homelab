@@ -1,6 +1,6 @@
 services:
   changedetection:
-    image: docker.io/dgtlmoon/changedetection.io:0.60.3@sha256:ecacd9fd0c664a786b77daadbbbf51373519b29178a32df3ddbc5c594bc067ed
+    image: docker.io/dgtlmoon/changedetection.io:0.60.6@sha256:eb4a9f718801004e006ffef0ce35171f42ec8d45c9b5d20da572bc5febe107ff
     container_name: changedetection
     ports:
       - 5000:5000
