@@ -37,7 +37,7 @@ endpoints:
     <<: *defaults
 
   - name: prowlarr
-    url: "{{ prowlarr_url }}health"
+    url: "{{ prowlarr_url }}ping"
     <<: *defaults
 
   - name: lidarr
@@ -49,11 +49,11 @@ endpoints:
     <<: *defaults
 
   - name: radarr
-    url: "{{ radarr_url }}"
+    url: "{{ radarr_url }}ping"
     <<: *defaults
 
   - name: sonarr
-    url: "{{ sonarr_url }}"
+    url: "{{ sonarr_url }}ping"
     <<: *defaults
 
   - name: seerr
