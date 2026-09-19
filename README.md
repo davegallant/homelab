@@ -209,7 +209,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/caronc/apprise | v1.5.4 |
 | docker.io/deluan/navidrome | 0.64.0 |
 | docker.io/dgtlmoon/changedetection.io | 0.60.6 |
-| docker.io/docker | 29.8.0-dind |
+| docker.io/docker | 29.8.1-dind |
 | docker.io/fosrl/newt | 1.17.0 |
 | docker.io/gotify/server | 3.1.1 |
 | docker.io/grafana/grafana | 13.2.2 |
