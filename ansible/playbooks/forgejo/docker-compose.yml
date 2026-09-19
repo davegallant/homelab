@@ -6,7 +6,7 @@ services:
     command: ["dockerd", "-H", "tcp://0.0.0.0:2375", "--tls=false"]
     restart: "unless-stopped"
   forgejo:
-    image: codeberg.org/forgejo/forgejo:16.0.4@sha256:a3e33d03e771d3e58b27de5573c3a25dc4f670583a6724c1878a6d0bbecf3556
+    image: codeberg.org/forgejo/forgejo:16.0.5@sha256:cf5f5ae6acf2ababca0ee3d255705b83a47f35b25e07fc931d694d60664053fe
     container_name: forgejo
     environment:
       - USER_UID=1000
