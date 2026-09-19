@@ -250,5 +250,5 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | ghcr.io/seriousm4x/upsnap | 5.7.0 |
 | ghcr.io/umami-software/umami | 3.4.0 |
 | quay.io/invidious/invidious | 2026.09.16-c882300 |
-| quay.io/invidious/invidious-companion | 2026.09.12-c9a309e |
+| quay.io/invidious/invidious-companion | 2026.09.18-ff181f8 |
 <!-- DOCKER_SERVICES_END -->
