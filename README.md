@@ -226,7 +226,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/linuxserver/radarr | 6.4.4 |
 | docker.io/linuxserver/sonarr | 4.0.20 |
 | docker.io/linuxserver/speedtest-tracker | 1.15.0 |
-| docker.io/mariadb | 12.3.3 |
+| docker.io/mariadb | 13.0.2 |
 | docker.io/miniflux/miniflux | 2.3.3 |
 | docker.io/paperlessngx/paperless-ngx | 3.2.0 |
 | docker.io/postgres | 18.6 |
