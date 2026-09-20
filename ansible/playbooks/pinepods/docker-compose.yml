@@ -1,8 +1,6 @@
 services:
   pinepods:
-    # image: docker.io/madeofpendletonwool/pinepods:0.9.0@sha256:ebc258bb0c62cdb69e5fb726b247c885dac19b50d06fed68fa8d37197b88ace4
-    # https://github.com/madeofpendletonwool/PinePods/issues/980
-    image: ghcr.io/davegallant/pinepods:ios-range-fix@sha256:c0ab5fb74919a50ec4adeb6752548a43a21525983fb4700825d98337df561cb4
+    image: docker.io/madeofpendletonwool/pinepods:0.9.0@sha256:ebc258bb0c62cdb69e5fb726b247c885dac19b50d06fed68fa8d37197b88ace4
     container_name: pinepods
     networks:
       - pinepods
