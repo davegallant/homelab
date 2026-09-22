@@ -229,7 +229,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/madeofpendletonwool/pinepods | 0.9.0 |
 | docker.io/mariadb | 13.0.2 |
 | docker.io/miniflux/miniflux | 2.3.3 |
-| docker.io/paperlessngx/paperless-ngx | 3.2.0 |
+| docker.io/paperlessngx/paperless-ngx | 3.2.1 |
 | docker.io/postgres | 18.6 |
 | docker.io/rommapp/romm | 5.2.0 |
 | docker.io/searxng/searxng | 2026.9.22-b3c389529 |
