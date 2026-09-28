@@ -205,10 +205,10 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | data.forgejo.org/forgejo/runner | 13 |
 | docker.io/aceberg/watchyourlan | v2 |
 | docker.io/adguard/adguardhome | v0.107.79 |
-| docker.io/archivebox/archivebox | 0.9.51 |
+| docker.io/archivebox/archivebox | 0.9.70 |
 | docker.io/caronc/apprise | v1.5.4 |
 | docker.io/deluan/navidrome | 0.64.2 |
-| docker.io/dgtlmoon/changedetection.io | 0.60.7 |
+| docker.io/dgtlmoon/changedetection.io | 0.60.8 |
 | docker.io/docker | 29.8.1-dind |
 | docker.io/fosrl/newt | 1.17.0 |
 | docker.io/gotify/server | 3.1.1 |
@@ -247,7 +247,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | ghcr.io/immich-app/postgres | 14-vectorchord0.4.3-pgvectors0.2.0 |
 | ghcr.io/kiwix/kiwix-serve | 3.8.2 |
 | ghcr.io/seerr-team/seerr | v3.5.0 |
-| ghcr.io/seriousm4x/upsnap | 5.7.1 |
+| ghcr.io/seriousm4x/upsnap | 5.7.2 |
 | ghcr.io/umami-software/umami | 3.4.0 |
 | quay.io/invidious/invidious | 2026.09.16-c882300 |
 | quay.io/invidious/invidious-companion | 2026.09.19-bb3b37f |
