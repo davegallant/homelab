@@ -8,7 +8,6 @@ set -euo pipefail
 NODES=(
   pve-g3-1
   pve-g3-2
-  pve-apollo
 )
 
 LOG_DIR="logs/pve-update-lxc-$(date +%Y%m%d-%H%M%S)"
