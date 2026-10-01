@@ -68,6 +68,10 @@ endpoints:
     url: "{{ bentopdf_url }}"
     <<: *defaults
 
+  - name: arca
+    url: https://arca.snake-cloud.ts.net/
+    <<: *defaults
+
   - name: lan-orangutan
     url: "{{ lan_orangutan_url }}/static/orangutan.svg"
     <<: *defaults
@@ -86,10 +90,6 @@ endpoints:
 
   - name: maloja
     url: "{{ maloja_url }}"
-    <<: *defaults
-
-  - name: archivebox
-    url: "{{ archivebox_url }}"
     <<: *defaults
 
   - name: beszel
