@@ -69,7 +69,7 @@ endpoints:
     <<: *defaults
 
   - name: arca
-    url: https://arca.snake-cloud.ts.net/
+    url: https://arca.snake-cloud.ts.net/healthz
     <<: *defaults
 
   - name: lan-orangutan
