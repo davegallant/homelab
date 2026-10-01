@@ -233,7 +233,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/searxng/searxng | 2026.9.25-d8ae3abd5 |
 | docker.io/twinproduction/gatus | v5.37.0 |
 | docker.io/valkey/valkey | 9 |
-| ghcr.io/advplyr/audiobookshelf | 2.36.1 |
+| ghcr.io/advplyr/audiobookshelf | 2.37.1 |
 | ghcr.io/alam00000/bentopdf | 2.8.8 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.6.0.1 |
 | ghcr.io/dispatcharr/dispatcharr | 0.31.0 |
