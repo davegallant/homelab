@@ -204,12 +204,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | data.forgejo.org/forgejo/runner | 13 |
 | docker.io/aceberg/watchyourlan | v2 |
 | docker.io/adguard/adguardhome | v0.107.79 |
-<<<<<<< HEAD
-| docker.io/caronc/apprise | v1.5.4 |
-=======
-| docker.io/archivebox/archivebox | 0.9.51 |
 | docker.io/caronc/apprise | v2.0.0 |
->>>>>>> f0eb8f3 (chore: update containers table)
 | docker.io/deluan/navidrome | 0.64.2 |
 | docker.io/dgtlmoon/changedetection.io | 0.60.8 |
 | docker.io/docker | 29.8.2-dind |
