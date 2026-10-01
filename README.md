@@ -210,7 +210,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/docker | 29.8.1-dind |
 | docker.io/fosrl/newt | 1.17.0 |
 | docker.io/gotify/server | 3.1.1 |
-| docker.io/grafana/grafana | 13.2.2 |
+| docker.io/grafana/grafana | 13.2.3 |
 | docker.io/grafana/loki | 3.7.8 |
 | docker.io/henrygd/beszel | 0.20.0 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.9.1 |
