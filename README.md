@@ -84,7 +84,6 @@ Each LXC container runs:
 | Service | Description |
 |---|---|
 | [Miniflux](https://miniflux.app) | Minimalist RSS reader |
-| [ArchiveBox](https://archivebox.io) | Self-hosted internet archiving |
 | [Kiwix](https://kiwix.org) | Offline access to Wikipedia, Stack Overflow, and more |
 | [Maloja](https://github.com/krateng/maloja) | Self-hosted scrobbling server (Last.fm alternative) |
 | [LubeLogger](https://lubelogger.com) | Vehicle maintenance tracker |
@@ -205,7 +204,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | data.forgejo.org/forgejo/runner | 13 |
 | docker.io/aceberg/watchyourlan | v2 |
 | docker.io/adguard/adguardhome | v0.107.79 |
-| docker.io/archivebox/archivebox | 0.9.64 |
 | docker.io/caronc/apprise | v1.5.4 |
 | docker.io/deluan/navidrome | 0.64.2 |
 | docker.io/dgtlmoon/changedetection.io | 0.60.8 |

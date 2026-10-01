@@ -33,7 +33,6 @@ services:
       - "HOMEPAGE_VAR_INVIDIOUS_URL={{ invidious_url }}"
       - "HOMEPAGE_VAR_CHANGEDETECTION_URL={{ changedetection_url }}"
       - "HOMEPAGE_VAR_BENTOPDF_URL={{ bentopdf_url }}"
-      - "HOMEPAGE_VAR_ARCHIVEBOX_URL={{ archivebox_url }}"
       - "HOMEPAGE_VAR_LUBELOGGER_URL={{ lubelogger_url }}"
       - "HOMEPAGE_VAR_GRAFANA_URL={{ grafana_url }}"
       - "HOMEPAGE_VAR_LAN_ORANGUTAN_URL={{ lan_orangutan_url }}"

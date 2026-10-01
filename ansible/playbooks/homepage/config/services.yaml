@@ -110,10 +110,10 @@
         icon: bentopdf
         href: "{% raw %}{{HOMEPAGE_VAR_BENTOPDF_URL}}{% endraw %}"
         description: PDF tools
-    - Archivebox:
+    - Arca:
         icon: archivebox
-        href: "{% raw %}{{HOMEPAGE_VAR_ARCHIVEBOX_URL}}{% endraw %}"
-        description: Website preserver
+        href: https://arca.snake-cloud.ts.net/
+        description: Website archive
     - Lubelogger:
         icon: lubelogger
         href: "{% raw %}{{HOMEPAGE_VAR_LUBELOGGER_URL}}{% endraw %}"
