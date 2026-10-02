@@ -11,6 +11,9 @@ services:
       - DISPATCHARR_ENV=aio
       - REDIS_HOST=localhost
       - CELERY_BROKER_URL=redis://localhost:6379/0
+      - UWSGI_WORKERS=2
+      - CELERY_MIN_WORKERS=1
+      - CELERY_MAX_WORKERS=2
       - DISPATCHARR_LOG_LEVEL=info
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
