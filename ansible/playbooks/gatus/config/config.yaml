@@ -167,3 +167,7 @@ endpoints:
   - name: pangolin
     url: "https://{{ pangolin_dashboard_domain }}/api/v1/"
     <<: *defaults
+
+  - name: headscale
+    url: "https://{{ headscale_server_domain }}/health"
+    <<: *defaults

@@ -1,3 +1,11 @@
+- name: Remove legacy Docker .list files to prevent Signed-By conflicts
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/download_docker_com_linux_ubuntu.list
+    - /etc/apt/sources.list.d/docker.list
+
 - name: Install python
   ansible.builtin.apt:
     name:
@@ -24,11 +32,6 @@
     src: docker.sources.j2
     dest: /etc/apt/sources.list.d/docker.sources
     mode: "0644"
-
-- name: Remove legacy Docker .list file to prevent Signed-By conflicts
-  ansible.builtin.file:
-    path: /etc/apt/sources.list.d/download_docker_com_linux_ubuntu.list
-    state: absent
 
 - name: Update apt cache to load Docker repo
   ansible.builtin.apt:

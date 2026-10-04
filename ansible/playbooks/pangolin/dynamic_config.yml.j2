@@ -45,6 +45,20 @@ http:
         - badger
       tls:
         certResolver: letsencrypt
+    headscale-router-redirect:
+      rule: "Host(`{{ headscale_server_domain }}`)"
+      service: headscale-service
+      entryPoints:
+        - web
+      middlewares:
+        - redirect-to-https
+    headscale-router:
+      rule: "Host(`{{ headscale_server_domain }}`)"
+      service: headscale-service
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
   services:
     next-service:
       loadBalancer:
@@ -54,6 +68,10 @@ http:
       loadBalancer:
         servers:
           - url: "http://pangolin:3000"
+    headscale-service:
+      loadBalancer:
+        servers:
+          - url: "http://headscale:8080"
 tcp:
   serversTransports:
     pp-transport-v1:

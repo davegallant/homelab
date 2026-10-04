@@ -2,6 +2,8 @@
 - name: Install pangolin
   hosts: pangolin
   vars:
+    # Reuse the project name of the manually-deployed stack on the VPS.
+    docker_compose_project_name: pangolin
     # Values verified against the VPS's live ~/config (2026-10-03). If the live
     # config changes, update these to match before running.
     #
@@ -48,6 +50,8 @@
         - config
         - config/db
         - config/letsencrypt
+        - config/headscale
+        - config/headscale/data
         - config/traefik
         - config/traefik/logs
 
@@ -62,8 +66,14 @@
         src: config.yml.j2
         dest: "~/config/config.yml"
         mode: "0640"
-      # State Ansible never touches, all under ~/config:
-      # db/db.sqlite (all sites/resources), key (Gerbil), letsencrypt/acme.json.
+    # State Ansible never touches, all under ~/config:
+    # db/db.sqlite (all sites/resources), key (Gerbil), letsencrypt/acme.json.
+
+    - name: Copy Headscale config
+      ansible.builtin.template:
+        src: headscale_config.yaml.j2
+        dest: "~/config/headscale/config.yaml"
+        mode: "0640"
 
     - name: Copy traefik static config
       ansible.builtin.template:
@@ -82,9 +92,9 @@
         rule: allow
         port: "22"
         proto: tcp
-      # This host is reached over plain SSH (no Tailscale), so 22 is the only
-      # way in. It must be open BEFORE the deny policy loads. Do not move this
-      # below "Enable UFW".
+    # This host is reached over plain SSH (no Tailscale), so 22 is the only
+    # way in. It must be open BEFORE the deny policy loads. Do not move this
+    # below "Enable UFW".
 
     - name: Enable UFW
       community.general.ufw:

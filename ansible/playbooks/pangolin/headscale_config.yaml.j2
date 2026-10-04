@@ -1,0 +1,50 @@
+# Managed by Ansible (playbooks/pangolin).
+server_url: https://{{ headscale_server_domain }}
+listen_addr: 0.0.0.0:8080
+metrics_listen_addr: ""
+grpc_listen_addr: 127.0.0.1:50443
+grpc_allow_insecure: false
+
+noise:
+  private_key_path: /var/lib/headscale/noise_private.key
+
+prefixes:
+  v4: 100.100.0.0/16
+  v6: fd7a:115c:a1e0::/48
+  allocation: sequential
+
+derp:
+  server:
+    enabled: false
+  urls:
+    - https://controlplane.tailscale.com/derpmap/default
+  paths: []
+  auto_update_enabled: true
+  update_frequency: 3h
+
+database:
+  type: sqlite
+  sqlite:
+    path: /var/lib/headscale/db.sqlite
+    write_ahead_log: true
+
+policy:
+  mode: database
+
+dns:
+  magic_dns: true
+  base_domain: "{{ headscale_magic_dns_domain }}"
+  override_local_dns: true
+  nameservers:
+    global:
+      - 1.1.1.1
+      - 1.0.0.1
+      - 2606:4700:4700::1111
+      - 2606:4700:4700::1001
+
+unix_socket: /var/run/headscale/headscale.sock
+unix_socket_permission: "0770"
+
+log:
+  level: info
+  format: text
