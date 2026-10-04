@@ -33,11 +33,3 @@ jobs:
           platforms: linux/amd64
           tags: ghcr.io/davegallant/homelab-caddy-cloudflare:2.11.6-a8737d0
           labels: org.opencontainers.image.source=https://github.com/davegallant/homelab
-
-      - name: Make package public
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: >-
-          gh api --method PATCH
-          /user/packages/container/homelab-caddy-cloudflare/visibility
-          --field visibility=public
