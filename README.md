@@ -211,7 +211,9 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/deluan/navidrome | 0.64.2 |
 | docker.io/dgtlmoon/changedetection.io | 0.60.8 |
 | docker.io/docker | 29.8.2-dind |
+| docker.io/fosrl/gerbil | 1.5.0 |
 | docker.io/fosrl/newt | 1.18.1 |
+| docker.io/fosrl/pangolin | 1.23.0 |
 | docker.io/gotify/server | 3.1.1 |
 | docker.io/grafana/grafana | 13.2.3 |
 | docker.io/grafana/loki | 3.7.8 |
@@ -234,6 +236,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/postgres | 18.6 |
 | docker.io/rommapp/romm | 5.3.1 |
 | docker.io/searxng/searxng | 2026.10.2-e652ca7d2 |
+| docker.io/traefik | v3.6 |
 | docker.io/twinproduction/gatus | v5.37.0 |
 | docker.io/valkey/valkey | 9 |
 | ghcr.io/advplyr/audiobookshelf | 2.37.1 |
