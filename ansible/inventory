@@ -12,11 +12,10 @@ gatus
 gotify
 grafana
 homepage
-immich
 igotify
+immich
 invidious
 jellyfin
-seerr
 kiwix
 lan-orangutan
 lidarr
@@ -31,8 +30,10 @@ qbittorrent
 radarr
 romm
 searxng
+seerr
 sonarr
 speedtest-tracker
+# No playbook: hand-managed Tailscale infrastructure, not provisioned by Ansible
 tailscale-exit-node
 tailscale-subnet-router
 umami
