@@ -1,0 +1,64 @@
+---
+- name: Migrate batch to Headscale
+  hosts: "{{ migration_batch | default('all', true) }}"
+  gather_facts: false
+  vars:
+    headscale_login_server: "https://headscale.example.invalid"
+  tasks:
+    - name: Assert migration_batch is provided
+      ansible.builtin.assert:
+        that:
+          - migration_batch is defined
+          - migration_batch | default('') | trim | length > 0
+        fail_msg: "migration_batch must be a non-empty comma-separated host list."
+
+    - name: Assert headscale_batch_key is provided
+      ansible.builtin.assert:
+        that:
+          - headscale_batch_key is defined
+          - headscale_batch_key | default('') | trim | length > 0
+        fail_msg: "headscale_batch_key must be a non-empty pre-auth key."
+      no_log: true
+
+    - name: Check current control plane
+      ansible.builtin.command:
+        cmd: tailscale status --json
+      register: migration_tailscale_status
+      check_mode: false
+      changed_when: false
+      failed_when: false
+
+    - name: Flip host to Headscale
+      ansible.builtin.command:
+        cmd: >-
+          tailscale up --login-server={{ headscale_login_server }}
+          --authkey={{ headscale_batch_key }}
+          --force-reauth --accept-routes=true --ssh=true
+      changed_when: true
+      no_log: true
+      when: >-
+        (headscale_login_server | urlsplit('hostname'))
+        not in migration_tailscale_status.stdout
+
+    - name: "Wait for host to appear in Headscale: {{ inventory_hostname }}"
+      ansible.builtin.command:
+        cmd: docker exec headscale headscale nodes list
+      delegate_to: pangolin
+      register: migration_headscale_nodes
+      check_mode: false
+      changed_when: false
+      failed_when: false
+      until: inventory_hostname in migration_headscale_nodes.stdout
+      retries: 12
+      delay: 5
+
+    - name: Get Headscale tailnet IPv4 address
+      ansible.builtin.command:
+        cmd: tailscale ip -4
+      register: migration_tailnet_ip
+      check_mode: false
+      changed_when: false
+
+    - name: Record Headscale batch address
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }}: {{ migration_tailnet_ip.stdout | trim }}"

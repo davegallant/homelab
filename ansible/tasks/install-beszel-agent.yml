@@ -10,6 +10,7 @@
 - name: Install beszel-agent package
   ansible.builtin.apt:
     deb: /tmp/beszel-agent.deb
+  when: not ansible_check_mode
 
 - name: Remove downloaded beszel-agent package
   ansible.builtin.file:

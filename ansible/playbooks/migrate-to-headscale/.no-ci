@@ -1,0 +1,2 @@
+# This playbook changes a live host's Tailscale control plane using a batch
+# pre-auth key. Run it manually only; never include it in CI or the daily cron.
