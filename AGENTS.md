@@ -27,8 +27,11 @@ just lint                               # yamllint + ansible-lint + shellcheck
 ### CI/CD
 
 - **On push to `main` (paths `ansible/**`) and daily via cron**: every playbook
-  runs in a Forgejo Actions matrix (`.forgejo/workflows/run-all-playbooks.yaml`)
+  runs in a Forgejo Actions matrix (`.forgejo/workflows/run-all-playbooks.yaml`),
+  except playbooks with a `.no-ci` marker file in their directory (e.g. `pangolin`:
+  the VPS edge box only runs by hand, via `just run "--limit pangolin"`)
 - **Manual dispatch**: run a single playbook by name via `run-single-playbook.yml`
+  (refuses `.no-ci` hosts — those run by hand only)
 - **On compose file changes**: `update-containers-table.yml`
   (`.github/workflows/`) regenerates the README table
 - **On every pull request**: `lint.yml` (`.github/workflows/`) runs yamllint,
@@ -96,6 +99,10 @@ Every service playbook follows this exact pattern:
   `risky-file-permissions`)
 - **Variable references**: `{{ var }}` with spaces inside braces
 - **Privilege escalation**: not specified (hosts are accessed as root via Tailscale SSH)
+- **Edge hosts** (e.g. `pangolin`): reached over plain SSH via the operator's
+  `~/.ssh/config`, not the tailnet — set `ansible_user: root` in the play,
+  allow SSH before enabling UFW, skip Alloy/Beszel (no tailnet route to
+  Loki/hub), and opt out of CI with `.no-ci`
 - **Task directive order**: `name:` first, then module with parameters, then conditionals
 - **Hosts value**: must match the playbook directory name and the inventory hostname
 - **Use `ansible.builtin.template`** for copying compose files (even if no variables),
@@ -114,7 +121,9 @@ Every service playbook follows this exact pattern:
 
 Hosts without Docker (e.g. `cinema`) skip `install-docker.yml` and set
 `alloy_docker_discovery: false` in the play's `vars:` so Alloy ships journal
-logs only.
+logs only. The `pangolin` play additionally skips `install-alloy.yml` and
+`install-beszel-agent.yml`: it is not on the tailnet, so it cannot reach Loki
+or the Beszel hub (it is covered by a Gatus endpoint instead).
 
 ## Docker Compose Conventions
 
@@ -175,6 +184,8 @@ logs only.
 5. If using secrets, reference via `{{ variable }}` and define in `group_vars/all/secrets.yaml`.
    Non-secret shared values go in `group_vars/all/vars.yaml` (unencrypted)
 6. Run `just lint` from the repo root before opening a PR
+7. If the host must never run in CI (edge infra like the Pangolin VPS), add a
+   `.no-ci` marker file in the playbook directory with a comment explaining why
 
 ## Shared Variables
 
@@ -188,6 +199,10 @@ logs only.
 - `ufw_docker_allowed_sources` -- sources allowed to reach published container
   ports, defaulting to the tailnet only. Override in a play's `vars:` for a
   service that must be reachable from the LAN (see `bedrock`, `jellyfin`)
+- `ufw_docker_public_ports` -- list of `{port, proto}` published container ports
+  reachable from anywhere (default `[]`). For edge hosts like `pangolin` whose
+  ports are intentionally public; narrower than widening
+  `ufw_docker_allowed_sources`, which would open every published port on the host
 - `homelab_lan_subnet` -- the LAN range, for UFW rules
 
 ## Firewalling Published Container Ports
@@ -204,4 +219,6 @@ unaffected -- their traffic hits `INPUT`, where the ufw rules do apply.
 
 A `ufw: rule: allow` task on its own only opens a *host* port. If a service
 needs to be reachable from the LAN, it also needs `ufw_docker_allowed_sources`
-widened in its play.
+widened in its play. If a service's ports must be reachable from the public
+internet (the `pangolin` VPS), list them in `ufw_docker_public_ports` instead --
+specific ports, any source, without opening every published port on the host.

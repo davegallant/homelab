@@ -28,6 +28,11 @@ jobs:
             echo "'$PLAYBOOK_HOST' is not a host in ansible/inventory" >&2
             exit 1
           fi
+          if [ -f "ansible/playbooks/$PLAYBOOK_HOST/.no-ci" ]; then
+            echo "'$PLAYBOOK_HOST' is opted out of CI (.no-ci); run it by hand instead:" >&2
+            echo "  just run \"--limit $PLAYBOOK_HOST\"" >&2
+            exit 1
+          fi
           # Remove the plaintext vault password left behind by earlier runs.
           rm -f .vault_pass
           # Ansible executes the password file and reads stdout, so the vault

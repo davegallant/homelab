@@ -110,6 +110,7 @@ Each LXC container runs:
 |---|---|
 | [AdGuard Home](https://adguard.com/adguard-home.html) | Network-wide DNS ad and tracker blocking |
 | [upSnap](https://github.com/seriousm4x/upSnap) | Wake-on-LAN dashboard for waking devices on the LAN |
+| [Pangolin](https://github.com/fosrl/pangolin) | Reverse proxy with WireGuard tunneling for public-facing services (runs on a VPS, managed by `playbooks/pangolin`) |
 
 ### 🔧 Developer Tools
 

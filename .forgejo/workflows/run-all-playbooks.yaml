@@ -18,8 +18,11 @@ jobs:
       - uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - id: list
         run: |
+          # Playbooks containing a .no-ci marker file are skipped: edge infra
+          # that must only ever run by hand (e.g. the Pangolin VPS).
           playbooks=$(find ansible/playbooks -name "main.yml" -mindepth 2 -maxdepth 2 \
-            | xargs -I{} dirname {} | xargs -I{} basename {} \
+            | xargs -I{} dirname {} \
+            | while IFS= read -r dir; do [ -f "$dir/.no-ci" ] || basename "$dir"; done \
             | jq -R -s -c 'split("\n") | map(select(length > 0))')
           echo "playbooks=$playbooks" >> $FORGEJO_OUTPUT
 

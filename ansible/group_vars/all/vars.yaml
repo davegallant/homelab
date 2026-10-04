@@ -18,3 +18,7 @@ homelab_lan_subnet: 192.168.1.0/24
 # override this in their play's vars: (see bedrock and jellyfin).
 ufw_docker_allowed_sources:
   - 100.64.0.0/10  # Tailscale (CGNAT range)
+
+# Pangolin dashboard domain (VPS edge host). Shared by the pangolin playbook
+# and the Gatus endpoint. Verified against the live VPS config (2026-10-03).
+pangolin_dashboard_domain: "pangolin.davegallant.ca"

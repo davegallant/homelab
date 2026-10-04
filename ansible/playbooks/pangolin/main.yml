@@ -1,0 +1,95 @@
+---
+- name: Install pangolin
+  hosts: pangolin
+  vars:
+    # Values verified against the VPS's live ~/config (2026-10-03). If the live
+    # config changes, update these to match before running.
+    #
+    # pangolin_dashboard_domain lives in group_vars/all/vars.yaml (shared with
+    # the Gatus endpoint). pangolin_server_secret lives in the vault and MUST
+    # match the live value or existing sessions/tokens break.
+    pangolin_base_domain: "davegallant.ca"
+    pangolin_letsencrypt_email: "davegallant@proton.me"
+    # Plain SSH via ~/.ssh/config (no Tailscale on this host). Explicit: the
+    # other playbooks rely on Tailscale SSH and never set this.
+    ansible_user: root
+    # Edge reverse proxy: these published container ports must be reachable
+    # from the public internet. Everything else published stays tailnet-only
+    # (ufw_docker_allowed_sources). See ufw_docker_public_ports in
+    # tasks/install-docker.yml.
+    ufw_docker_public_ports:
+      - port: "80"
+        proto: tcp
+      - port: "443"
+        proto: tcp
+      - port: "51820"
+        proto: udp
+      - port: "21820"
+        proto: udp
+      - port: "19132"
+        proto: udp
+  tasks:
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-docker.yml
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-common-packages.yml
+
+    # No install-alloy.yml / install-beszel-agent.yml: this host is not on the
+    # tailnet, so it cannot reach Loki or the Beszel hub. It is monitored via
+    # the Gatus pangolin endpoint instead.
+
+    - name: Create pangolin config directories
+      ansible.builtin.file:
+        path: "{{ ansible_env.HOME }}/{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - config
+        - config/db
+        - config/letsencrypt
+        - config/traefik
+        - config/traefik/logs
+
+    - name: Copy docker-compose.yml
+      ansible.builtin.template:
+        src: docker-compose.yml
+        dest: "~/docker-compose.yml"
+        mode: "0640"
+
+    - name: Copy pangolin config.yml
+      ansible.builtin.template:
+        src: config.yml.j2
+        dest: "~/config/config.yml"
+        mode: "0640"
+      # State Ansible never touches, all under ~/config:
+      # db/db.sqlite (all sites/resources), key (Gerbil), letsencrypt/acme.json.
+
+    - name: Copy traefik static config
+      ansible.builtin.template:
+        src: traefik_config.yml.j2
+        dest: "~/config/traefik/traefik_config.yml"
+        mode: "0640"
+
+    - name: Copy traefik dynamic config
+      ansible.builtin.template:
+        src: dynamic_config.yml.j2
+        dest: "~/config/traefik/dynamic_config.yml"
+        mode: "0640"
+
+    - name: Allow SSH before enabling the firewall
+      community.general.ufw:
+        rule: allow
+        port: "22"
+        proto: tcp
+      # This host is reached over plain SSH (no Tailscale), so 22 is the only
+      # way in. It must be open BEFORE the deny policy loads. Do not move this
+      # below "Enable UFW".
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+        policy: deny
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/docker-compose-up.yml
