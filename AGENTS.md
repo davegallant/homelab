@@ -29,8 +29,10 @@ just lint                               # yamllint + ansible-lint + shellcheck
 - **On push to `main` (paths `ansible/**`) and daily via cron**: every playbook
   runs in a Forgejo Actions matrix (`.forgejo/workflows/run-all-playbooks.yaml`)
 - **Manual dispatch**: run a single playbook by name via `run-single-playbook.yml`
-- **On compose file changes**: `update-containers-table.yml` regenerates the README table
-- **On every pull request**: `lint.yml` runs yamllint, ansible-lint and shellcheck
+- **On compose file changes**: `update-containers-table.yml`
+  (`.github/workflows/`) regenerates the README table
+- **On every pull request**: `lint.yml` (`.github/workflows/`) runs yamllint,
+  ansible-lint and shellcheck
 
 There are no unit tests or integration tests. CI runs the actual Ansible playbooks
 against real infrastructure. The vault password is injected from
@@ -59,6 +61,9 @@ Every service playbook follows this exact pattern:
 
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-alloy.yml
+
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/install-beszel-agent.yml
 
     - name: Copy docker-compose.yml
       ansible.builtin.template:
@@ -101,10 +106,15 @@ Every service playbook follows this exact pattern:
 1. Include `install-docker.yml`
 2. Include `install-common-packages.yml`
 3. Include `install-alloy.yml`
-4. Copy compose file(s) and any extra config files
-5. UFW allow rules for specific ports (if needed)
-6. Enable UFW with deny-all policy
-7. Include `docker-compose-up.yml` (always last)
+4. Include `install-beszel-agent.yml`
+5. Copy compose file(s) and any extra config files
+6. UFW allow rules for specific ports (if needed)
+7. Enable UFW with deny-all policy
+8. Include `docker-compose-up.yml` (always last)
+
+Hosts without Docker (e.g. `cinema`) skip `install-docker.yml` and set
+`alloy_docker_discovery: false` in the play's `vars:` so Alloy ships journal
+logs only.
 
 ## Docker Compose Conventions
 

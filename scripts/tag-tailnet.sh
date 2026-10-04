@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
-# tag-tailnet.sh — Tag all devices that run Pangolin reverse-proxy sidecars
+# tag-tailnet.sh — Tag all devices that run Pangolin reverse-proxy sidecars.
+#
+# The service list is derived from the repo itself: every playbook whose
+# docker-compose.yml defines a top-level `newt` service gets tagged. Nothing
+# hardcoded to keep in sync when services are added or removed.
+#
+# Run from anywhere; paths are resolved relative to this script.
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 TAG="tag:pangolin"
 TS_NET=""
@@ -28,22 +37,20 @@ if [[ -z "$TS_NET" || -z "$TS_API_KEY" ]]; then
   exit 1
 fi
 
-# Services that use Pangolin sidecars
-SERVICES=(
-  audiobookshelf
-  bento-pdf
-  dispatcharr
-  forgejo
-  gotify
-  igotify
-  invidious
-  jellyfin
-  miniflux
-  navidrome
-  paperless-ngx
-  searxng
-  umami
-)
+# Services that use Pangolin sidecars: playbook dir names for compose files
+# with a top-level `newt:` service. The device hostname must match the
+# playbook directory name (see ansible/inventory).
+SERVICES=()
+while IFS= read -r compose_file; do
+  SERVICES+=("$(basename "$(dirname "${compose_file}")")")
+done < <(grep -rl '^  newt:' "${REPO_ROOT}"/ansible/playbooks/*/docker-compose.yml 2>/dev/null | sort -u)
+
+if [[ ${#SERVICES[@]} -eq 0 ]]; then
+  echo "No playbooks with a newt sidecar found under ${REPO_ROOT}/ansible/playbooks; nothing to tag." >&2
+  exit 1
+fi
+
+echo "Tagging ${#SERVICES[@]} service(s): ${SERVICES[*]}"
 
 FAILED=0
 
@@ -78,7 +85,6 @@ for name in "${SERVICES[@]}"; do
     echo "  ✗ $name ($id) → HTTP $http_code"
     FAILED=$((FAILED + 1))
   fi
-
 done
 
 echo ""

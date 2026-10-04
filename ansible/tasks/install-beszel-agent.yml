@@ -26,6 +26,7 @@
     owner: beszel
     group: beszel
     mode: "0600"
+  no_log: true
 
 - name: Reset failed state from the package's own first-boot start attempt
   ansible.builtin.command:
