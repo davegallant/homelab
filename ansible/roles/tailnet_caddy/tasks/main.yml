@@ -1,0 +1,81 @@
+---
+- name: Validate tailnet Caddy settings
+  ansible.builtin.assert:
+    that:
+      - tailnet_caddy_domain is defined
+      - tailnet_caddy_upstream is defined
+      - cloudflare_dns_api_token is defined
+      - cloudflare_dns_api_token | length > 0
+    fail_msg: "Set the tailnet_caddy_domain, tailnet_caddy_upstream, and Cloudflare token before deploying tailnet Caddy."
+
+- name: Get the tailnet IPv4 address
+  ansible.builtin.command:
+    cmd: tailscale ip -4
+  register: tailnet_caddy_tailscale_ip
+  check_mode: false
+  changed_when: false
+
+- name: Validate the tailnet IPv4 address
+  ansible.builtin.assert:
+    that:
+      - tailnet_caddy_tailscale_ip.stdout | trim | length > 0
+    fail_msg: "The tailnet Caddy role requires an assigned Tailscale IPv4 address."
+
+- name: Create tailnet Caddy directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
+    - path: /root/tailnet-caddy
+      mode: "0750"
+    - path: /etc/tailnet-caddy
+      mode: "0700"
+
+- name: Install tailnet Caddyfile
+  ansible.builtin.template:
+    src: Caddyfile.j2
+    dest: /root/tailnet-caddy/Caddyfile
+    owner: root
+    group: root
+    mode: "0640"
+  register: tailnet_caddy_config
+
+- name: Install tailnet Caddy Compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: /root/tailnet-caddy/docker-compose.yml
+    owner: root
+    group: root
+    mode: "0640"
+
+- name: Install Cloudflare DNS API token
+  ansible.builtin.copy:
+    content: "{{ cloudflare_dns_api_token }}"
+    dest: /etc/tailnet-caddy/cloudflare_api_token
+    owner: root
+    group: root
+    mode: "0600"
+  register: tailnet_caddy_token
+  no_log: true
+
+- name: Pull Caddy with Cloudflare DNS support
+  community.docker.docker_image:
+    name: "{{ tailnet_caddy_image }}"
+    source: pull
+
+- name: Reset old Tailscale Serve configuration
+  ansible.builtin.command:
+    cmd: tailscale serve reset
+  changed_when: false
+
+- name: Start tailnet Caddy
+  community.docker.docker_compose_v2:
+    project_src: /root/tailnet-caddy
+    project_name: tailnet-caddy
+    state: present
+    build: never
+    pull: never
+    recreate: "{{ 'always' if tailnet_caddy_config.changed or tailnet_caddy_token.changed else 'auto' }}"

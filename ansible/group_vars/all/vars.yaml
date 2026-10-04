@@ -22,3 +22,10 @@ ufw_docker_allowed_sources:
 # Pangolin dashboard domain (VPS edge host). Shared by the pangolin playbook
 # and the Gatus endpoint. Verified against the live VPS config (2026-10-03).
 pangolin_dashboard_domain: "pangolin.davegallant.ca"
+
+# Headscale control-plane domain (VPS edge host, Traefik-routed). Used by the
+# pangolin playbook (Headscale config, Traefik route) and the Gatus endpoint.
+headscale_server_domain: "headscale.example.invalid"
+
+# Headscale MagicDNS base domain. Must differ from headscale_server_domain.
+headscale_magic_dns_domain: "tailnet.example.invalid"

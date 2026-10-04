@@ -1,0 +1,2 @@
+---
+tailnet_caddy_image: "ghcr.io/davegallant/homelab-caddy-cloudflare:2.11.6-a8737d0@sha256:07cc2df1cc7139c72ebd1c854d57dcc2933002352ade5f32859bff60dcf76e21"

@@ -20,10 +20,25 @@
         dest: "~/docker-compose.yml"
         mode: "0640"
 
+    - name: Allow HTTPS from the tailnet
+      community.general.ufw:
+        rule: allow
+        port: "443"
+        proto: tcp
+        from_ip: "{{ item }}"
+      loop: "{{ ufw_docker_allowed_sources }}"
+
     - name: Enable UFW
       community.general.ufw:
         state: enabled
         policy: deny
+
+    - name: Install tailnet Caddy
+      ansible.builtin.include_role:
+        name: tailnet_caddy
+      vars:
+        tailnet_caddy_domain: "speedtest-tracker.{{ headscale_magic_dns_domain }}"
+        tailnet_caddy_upstream: "127.0.0.1:8080"
 
     - ansible.builtin.include_tasks:
         file: ../../tasks/docker-compose-up.yml

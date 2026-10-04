@@ -1,0 +1,13 @@
+{
+  auto_https disable_redirects
+  tls_resolvers 1.1.1.1
+}
+
+{{ tailnet_caddy_domain }} {
+  bind {{ tailnet_caddy_tailscale_ip.stdout | trim }}
+  tls {
+    dns cloudflare {file./run/secrets/cloudflare_api_token}
+  }
+
+  reverse_proxy {{ tailnet_caddy_upstream }}
+}

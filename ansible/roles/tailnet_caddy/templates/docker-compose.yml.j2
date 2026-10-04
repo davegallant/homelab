@@ -1,0 +1,15 @@
+services:
+  caddy:
+    image: "{{ tailnet_caddy_image }}"
+    container_name: tailnet-caddy
+    restart: always
+    network_mode: host
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data:/data
+      - ./config:/config
+      - /etc/tailnet-caddy/cloudflare_api_token:/run/secrets/cloudflare_api_token:ro
