@@ -1,0 +1,73 @@
+# Upstream reference: https://docs.pangolin.net/self-host/manual/docker-compose
+#
+# State that Ansible never touches (all under ./config, i.e. ~/config on the host):
+#   db/db.sqlite        - Pangolin's database: all sites, resources, users. Do not delete.
+#   key                 - Gerbil's WireGuard key, generated on first run.
+#   letsencrypt/acme.json - Traefik's certificates, renewed in place.
+# Seed those by keeping the existing VPS deployment; Ansible only manages the
+# files templated by main.yml.
+
+name: pangolin
+
+services:
+  pangolin:
+    # https://github.com/fosrl/pangolin/releases
+    image: docker.io/fosrl/pangolin:1.23.0@sha256:00cfb631097a819a0b6a65cf84e5d976a9f4a4fece533a59a984de374711f47a
+    container_name: pangolin
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    volumes:
+      - ./config:/app/config
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+
+  gerbil:
+    # https://github.com/fosrl/gerbil/releases
+    image: docker.io/fosrl/gerbil:1.5.0@sha256:6da170863132c79c67c580ef6a76606ea05fec704706d87988f52b06ba6d6b93
+    container_name: gerbil
+    restart: unless-stopped
+    depends_on:
+      pangolin:
+        condition: service_healthy
+    command:
+      - --reachableAt=http://gerbil:3004
+      - --generateAndSaveKeyTo=/var/config/key
+      - --remoteConfig=http://pangolin:3001/api/v1/
+    volumes:
+      - ./config/:/var/config
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    ports:
+      - 51820:51820/udp
+      - 21820:21820/udp
+      - 443:443
+      - 80:80
+      - 19132:19132/udp
+
+  traefik:
+    image: docker.io/traefik:v3.6@sha256:31267173a15b4944e797a76ffd9c419707c8d8b32fe5b610f80cd0cfa05f372d
+    container_name: traefik
+    restart: unless-stopped
+    network_mode: service:gerbil # Ports appear on the gerbil service
+    depends_on:
+      pangolin:
+        condition: service_healthy
+    command:
+      - --configFile=/etc/traefik/traefik_config.yml
+    volumes:
+      - ./config/traefik:/etc/traefik:ro
+      - ./config/letsencrypt:/letsencrypt
+      - ./config/traefik/logs:/var/log/traefik
+
+networks:
+  default:
+    driver: bridge
+    name: pangolin
+    enable_ipv6: true

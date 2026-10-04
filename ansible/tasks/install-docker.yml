@@ -72,6 +72,13 @@
       -A DOCKER-USER -s {{ source }} -j RETURN
       {% endfor %}
 
+      # Published ports intentionally reachable from anywhere (edge hosts like
+      # the Pangolin VPS). Narrower than widening ufw_docker_allowed_sources:
+      # specific ports, any source.
+      {% for rule in ufw_docker_public_ports | default([]) %}
+      -A DOCKER-USER -p {{ rule.proto | default('tcp') }} --dport {{ rule.port }} -j RETURN
+      {% endfor %}
+
       # Anything else headed for a container network is dropped and logged.
       -A DOCKER-USER -d 172.16.0.0/12 -j ufw-docker-logging-deny
 
