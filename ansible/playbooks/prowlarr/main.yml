@@ -27,3 +27,9 @@
 
     - ansible.builtin.include_tasks:
         file: ../../tasks/docker-compose-up.yml
+
+    - name: Serve HTTPS over the tailnet
+      ansible.builtin.include_role:
+        name: tailnet_caddy
+      vars:
+        tailnet_caddy_upstream: "http://127.0.0.1:9696"

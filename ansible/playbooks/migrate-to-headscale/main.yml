@@ -3,7 +3,7 @@
   hosts: "{{ migration_batch | default('all', true) }}"
   gather_facts: false
   vars:
-    headscale_login_server: "https://headscale.example.invalid"
+    headscale_login_server: "https://{{ headscale_server_domain }}"
   tasks:
     - name: Assert migration_batch is provided
       ansible.builtin.assert:
