@@ -52,6 +52,7 @@ jobs:
           trap 'rm -f "$VAULT_PASS_FILE"' EXIT
           chmod 700 "$VAULT_PASS_FILE"
           printf '#!/bin/sh\nprintf %%s "$ANSIBLE_VAULT_PASSWORD"\n' > "$VAULT_PASS_FILE"
+          export ANSIBLE_ROLES_PATH="$PWD/ansible/roles"
           ansible-playbook -i ansible/inventory \
             "ansible/playbooks/$PLAYBOOK/main.yml" \
             --vault-password-file "$VAULT_PASS_FILE"
