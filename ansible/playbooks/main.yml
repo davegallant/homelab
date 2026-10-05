@@ -24,7 +24,6 @@
 - import_playbook: navidrome/main.yml
 - import_playbook: paperless-ngx/main.yml
 - import_playbook: pangolin/main.yml
-- import_playbook: pinepods/main.yml
 - import_playbook: prowlarr/main.yml
 - import_playbook: qbittorrent/main.yml
 - import_playbook: radarr/main.yml

@@ -50,10 +50,6 @@
           key: "{% raw %}{{HOMEPAGE_VAR_TRUENAS_API_KEY}}{% endraw %}"
           enablePools: true
 - Quick Links:
-    - Headscale:
-        href: "https://{{ headscale_server_domain }}/health"
-        description: Control server health
-        icon: tailscale
     - Proxmox:
         href: "{% raw %}{{HOMEPAGE_VAR_PROXMOX_URL}}{% endraw %}"
         description: Virtualization

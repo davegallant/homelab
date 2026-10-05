@@ -34,6 +34,7 @@
           tailscale up --login-server={{ headscale_login_server }}
           --authkey={{ headscale_batch_key }}
           --force-reauth --accept-routes=true --ssh=true
+          --accept-risk=lose-ssh
       changed_when: true
       no_log: true
       when: >-
