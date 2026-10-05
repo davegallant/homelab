@@ -223,12 +223,11 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/gotify/server | 3.1.1 |
 | docker.io/grafana/grafana | 13.2.3 |
 | docker.io/grafana/loki | 3.7.8 |
-| docker.io/headscale/headscale | 0.29.3 |
+| docker.io/headscale/headscale | 0.29.4 |
 | docker.io/henrygd/beszel | 0.21.0 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.9.2 |
 | docker.io/jellyfin/jellyfin | 12.1 |
 | docker.io/krateng/maloja | 3.2.6 |
-| docker.io/library/postgres | 18.6 |
 | docker.io/library/redis | 8 |
 | docker.io/linuxserver/lidarr | 3.1.0 |
 | docker.io/linuxserver/prowlarr | 2.6.5 |
@@ -236,7 +235,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/linuxserver/radarr | 6.4.4 |
 | docker.io/linuxserver/sonarr | 4.0.20 |
 | docker.io/linuxserver/speedtest-tracker | 1.15.0 |
-| docker.io/madeofpendletonwool/pinepods | 0.9.0 |
 | docker.io/mariadb | 13.0.2 |
 | docker.io/miniflux/miniflux | 2.3.3 |
 | docker.io/paperlessngx/paperless-ngx | 3.2.1 |
