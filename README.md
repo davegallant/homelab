@@ -67,7 +67,6 @@ Each LXC container runs:
 | [Jellyfin](https://jellyfin.org) | Open-source media server for movies, TV, and music |
 | [Navidrome](https://navidrome.org) | Subsonic-compatible music streaming server |
 | [Audiobookshelf](https://www.audiobookshelf.org) | Self-hosted audiobook and podcast server |
-| [Pinepods](https://github.com/madeofpendletonwool/Pinepods) | Self-hosted podcast server and player |
 | [Dispatcharr](https://github.com/Dispatcharr/Dispatcharr) | IPTV playlist and EPG manager |
 | [Invidious](https://invidious.io) | Privacy-respecting YouTube frontend |
 | [RomM](https://github.com/rommapp/romm) | ROM manager and game library for retro games |

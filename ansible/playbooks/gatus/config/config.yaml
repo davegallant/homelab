@@ -156,10 +156,6 @@ endpoints:
     url: "{{ paperless_ngx_url }}"
     <<: *defaults
 
-  - name: pinepods
-    url: "{{ pinepods_url }}"
-    <<: *defaults
-
   - name: pangolin
     url: "https://{{ pangolin_dashboard_domain }}/api/v1/"
     <<: *defaults
