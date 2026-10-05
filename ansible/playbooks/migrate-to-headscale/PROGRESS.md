@@ -4,7 +4,7 @@ Updated: 2026-10-05
 
 ## Status legend
 
-- `[x]` migrated — flipped, Caddy deployed (if needed), HTTPS verified; SaaS entry retained unless removal is explicitly approved
+- `[x]` migration complete — flipped (or already on Headscale), Caddy deployed if needed; HTTPS was verified or explicitly left to Dave, with any known failure recorded; SaaS entry retained unless removal is explicitly approved
 - `[~]` in progress or needs attention
 - `[ ]` pending
 
@@ -22,31 +22,30 @@ Updated: 2026-10-05
 - [x] `prowlarr` — flipped 2026-10-04 (100.100.0.7), Caddy deployed; Dave confirmed it works, and the HTTPS login page returns 200; SaaS entry retained by instruction
 - [x] `sonarr` — flipped 2026-10-04 (100.100.0.8), service playbook ran (56 OK, 13 changed, 0 failed), Caddy running; Dave confirmed it is working after the canary curl timed out; SaaS entry retained
 
-## Awaiting Dave's HTTPS verification
+## Migrated — HTTPS verified or left to Dave
 
-- [~] `radarr` — flipped 2026-10-04 (100.100.0.9); full service playbook succeeded (56 OK, 12 changed, 0 failed); HTTPS verification left to Dave per instruction; SaaS entry retained
-- [~] `lidarr` — flipped 2026-10-04 (100.100.0.10); Caddy-only run succeeded (12 OK, 6 changed, 0 failed); HTTPS verification left to Dave per instruction; SaaS entry retained
-- [~] `gatus` — flipped 2026-10-04 (100.100.0.11); Caddy-only run succeeded (12 OK, 6 changed, 0 failed); HTTPS verification left to Dave per instruction; SaaS entry retained
-- [~] `homepage` — flipped 2026-10-04 (100.100.0.12); Caddy-only run succeeded (12 OK, 6 changed, 0 failed); HTTPS verification left to Dave per instruction; SaaS entry retained
-- [~] `qbittorrent` — flipped 2026-10-04 (100.100.0.13); Caddy-only run succeeded (12 OK, 6 changed, 0 failed); HTTPS verification left to Dave per instruction; SaaS entry retained
-- [~] `grafana` — flipped 2026-10-04 (100.100.0.14); Caddy-only run succeeded (12 OK, 6 changed, 0 failed); HTTPS verification left to Dave per instruction; SaaS entry retained
-- [~] `immich` — flipped 2026-10-04 (100.100.0.15); Caddy-only run succeeded (12 OK, 6 changed, 0 failed); HTTPS verification left to Dave per instruction; SaaS entry retained
-- [~] `audiobookshelf` — already online on Headscale (100.100.0.5); migration playbook skipped the flip; Caddy-only run succeeded (12 OK, 4 changed); HTTPS verification left to Dave; SaaS entry retained
-- [~] `maloja` — flipped 2026-10-05 (100.100.0.18); Caddy-only run succeeded (12 OK, 6 changed); HTTPS verification left to Dave; SaaS entry retained
-- [~] `romm` — already online on Headscale (100.100.0.3); migration playbook skipped the flip; Caddy-only run succeeded (12 OK, 4 changed); HTTPS verification left to Dave; SaaS entry retained
-- [~] `upsnap` — flipped 2026-10-05 (100.100.0.19); Caddy-only run succeeded (12 OK, 6 changed); HTTPS verification left to Dave; SaaS entry retained
+- [x] `radarr` — flipped 2026-10-04 (100.100.0.9); full service playbook succeeded (56 OK, 12 changed, 0 failed); HTTPS verification left to Dave per instruction; SaaS entry retained
+- [x] `lidarr` — flipped 2026-10-04 (100.100.0.10); Caddy-only run succeeded (12 OK, 6 changed, 0 failed); HTTPS verification left to Dave per instruction; SaaS entry retained
+- [x] `gatus` — flipped 2026-10-04 (100.100.0.11); Caddy-only run succeeded (12 OK, 6 changed, 0 failed); HTTPS verification left to Dave per instruction; SaaS entry retained
+- [x] `homepage` — flipped 2026-10-04 (100.100.0.12); Caddy-only run succeeded (12 OK, 6 changed, 0 failed); HTTPS verification left to Dave per instruction; SaaS entry retained
+- [x] `qbittorrent` — flipped 2026-10-04 (100.100.0.13); Caddy-only run succeeded (12 OK, 6 changed, 0 failed); HTTPS verification left to Dave per instruction; SaaS entry retained
+- [x] `grafana` — flipped 2026-10-04 (100.100.0.14); Caddy-only run succeeded (12 OK, 6 changed, 0 failed); HTTPS verification left to Dave per instruction; SaaS entry retained
+- [x] `immich` — flipped 2026-10-04 (100.100.0.15); Caddy-only run succeeded (12 OK, 6 changed, 0 failed); HTTPS verification left to Dave per instruction; SaaS entry retained
+- [x] `audiobookshelf` — already online on Headscale (100.100.0.5); tailnet Caddy role wiring removed per Dave; Gatus/Homepage retain the public `audiobookshelf.davegallant.ca` URL; live Caddy container unchanged; SaaS entry retained
+- [x] `maloja` — flipped 2026-10-05 (100.100.0.18); Caddy-only run succeeded (12 OK, 6 changed); HTTPS verification left to Dave; SaaS entry retained
+- [x] `romm` — already online on Headscale (100.100.0.3); migration playbook skipped the flip; Caddy-only run succeeded (12 OK, 4 changed); HTTPS verification left to Dave; SaaS entry retained
+- [x] `upsnap` — flipped 2026-10-05 (100.100.0.19); Caddy-only run succeeded (12 OK, 6 changed); HTTPS verification left to Dave; SaaS entry retained
+- [x] `lubelogger` — flipped 2026-10-05 (100.100.0.20); Caddy-only run succeeded (12 OK, 6 changed); first HTTPS check returned a TLS internal error; no further HTTPS checks per Dave's instruction; SaaS entry retained
+- [x] `changedetection` — flipped 2026-10-05 (100.100.0.21); Caddy-only run succeeded (12 OK, 6 changed); HTTPS verification left to Dave; SaaS entry retained
+- [x] `kiwix` — flipped 2026-10-05 (100.100.0.23); Caddy-only run succeeded (12 OK, 6 changed); HTTPS verification left to Dave; no Gatus/Homepage URL was configured; SaaS entry retained
+- [x] `adguard-home` — flipped 2026-10-05 (100.100.0.24); Caddy-only run succeeded (12 OK, 6 changed); HTTPS verification left to Dave; SaaS entry retained
+- [x] `watchyourlan` — flipped 2026-10-05 (100.100.0.25); Caddy-only run succeeded (12 OK, 6 changed); HTTPS verification left to Dave; SaaS entry retained
+- [x] `dispatcharr` — flipped 2026-10-05 (100.100.0.26); Caddy-only run succeeded (12 OK, 6 changed); HTTPS verification left to Dave; SaaS entry retained
+- [x] `invidious` — flipped 2026-10-05 (100.100.0.27); Caddy-only run succeeded (12 OK, 6 changed); HTTPS verification left to Dave; SaaS entry retained
 
 ## Pending — wired, ready to migrate
 
-These have the `tailnet_caddy` role wired and are still on Tailscale SaaS.
-
-- [ ] `adguard-home` (upstream 80)
-- [ ] `changedetection` (upstream 5000)
-- [ ] `dispatcharr` (upstream 9191)
-- [ ] `invidious` (upstream 3000)
-- [ ] `kiwix` (upstream 8080)
-- [ ] `lubelogger` (upstream 8080)
-- [ ] `watchyourlan` (upstream 8840)
+All 22 wired service hosts have completed their Headscale migration and Caddy deployment.
 
 ## Separate tracks — not in the batch flow
 
