@@ -32,9 +32,6 @@ searxng
 seerr
 sonarr
 speedtest-tracker
-# No playbook: hand-managed Tailscale infrastructure, not provisioned by Ansible
-tailscale-exit-node
-tailscale-subnet-router
 umami
 upsnap
 watchyourlan

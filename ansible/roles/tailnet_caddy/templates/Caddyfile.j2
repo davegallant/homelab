@@ -1,6 +1,9 @@
 {
   auto_https disable_redirects
   tls_resolvers 1.1.1.1
+  servers {
+    protocols h1 h2
+  }
 }
 
 {{ tailnet_caddy_domain }} {

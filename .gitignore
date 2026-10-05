@@ -2,3 +2,6 @@
 .vault_pass
 .direnv/
 logs/
+docs/
+
+ansible/playbooks/migrate-to-headscale/PROGRESS.md
