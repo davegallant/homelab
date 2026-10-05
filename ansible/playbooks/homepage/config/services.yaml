@@ -116,7 +116,7 @@
         description: PDF tools
     - Arca:
         icon: archivebox
-        href: https://arca.snake-cloud.ts.net/
+        href: "https://arca.{{ headscale_magic_dns_domain }}/"
         description: Website archive
     - Lubelogger:
         icon: lubelogger
@@ -126,10 +126,6 @@
         icon: grafana
         href: "{% raw %}{{HOMEPAGE_VAR_GRAFANA_URL}}{% endraw %}"
         description: Visualization
-    - LAN Orangutan:
-        icon: /icons/lan-orangutan.png
-        href: "{% raw %}{{HOMEPAGE_VAR_LAN_ORANGUTAN_URL}}{% endraw %}"
-        description: Network scanner
     - WatchYourLAN:
         icon: watchyourlan
         href: "{% raw %}{{HOMEPAGE_VAR_WATCHYOURLAN_URL}}{% endraw %}"
