@@ -54,10 +54,6 @@
         href: "{% raw %}{{HOMEPAGE_VAR_PROXMOX_URL}}{% endraw %}"
         description: Virtualization
         icon: proxmox
-    - PVE Apollo Monitor:
-        href: "{% raw %}{{HOMEPAGE_VAR_PROXMENUX_APOLLO_URL}}{% endraw %}"
-        description: ProxMenux Monitor
-        icon: proxmox
     - PVE G3-1 Monitor:
         href: "{% raw %}{{HOMEPAGE_VAR_PROXMENUX_G3_1_URL}}{% endraw %}"
         description: ProxMenux Monitor
