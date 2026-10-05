@@ -5,7 +5,7 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - HOMEPAGE_ALLOWED_HOSTS=homepage.snake-cloud.ts.net
+      - HOMEPAGE_ALLOWED_HOSTS={{ inventory_hostname }}.{{ headscale_magic_dns_domain }}
       - "HOMEPAGE_VAR_GOTIFY_API_KEY={{ homepage_gotify_api_key }}"
       - "HOMEPAGE_VAR_IMMICH_API_KEY={{ homepage_immich_api_key }}"
       - "HOMEPAGE_VAR_ADGUARD_HOME_USERNAME={{ homepage_adguard_home_username }}"
