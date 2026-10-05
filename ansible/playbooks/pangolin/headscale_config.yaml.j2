@@ -9,7 +9,7 @@ noise:
   private_key_path: /var/lib/headscale/noise_private.key
 
 prefixes:
-  v4: 100.100.0.0/16
+  v4: {{ headscale_v4_prefix }}
   v6: fd7a:115c:a1e0::/48
   allocation: sequential
 

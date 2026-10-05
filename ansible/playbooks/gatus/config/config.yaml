@@ -69,11 +69,7 @@ endpoints:
     <<: *defaults
 
   - name: arca
-    url: https://arca.snake-cloud.ts.net/healthz
-    <<: *defaults
-
-  - name: lan-orangutan
-    url: "{{ lan_orangutan_url }}/static/orangutan.svg"
+    url: "https://arca.{{ headscale_magic_dns_domain }}/healthz"
     <<: *defaults
 
   - name: watchyourlan

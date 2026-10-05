@@ -7,8 +7,6 @@
 # renovate: datasource=github-releases depName=henrygd/beszel
 beszel_version: "0.21.0"
 
-# renovate: datasource=github-releases depName=291-Group/LAN-Orangutan
-lan_orangutan_version: "3.3.8"
 
 homelab_lan_subnet: 192.168.1.0/24
 
@@ -23,9 +21,5 @@ ufw_docker_allowed_sources:
 # and the Gatus endpoint. Verified against the live VPS config (2026-10-03).
 pangolin_dashboard_domain: "pangolin.davegallant.ca"
 
-# Headscale control-plane domain (VPS edge host, Traefik-routed). Used by the
-# pangolin playbook (Headscale config, Traefik route) and the Gatus endpoint.
-headscale_server_domain: "headscale.example.invalid"
-
-# Headscale MagicDNS base domain. Must differ from headscale_server_domain.
-headscale_magic_dns_domain: "tailnet.example.invalid"
+# Headscale tailnet IPv4 allocation range.
+headscale_v4_prefix: "100.100.0.0/16"
