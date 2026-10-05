@@ -2,7 +2,7 @@
 
 This repo contains [Ansible playbooks](./ansible/playbooks/) and Docker Compose files that provision and manage a fully self-hosted homelab running on [Proxmox](https://proxmox.com).
 
-Every service lives in its own LXC container running Ubuntu. Ansible deploys Docker and a `docker-compose.yml` to each container; [Tailscale](https://tailscale.com) handles all networking; [Grafana Alloy](https://grafana.com/docs/alloy/) ships logs to Loki.
+Every service lives in its own LXC container running Ubuntu. Ansible deploys Docker and a `docker-compose.yml` to each container; [Headscale](https://headscale.net) (self-hosted Tailscale control plane) handles all networking; [Grafana Alloy](https://grafana.com/docs/alloy/) ships logs to Loki.
 
 > **Why Proxmox + LXC instead of a single Docker host?**
 > Proxmox makes it trivial to snapshot, backup, and live-migrate individual services between nodes from a single web UI. LXC containers are lightweight enough that 36+ services run comfortably without fighting for resources.
@@ -13,6 +13,11 @@ Every service lives in its own LXC container running Ubuntu. Ansible deploys Doc
 
 ```mermaid
 graph TD
+    subgraph VPS["Pangolin VPS (off-tailnet)"]
+        headscale["Headscale\n(control plane)"]
+        pangolin["Pangolin\nReverse Proxy"]
+    end
+
     subgraph Proxmox["Proxmox Cluster"]
         subgraph N1["Node 1"]
             immich["immich"]
@@ -29,12 +34,14 @@ graph TD
         end
     end
 
-    Proxmox -->|"Tailscale mesh VPN\n(SSH + ACLs)"| ts["Tailnet"]
-    Proxmox -->|"Newt tunnel sidecar\n(per service)"| pangolin["Pangolin\nReverse Proxy\n(VPS)"]
+    Proxmox -->|"Headscale mesh VPN\n(SSH + ACLs)"| ts["Tailnet\n(100.100.0.0/16)"]
+    Proxmox -.->|"control plane"| headscale
+    Proxmox -->|"Newt tunnel sidecar\n(per service)"| pangolin
     pangolin -->|"HTTPS"| internet["Public Internet"]
 
     subgraph PerHost["Every LXC container runs"]
         docker["Docker"]
+        caddy["Caddy\n(tailnet HTTPS)"]
         alloy["Grafana Alloy\n(systemd)"]
         beszelagent["beszel-agent\n(systemd)"]
     end
@@ -134,11 +141,11 @@ Each LXC container runs:
 
 ## Networking
 
-All hosts run **Tailscale** with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh) enabled — there are no open SSH ports on the public internet. Tailscale ACLs tag and restrict which nodes can reach each other.
+All hosts run the **Headscale** client (self-hosted Tailscale control plane) with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh) enabled — there are no open SSH ports on the public internet. Headscale ACLs tag and restrict which nodes can reach each other. The Headscale server itself runs in Docker on the Pangolin VPS, which stays off the tailnet.
 
-For public-facing services, a **[Pangolin](https://github.com/fosrl/pangolin)** reverse proxy runs on a separate VPS. It has no dependency on Tailscale — each service that needs public exposure runs a **Newt** sidecar container that tunnels directly from the Proxmox cluster to Pangolin, no inbound firewall rules required:
+For public-facing services, a **[Pangolin](https://github.com/fosrl/pangolin)** reverse proxy runs on the same VPS. Each service that needs public exposure runs a **Newt** sidecar container that tunnels directly from the Proxmox cluster to Pangolin, no inbound firewall rules required.
 
-For Tailnet-only services, [tailscale serve](https://tailscale.com/kb/1242/tailscale-serve) provides HTTPS with automatic Let's Encrypt certificates.
+For tailnet-only services, a per-node **[Caddy](https://caddyserver.com)** instance provides HTTPS with automatic Let's Encrypt certificates (DNS-01 via Cloudflare), replacing Tailscale Serve.
 
 ---
 
@@ -158,7 +165,7 @@ Any service's logs are searchable in Grafana.
 ### Prerequisites
 
 - A Proxmox cluster with LXC containers provisioned and named to match `ansible/inventory`
-- Tailscale installed on each container (playbooks assume Tailscale SSH as the only access method)
+- Headscale client installed on each container (playbooks assume Tailscale SSH as the only access method)
 - Ansible Vault password written to `ansible/.vault_pass`
 
 ### Developer Environment
