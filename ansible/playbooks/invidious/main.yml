@@ -31,5 +31,8 @@
     - name: Serve HTTPS over the tailnet
       ansible.builtin.include_role:
         name: tailnet_caddy
+        apply:
+          tags: ["tailnet_caddy"]
       vars:
         tailnet_caddy_upstream: "http://127.0.0.1:3000"
+      tags: ["tailnet_caddy"]
