@@ -46,7 +46,7 @@ services:
 
   gerbil:
     # https://github.com/fosrl/gerbil/releases
-    image: docker.io/fosrl/gerbil:1.5.0@sha256:6da170863132c79c67c580ef6a76606ea05fec704706d87988f52b06ba6d6b93
+    image: docker.io/fosrl/gerbil:1.5.2@sha256:1f6e64eaba7997282c7067ba19922fc7e46b5f73e1a27add3dd66a591d50512f
     container_name: gerbil
     restart: unless-stopped
     depends_on:
