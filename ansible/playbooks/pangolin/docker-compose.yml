@@ -69,7 +69,7 @@ services:
       - 19132:19132/udp
 
   traefik:
-    image: docker.io/traefik:v3.6@sha256:31267173a15b4944e797a76ffd9c419707c8d8b32fe5b610f80cd0cfa05f372d
+    image: docker.io/traefik:v3.7@sha256:b588cb566045e1ebb185948a8e2456f9705cb915b5f0fb5ee698184233997817
     container_name: traefik
     restart: unless-stopped
     network_mode: service:gerbil # Ports appear on the gerbil service
