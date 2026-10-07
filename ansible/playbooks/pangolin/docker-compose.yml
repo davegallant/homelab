@@ -29,7 +29,7 @@ services:
 
   pangolin:
     # https://github.com/fosrl/pangolin/releases
-    image: docker.io/fosrl/pangolin:1.23.0@sha256:00cfb631097a819a0b6a65cf84e5d976a9f4a4fece533a59a984de374711f47a
+    image: docker.io/fosrl/pangolin:1.24.0@sha256:17774ddbb4bf13f4a2b9e813cc2dfc3ca8ded1c5745823624af632bab0376488
     container_name: pangolin
     restart: unless-stopped
     deploy:
@@ -46,7 +46,7 @@ services:
 
   gerbil:
     # https://github.com/fosrl/gerbil/releases
-    image: docker.io/fosrl/gerbil:1.5.0@sha256:6da170863132c79c67c580ef6a76606ea05fec704706d87988f52b06ba6d6b93
+    image: docker.io/fosrl/gerbil:1.5.2@sha256:1f6e64eaba7997282c7067ba19922fc7e46b5f73e1a27add3dd66a591d50512f
     container_name: gerbil
     restart: unless-stopped
     depends_on:
@@ -69,7 +69,7 @@ services:
       - 19132:19132/udp
 
   traefik:
-    image: docker.io/traefik:v3.6@sha256:31267173a15b4944e797a76ffd9c419707c8d8b32fe5b610f80cd0cfa05f372d
+    image: docker.io/traefik:v3.7@sha256:b588cb566045e1ebb185948a8e2456f9705cb915b5f0fb5ee698184233997817
     container_name: traefik
     restart: unless-stopped
     network_mode: service:gerbil # Ports appear on the gerbil service
