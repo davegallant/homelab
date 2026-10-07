@@ -103,3 +103,7 @@
 
     - ansible.builtin.include_tasks:
         file: ../../tasks/docker-compose-up.yml
+
+    - name: Set up automated VPS state backups
+      ansible.builtin.include_role:
+        name: vps_backup

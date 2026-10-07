@@ -1,0 +1,29 @@
+---
+# Role: vps_backup — nightly encrypted backups of VPS state to Google Drive.
+#
+# Restic encrypts and dedups locally, then ships snapshots to Drive through
+# its rclone backend. Same simple end of the spectrum (deliberately not PBS).
+#
+# Prerequisites (do these before running):
+#   1. An rclone Google Drive remote on your Mac (already have `gdrive`).
+#      If the token ever expires, reconnect with `rclone config`.
+#   2. Copy the [gdrive] stanza from ~/.config/rclone/rclone.conf
+#      into the Ansible vault as vps_backup_rclone_config (Codex handles
+#      vault edits — never put the token in plaintext).
+#   3. Add a restic password to the vault:
+#        vps_backup_restic_password: "<output of: openssl rand -base64 32>"
+
+# Rclone remote name (must match the stanza in vps_backup_rclone_config).
+vps_backup_rclone_remote: "gdrive"
+
+# Path on Google Drive holding the restic repo.
+vps_backup_repo_path: "vps-backup"
+
+# systemd OnCalendar schedule for the backup timer.
+vps_backup_on_calendar: "*-*-* 03:00:00"
+
+# Retention passed to `restic forget` after each backup.
+vps_backup_retention: "--keep-daily 7 --keep-weekly 4 --keep-monthly 6"
+
+# Tag applied to every snapshot.
+vps_backup_tag: "vps-nightly"

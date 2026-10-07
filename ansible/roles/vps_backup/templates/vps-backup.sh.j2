@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Nightly VPS state backup. Managed by Ansible (roles/vps_backup).
+#
+# Backs up the ~/config state that Ansible does NOT manage (i.e. not in git):
+#   - Headscale SQLite DB (nodes, routes, policy — the whole tailnet state)
+#   - Headscale Noise identity key (a restored Headscale needs this)
+#   - Pangolin SQLite DB (sites, resources, users)
+#   - Gerbil WireGuard private key, Traefik ACME certs
+# Everything else on the VPS is templated from the homelab repo.
+set -euo pipefail
+
+CONFIG="${HOME:-/root}/config"
+STAGING="$(mktemp -d)"
+trap 'rm -rf "$STAGING"' EXIT
+
+# Consistent SQLite copies while the services keep running.
+sqlite3 "$CONFIG/headscale/data/db.sqlite" ".backup '$STAGING/headscale-db.sqlite'"
+sqlite3 "$CONFIG/db/db.sqlite" ".backup '$STAGING/pangolin-db.sqlite'"
+
+# Static secrets/state.
+mkdir -p "$STAGING/files"
+cp "$CONFIG/headscale/data/noise_private.key" "$STAGING/files/"
+cp "$CONFIG/key" "$STAGING/files/gerbil.key"
+cp "$CONFIG/letsencrypt/acme.json" "$STAGING/files/"
+cp "$CONFIG/headscale/config.yaml" "$STAGING/files/"
+cp "$CONFIG/headscale/policy.hujson" "$STAGING/files/"
+
+restic backup "$STAGING" --tag {{ vps_backup_tag }}
+restic forget {{ vps_backup_retention }} --prune
