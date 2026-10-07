@@ -1,0 +1,10 @@
+# Managed by Ansible (roles/vps_backup).
+[Unit]
+Description=Nightly VPS state backup (restic -> B2)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/vps-backup/restic.env
+ExecStart=/usr/local/bin/vps-backup.sh

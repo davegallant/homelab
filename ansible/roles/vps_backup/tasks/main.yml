@@ -1,0 +1,89 @@
+---
+- name: Install restic, rclone and sqlite3
+  ansible.builtin.apt:
+    name:
+      - restic
+      - rclone
+      - sqlite3
+    state: present
+    update_cache: true
+  # Deliberately from Ubuntu repos, not version-pinned: unattended-upgrades
+  # keeps them current, and restic repos are stable across versions.
+
+- name: Set restic environment fact
+  ansible.builtin.set_fact:
+    vps_backup_env:
+      RESTIC_REPOSITORY: "rclone:{{ vps_backup_rclone_remote }}:{{ vps_backup_repo_path }}"
+      RESTIC_PASSWORD: "{{ vps_backup_restic_password }}"
+  no_log: true
+
+- name: Create backup directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  loop:
+    - /etc/vps-backup
+    - /root/.config/rclone
+
+- name: Install rclone config (Google Drive token)
+  ansible.builtin.template:
+    src: rclone.conf.j2
+    dest: /root/.config/rclone/rclone.conf
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+
+- name: Install restic environment file
+  ansible.builtin.template:
+    src: restic.env.j2
+    dest: /etc/vps-backup/restic.env
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+
+- name: Install backup script
+  ansible.builtin.template:
+    src: vps-backup.sh.j2
+    dest: /usr/local/bin/vps-backup.sh
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Install systemd service and timer
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - { src: "vps-backup.service.j2", dest: "/etc/systemd/system/vps-backup.service" }
+    - { src: "vps-backup.timer.j2", dest: "/etc/systemd/system/vps-backup.timer" }
+
+- name: Check whether the restic repo is initialized
+  ansible.builtin.command:
+    cmd: restic cat config
+  environment: "{{ vps_backup_env }}"
+  register: vps_backup_repo_check
+  changed_when: false
+  failed_when: false
+  no_log: true
+
+- name: Initialize the restic repo
+  ansible.builtin.command:
+    cmd: restic init
+  environment: "{{ vps_backup_env }}"
+  when: vps_backup_repo_check.rc != 0
+  no_log: true
+
+- name: Enable and start the backup timer
+  ansible.builtin.systemd_service:
+    name: vps-backup.timer
+    enabled: true
+    state: started
+    daemon_reload: true

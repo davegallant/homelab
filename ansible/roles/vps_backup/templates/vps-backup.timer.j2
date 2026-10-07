@@ -1,0 +1,11 @@
+# Managed by Ansible (roles/vps_backup).
+[Unit]
+Description=Run VPS state backup nightly
+
+[Timer]
+OnCalendar={{ vps_backup_on_calendar }}
+RandomizedDelaySec=1800
+Persistent=true
+
+[Install]
+WantedBy=timers.target
