@@ -8,11 +8,11 @@
 #   - Gerbil WireGuard private key, Traefik ACME certs
 # Everything else on the VPS is templated from the homelab repo.
 #
-# Failure handling is fully explicit: every fallible command has `|| fail`.
-# (Deliberately NOT `set -e` + `trap ... ERR` — that combo masks the real
-# exit status and the script can exit 0 on failure.) Any failure posts to
-# Gotify (priority 8) and exits non-zero. Success is silent. A fully-dead
-# VPS is already covered by the existing Gatus check.
+# Failure handling is fully explicit and deliberately boring: every fallible
+# command ends in `|| fail`. No `set -e`, no traps — nothing that can mask
+# or clobber the exit status. Any failure posts to Gotify (priority 8) and
+# exits 1. Success is silent. A fully-dead VPS is already covered by the
+# existing Gatus check.
 set -uo pipefail
 
 CONFIG="${HOME:-/root}/config"
@@ -29,11 +29,9 @@ backup_failed() {
 
 fail() {
     backup_failed "$1"
+    rm -rf "$STAGING"
     exit 1
 }
-
-# Always clean up staging, and never let the trap clobber the exit status.
-trap 'rc=$?; rm -rf "$STAGING"; exit "$rc"' EXIT
 
 # sqlite .backup with retries: the DBs are live (Headscale/Pangolin keep
 # writing), so a transient write lock is possible.
@@ -73,3 +71,5 @@ restic backup "$STAGING" --tag {{ vps_backup_tag }} \
     || fail "restic backup failed on $(hostname)"
 restic forget {{ vps_backup_retention }} --prune \
     || fail "restic forget/prune failed on $(hostname)"
+
+rm -rf "$STAGING"
