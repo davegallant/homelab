@@ -79,6 +79,7 @@
     cmd: restic init
   environment: "{{ vps_backup_env }}"
   when: vps_backup_repo_check.rc != 0
+  changed_when: true
   no_log: true
 
 - name: Enable and start the backup timer
