@@ -13,12 +13,12 @@ Every service lives in its own LXC container running Ubuntu. Ansible deploys Doc
 
 ```mermaid
 graph TD
-    subgraph VPS["Pangolin VPS (off-tailnet)"]
+    subgraph VPS["VPS (off-tailnet)"]
         headscale["Headscale\n(control plane)"]
         pangolin["Pangolin\nReverse Proxy"]
     end
 
-    subgraph Proxmox["Proxmox Cluster"]
+    subgraph Proxmox["Proxmox Cluster (tailnet mesh, 100.100.0.0/16)"]
         subgraph N1["Node 1"]
             immich["immich"]
             forgejo["forgejo"]
@@ -32,10 +32,11 @@ graph TD
             sonarr["sonarr / radarr"]
             n2etc["..."]
         end
+        N1 <-->|"direct WireGuard mesh\n(SSH + ACLs, no central hop)"| N2
     end
 
-    Proxmox -->|"Headscale mesh VPN\n(SSH + ACLs)"| ts["Tailnet\n(100.100.0.0/16)"]
-    Proxmox -.->|"control plane"| headscale
+    N1 -.->|"coordination"| headscale
+    N2 -.->|"coordination"| headscale
     Proxmox -->|"Newt tunnel sidecar\n(per service)"| pangolin
     pangolin -->|"HTTPS"| internet["Public Internet"]
 
