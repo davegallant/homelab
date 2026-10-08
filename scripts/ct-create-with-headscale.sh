@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# Creates a new LXC container with tun/tap device passthrough (needed for
-# tailscale) via pvectl instead of `pct` — works from any machine with
-# `pvectl setup` run, not just on the Proxmox host — then installs
-# tailscale once the container is up.
-#   ./scripts/ct-create-with-tailscale.sh
+# Creates a new LXC container with tun/tap device passthrough (needed for the
+# tailscale client) via pvectl instead of `pct` — works from any machine with
+# `pvectl setup` run, not just on the Proxmox host — then installs the
+# tailscale client once the container is up. Headscale uses the stock
+# tailscale client pointed at your own control plane, so the install is
+# identical to ct-create-with-tailscale.sh; only the `tailscale up` step
+# differs (it needs --login-server).
+#   ./scripts/ct-create-with-headscale.sh
 set -euo pipefail
 
 # --- config you may want to tweak ---
@@ -15,6 +18,39 @@ MEMORY=2048
 SWAP=1024
 CORES=2
 DISK_SIZE=8   # GB
+
+# --- resolve the Headscale control-plane domain ---
+# Pulled from headscale_server_domain in the ansible vault
+# (ansible/group_vars/all/secrets.yaml). Set HEADSCALE_SERVER_DOMAIN in the
+# environment to skip the vault lookup.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(dirname "${SCRIPT_DIR}")"
+
+resolve_headscale_server_domain() {
+  if [[ -n "${HEADSCALE_SERVER_DOMAIN:-}" ]]; then
+    printf '%s\n' "${HEADSCALE_SERVER_DOMAIN}"
+    return 0
+  fi
+  local secrets_file="${REPO_ROOT}/ansible/group_vars/all/secrets.yaml"
+  local vault_pass_file="${REPO_ROOT}/ansible/.vault_pass"
+  if [[ ! -f "${vault_pass_file}" ]]; then
+    echo "error: vault password file not found at ${vault_pass_file}" >&2
+    return 1
+  fi
+  # Minimal YAML extraction: assumes `headscale_server_domain: <value>` on
+  # one line (quoted or not). Not a real YAML parser — keep the value simple.
+  ansible-vault view "${secrets_file}" --vault-password-file "${vault_pass_file}" 2>/dev/null |
+    awk -F': ' '$1 == "headscale_server_domain" { gsub(/"/, "", $2); gsub(/[ \t\r]+$/, "", $2); print $2; exit }'
+}
+
+headscale_domain="$(resolve_headscale_server_domain || true)"
+if [[ -z "${headscale_domain}" ]]; then
+  echo "error: could not resolve headscale_server_domain from ansible secrets." >&2
+  echo "Add it with: cd ansible && just edit-secrets" >&2
+  echo "Or override: HEADSCALE_SERVER_DOMAIN=hs.example.com $0" >&2
+  exit 1
+fi
+echo "Using Headscale control plane: https://${headscale_domain}"
 
 # --- prompt for hostname ---
 read -rp "Enter container name (hostname): " ctname
@@ -72,7 +108,7 @@ echo "Container ${ctname} created with tun/tap passthrough configured."
 
 pvectl ct start "${ctname}"
 
-# --- install tailscale ---
+# --- install the tailscale client ---
 # There's no Proxmox API (or pvectl command) for running a command inside
 # a container — `pct exec` already does exactly this over the same SSH
 # connection `config append` uses above, so no pvectl wrapper is needed.
@@ -108,7 +144,7 @@ for attempt in $(seq 1 30); do
     break
   fi
   if [[ "${attempt}" -eq 30 ]]; then
-    echo "error: ${ctname} did not become reachable via pct exec in time — install tailscale manually with:" >&2
+    echo "error: ${ctname} did not become reachable via pct exec in time — install the tailscale client manually with:" >&2
     echo "  ssh ${node} \"pct exec ${vmid} -- sh -c 'curl -fsSL https://tailscale.com/install.sh | sh'\"" >&2
     exit 1
   fi
@@ -124,12 +160,15 @@ if ! pct_exec "${node}" "${vmid}" "command -v curl >/dev/null 2>&1"; then
   fi
 fi
 
-echo "installing tailscale on ${ctname}..."
+echo "installing the tailscale client on ${ctname}..."
 if ! pct_exec "${node}" "${vmid}" "curl -fsSL https://tailscale.com/install.sh | sh"; then
-  echo "error: tailscale install failed — retry manually with:" >&2
+  echo "error: tailscale client install failed — retry manually with:" >&2
   echo "  ssh ${node} \"pct exec ${vmid} -- sh -c 'curl -fsSL https://tailscale.com/install.sh | sh'\"" >&2
   exit 1
 fi
 
-echo "tailscale installed on ${ctname}. Bring it up with:"
-echo "  ssh ${node} \"pct exec ${vmid} -- tailscale up --ssh\""
+echo "tailscale client installed on ${ctname}. Join it to Headscale with:"
+echo "  ssh ${node} \"pct exec ${vmid} -- tailscale up --login-server=https://${headscale_domain} --ssh\""
+echo ""
+echo "For a non-interactive join, create a pre-auth key (headscale preauthkeys create)"
+echo "and pass --auth-key <key> to the tailscale up command above."
