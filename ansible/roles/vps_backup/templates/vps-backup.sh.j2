@@ -7,23 +7,69 @@
 #   - Pangolin SQLite DB (sites, resources, users)
 #   - Gerbil WireGuard private key, Traefik ACME certs
 # Everything else on the VPS is templated from the homelab repo.
-set -euo pipefail
+#
+# Failure handling is fully explicit: every fallible command has `|| fail`.
+# (Deliberately NOT `set -e` + `trap ... ERR` — that combo masks the real
+# exit status and the script can exit 0 on failure.) Any failure posts to
+# Gotify (priority 8) and exits non-zero. Success is silent. A fully-dead
+# VPS is already covered by the existing Gatus check.
+set -uo pipefail
 
 CONFIG="${HOME:-/root}/config"
 STAGING="$(mktemp -d)"
-trap 'rm -rf "$STAGING"' EXIT
+
+backup_failed() {
+    if [ -n "${GOTIFY_URL:-}" ] && [ -n "${GOTIFY_TOKEN:-}" ]; then
+        curl -fsS --max-time 30 -X POST "${GOTIFY_URL%/}/message?token=${GOTIFY_TOKEN}" \
+            -F "title=VPS backup failed" \
+            -F "message=$1" \
+            -F "priority=8" || true
+    fi
+}
+
+fail() {
+    backup_failed "$1"
+    exit 1
+}
+
+# Always clean up staging, and never let the trap clobber the exit status.
+trap 'rc=$?; rm -rf "$STAGING"; exit "$rc"' EXIT
+
+# sqlite .backup with retries: the DBs are live (Headscale/Pangolin keep
+# writing), so a transient write lock is possible.
+sqlite_backup() {
+    local src="$1" dest="$2" tries=0
+    while [ "$tries" -lt 3 ]; do
+        if sqlite3 "$src" ".backup '$dest'"; then
+            return 0
+        fi
+        tries=$((tries + 1))
+        sleep 5
+    done
+    return 1
+}
 
 # Consistent SQLite copies while the services keep running.
-sqlite3 "$CONFIG/headscale/data/db.sqlite" ".backup '$STAGING/headscale-db.sqlite'"
-sqlite3 "$CONFIG/db/db.sqlite" ".backup '$STAGING/pangolin-db.sqlite'"
+sqlite_backup "$CONFIG/headscale/data/db.sqlite" "$STAGING/headscale-db.sqlite" \
+    || fail "sqlite .backup of Headscale DB failed (still locked after retries) on $(hostname)"
+sqlite_backup "$CONFIG/db/db.sqlite" "$STAGING/pangolin-db.sqlite" \
+    || fail "sqlite .backup of Pangolin DB failed (still locked after retries) on $(hostname)"
 
 # Static secrets/state.
-mkdir -p "$STAGING/files"
-cp "$CONFIG/headscale/data/noise_private.key" "$STAGING/files/"
-cp "$CONFIG/key" "$STAGING/files/gerbil.key"
-cp "$CONFIG/letsencrypt/acme.json" "$STAGING/files/"
-cp "$CONFIG/headscale/config.yaml" "$STAGING/files/"
-cp "$CONFIG/headscale/policy.hujson" "$STAGING/files/"
+mkdir -p "$STAGING/files" \
+    || fail "creating staging dir failed on $(hostname)"
+cp "$CONFIG/headscale/data/noise_private.key" "$STAGING/files/" \
+    || fail "copying noise key failed on $(hostname)"
+cp "$CONFIG/key" "$STAGING/files/gerbil.key" \
+    || fail "copying gerbil key failed on $(hostname)"
+cp "$CONFIG/letsencrypt/acme.json" "$STAGING/files/" \
+    || fail "copying acme.json failed on $(hostname)"
+cp "$CONFIG/headscale/config.yaml" "$STAGING/files/" \
+    || fail "copying headscale config failed on $(hostname)"
+cp "$CONFIG/headscale/policy.hujson" "$STAGING/files/" \
+    || fail "copying headscale policy failed on $(hostname)"
 
-restic backup "$STAGING" --tag {{ vps_backup_tag }}
-restic forget {{ vps_backup_retention }} --prune
+restic backup "$STAGING" --tag {{ vps_backup_tag }} \
+    || fail "restic backup failed on $(hostname)"
+restic forget {{ vps_backup_retention }} --prune \
+    || fail "restic forget/prune failed on $(hostname)"

@@ -36,8 +36,22 @@ MB — Drive's 15 GB free tier is plenty.
    ```yaml
    vps_backup_restic_password: "<output of: openssl rand -base64 32>"
    ```
-4. Run the pangolin playbook (role is wired in at the end of
+4. In the Gotify UI, create an app for VPS backups and add its token to the
+   vault:
+   ```yaml
+   vps_backup_gotify_token: "<app token>"
+   ```
+   Set `vps_backup_gotify_url` to your public Gotify URL (e.g. in
+   `group_vars/all/vars.yaml`). Leave it empty to disable failure alerts.
+5. Run the pangolin playbook (role is wired in at the end of
    `ansible/playbooks/pangolin/main.yml`).
+
+## Failure alerts
+
+Any failure in the backup script posts to Gotify at priority 8 and exits
+non-zero; success is silent. A fully-dead VPS is already covered by the
+existing Gatus check, so this only catches backup-level failures (restic,
+rclone/auth, sqlite dump).
 
 ## Verify
 

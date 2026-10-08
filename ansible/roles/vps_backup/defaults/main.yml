@@ -12,6 +12,10 @@
 #      vault edits — never put the token in plaintext).
 #   3. Add a restic password to the vault:
 #        vps_backup_restic_password: "<output of: openssl rand -base64 32>"
+#   4. In the Gotify UI, create an app for VPS backups and add its token:
+#        vps_backup_gotify_token: "<app token>"
+#      Set vps_backup_gotify_url (below) to your public Gotify URL, e.g. in
+#      group_vars/all/vars.yaml.
 
 # Rclone remote name (must match the stanza in vps_backup_rclone_config).
 vps_backup_rclone_remote: "gdrive"
@@ -27,3 +31,7 @@ vps_backup_retention: "--keep-daily 7 --keep-weekly 4 --keep-monthly 6"
 
 # Tag applied to every snapshot.
 vps_backup_tag: "vps-nightly"
+
+# Public Gotify URL for failure alerts, e.g. https://gotify.example.com
+# (no trailing slash needed). Empty disables alerting.
+vps_backup_gotify_url: ""
