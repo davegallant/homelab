@@ -15,7 +15,7 @@ hermes_version: "v0.21.6"
 # signal-cli version for the Hermes Signal sidecar (GraalVM native build, no
 # JRE). The hermes playbook builds the sidecar image locally.
 # renovate: datasource=github-releases depName=AsamK/signal-cli
-signal_cli_version: "0.14.8"
+signal_cli_version: "0.14.9"
 
 homelab_lan_subnet: 192.168.1.0/24
 
