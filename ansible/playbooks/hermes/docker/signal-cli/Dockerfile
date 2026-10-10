@@ -8,7 +8,7 @@
 #
 # Built by the hermes playbook; version pinned via signal_cli_version in
 # group_vars/all/vars.yaml and passed in as SIGNAL_CLI_VERSION.
-FROM debian:13-slim
+FROM debian:13-slim@sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e64a2bad10d765c46aea49f11f
 
 ARG SIGNAL_CLI_VERSION=0.14.8
 
