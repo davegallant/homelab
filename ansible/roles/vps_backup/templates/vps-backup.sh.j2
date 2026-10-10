@@ -34,15 +34,16 @@ fail() {
 }
 
 # sqlite .backup with retries: the DBs are live (Headscale/Pangolin keep
-# writing), so a transient write lock is possible.
+# writing), so a transient write lock is possible. Tolerates up to ~1 min
+# of lock contention before giving up and alerting.
 sqlite_backup() {
     local src="$1" dest="$2" tries=0
-    while [ "$tries" -lt 3 ]; do
+    while [ "$tries" -lt 6 ]; do
         if sqlite3 "$src" ".backup '$dest'"; then
             return 0
         fi
         tries=$((tries + 1))
-        sleep 5
+        sleep 10
     done
     return 1
 }
