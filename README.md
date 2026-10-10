@@ -217,7 +217,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/caronc/apprise | 2.0.1 |
 | docker.io/deluan/navidrome | 0.64.2 |
 | docker.io/dgtlmoon/changedetection.io | 0.60.8 |
-| docker.io/docker | 29.8.2-dind |
+| docker.io/docker | 29.9.0-dind |
 | docker.io/fosrl/gerbil | 1.5.2 |
 | docker.io/fosrl/newt | 1.18.1 |
 | docker.io/fosrl/pangolin | 1.24.0 |
