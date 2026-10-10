@@ -174,7 +174,3 @@
         icon: router
         href: "{% raw %}{{HOMEPAGE_VAR_GL_MT3000_URL}}{% endraw %}"
         description: GL.iNet Admin Panel
-    - Hermes:
-        icon: hermes
-        href: "https://hermes.{{ headscale_magic_dns_domain }}/"
-        description: AI agent

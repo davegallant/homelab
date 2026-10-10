@@ -7,16 +7,6 @@
 # renovate: datasource=github-releases depName=henrygd/beszel
 beszel_version: "0.21.0"
 
-# Hermes Agent version (git tag). Nous publishes no container image, so the
-# hermes playbook clones the repo at this tag and builds the image locally.
-# renovate: datasource=github-releases depName=NousResearch/hermes-agent
-hermes_version: "v0.21.6"
-
-# signal-cli version for the Hermes Signal sidecar (GraalVM native build, no
-# JRE). The hermes playbook builds the sidecar image locally.
-# renovate: datasource=github-releases depName=AsamK/signal-cli
-signal_cli_version: "0.14.9"
-
 homelab_lan_subnet: 192.168.1.0/24
 
 # Sources allowed to reach published container ports (see the DOCKER-USER block
