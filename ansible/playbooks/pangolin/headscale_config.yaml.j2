@@ -38,6 +38,7 @@ dns:
   nameservers:
     global:
       - 100.100.0.24
+      - {{ headscale_secondary_dns_ip }}
 
 unix_socket: /var/run/headscale/headscale.sock
 unix_socket_permission: "0770"

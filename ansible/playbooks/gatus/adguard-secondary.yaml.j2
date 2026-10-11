@@ -1,0 +1,51 @@
+# Secondary tailnet DNS resolver. Keep filters and rewrites aligned with the
+# primary AdGuard instance when changing its policy.
+schema_version: 34
+http:
+  address: 127.0.0.1:3001
+users: []
+dns:
+  bind_hosts:
+    - {{ headscale_secondary_dns_ip }}
+  port: 53
+  serve_plain_dns: true
+  upstream_dns:
+    - 192.168.1.1
+  fallback_dns:
+    - adblock.dns.mullvad.net
+  bootstrap_dns:
+    - 9.9.9.10
+    - 149.112.112.10
+    - 2620:fe::10
+    - 2620:fe::fe:10
+filtering:
+  protection_enabled: true
+  filtering_enabled: true
+  filters_update_interval: 24
+  rewrites_enabled: true
+  rewrites:
+    - domain: proxmox.davegallant.ca
+      answer: 192.168.1.205
+      enabled: true
+    - domain: pve-g3-1.davegallant.ca
+      answer: 192.168.1.205
+      enabled: true
+    - domain: pve-g3-2.davegallant.ca
+      answer: 192.168.1.206
+      enabled: true
+    - domain: opnsense.davegallant.ca
+      answer: 192.168.1.1
+      enabled: true
+filters:
+  - enabled: true
+    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt
+    name: AdGuard DNS filter
+    id: 1
+  - enabled: true
+    url: https://big.oisd.nl
+    name: OISD
+    id: 1780769846
+tls:
+  enabled: false
+dhcp:
+  enabled: false

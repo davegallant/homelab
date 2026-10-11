@@ -2,7 +2,7 @@ services:
   speedtest-tracker:
     container_name: speedtest-tracker
     ports:
-      - 8080:80
+      - 127.0.0.1:8080:80
     environment:
       - PUID=1000
       - PGID=1000
@@ -35,7 +35,7 @@ services:
     image: docker.io/caronc/apprise:2.0.1@sha256:0b2913b15c8eb47c25345722985ffbfae701326edde21909c205d296d62dd52c
     container_name: apprise
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     user: "${PUID:-1000}:${PGID:-1000}"
     environment:
       APPRISE_STATEFUL_MODE: simple

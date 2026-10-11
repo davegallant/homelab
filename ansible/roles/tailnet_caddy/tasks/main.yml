@@ -5,12 +5,16 @@
   register: tailnet_caddy_tailscale_ip
   check_mode: false
   changed_when: false
-  failed_when: false
+  failed_when: tailnet_caddy_tailscale_ip.rc != 0
+
+- name: Validate the Headscale IPv4 address
+  ansible.builtin.assert:
+    that:
+      - tailnet_caddy_tailscale_ip.stdout | trim | length > 0
+      - (tailnet_caddy_tailscale_ip.stdout | trim).split('.')[0:2] == headscale_v4_prefix.split('.')[0:2]
+    fail_msg: "The tailnet Caddy role requires an assigned Headscale IPv4 address in {{ headscale_v4_prefix }}."
 
 - name: Configure Caddy on the Headscale tailnet
-  when: >-
-    (tailnet_caddy_tailscale_ip.stdout | default('') | trim).split('.')[0:2]
-    == headscale_v4_prefix.split('.')[0:2]
   block:
     - name: Validate tailnet Caddy settings
       ansible.builtin.assert:
@@ -21,12 +25,6 @@
           - cloudflare_dns_api_token | length > 0
         fail_msg: "Set the tailnet_caddy_domain, tailnet_caddy_upstream, and Cloudflare token before deploying tailnet Caddy."
       no_log: true
-
-    - name: Validate the Headscale IPv4 address
-      ansible.builtin.assert:
-        that:
-          - tailnet_caddy_tailscale_ip.stdout | trim | length > 0
-        fail_msg: "The tailnet Caddy role requires an assigned Headscale IPv4 address."
 
     - name: Create tailnet Caddy directories
       ansible.builtin.file:
@@ -57,6 +55,7 @@
         owner: root
         group: root
         mode: "0640"
+      register: tailnet_caddy_compose
 
     - name: Install Cloudflare DNS API token
       ansible.builtin.copy:
@@ -85,4 +84,4 @@
         state: present
         build: never
         pull: never
-        recreate: "{{ 'always' if tailnet_caddy_config.changed or tailnet_caddy_token.changed else 'auto' }}"
+        recreate: "{{ 'always' if tailnet_caddy_config.changed or tailnet_caddy_compose.changed or tailnet_caddy_token.changed else 'auto' }}"

@@ -3,7 +3,7 @@ services:
     image: docker.io/dgtlmoon/changedetection.io:0.60.8@sha256:34df3680db1cbffc45ac1e9c1514bc0507dd0c5b5fde47d1992fe6f14a7b40e4
     container_name: changedetection
     ports:
-      - 5000:5000
+      - 127.0.0.1:5000:5000
     volumes:
       - ./changedetection:/datastore
     environment:

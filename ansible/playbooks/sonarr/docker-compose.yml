@@ -5,7 +5,7 @@ services:
     image: docker.io/linuxserver/sonarr:4.0.20@sha256:dffc730adcb8b4f4342792fbb27fcad9c62fb8660523f2aeb082416980d7fe0c
     restart: always
     ports:
-      - 8989:8989
+      - 127.0.0.1:8989:8989
     environment:
       - PUID=1000
       - PGID=1000

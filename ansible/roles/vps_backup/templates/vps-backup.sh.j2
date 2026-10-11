@@ -6,7 +6,8 @@
 #   - Headscale Noise identity key (a restored Headscale needs this)
 #   - Pangolin SQLite DB (sites, resources, users)
 #   - Gerbil WireGuard private key, Traefik ACME certs
-# Everything else on the VPS is templated from the homelab repo.
+# Headscale's active policy is stored in the database. Its source is maintained
+# in the homelab repo and does not need a second copy in this backup.
 #
 # Failure handling is fully explicit and deliberately boring: every fallible
 # command ends in `|| fail`. No `set -e`, no traps — nothing that can mask
@@ -65,8 +66,6 @@ cp "$CONFIG/letsencrypt/acme.json" "$STAGING/files/" \
     || fail "copying acme.json failed on $(hostname)"
 cp "$CONFIG/headscale/config.yaml" "$STAGING/files/" \
     || fail "copying headscale config failed on $(hostname)"
-cp "$CONFIG/headscale/policy.hujson" "$STAGING/files/" \
-    || fail "copying headscale policy failed on $(hostname)"
 
 restic backup "$STAGING" --tag {{ vps_backup_tag }} \
     || fail "restic backup failed on $(hostname)"

@@ -20,53 +20,37 @@
         dest: "~/docker-compose.yml"
         mode: "0640"
 
-    - name: Allow DNS over TCP
+    - name: Remove unrestricted AdGuard firewall rules
       community.general.ufw:
         rule: allow
-        port: "53"
-        proto: tcp
+        delete: true
+        port: "{{ item.port }}"
+        proto: "{{ item.proto }}"
+      loop:
+        - { port: "53", proto: tcp }
+        - { port: "53", proto: udp }
+        - { port: "80", proto: tcp }
+        - { port: "3000", proto: tcp }
+        - { port: "443", proto: tcp }
+        - { port: "443", proto: udp }
+        - { port: "853", proto: tcp }
+        - { port: "853", proto: udp }
 
-    - name: Allow DNS over UDP
+    - name: Allow AdGuard DNS from the LAN and tailnet
       community.general.ufw:
         rule: allow
-        port: "53"
-        proto: udp
-
-    - name: Allow AdGuard Home web port
-      community.general.ufw:
-        rule: allow
-        port: "80"
-        proto: tcp
-
-    - name: Allow AdGuard Home setup port
-      community.general.ufw:
-        rule: allow
-        port: "3000"
-        proto: tcp
-
-    - name: Allow DNS-over-HTTPS port
-      community.general.ufw:
-        rule: allow
-        port: "443"
-        proto: tcp
-
-    - name: Allow DNS-over-QUIC port
-      community.general.ufw:
-        rule: allow
-        port: "443"
-        proto: udp
-
-    - name: Allow DNS-over-TLS port
-      community.general.ufw:
-        rule: allow
-        port: "853"
-        proto: tcp
-
-    - name: Allow DNS-over-QUIC alternate port
-      community.general.ufw:
-        rule: allow
-        port: "853"
-        proto: udp
+        port: "{{ item.0.port }}"
+        proto: "{{ item.0.proto }}"
+        from_ip: "{{ item.1 }}"
+      loop: "{{ query('nested', adguard_dns_ports, [homelab_lan_subnet, '100.64.0.0/10']) }}"
+      vars:
+        adguard_dns_ports:
+          - { port: "53", proto: tcp }
+          - { port: "53", proto: udp }
+          - { port: "443", proto: tcp }
+          - { port: "443", proto: udp }
+          - { port: "853", proto: tcp }
+          - { port: "853", proto: udp }
 
     - name: Enable UFW
       community.general.ufw:

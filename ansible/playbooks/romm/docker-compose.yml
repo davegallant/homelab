@@ -20,7 +20,7 @@ services:
       - /mnt/media/romm/assets:/romm/assets
       - ~/config:/romm/config # Path where config.yml is stored
     ports:
-      - 8080:8080
+      - 127.0.0.1:8080:8080
     depends_on:
       romm-db:
         condition: service_healthy

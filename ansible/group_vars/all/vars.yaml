@@ -22,3 +22,4 @@ pangolin_dashboard_domain: "pangolin.davegallant.ca"
 
 # Headscale tailnet IPv4 allocation range.
 headscale_v4_prefix: "100.100.0.0/16"
+headscale_secondary_dns_ip: "100.100.0.11" # Gatus host

@@ -14,7 +14,7 @@ services:
       - log:/App/log
       - keys:/root/.aspnet/DataProtection-Keys
     ports:
-      - 8080:8080
+      - 127.0.0.1:8080:8080
     networks:
       - lubelogger
 
