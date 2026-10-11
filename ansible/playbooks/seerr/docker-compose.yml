@@ -7,7 +7,7 @@ services:
       - LOG_LEVEL=debug
       - TZ=America/Toronto
     ports:
-      - 5055:5055
+      - 127.0.0.1:5055:5055
     volumes:
       - ./config:/app/config
     healthcheck:

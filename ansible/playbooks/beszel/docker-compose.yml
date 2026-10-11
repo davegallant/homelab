@@ -3,7 +3,7 @@ services:
     image: docker.io/henrygd/beszel:0.21.0@sha256:6b39a8b64f9b15d00a25e7683e31a93c46161182a54f62713525107064e10599
     container_name: beszel
     ports:
-      - 8090:8090
+      - 127.0.0.1:8090:8090
     volumes:
       - ${PWD}/beszel-hub/beszel_data:/beszel_data
     restart: always

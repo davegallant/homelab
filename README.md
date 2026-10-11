@@ -142,11 +142,13 @@ Each LXC container runs:
 
 ## Networking
 
-All hosts run the **Headscale** client (self-hosted Tailscale control plane) with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh) enabled — there are no open SSH ports on the public internet. Headscale ACLs tag and restrict which nodes can reach each other. The Headscale server itself runs in Docker on the Pangolin VPS, which stays off the tailnet.
+All hosts run the **Headscale** client (self-hosted Tailscale control plane) with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh) enabled — there are no open SSH ports on the public internet. The Headscale ACL source is `ansible/playbooks/pangolin/policy.headscale.hujson`. The Pangolin playbook validates it and updates Headscale's policy database when the active policy differs. Pangolin is excluded from CI, so run `just run "--limit pangolin"` from `ansible/` to apply policy changes. The Headscale server itself runs in Docker on the Pangolin VPS, which stays off the tailnet.
 
 For public-facing services, a **[Pangolin](https://github.com/fosrl/pangolin)** reverse proxy runs on the same VPS. Each service that needs public exposure runs a **Newt** sidecar container that tunnels directly from the Proxmox cluster to Pangolin, no inbound firewall rules required.
 
-For tailnet-only services, a per-node **[Caddy](https://caddyserver.com)** instance provides HTTPS with automatic Let's Encrypt certificates (DNS-01 via Cloudflare), replacing Tailscale Serve.
+For tailnet-only services, a per-node **[Caddy](https://caddyserver.com)** instance provides HTTPS with automatic Let's Encrypt certificates (DNS-01 via Cloudflare), replacing Tailscale Serve. Their Docker UI ports bind to localhost so other tailnet nodes reach the UI through Caddy. Other ports needed by services, such as Loki ingestion and qBittorrent peer traffic, remain separately exposed.
+
+Headscale advertises the primary AdGuard Home resolver and a secondary AdGuard Home instance on the Gatus host. Deploy the Gatus playbook before manually running the Pangolin playbook so the second resolver is available when Headscale advertises it. Keep the filters and DNS rewrites in `ansible/playbooks/gatus/adguard-secondary.yaml.j2` aligned with the primary AdGuard instance.
 
 ---
 

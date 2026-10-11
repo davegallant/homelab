@@ -9,7 +9,7 @@ services:
     volumes:
       - ~/config:/config
     ports:
-      - 9696:9696
+      - 127.0.0.1:9696:9696
     restart: always
 
   flaresolverr:

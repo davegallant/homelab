@@ -1,4 +1,13 @@
 services:
+  adguard-secondary:
+    image: docker.io/adguard/adguardhome:v0.107.79@sha256:abadc6ec47f8ca385cb38f2abfeb11ca6a2b0277964967b1954c63e11b517f4f
+    container_name: adguard-secondary
+    network_mode: host
+    restart: always
+    volumes:
+      - ./adguard-secondary/work:/opt/adguardhome/work
+      - ./adguard-secondary/conf:/opt/adguardhome/conf
+
   gatus:
     image: docker.io/twinproduction/gatus:v5.37.0@sha256:094eb186e55235db367e90e9d56140e5897b7044c41de23cde4cc18e6da1242e
     container_name: gatus
@@ -7,5 +16,5 @@ services:
       - ./config:/config
       - ./data:/data
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     restart: always

@@ -12,12 +12,12 @@ Everything under `~/config` that Ansible does **not** manage (i.e. not in git):
 
 | Staged as | Source | Contents |
 |---|---|---|
-| `headscale-db.sqlite` | `~/config/headscale/data/db.sqlite` | Headscale DB: nodes, routes, policy — the whole tailnet state |
+| `headscale-db.sqlite` | `~/config/headscale/data/db.sqlite` | Headscale DB: nodes, routes, active policy — the whole tailnet state. The policy source is in `ansible/playbooks/pangolin/policy.headscale.hujson`. |
 | `pangolin-db.sqlite` | `~/config/db/db.sqlite` | Pangolin DB: sites, resources, users |
 | `files/noise_private.key` | `~/config/headscale/data/noise_private.key` | Headscale identity key (a restored Headscale needs this) |
 | `files/gerbil.key` | `~/config/key` | Gerbil WireGuard private key |
 | `files/acme.json` | `~/config/letsencrypt/acme.json` | Traefik certs (renewable, but avoids rate limits on rebuild) |
-| `files/config.yaml`, `files/policy.hujson` | `~/config/headscale/` | Headscale config (also in git, harmless to include) |
+| `files/config.yaml` | `~/config/headscale/` | Headscale config (also in git, harmless to include) |
 
 SQLite files are copied with `sqlite3 .backup` first, so the snapshot is
 consistent while the services keep running. Everything else on the VPS

@@ -49,7 +49,7 @@ services:
       - "HOMEPAGE_VAR_UPSNAP_URL={{ upsnap_url }}"
       - "HOMEPAGE_VAR_GL_MT3000_URL={{ gl_mt3000_url }}"
     ports:
-      - 3000:3000
+      - 127.0.0.1:3000:3000
     volumes:
       - ./config:/app/config
       - ./config/icons:/app/public/icons

@@ -1,0 +1,86 @@
+// Headscale ACL policy — converted from Tailscale SaaS policy.hujson.
+// Changes from the SaaS version:
+//   1. Removed nodeAttrs (Funnel is a Tailscale SaaS feature, not in Headscale).
+//   2. tagOwners lists all tags referenced in acls/ssh (Headscale requires
+//      every tag to be defined). All set to [] (no one can assign yet) —
+//      update when you need to actually tag nodes. Headscale v0.29.3 rejects
+//      both plain usernames and autogroup:member as owners.
+//   3. SSH covers every node via autogroup:member + autogroup:tagged
+//      (Headscale rejects "*" as an SSH dst), replacing the SaaS
+//      per-tag/self rules — tagged nodes never match autogroup:self,
+//      so per-tag rules needed constant upkeep.
+{
+	// Access control lists.
+	"acls": [
+		// Ensure that pangolin machines cannot communicate with other nodes,
+		{
+			"action": "accept",
+			"src":    ["tag:pangolin"],
+			"dst":    ["tag:pangolin:*"],
+		},
+		// Allow Navidrome to submit scrobbles to Maloja.
+		{
+			"action": "accept",
+			"src":    ["tag:navidrome"],
+			"dst":    ["tag:maloja:*"],
+		},
+		// Allow the Beszel agent on Pangolin machines to reach the Beszel hub.
+		{
+			"action": "accept",
+			"src":    ["tag:pangolin"],
+			"dst":    ["tag:beszel:*"],
+		},
+		// Allow tailnet members to access work machines. Work machines should
+		// be tagged tag:work so they do not match autogroup:member as sources.
+		{
+			"action": "accept",
+			"src":    ["autogroup:member"],
+			"dst":    ["tag:work:*"],
+		},
+		// Match tailnet IPs for user-owned member devices. (On Headscale
+		// >= 0.28 "*" only covers 100.64.0.0/10 — internet-bound traffic
+		// needs the explicit rule below.) Tagged devices like work machines
+		// are excluded as sources.
+		{
+			"action": "accept",
+			"src":    ["autogroup:member"],
+			"dst":    ["*:*"],
+		},
+		// Allow members to use exit nodes (internet-bound traffic).
+		{
+			"action": "accept",
+			"src":    ["autogroup:member"],
+			"dst":    ["autogroup:internet:*"],
+		},
+	],
+
+	"ssh": [
+		// Allow tailnet members to SSH into every node, tagged or not
+		// (matches the old Tailscale SaaS behaviour). Headscale rejects
+		// "*" as an SSH destination, so this is two rules: user-owned
+		// devices via autogroup:member, tagged devices via
+		// autogroup:tagged. Tagged nodes are not members, so they can
+		// never use these rules as a source — tag:pangolin stays isolated.
+		{
+			"action": "accept",
+			"src":    ["autogroup:member"],
+			"dst":    ["autogroup:member"],
+			"users":  ["autogroup:nonroot", "root"],
+		},
+		{
+			"action": "accept",
+			"src":    ["autogroup:member"],
+			"dst":    ["autogroup:tagged"],
+			"users":  ["autogroup:nonroot", "root"],
+		},
+	],
+
+	// All tags referenced in acls/ssh must be defined here, even if empty.
+	"tagOwners": {
+		"tag:pangolin":  [],
+		"tag:navidrome": [],
+		"tag:maloja":    [],
+		"tag:beszel":    [],
+		"tag:work":      [],
+	},
+}
