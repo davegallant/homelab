@@ -30,23 +30,26 @@
         proto: udp
       - port: "19132"
         proto: udp
-    # Enforce tags by hostname so re-registered nodes keep their policy role.
+    # Enforce role and monitoring tags by hostname after nodes enroll.
     headscale_node_tags:
-      audiobookshelf: tag:pangolin
-      bento-pdf: tag:pangolin
-      dispatcharr: tag:pangolin
-      forgejo: tag:pangolin
-      gotify: tag:pangolin
-      igotify: tag:pangolin
-      invidious: tag:pangolin
-      jellyfin: tag:pangolin
-      mcleod: tag:external
-      miniflux: tag:pangolin
-      muse: tag:external
-      navidrome: tag:pangolin
-      paperless-ngx: tag:pangolin
-      searxng: tag:pangolin
-      umami: tag:pangolin
+      audiobookshelf: [tag:monitored, tag:pangolin]
+      bento-pdf: [tag:monitored, tag:pangolin]
+      beszel: [tag:beszel, tag:monitored]
+      dispatcharr: [tag:monitored, tag:pangolin]
+      forgejo: [tag:monitored, tag:pangolin]
+      gotify: [tag:monitored, tag:pangolin]
+      grafana: [tag:loki, tag:monitored]
+      igotify: [tag:monitored, tag:pangolin]
+      invidious: [tag:monitored, tag:pangolin]
+      jellyfin: [tag:monitored, tag:pangolin]
+      maloja: [tag:maloja, tag:monitored]
+      mcleod: [tag:external]
+      miniflux: [tag:monitored, tag:pangolin]
+      muse: [tag:external]
+      navidrome: [tag:monitored, tag:navidrome, tag:pangolin]
+      paperless-ngx: [tag:monitored, tag:pangolin]
+      searxng: [tag:monitored, tag:pangolin]
+      umami: [tag:monitored, tag:pangolin]
   tasks:
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-docker.yml
@@ -153,7 +156,7 @@
           - -i
           - "{{ headscale_node.id }}"
           - -t
-          - "{{ item.value }}"
+          - "{{ item.value | join(',') }}"
       vars:
         headscale_node: "{{ (headscale_nodes.stdout | from_json | selectattr('name', 'equalto', item.key) | list | first) | default({}) }}"
       loop: "{{ headscale_node_tags | dict2items }}"
@@ -162,7 +165,7 @@
       changed_when: true
       when:
         - headscale_node | length > 0
-        - headscale_node.tags | default([]) != [item.value]
+        - headscale_node.tags | default([]) | sort != item.value | sort
 
     - name: Validate Headscale policy
       ansible.builtin.command:
