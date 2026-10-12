@@ -37,7 +37,7 @@
 
     - name: Create secondary AdGuard directories
       ansible.builtin.file:
-        path: "{{ ansible_env.HOME }}/adguard-secondary/{{ item }}"
+        path: "{{ ansible_facts['env']['HOME'] }}/adguard-secondary/{{ item }}"
         state: directory
         mode: "0750"
       loop:
@@ -46,13 +46,13 @@
 
     - name: Check whether secondary AdGuard has a live config
       ansible.builtin.stat:
-        path: "{{ ansible_env.HOME }}/adguard-secondary/conf/AdGuardHome.yaml"
+        path: "{{ ansible_facts['env']['HOME'] }}/adguard-secondary/conf/AdGuardHome.yaml"
       register: adguard_secondary_live_config
 
     - name: Render desired secondary AdGuard config
       ansible.builtin.template:
         src: adguard-secondary.yaml.j2
-        dest: "{{ ansible_env.HOME }}/adguard-secondary/desired.yaml"
+        dest: "{{ ansible_facts['env']['HOME'] }}/adguard-secondary/desired.yaml"
         mode: "0640"
       register: adguard_secondary_desired_config
 
@@ -71,8 +71,8 @@
 
     - name: Copy secondary AdGuard config
       ansible.builtin.copy:
-        src: "{{ ansible_env.HOME }}/adguard-secondary/desired.yaml"
-        dest: "{{ ansible_env.HOME }}/adguard-secondary/conf/AdGuardHome.yaml"
+        src: "{{ ansible_facts['env']['HOME'] }}/adguard-secondary/desired.yaml"
+        dest: "{{ ansible_facts['env']['HOME'] }}/adguard-secondary/conf/AdGuardHome.yaml"
         remote_src: true
         mode: "0640"
       when: adguard_secondary_desired_config.changed or not adguard_secondary_live_config.stat.exists
