@@ -46,6 +46,14 @@
 			"src":    ["autogroup:member"],
 			"dst":    ["*:*"],
 		},
+		// Remote hosts can reach tailnet services, but not SSH on port 22.
+		// Tailscale SSH also requires an SSH rule, and tag:external is not
+		// included as a source in any of those rules.
+		{
+			"action": "accept",
+			"src":    ["tag:external"],
+			"dst":    ["*:1-21,23-65535"],
+		},
 		// Allow members to use exit nodes (internet-bound traffic).
 		{
 			"action": "accept",
@@ -60,7 +68,9 @@
 		// "*" as an SSH destination, so this is two rules: user-owned
 		// devices via autogroup:member, tagged devices via
 		// autogroup:tagged. Tagged nodes are not members, so they can
-		// never use these rules as a source — tag:pangolin stays isolated.
+		// never use these rules as a source. Tag remote hosts such as muse
+		// and mcleod with tag:external so they can receive SSH but cannot
+		// initiate Tailscale SSH to any node.
 		{
 			"action": "accept",
 			"src":    ["autogroup:member"],
@@ -75,6 +85,28 @@
 		},
 	],
 
+	// Keep the remote-host boundary intact when changing access rules.
+	"tests": [
+		{
+			"src":    "tag:external",
+			"proto":  "tcp",
+			"accept": ["dave@:443"],
+			"deny":   ["dave@:22"],
+		},
+	],
+	"sshTests": [
+		{
+			"src":  "tag:external",
+			"dst":  ["dave@"],
+			"deny": ["root"],
+		},
+		{
+			"src":    "dave@",
+			"dst":    ["tag:external"],
+			"accept": ["root"],
+		},
+	],
+
 	// All tags referenced in acls/ssh must be defined here, even if empty.
 	"tagOwners": {
 		"tag:pangolin":  [],
@@ -82,5 +114,6 @@
 		"tag:maloja":    [],
 		"tag:beszel":    [],
 		"tag:work":      [],
+		"tag:external":  [],
 	},
 }
