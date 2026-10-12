@@ -25,6 +25,12 @@
 			"src":    ["tag:beszel-agent"],
 			"dst":    ["tag:beszel:443"],
 		},
+		// Muse can read Gatus health status over its tailnet HTTPS endpoint.
+		{
+			"action": "accept",
+			"src":    ["100.100.0.48"],
+			"dst":    ["100.100.0.11:443"],
+		},
 		// Match tailnet IPs for user-owned member devices. (On Headscale
 		// >= 0.28 "*" only covers 100.64.0.0/10 — internet-bound traffic
 		// needs the explicit rule below.) Tagged devices are excluded as
@@ -96,11 +102,12 @@
 			"accept": ["tag:beszel:443", "100.100.0.11:53", "100.100.0.24:53"],
 			"deny":   ["dave@:443", "tag:loki:3100", "tag:maloja:443", "tag:pangolin:443"],
 		},
-		// Muse stays DNS-only; the Beszel exception is for mcleod alone.
+		// Muse may query Gatus but has no access to Beszel or other tagged services.
 		{
-			"src":   "100.100.0.48",
-			"proto": "tcp",
-			"deny":  ["tag:beszel:443"],
+			"src":    "100.100.0.48",
+			"proto":  "tcp",
+			"accept": ["100.100.0.11:443"],
+			"deny":   ["tag:beszel:443", "tag:loki:3100", "tag:maloja:443", "tag:pangolin:443"],
 		},
 		{
 			"src":    "tag:external",
