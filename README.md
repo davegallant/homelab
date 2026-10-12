@@ -254,7 +254,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | ghcr.io/androidseb25/igotify-notification-assist | v1.6.0.1 |
 | ghcr.io/dispatcharr/dispatcharr | 0.32.0 |
 | ghcr.io/flaresolverr/flaresolverr | v3.5.2 |
-| ghcr.io/gethomepage/homepage | v2.4.0 |
+| ghcr.io/gethomepage/homepage | v2.5.0 |
 | ghcr.io/hargata/lubelogger | v1.4.5 |
 | ghcr.io/immich-app/immich-machine-learning | v3.3.1 |
 | ghcr.io/immich-app/immich-server | v3.3.1 |
