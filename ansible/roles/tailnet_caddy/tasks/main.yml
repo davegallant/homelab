@@ -39,6 +39,36 @@
         - path: /etc/tailnet-caddy
           mode: "0700"
 
+    - name: Create tailnet Caddy storage directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0750"
+      loop:
+        - /root/tailnet-caddy/data
+        - /root/tailnet-caddy/config
+
+    - name: Find tailnet Caddy storage entries
+      ansible.builtin.find:
+        paths:
+          - /root/tailnet-caddy/data
+          - /root/tailnet-caddy/config
+        recurse: true
+        hidden: true
+        file_type: any
+      register: tailnet_caddy_storage_entries
+
+    - name: Correct tailnet Caddy storage ownership
+      ansible.builtin.command:
+        cmd: chown -R root:root /root/tailnet-caddy/data /root/tailnet-caddy/config
+      changed_when: true
+      when: >-
+        tailnet_caddy_storage_entries.files | selectattr('uid', 'ne', 0) | list | length > 0
+        or tailnet_caddy_storage_entries.files | selectattr('gid', 'ne', 0) | list | length > 0
+      register: tailnet_caddy_storage_ownership
+
     - name: Install tailnet Caddyfile
       ansible.builtin.template:
         src: Caddyfile.j2
@@ -84,4 +114,10 @@
         state: present
         build: never
         pull: never
-        recreate: "{{ 'always' if tailnet_caddy_config.changed or tailnet_caddy_compose.changed or tailnet_caddy_token.changed else 'auto' }}"
+        recreate: >-
+          {{ 'always' if (
+            tailnet_caddy_config.changed
+            or tailnet_caddy_compose.changed
+            or tailnet_caddy_token.changed
+            or tailnet_caddy_storage_ownership.changed
+          ) else 'auto' }}
