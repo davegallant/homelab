@@ -43,7 +43,7 @@
       invidious: [tag:monitored, tag:pangolin]
       jellyfin: [tag:monitored, tag:pangolin]
       maloja: [tag:maloja, tag:monitored]
-      mcleod: [tag:external]
+      mcleod: [tag:external, tag:beszel-agent]
       miniflux: [tag:monitored, tag:pangolin]
       muse: [tag:external]
       navidrome: [tag:monitored, tag:navidrome, tag:pangolin]
