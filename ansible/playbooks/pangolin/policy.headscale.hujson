@@ -13,35 +13,32 @@
 {
 	// Access control lists.
 	"acls": [
-		// Allow Navidrome to submit scrobbles to Maloja.
+		// Monitored hosts send logs to Loki and metrics to Beszel.
 		{
 			"action": "accept",
-			"src":    ["tag:navidrome"],
-			"dst":    ["tag:maloja:*"],
-		},
-		// Allow tailnet members to access work machines. Work machines should
-		// be tagged tag:work so they do not match autogroup:member as sources.
-		{
-			"action": "accept",
-			"src":    ["autogroup:member"],
-			"dst":    ["tag:work:*"],
+			"src":    ["tag:monitored"],
+			"dst":    ["tag:beszel:443", "tag:loki:3100"],
 		},
 		// Match tailnet IPs for user-owned member devices. (On Headscale
 		// >= 0.28 "*" only covers 100.64.0.0/10 — internet-bound traffic
-		// needs the explicit rule below.) Tagged devices like work machines
-		// are excluded as sources.
+		// needs the explicit rule below.) Tagged devices are excluded as
+		// sources.
 		{
 			"action": "accept",
 			"src":    ["autogroup:member"],
 			"dst":    ["*:*"],
 		},
-		// Remote hosts and Newt service hosts can reach tailnet services,
-		// but not SSH on port 22. Tailscale SSH also requires an SSH rule,
-		// and neither tag is included as a source in those rules.
+		// Tagged nodes use the tailnet DNS resolvers for MagicDNS and filtering.
 		{
 			"action": "accept",
-			"src":    ["tag:external", "tag:pangolin"],
-			"dst":    ["*:1-21,23-65535"],
+			"src":    ["tag:external", "tag:monitored"],
+			"dst":    ["100.100.0.11:53", "100.100.0.24:53"],
+		},
+		// Navidrome can submit scrobbles to Maloja over HTTPS.
+		{
+			"action": "accept",
+			"src":    ["tag:navidrome"],
+			"dst":    ["tag:maloja:443"],
 		},
 		// Allow members to use exit nodes (internet-bound traffic).
 		{
@@ -77,37 +74,66 @@
 	// Keep the tagged-node boundary intact when changing access rules.
 	"tests": [
 		{
+			"src":   "tag:external",
+			"proto": "tcp",
+			"deny":  ["dave@:443", "tag:beszel:443", "tag:loki:3100", "tag:maloja:443", "tag:pangolin:443"],
+		},
+		{
+			"src":    "tag:external",
+			"proto":  "udp",
+			"accept": ["100.100.0.11:53", "100.100.0.24:53"],
+			"deny":   ["tag:beszel:53"],
+		},
+		{
 			"src":    "tag:external",
 			"proto":  "tcp",
-			"accept": ["dave@:443"],
-			"deny":   ["dave@:22", "tag:external:22", "tag:pangolin:22"],
+			"accept": ["100.100.0.11:53", "100.100.0.24:53"],
+			"deny":   ["dave@:443"],
 		},
 		{
-			"src":    "tag:pangolin",
+			"src":    "tag:monitored",
 			"proto":  "tcp",
-			"accept": ["dave@:443"],
-			"deny":   ["dave@:22", "tag:external:22", "tag:pangolin:22"],
+			"accept": ["tag:beszel:443", "tag:loki:3100"],
+			"deny":   ["dave@:443", "tag:external:443", "tag:pangolin:443"],
 		},
 		{
-			"src":    "dave@",
+			"src":    "tag:monitored",
+			"proto":  "udp",
+			"accept": ["100.100.0.11:53", "100.100.0.24:53"],
+			"deny":   ["tag:maloja:53"],
+		},
+		{
+			"src":    "tag:monitored",
 			"proto":  "tcp",
-			"accept": ["tag:external:22", "tag:pangolin:22"],
+			"accept": ["100.100.0.11:53", "100.100.0.24:53"],
+			"deny":   ["dave@:443"],
+		},
+		{
+			"src":    "tag:navidrome",
+			"proto":  "tcp",
+			"accept": ["tag:maloja:443", "tag:beszel:443", "tag:loki:3100"],
+			"deny":   ["dave@:443", "tag:external:443"],
 		},
 	],
 	"sshTests": [
 		{
 			"src":  "tag:external",
-			"dst":  ["dave@", "tag:external", "tag:pangolin"],
+			"dst":  ["dave@", "tag:external", "tag:pangolin", "tag:monitored", "tag:beszel", "tag:loki", "tag:maloja"],
 			"deny": ["root"],
 		},
 		{
 			"src":    "dave@",
-			"dst":    ["tag:external"],
+			"dst":    ["tag:external", "tag:pangolin", "tag:monitored", "tag:beszel", "tag:loki", "tag:maloja"],
 			"accept": ["root"],
 		},
 		{
 			"src":  "tag:pangolin",
-			"dst":  ["dave@", "tag:external", "tag:pangolin"],
+			"dst":  ["dave@", "tag:external", "tag:pangolin", "tag:monitored", "tag:beszel", "tag:loki", "tag:maloja"],
+			"deny": ["root"],
+		},
+		{
+			"src":  "tag:monitored",
+			"dst":  ["dave@", "tag:external", "tag:pangolin", "tag:monitored", "tag:beszel", "tag:loki", "tag:maloja"],
 			"deny": ["root"],
 		},
 		{
@@ -123,7 +149,8 @@
 		"tag:navidrome": [],
 		"tag:maloja":    [],
 		"tag:beszel":    [],
-		"tag:work":      [],
+		"tag:loki":      [],
+		"tag:monitored": [],
 		"tag:external":  [],
 	},
 }

@@ -51,16 +51,16 @@ def main() -> int:
             raise RuntimeError("Headscale returned duplicate node names")
 
         errors = []
-        for name, tag in expected_tags.items():
+        for name, tags in expected_tags.items():
             node = nodes_by_name.get(name)
             if node is None:
                 errors.append(f"{name}: missing from Headscale")
-            elif node.get("tags", []) != [tag]:
+            elif sorted(node.get("tags", [])) != sorted(tags):
                 errors.append(
-                    f"{name}: expected [{tag}], got {node.get('tags', [])}"
+                    f"{name}: expected {sorted(tags)}, got {sorted(node.get('tags', []))}"
                 )
 
-        managed_tags = set(expected_tags.values())
+        managed_tags = {tag for tags in expected_tags.values() for tag in tags}
         for name, node in nodes_by_name.items():
             if name not in expected_tags and managed_tags.intersection(
                 node.get("tags", [])
@@ -72,7 +72,7 @@ def main() -> int:
 
         print(
             f"Headscale policy is valid and matches the repository; "
-            f"{len(expected_tags)} managed node tags match."
+            f"{len(expected_tags)} managed nodes have the expected tags."
         )
         return 0
     except (OSError, KeyError, IndexError, TypeError, ValueError, RuntimeError) as exc:
