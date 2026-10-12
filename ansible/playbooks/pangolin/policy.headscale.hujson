@@ -2,9 +2,10 @@
 // Changes from the SaaS version:
 //   1. Removed nodeAttrs (Funnel is a Tailscale SaaS feature, not in Headscale).
 //   2. tagOwners lists all tags referenced in acls/ssh (Headscale requires
-//      every tag to be defined). All set to [] (no one can assign yet) —
-//      update when you need to actually tag nodes. Headscale v0.29.3 rejects
-//      both plain usernames and autogroup:member as owners.
+//      every tag to be defined). All set to [] so users cannot assign tags;
+//      the Pangolin playbook applies them through the Headscale admin CLI.
+//      Headscale v0.29.3 rejects both plain usernames and autogroup:member
+//      as owners.
 //   3. SSH covers every node via autogroup:member + autogroup:tagged
 //      (Headscale rejects "*" as an SSH dst), replacing the SaaS
 //      per-tag/self rules — tagged nodes never match autogroup:self,
@@ -12,23 +13,11 @@
 {
 	// Access control lists.
 	"acls": [
-		// Ensure that pangolin machines cannot communicate with other nodes,
-		{
-			"action": "accept",
-			"src":    ["tag:pangolin"],
-			"dst":    ["tag:pangolin:*"],
-		},
 		// Allow Navidrome to submit scrobbles to Maloja.
 		{
 			"action": "accept",
 			"src":    ["tag:navidrome"],
 			"dst":    ["tag:maloja:*"],
-		},
-		// Allow the Beszel agent on Pangolin machines to reach the Beszel hub.
-		{
-			"action": "accept",
-			"src":    ["tag:pangolin"],
-			"dst":    ["tag:beszel:*"],
 		},
 		// Allow tailnet members to access work machines. Work machines should
 		// be tagged tag:work so they do not match autogroup:member as sources.
@@ -46,12 +35,12 @@
 			"src":    ["autogroup:member"],
 			"dst":    ["*:*"],
 		},
-		// Remote hosts can reach tailnet services, but not SSH on port 22.
-		// Tailscale SSH also requires an SSH rule, and tag:external is not
-		// included as a source in any of those rules.
+		// Remote hosts and Newt service hosts can reach tailnet services,
+		// but not SSH on port 22. Tailscale SSH also requires an SSH rule,
+		// and neither tag is included as a source in those rules.
 		{
 			"action": "accept",
-			"src":    ["tag:external"],
+			"src":    ["tag:external", "tag:pangolin"],
 			"dst":    ["*:1-21,23-65535"],
 		},
 		// Allow members to use exit nodes (internet-bound traffic).
@@ -68,8 +57,8 @@
 		// "*" as an SSH destination, so this is two rules: user-owned
 		// devices via autogroup:member, tagged devices via
 		// autogroup:tagged. Tagged nodes are not members, so they can
-		// never use these rules as a source. Tag remote hosts such as muse
-		// and mcleod with tag:external so they can receive SSH but cannot
+		// never use these rules as a source. Remote hosts use tag:external,
+		// and Newt hosts use tag:pangolin. They can receive SSH but cannot
 		// initiate Tailscale SSH to any node.
 		{
 			"action": "accept",
@@ -85,24 +74,45 @@
 		},
 	],
 
-	// Keep the remote-host boundary intact when changing access rules.
+	// Keep the tagged-node boundary intact when changing access rules.
 	"tests": [
 		{
 			"src":    "tag:external",
 			"proto":  "tcp",
 			"accept": ["dave@:443"],
-			"deny":   ["dave@:22"],
+			"deny":   ["dave@:22", "tag:external:22", "tag:pangolin:22"],
+		},
+		{
+			"src":    "tag:pangolin",
+			"proto":  "tcp",
+			"accept": ["dave@:443"],
+			"deny":   ["dave@:22", "tag:external:22", "tag:pangolin:22"],
+		},
+		{
+			"src":    "dave@",
+			"proto":  "tcp",
+			"accept": ["tag:external:22", "tag:pangolin:22"],
 		},
 	],
 	"sshTests": [
 		{
 			"src":  "tag:external",
-			"dst":  ["dave@"],
+			"dst":  ["dave@", "tag:external", "tag:pangolin"],
 			"deny": ["root"],
 		},
 		{
 			"src":    "dave@",
 			"dst":    ["tag:external"],
+			"accept": ["root"],
+		},
+		{
+			"src":  "tag:pangolin",
+			"dst":  ["dave@", "tag:external", "tag:pangolin"],
+			"deny": ["root"],
+		},
+		{
+			"src":    "dave@",
+			"dst":    ["tag:pangolin"],
 			"accept": ["root"],
 		},
 	],

@@ -13,6 +13,10 @@ lint:
     cd ansible && ansible-lint
     shellcheck generate-containers-table.sh scripts/*.sh
 
+# Validate the deployed Headscale policy and managed node tags
+check-headscale-policy:
+    python3 scripts/check-headscale-policy.py
+
 # Backup pangolin config from remote host and pull locally
 backup-pangolin:
     #!/usr/bin/env bash
