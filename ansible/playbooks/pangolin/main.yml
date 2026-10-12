@@ -30,6 +30,23 @@
         proto: udp
       - port: "19132"
         proto: udp
+    # Enforce tags by hostname so re-registered nodes keep their policy role.
+    headscale_node_tags:
+      audiobookshelf: tag:pangolin
+      bento-pdf: tag:pangolin
+      dispatcharr: tag:pangolin
+      forgejo: tag:pangolin
+      gotify: tag:pangolin
+      igotify: tag:pangolin
+      invidious: tag:pangolin
+      jellyfin: tag:pangolin
+      mcleod: tag:external
+      miniflux: tag:pangolin
+      muse: tag:external
+      navidrome: tag:pangolin
+      paperless-ngx: tag:pangolin
+      searxng: tag:pangolin
+      umami: tag:pangolin
   tasks:
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-docker.yml
@@ -117,6 +134,35 @@
         state: started
         restart: true
       when: headscale_config.changed
+
+    - name: Read Headscale nodes
+      ansible.builtin.command:
+        cmd: docker exec headscale headscale nodes list -o json
+      register: headscale_nodes
+      changed_when: false
+
+    - name: Assign Headscale node tags
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - headscale
+          - headscale
+          - nodes
+          - tag
+          - -i
+          - "{{ headscale_node.id }}"
+          - -t
+          - "{{ item.value }}"
+      vars:
+        headscale_node: "{{ (headscale_nodes.stdout | from_json | selectattr('name', 'equalto', item.key) | list | first) | default({}) }}"
+      loop: "{{ headscale_node_tags | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+      changed_when: true
+      when:
+        - headscale_node | length > 0
+        - headscale_node.tags | default([]) != [item.value]
 
     - name: Validate Headscale policy
       ansible.builtin.command:
