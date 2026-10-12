@@ -19,6 +19,12 @@
 			"src":    ["tag:monitored"],
 			"dst":    ["tag:beszel:443", "tag:loki:3100"],
 		},
+		// The remote GL-MT3000 reports metrics directly to the Beszel hub.
+		{
+			"action": "accept",
+			"src":    ["tag:beszel-agent"],
+			"dst":    ["tag:beszel:443"],
+		},
 		// Match tailnet IPs for user-owned member devices. (On Headscale
 		// >= 0.28 "*" only covers 100.64.0.0/10 — internet-bound traffic
 		// needs the explicit rule below.) Tagged devices are excluded as
@@ -31,7 +37,7 @@
 		// Tagged nodes use the tailnet DNS resolvers for MagicDNS and filtering.
 		{
 			"action": "accept",
-			"src":    ["tag:external", "tag:monitored"],
+			"src":    ["tag:external", "tag:beszel-agent", "tag:monitored"],
 			"dst":    ["100.100.0.11:53", "100.100.0.24:53"],
 		},
 		// Navidrome can submit scrobbles to Maloja over HTTPS.
@@ -76,13 +82,25 @@
 		{
 			"src":   "tag:external",
 			"proto": "tcp",
-			"deny":  ["dave@:443", "tag:beszel:443", "tag:loki:3100", "tag:maloja:443", "tag:pangolin:443"],
+			"deny":  ["dave@:443", "tag:loki:3100", "tag:maloja:443", "tag:pangolin:443"],
 		},
 		{
 			"src":    "tag:external",
 			"proto":  "udp",
 			"accept": ["100.100.0.11:53", "100.100.0.24:53"],
 			"deny":   ["tag:beszel:53"],
+		},
+		{
+			"src":    "tag:beszel-agent",
+			"proto":  "tcp",
+			"accept": ["tag:beszel:443", "100.100.0.11:53", "100.100.0.24:53"],
+			"deny":   ["dave@:443", "tag:loki:3100", "tag:maloja:443", "tag:pangolin:443"],
+		},
+		// Muse stays DNS-only; the Beszel exception is for mcleod alone.
+		{
+			"src":   "100.100.0.48",
+			"proto": "tcp",
+			"deny":  ["tag:beszel:443"],
 		},
 		{
 			"src":    "tag:external",
@@ -122,6 +140,11 @@
 			"deny": ["root"],
 		},
 		{
+			"src":  "tag:beszel-agent",
+			"dst":  ["dave@", "tag:external", "tag:beszel-agent", "tag:pangolin", "tag:monitored", "tag:beszel", "tag:loki", "tag:maloja"],
+			"deny": ["root"],
+		},
+		{
 			"src":    "dave@",
 			"dst":    ["tag:external", "tag:pangolin", "tag:monitored", "tag:beszel", "tag:loki", "tag:maloja"],
 			"accept": ["root"],
@@ -149,6 +172,7 @@
 		"tag:navidrome": [],
 		"tag:maloja":    [],
 		"tag:beszel":    [],
+		"tag:beszel-agent": [],
 		"tag:loki":      [],
 		"tag:monitored": [],
 		"tag:external":  [],
