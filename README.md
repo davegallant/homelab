@@ -226,7 +226,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/fosrl/newt | 1.18.1 |
 | docker.io/fosrl/pangolin | 1.24.0 |
 | docker.io/gotify/server | 3.1.1 |
-| docker.io/grafana/grafana | 13.2.3 |
+| docker.io/grafana/grafana | 13.2.4 |
 | docker.io/grafana/loki | 3.7.8 |
 | docker.io/headscale/headscale | 0.29.4 |
 | docker.io/henrygd/beszel | 0.21.0 |
