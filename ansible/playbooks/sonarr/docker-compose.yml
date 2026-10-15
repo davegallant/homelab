@@ -2,7 +2,7 @@ services:
   sonarr:
     container_name: sonarr
     # https://hub.docker.com/r/linuxserver/sonarr/tags
-    image: docker.io/linuxserver/sonarr:4.0.20@sha256:dffc730adcb8b4f4342792fbb27fcad9c62fb8660523f2aeb082416980d7fe0c
+    image: docker.io/linuxserver/sonarr:4.0.20@sha256:44b06045a98bc1f237b9ffefc4b28dab64cb29305e4a2a94875ae93b5224e4cc
     restart: always
     ports:
       - 127.0.0.1:8989:8989
