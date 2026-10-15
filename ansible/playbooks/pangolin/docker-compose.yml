@@ -11,7 +11,7 @@ name: pangolin
 
 services:
   headscale:
-    image: docker.io/headscale/headscale:0.29.4@sha256:8833f828b414c0907b7e5c71da76473216fe17cce0818a166b536ec552c0903f
+    image: docker.io/headscale/headscale:v0.29.5@sha256:780ed2f9e85719a2211277433f2c8afb45105d0d25031949a6848a485f9e216d
     container_name: headscale
     restart: always
     read_only: true
@@ -69,7 +69,7 @@ services:
       - 19132:19132/udp
 
   traefik:
-    image: docker.io/traefik:v3.7@sha256:575fa15b135078fe5e50aa847987d96dbddd7b093c172429618404df73f3fa7c
+    image: docker.io/traefik:v3.7@sha256:1daf7eb7aa88e7754b99308fc669ec2b74bc1121f854ec4f334f8271b44d9489
     container_name: traefik
     restart: unless-stopped
     network_mode: service:gerbil # Ports appear on the gerbil service

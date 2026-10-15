@@ -226,11 +226,11 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/fosrl/newt | 1.18.1 |
 | docker.io/fosrl/pangolin | 1.24.0 |
 | docker.io/gotify/server | 3.1.1 |
-| docker.io/grafana/grafana | 13.2.3 |
+| docker.io/grafana/grafana | 13.2.4 |
 | docker.io/grafana/loki | 3.7.8 |
-| docker.io/headscale/headscale | 0.29.4 |
+| docker.io/headscale/headscale | v0.29.5 |
 | docker.io/henrygd/beszel | 0.21.0 |
-| docker.io/itzg/minecraft-bedrock-server | 2026.9.2 |
+| docker.io/itzg/minecraft-bedrock-server | 2026.10.0 |
 | docker.io/jellyfin/jellyfin | 12.2 |
 | docker.io/krateng/maloja | 3.2.7 |
 | docker.io/library/redis | 8 |
@@ -242,10 +242,10 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/linuxserver/speedtest-tracker | 1.15.0 |
 | docker.io/mariadb | 13.0.2 |
 | docker.io/miniflux/miniflux | 2.3.3 |
-| docker.io/paperlessngx/paperless-ngx | 3.3.0 |
+| docker.io/paperlessngx/paperless-ngx | 3.3.1 |
 | docker.io/postgres | 18.6 |
 | docker.io/rommapp/romm | 5.4.0 |
-| docker.io/searxng/searxng | 2026.10.11-ad46ebd7d |
+| docker.io/searxng/searxng | 2026.10.16-ff8f5ddcc |
 | docker.io/traefik | v3.7 |
 | docker.io/twinproduction/gatus | v5.37.0 |
 | docker.io/valkey/valkey | 9 |
@@ -256,13 +256,13 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | ghcr.io/flaresolverr/flaresolverr | v3.5.2 |
 | ghcr.io/gethomepage/homepage | v2.5.0 |
 | ghcr.io/hargata/lubelogger | v1.4.5 |
-| ghcr.io/immich-app/immich-machine-learning | v3.3.1 |
-| ghcr.io/immich-app/immich-server | v3.3.1 |
+| ghcr.io/immich-app/immich-machine-learning | v3.3.3 |
+| ghcr.io/immich-app/immich-server | v3.3.3 |
 | ghcr.io/immich-app/postgres | 14-vectorchord0.4.3-pgvectors0.2.0 |
 | ghcr.io/kiwix/kiwix-serve | 3.8.2 |
 | ghcr.io/seerr-team/seerr | v3.5.0 |
 | ghcr.io/seriousm4x/upsnap | 5.7.2 |
 | ghcr.io/umami-software/umami | 3.4.0 |
-| quay.io/invidious/invidious | 2026.10.11-20bcaa0 |
+| quay.io/invidious/invidious | 2026.10.13-907fe54 |
 | quay.io/invidious/invidious-companion | 2026.09.19-bb3b37f |
 <!-- DOCKER_SERVICES_END -->
