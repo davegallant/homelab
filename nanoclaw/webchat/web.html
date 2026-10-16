@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NanoClaw Chat</title>
+  <style>
+    :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; background: #0e141c; color: #e9eef5; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100dvh; display: flex; flex-direction: column; }
+    header { border-bottom: 1px solid #293747; padding: 16px max(18px, calc((100vw - 850px)/2)); display: flex; align-items: center; gap: 12px; }
+    .mark { background: #3edba8; color: #08251d; padding: 7px 9px; border-radius: 10px; font-weight: 900; }
+    h1 { font-size: 18px; margin: 0; }
+    .sub { color: #96a7bb; font-size: 13px; margin-left: auto; }
+    main { flex: 1; width: min(100%, 850px); margin: auto; padding: 24px 18px; overflow-y: auto; }
+    .empty { color: #96a7bb; text-align: center; margin: 25vh auto 0; line-height: 1.6; }
+    .row { display: flex; margin: 0 0 20px; }
+    .row.user { justify-content: flex-end; }
+    .bubble { max-width: min(90%, 700px); padding: 13px 16px; border-radius: 16px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; background: #1b2837; }
+    .user .bubble { background: #146c58; color: white; }
+    .bubble a { color: #8df2cb; }
+    .user .bubble a { color: white; }
+    footer { background: #0e141c; border-top: 1px solid #293747; padding: 15px max(18px, calc((100vw - 850px)/2)) 20px; }
+    form { display: flex; gap: 10px; align-items: end; }
+    textarea { flex: 1; min-height: 48px; max-height: 200px; resize: vertical; border: 1px solid #35485d; border-radius: 12px; background: #192533; color: #fff; padding: 12px 14px; font: inherit; }
+    textarea:focus { outline: 2px solid #3edba8; border-color: transparent; }
+    button { border: 0; border-radius: 12px; padding: 14px 18px; background: #3edba8; color: #08251d; font-weight: 800; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: wait; }
+    #status { min-height: 18px; color: #96a7bb; font-size: 12px; padding-top: 8px; }
+    @media (max-width: 550px) { .sub { display: none; } .bubble { max-width: 95%; } }
+  </style>
+</head>
+<body>
+  <header><span class="mark">&gt;&gt;</span><h1>NanoClaw</h1><span class="sub">Dave’s agent · private chat</span></header>
+  <main id="messages" aria-live="polite"><div class="empty">Message NanoClaw directly.<br>Contest Scout and your other tools are available here.</div></main>
+  <footer>
+    <form id="form"><textarea id="input" rows="1" maxlength="8000" placeholder="Ask NanoClaw…" aria-label="Message" required></textarea><button id="send">Send</button></form>
+    <div id="status">Connecting…</div>
+  </footer>
+  <script>
+    const list = document.getElementById('messages');
+    const input = document.getElementById('input');
+    const form = document.getElementById('form');
+    const button = document.getElementById('send');
+    const status = document.getElementById('status');
+    const seen = new Set();
+    function show(message) {
+      if (seen.has(message.id)) return;
+      seen.add(message.id);
+      list.querySelector('.empty')?.remove();
+      const row = document.createElement('div');
+      row.className = 'row ' + (message.role === 'user' ? 'user' : 'assistant');
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      const text = String(message.text);
+      const re = /https?:\/\/[^\s<>]+/g;
+      let offset = 0;
+      for (const match of text.matchAll(re)) {
+        bubble.append(document.createTextNode(text.slice(offset, match.index)));
+        const a = document.createElement('a');
+        a.href = match[0]; a.textContent = match[0]; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        bubble.append(a);
+        offset = match.index + match[0].length;
+      }
+      bubble.append(document.createTextNode(text.slice(offset)));
+      row.append(bubble);
+      row.dataset.createdAt = message.created_at;
+      const next = [...list.querySelectorAll('.row')].find((item) => item.dataset.createdAt > message.created_at);
+      list.insertBefore(row, next || null);
+      list.scrollTop = list.scrollHeight;
+      window.scrollTo(0, document.body.scrollHeight);
+    }
+    async function load() {
+      const r = await fetch('/chat/api/messages');
+      if (!r.ok) throw new Error('History unavailable');
+      for (const message of (await r.json()).messages) show(message);
+    }
+    load().catch(() => { status.textContent = 'Could not load chat history'; });
+    const events = new EventSource('/chat/events');
+    events.onopen = () => { status.textContent = 'Connected'; };
+    events.onerror = () => { status.textContent = 'Reconnecting…'; };
+    events.onmessage = (event) => show(JSON.parse(event.data));
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); form.requestSubmit(); }
+    });
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      button.disabled = true; status.textContent = 'Sending…';
+      try {
+        const r = await fetch('/chat/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Webchat-Request': '1' }, body: JSON.stringify({ text }) });
+        if (!r.ok) throw new Error((await r.json()).error || 'Send failed');
+        show(await r.json());
+        input.value = ''; status.textContent = 'Connected';
+      } catch (error) { status.textContent = error.message; }
+      finally { button.disabled = false; input.focus(); }
+    });
+  </script>
+</body>
+</html>
