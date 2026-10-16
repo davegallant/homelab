@@ -129,7 +129,7 @@ function createAdapter(): ChannelAdapter {
   }
 
   function canWrite(req: IncomingMessage): boolean {
-    return req.headers.origin === 'https://nanoclaw.tail.davegallant.ca'
+    return (!req.headers.origin || req.headers.origin === 'https://nanoclaw.tail.davegallant.ca')
       && req.headers['x-webchat-request'] === '1';
   }
 
@@ -215,7 +215,7 @@ function createAdapter(): ChannelAdapter {
       return;
     }
     if (req.method === 'POST' && pathname === '/login') {
-      if (req.headers.origin !== 'https://nanoclaw.tail.davegallant.ca') { json(res, 403, { error: 'Forbidden' }); return; }
+      if (req.headers.origin && req.headers.origin !== 'https://nanoclaw.tail.davegallant.ca') { json(res, 403, { error: 'Forbidden' }); return; }
       if (!req.headers['content-type']?.startsWith('application/x-www-form-urlencoded')) { json(res, 415, { error: 'Expected form' }); return; }
       failedLogins = failedLogins.filter((at) => at > Date.now() - LOGIN_WINDOW_MS);
       if (failedLogins.length >= MAX_FAILED_LOGINS) { redirect(res, '/chat/login?error=1'); return; }
