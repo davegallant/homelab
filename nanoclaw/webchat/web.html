@@ -9,10 +9,11 @@
     :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; background: #0e141c; color: #e9eef5; }
     * { box-sizing: border-box; }
     body { margin: 0; height: 100dvh; overflow: hidden; display: grid; grid-template-columns: 250px minmax(0, 1fr); }
-    aside { background: #111b26; border-right: 1px solid #293747; padding: 18px 12px; display: flex; flex-direction: column; gap: 16px; }
+    aside { min-height: 0; background: #111b26; border-right: 1px solid #293747; padding: 18px 12px; display: flex; flex-direction: column; gap: 16px; }
+    .sidebar-heading { display: flex; align-items: center; justify-content: space-between; }
     .side-title { font-size: 15px; font-weight: 800; padding: 5px 8px; }
     #new-chat { width: 100%; text-align: left; }
-    #chats { display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
+    #chats { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
     .chat-item { display: flex; align-items: center; gap: 4px; border-radius: 9px; }
     .chat-item.active { background: #1f3741; }
     .chat-select { flex: 1; min-width: 0; min-height: 44px; background: transparent; color: #dbe7ef; border: 0; text-align: left; font: inherit; font-weight: 500; padding: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
@@ -43,29 +44,37 @@
     button { border: 0; border-radius: 12px; padding: 14px 18px; background: #3edba8; color: #08251d; font-weight: 800; cursor: pointer; }
     button:disabled { opacity: .5; cursor: wait; }
     #status { min-height: 18px; color: #96a7bb; font-size: 12px; padding-top: 8px; }
+    #menu-toggle, #drawer-close, #drawer-scrim { display: none; }
     @media (max-width: 700px) {
-      body { display: flex; flex-direction: column; }
-      aside { flex: 0 0 auto; min-width: 0; border-right: 0; border-bottom: 1px solid #293747; gap: 8px; padding: 8px 12px; }
-      .side-title { display: none; }
-      #new-chat { width: auto; min-height: 44px; align-self: flex-start; padding: 8px 12px; }
-      #chats { flex-direction: row; overflow-x: auto; overflow-y: hidden; }
-      .chat-item { flex: 0 0 auto; max-width: 220px; }
-      .chat-shell { flex: 1; }
-      .sub { display: none; }
+      body { display: block; }
+      aside { position: fixed; z-index: 21; inset: 0 auto 0 0; width: min(82vw, 320px); height: 100dvh; padding: max(18px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom)); gap: 12px; box-shadow: 12px 0 32px #0007; transform: translateX(-100%); visibility: hidden; transition: transform .2s ease, visibility .2s; }
+      body.drawer-open aside { transform: translateX(0); visibility: visible; }
+      #drawer-scrim { position: fixed; z-index: 20; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 0; background: #0009; }
+      body.drawer-open #drawer-scrim { display: block; }
+      #drawer-close { display: block; min-width: 44px; min-height: 44px; padding: 0; background: transparent; color: #dbe7ef; font-size: 28px; font-weight: 400; }
+      #new-chat { min-height: 44px; padding: 10px 12px; }
+      .chat-shell { height: 100dvh; }
+      header { min-height: 56px; padding: 6px 12px; gap: 8px; }
+      #menu-toggle { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; padding: 0; background: transparent; border: 1px solid #35485d; color: #dbe7ef; font-size: 22px; font-weight: 400; }
+      .mark, .sub { display: none; }
+      h1 { font-size: 16px; }
+      #logout { padding: 8px 10px; font-size: 13px; }
+      main { padding: 16px 12px; }
       .bubble { max-width: 95%; }
-      footer { padding-inline: 12px; }
+      footer { padding: 8px 12px max(8px, env(safe-area-inset-bottom)); }
       #send { min-height: 48px; }
     }
   </style>
 </head>
 <body>
-  <aside aria-label="Chats">
-    <div class="side-title">Chats</div>
+  <button id="drawer-scrim" type="button" aria-label="Close chats"></button>
+  <aside id="chat-sidebar" aria-label="Chats">
+    <div class="sidebar-heading"><div class="side-title">Chats</div><button id="drawer-close" type="button" aria-label="Close chats">&times;</button></div>
     <button id="new-chat" type="button">+ New side chat</button>
     <nav id="chats" aria-label="Conversations"></nav>
   </aside>
   <div class="chat-shell">
-    <header><span class="mark">&gt;&gt;</span><h1 id="chat-title">Main</h1><span class="sub">Dave’s NanoClaw agent</span><button id="logout" type="button">Log out</button></header>
+    <header><button id="menu-toggle" type="button" aria-label="Open chats" aria-controls="chat-sidebar" aria-expanded="false">&#9776;</button><span class="mark">&gt;&gt;</span><h1 id="chat-title">Main</h1><span class="sub">Dave’s NanoClaw agent</span><button id="logout" type="button">Log out</button></header>
     <main id="messages" aria-live="polite"><div class="empty">Message NanoClaw directly.<br>Contest Scout and your other tools are available here.</div><div id="activity" class="activity" role="status" hidden><span class="spinner" aria-hidden="true"></span><span id="activity-text"></span></div></main>
     <footer>
       <form id="form"><textarea id="input" rows="1" maxlength="8000" placeholder="Ask NanoClaw…" aria-label="Message" required></textarea><button id="send">Send</button></form>
@@ -77,6 +86,10 @@
     const chatsNav = document.getElementById('chats');
     const chatTitle = document.getElementById('chat-title');
     const newChat = document.getElementById('new-chat');
+    const menuToggle = document.getElementById('menu-toggle');
+    const drawerClose = document.getElementById('drawer-close');
+    const drawerScrim = document.getElementById('drawer-scrim');
+    const chatShell = document.querySelector('.chat-shell');
     const logout = document.getElementById('logout');
     const input = document.getElementById('input');
     const form = document.getElementById('form');
@@ -91,6 +104,22 @@
     let connected = null;
     let failure = '';
     const writeHeaders = { 'X-Webchat-Request': '1' };
+    const mobileLayout = matchMedia('(max-width: 700px)');
+    function setDrawer(open) {
+      const wasOpen = document.body.classList.contains('drawer-open');
+      const show = open && mobileLayout.matches;
+      document.body.classList.toggle('drawer-open', show);
+      chatShell.inert = show;
+      menuToggle.setAttribute('aria-expanded', String(show));
+      if (show) drawerClose.focus();
+      else if (wasOpen && mobileLayout.matches) menuToggle.focus();
+    }
+    menuToggle.onclick = () => setDrawer(true);
+    drawerClose.onclick = drawerScrim.onclick = () => setDrawer(false);
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && document.body.classList.contains('drawer-open')) setDrawer(false);
+    });
+    mobileLayout.addEventListener('change', () => setDrawer(false));
     async function authFetch(url, options) {
       const response = await fetch(url, options);
       if (response.status === 401) {
@@ -153,6 +182,7 @@
     }
     async function selectChat(id) {
       selected = id;
+      setDrawer(false);
       history.replaceState(null, '', '#' + id);
       failure = '';
       clearMessages();

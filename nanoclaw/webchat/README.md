@@ -27,6 +27,7 @@ There is no automatic expiry. The UI loads the newest 100 messages per chat
 and receives new ones by server-sent events. Existing single-chat messages
 are migrated to Main on first launch. Include this database in NanoClaw
 backups.
+On phone-width screens, the chat list opens as a drawer from the header menu.
 
 `/chat/login` is a standard HTML sign-in form for password managers. The
 server checks the password against the scrypt hash in `data/webchat-auth.json`
