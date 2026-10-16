@@ -76,7 +76,7 @@
     aside { min-height: 0; background: var(--sidebar); border-right: 1px solid var(--border); padding: 18px 12px; display: flex; flex-direction: column; gap: 16px; }
     .sidebar-heading { display: flex; align-items: center; justify-content: space-between; }
     .side-title { font-size: 15px; font-weight: 800; padding: 5px 8px; }
-    #new-chat { width: 100%; text-align: left; }
+    #new-chat { width: 100%; text-align: left; background: var(--bubble); color: var(--text); border: 1px solid var(--border); }
     #chats { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
     .chat-item { display: flex; align-items: center; gap: 4px; border-radius: 9px; }
     .chat-item.active { background: var(--active); }
@@ -85,7 +85,6 @@
     .chat-delete:hover { color: #ff9c9c; }
     .chat-shell { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
     header { border-bottom: 1px solid var(--border); padding: 16px 18px; display: flex; align-items: center; gap: 12px; }
-    .mark { background: var(--accent); color: var(--accent-text); padding: 7px 9px; border-radius: 10px; font-weight: 900; }
     h1 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; margin: 0; }
     .sub { color: var(--muted); font-size: 13px; }
     #logout { min-height: 44px; padding: 10px 12px; background: transparent; border: 1px solid var(--input-border); color: var(--text); white-space: nowrap; }
@@ -124,7 +123,7 @@
       .chat-shell { height: 100dvh; }
       header { min-height: 56px; padding: 6px 12px; gap: 8px; }
       #menu-toggle { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; padding: 0; background: transparent; border: 1px solid var(--input-border); color: var(--text); font-size: 22px; font-weight: 400; }
-      .mark, .sub { display: none; }
+      .sub { display: none; }
       h1 { font-size: 16px; }
       #logout { padding: 8px 10px; font-size: 13px; }
       main { padding: 16px 12px; }
@@ -142,7 +141,7 @@
     <nav id="chats" aria-label="Conversations"></nav>
   </aside>
   <div class="chat-shell">
-    <header><button id="menu-toggle" type="button" aria-label="Open chats" aria-controls="chat-sidebar" aria-expanded="false">&#9776;</button><span class="mark">&gt;&gt;</span><h1 id="chat-title">Main</h1><span class="sub">Dave’s NanoClaw agent</span><div id="theme-toggle" role="radiogroup" aria-label="Color theme"><button class="theme-mode" type="button" role="radio" data-mode="auto" aria-label="Auto theme" title="Auto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9h9A9 9 0 1 1 12 3Z"/><path d="M16 3.7A9 9 0 0 1 20.3 8H16V3.7Z"/></svg></button><button class="theme-mode" type="button" role="radio" data-mode="light" aria-label="Light theme" title="Light"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg></button><button class="theme-mode" type="button" role="radio" data-mode="dark" aria-label="Dark theme" title="Dark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"/></svg></button></div><button id="logout" type="button">Log out</button></header>
+    <header><button id="menu-toggle" type="button" aria-label="Open chats" aria-controls="chat-sidebar" aria-expanded="false">&#9776;</button><h1 id="chat-title">Main</h1><span class="sub">Dave’s NanoClaw agent</span><div id="theme-toggle" role="radiogroup" aria-label="Color theme"><button class="theme-mode" type="button" role="radio" data-mode="auto" aria-label="Auto theme" title="Auto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9h9A9 9 0 1 1 12 3Z"/><path d="M16 3.7A9 9 0 0 1 20.3 8H16V3.7Z"/></svg></button><button class="theme-mode" type="button" role="radio" data-mode="light" aria-label="Light theme" title="Light"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg></button><button class="theme-mode" type="button" role="radio" data-mode="dark" aria-label="Dark theme" title="Dark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"/></svg></button></div><button id="logout" type="button">Log out</button></header>
     <main id="messages" aria-live="polite"><div class="empty">Message NanoClaw directly.<br>Contest Scout and your other tools are available here.</div><div id="activity" class="activity" role="status" hidden><span class="spinner" aria-hidden="true"></span><span id="activity-text"></span></div></main>
     <footer>
       <form id="form"><textarea id="input" rows="1" maxlength="8000" placeholder="Ask NanoClaw…" aria-label="Message" required></textarea><button id="send">Send</button></form>
