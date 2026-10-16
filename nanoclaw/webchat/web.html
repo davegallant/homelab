@@ -23,9 +23,7 @@
     .activity { display: flex; align-items: center; gap: 10px; color: #b8c9d9; font-size: 14px; padding: 4px 2px 24px; }
     .activity[hidden] { display: none; }
     .spinner { width: 16px; height: 16px; border: 2px solid #415668; border-top-color: #3edba8; border-radius: 50%; animation: spin .8s linear infinite; }
-    .activity.stalled .spinner { animation: none; border-top-color: #8495a5; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
     footer { background: #0e141c; border-top: 1px solid #293747; padding: 15px max(18px, calc((100vw - 850px)/2)) 20px; }
     form { display: flex; gap: 10px; align-items: end; }
     textarea { flex: 1; min-height: 48px; max-height: 200px; resize: vertical; border: 1px solid #35485d; border-radius: 12px; background: #192533; color: #fff; padding: 12px 14px; font: inherit; }
@@ -60,7 +58,6 @@
       const waiting = last?.classList.contains('user') ?? false;
       const age = waiting ? Date.now() - Date.parse(last.dataset.createdAt) : 0;
       activity.hidden = !sending && !waiting;
-      activity.classList.toggle('stalled', !sending && age > 120000);
       activityText.textContent = sending ? 'Sending message…' : age > 120000 ? 'No reply yet. Check back here later.' : age > 30000 ? 'Still waiting for NanoClaw…' : 'NanoClaw is working…';
       status.textContent = failure || (sending ? 'Sending…' : waiting ? 'Message received · waiting for reply' : connected === null ? 'Connecting…' : connected ? 'Connected' : 'Reconnecting…');
     }
