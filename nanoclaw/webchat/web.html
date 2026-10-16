@@ -30,7 +30,7 @@
       color: var(--text);
     }
     @media (prefers-color-scheme: light) {
-      :root {
+      :root:not([data-theme]) {
         color-scheme: light;
         --page: #f7f9fc;
         --sidebar: #eef3f7;
@@ -51,6 +51,26 @@
         --user-link: #087c5d;
       }
     }
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --page: #f7f9fc;
+      --sidebar: #eef3f7;
+      --border: #d7e0e8;
+      --text: #1d2935;
+      --muted: #637487;
+      --muted-strong: #526477;
+      --bubble: #eaf0f5;
+      --active: #dcebe7;
+      --input: #ffffff;
+      --input-border: #c4d0dc;
+      --accent: #16a879;
+      --accent-text: #06291f;
+      --link: #087c5d;
+      --activity: #506476;
+      --user-bubble: #cfeee2;
+      --user-text: #17382f;
+      --user-link: #087c5d;
+    }
     * { box-sizing: border-box; }
     body { margin: 0; height: 100dvh; overflow: hidden; display: grid; grid-template-columns: 250px minmax(0, 1fr); }
     aside { min-height: 0; background: var(--sidebar); border-right: 1px solid var(--border); padding: 18px 12px; display: flex; flex-direction: column; gap: 16px; }
@@ -69,6 +89,8 @@
     h1 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; margin: 0; }
     .sub { color: var(--muted); font-size: 13px; }
     #logout { margin-left: auto; min-height: 44px; padding: 10px 12px; background: transparent; border: 1px solid var(--input-border); color: var(--text); white-space: nowrap; }
+    #theme-toggle { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; padding: 0; background: transparent; border: 1px solid var(--input-border); color: var(--text); }
+    #theme-toggle svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     main { flex: 1; min-height: 0; width: 100%; padding: 24px 18px; overflow-y: auto; overscroll-behavior: contain; }
     .empty { color: var(--muted); text-align: center; margin: 25vh auto 0; line-height: 1.6; }
     .row { display: flex; max-width: 850px; margin: 0 auto 20px; }
@@ -118,7 +140,7 @@
     <nav id="chats" aria-label="Conversations"></nav>
   </aside>
   <div class="chat-shell">
-    <header><button id="menu-toggle" type="button" aria-label="Open chats" aria-controls="chat-sidebar" aria-expanded="false">&#9776;</button><span class="mark">&gt;&gt;</span><h1 id="chat-title">Main</h1><span class="sub">Dave’s NanoClaw agent</span><button id="logout" type="button">Log out</button></header>
+    <header><button id="menu-toggle" type="button" aria-label="Open chats" aria-controls="chat-sidebar" aria-expanded="false">&#9776;</button><span class="mark">&gt;&gt;</span><h1 id="chat-title">Main</h1><span class="sub">Dave’s NanoClaw agent</span><button id="theme-toggle" type="button" aria-label="Switch theme" title="Switch theme"></button><button id="logout" type="button">Log out</button></header>
     <main id="messages" aria-live="polite"><div class="empty">Message NanoClaw directly.<br>Contest Scout and your other tools are available here.</div><div id="activity" class="activity" role="status" hidden><span class="spinner" aria-hidden="true"></span><span id="activity-text"></span></div></main>
     <footer>
       <form id="form"><textarea id="input" rows="1" maxlength="8000" placeholder="Ask NanoClaw…" aria-label="Message" required></textarea><button id="send">Send</button></form>
@@ -135,6 +157,32 @@
     const drawerScrim = document.getElementById('drawer-scrim');
     const chatShell = document.querySelector('.chat-shell');
     const logout = document.getElementById('logout');
+    const themeToggle = document.getElementById('theme-toggle');
+    const themePreference = localStorage.getItem('nanoclaw-chat-theme');
+    if (themePreference === 'light' || themePreference === 'dark') document.documentElement.dataset.theme = themePreference;
+    function updateThemeToggle() {
+      const isLight = document.documentElement.dataset.theme
+        ? document.documentElement.dataset.theme === 'light'
+        : matchMedia('(prefers-color-scheme: light)').matches;
+      const action = isLight ? 'Switch to dark theme' : 'Switch to light theme';
+      themeToggle.setAttribute('aria-label', action);
+      themeToggle.title = action;
+      themeToggle.innerHTML = isLight
+        ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"/></svg>'
+        : '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>';
+    }
+    themeToggle.onclick = () => {
+      const isLight = document.documentElement.dataset.theme
+        ? document.documentElement.dataset.theme === 'light'
+        : matchMedia('(prefers-color-scheme: light)').matches;
+      document.documentElement.dataset.theme = isLight ? 'dark' : 'light';
+      localStorage.setItem('nanoclaw-chat-theme', document.documentElement.dataset.theme);
+      updateThemeToggle();
+    };
+    updateThemeToggle();
+    matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+      if (!document.documentElement.dataset.theme) updateThemeToggle();
+    });
     const input = document.getElementById('input');
     const form = document.getElementById('form');
     const button = document.getElementById('send');
