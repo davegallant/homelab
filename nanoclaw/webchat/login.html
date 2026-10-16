@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · NanoClaw Chat</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/chat/favicon-32x32.png">
+  <style>
+    :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; background: #0e141c; color: #e9eef5; }
+    * { box-sizing: border-box; }
+    body { min-height: 100dvh; margin: 0; display: grid; place-items: center; padding: 24px; }
+    main { width: min(100%, 400px); padding: 28px; border: 1px solid #293747; border-radius: 18px; background: #111b26; }
+    .mark { display: inline-block; background: #3edba8; color: #08251d; padding: 7px 9px; border-radius: 10px; font-weight: 900; }
+    h1 { margin: 20px 0 6px; font-size: 24px; }
+    p { margin: 0 0 24px; color: #aebccc; line-height: 1.5; }
+    label { display: block; margin: 16px 0 7px; font-size: 14px; font-weight: 650; }
+    input { width: 100%; min-height: 48px; padding: 11px 13px; border: 1px solid #35485d; border-radius: 10px; background: #192533; color: #fff; font: inherit; font-size: 16px; }
+    input:focus { outline: 2px solid #3edba8; border-color: transparent; }
+    button { width: 100%; min-height: 48px; margin-top: 24px; border: 0; border-radius: 10px; background: #3edba8; color: #08251d; font: inherit; font-weight: 800; cursor: pointer; }
+    .error { margin: 16px 0 0; color: #ffadad; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <span class="mark">&gt;&gt;</span>
+    <h1>Sign in to NanoClaw</h1>
+    <p>Your chat is private to this tailnet.</p>
+    <form method="post" action="/chat/login">
+      <label for="username">Username</label>
+      <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+      <button type="submit">Sign in</button>
+    </form>
+    <!-- LOGIN_ERROR -->
+  </main>
+</body>
+</html>

@@ -5,7 +5,7 @@ The browser talks directly to NanoClaw through Caddy at
 `https://nanoclaw.tail.davegallant.ca/chat/`. OneCLI remains at `/`.
 
 `web.ts` is installed as `src/channels/web.ts` and imported from
-`src/channels/index.ts` with `import './web.js';`. The HTML and
+`src/channels/index.ts` with `import './web.js';`. Both HTML files and
 `favicon-32x32.png` from `https://nanoclaw.dev/favicon-32x32.png` are installed
 at both `src/channels/` and `dist/channels/`; TypeScript does not
 copy static assets during a build. Recopy them after rebuilding. Restart
@@ -28,6 +28,16 @@ and receives new ones by server-sent events. Existing single-chat messages
 are migrated to Main on first launch. Include this database in NanoClaw
 backups.
 
+`/chat/login` is a standard HTML sign-in form for password managers. The
+server checks the password against the scrypt hash in `data/webchat-auth.json`
+(owned by `nanoclaw`, mode `0600`), then issues a 14-day session cookie with
+`Secure`, `HttpOnly`, `SameSite=Lax`, and `Path=/chat/`. Only a hash of the
+session token is stored in `data/webchat.db`; logout removes it. The chat page,
+API, and event stream require a valid session. Login is limited to ten failed
+attempts per 15 minutes per service process. Back up the auth file with the
+database; the service cannot start without it. The existing chat password was
+reused when the auth file was created on the LXC.
+
 Deleting a side chat stops its container, removes its session directory and
 context file, deletes its central session row, then removes its web messages
 and chat row. Some session mount placeholders are root owned; the adapter uses
@@ -36,20 +46,17 @@ Main has no Delete control. Shared agent workspace files and retained backups
 are outside this delete operation.
 
 The live Caddyfile is `/root/tailnet-caddy/Caddyfile`. It routes `/chat/*`
-to `127.0.0.1:3200` with HTTP Basic authentication and all other paths to
-OneCLI at `172.17.0.1:10254`. The password is in
-`/root/tailnet-caddy/webchat-password` (root only); only its bcrypt hash is
-in the Caddyfile. The live Caddyfile was backed up as
-`/root/tailnet-caddy/Caddyfile.pre-webchat` before editing. Its route block is:
+to `127.0.0.1:3200` and all other paths to OneCLI at `172.17.0.1:10254`.
+The NanoClaw channel enforces authentication on every chat route. Caddyfile
+backups are `/root/tailnet-caddy/Caddyfile.pre-webchat` and
+`/root/tailnet-caddy/Caddyfile.pre-form-login` (the latter has the old Basic
+auth configuration). Its route block is:
 
 ```caddyfile
 handle /chat {
   redir * /chat/ 308
 }
 handle_path /chat/* {
-  basic_auth {
-    dave <bcrypt hash from caddy hash-password>
-  }
   reverse_proxy 127.0.0.1:3200
 }
 handle {
