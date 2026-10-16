@@ -48,6 +48,14 @@
       "groupName": "beszel"
     },
     {
+      "description": "Track Headscale container releases",
+      "matchPackageNames": [
+        "docker.io/headscale/headscale"
+      ],
+      "versioning": "semver",
+      "pinDigests": true
+    },
+    {
       "matchDepNames": [
         "docker.io/searxng/searxng"
       ],
