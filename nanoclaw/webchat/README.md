@@ -10,12 +10,29 @@ both `src/channels/web.html` and `dist/channels/web.html`; TypeScript does not
 copy static assets during a build. Recopy it after rebuilding. Restart
 `nanoclaw-v2-454ebe7e.service` after changes.
 
-The channel listens only on `127.0.0.1:3200` and has one conversation,
-`web/local`. Its messaging group is wired to the existing `cli-with-dave`
-agent group. The agent session is distinct from the CLI session, but the
-agent workspace and tools are shared. The host stores the last displayed
-messages in `data/webchat.db`; the UI loads the newest 100 and receives new
-messages by server-sent events. Include this database in NanoClaw backups.
+The channel listens only on `127.0.0.1:3200`. Main uses the original
+`web/local` messaging group and session. Side chats use the `web/side`
+messaging group with one NanoClaw thread and session per chat. Both groups
+are wired to `cli-with-dave`, so agent tools and workspace files are shared
+while conversation context is separate. Create the side routing on a new LXC:
+
+```sh
+./bin/ncl messaging-groups create --channel-type web --platform-id side --instance web --name "Web Side Chats" --is-group 1 --unknown-sender-policy public
+./bin/ncl wirings create --channel-type web --platform-id side --instance web --agent-group cli-with-dave --engage-mode pattern --engage-pattern . --sender-scope all --session-mode per-thread --threads true
+```
+
+The host stores all browser messages and chat titles in `data/webchat.db`.
+There is no automatic expiry. The UI loads the newest 100 messages per chat
+and receives new ones by server-sent events. Existing single-chat messages
+are migrated to Main on first launch. Include this database in NanoClaw
+backups.
+
+Deleting a side chat stops its container, removes its session directory and
+context file, deletes its central session row, then removes its web messages
+and chat row. Some session mount placeholders are root owned; the adapter uses
+the existing NanoClaw Docker image to return ownership before removing them.
+Main has no Delete control. Shared agent workspace files and retained backups
+are outside this delete operation.
 
 The live Caddyfile is `/root/tailnet-caddy/Caddyfile`. It routes `/chat/*`
 to `127.0.0.1:3200` with HTTP Basic authentication and all other paths to

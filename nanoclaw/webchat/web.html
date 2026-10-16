@@ -7,7 +7,17 @@
   <style>
     :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; background: #0e141c; color: #e9eef5; }
     * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100dvh; display: flex; flex-direction: column; }
+    body { margin: 0; min-height: 100dvh; display: grid; grid-template-columns: 250px minmax(0, 1fr); }
+    aside { background: #111b26; border-right: 1px solid #293747; padding: 18px 12px; display: flex; flex-direction: column; gap: 16px; }
+    .side-title { font-size: 15px; font-weight: 800; padding: 5px 8px; }
+    #new-chat { width: 100%; text-align: left; }
+    #chats { display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
+    .chat-item { display: flex; align-items: center; gap: 4px; border-radius: 9px; }
+    .chat-item.active { background: #1f3741; }
+    .chat-select { flex: 1; min-width: 0; background: transparent; color: #dbe7ef; border: 0; text-align: left; font: inherit; font-weight: 500; padding: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+    .chat-delete { background: transparent; color: #aebccc; border: 0; padding: 8px 10px; font-size: 18px; cursor: pointer; }
+    .chat-delete:hover { color: #ff9c9c; }
+    .chat-shell { min-width: 0; height: 100dvh; display: flex; flex-direction: column; }
     header { border-bottom: 1px solid #293747; padding: 16px max(18px, calc((100vw - 850px)/2)); display: flex; align-items: center; gap: 12px; }
     .mark { background: #3edba8; color: #08251d; padding: 7px 9px; border-radius: 10px; font-weight: 900; }
     h1 { font-size: 18px; margin: 0; }
@@ -31,18 +41,38 @@
     button { border: 0; border-radius: 12px; padding: 14px 18px; background: #3edba8; color: #08251d; font-weight: 800; cursor: pointer; }
     button:disabled { opacity: .5; cursor: wait; }
     #status { min-height: 18px; color: #96a7bb; font-size: 12px; padding-top: 8px; }
-    @media (max-width: 550px) { .sub { display: none; } .bubble { max-width: 95%; } }
+    @media (max-width: 700px) {
+      body { display: flex; flex-direction: column; }
+      aside { border-right: 0; border-bottom: 1px solid #293747; gap: 8px; padding: 8px 12px; }
+      .side-title { display: none; }
+      #new-chat { width: auto; align-self: flex-start; padding: 8px 12px; }
+      #chats { flex-direction: row; overflow-x: auto; }
+      .chat-item { flex: 0 0 auto; max-width: 220px; }
+      .chat-shell { height: calc(100dvh - 94px); min-height: 350px; }
+      .sub { display: none; }
+      .bubble { max-width: 95%; }
+    }
   </style>
 </head>
 <body>
-  <header><span class="mark">&gt;&gt;</span><h1>NanoClaw</h1><span class="sub">Dave’s agent · private chat</span></header>
-  <main id="messages" aria-live="polite"><div class="empty">Message NanoClaw directly.<br>Contest Scout and your other tools are available here.</div><div id="activity" class="activity" role="status" hidden><span class="spinner" aria-hidden="true"></span><span id="activity-text"></span></div></main>
-  <footer>
-    <form id="form"><textarea id="input" rows="1" maxlength="8000" placeholder="Ask NanoClaw…" aria-label="Message" required></textarea><button id="send">Send</button></form>
-    <div id="status">Connecting…</div>
-  </footer>
+  <aside aria-label="Chats">
+    <div class="side-title">Chats</div>
+    <button id="new-chat" type="button">+ New side chat</button>
+    <nav id="chats" aria-label="Conversations"></nav>
+  </aside>
+  <div class="chat-shell">
+    <header><span class="mark">&gt;&gt;</span><h1 id="chat-title">Main</h1><span class="sub">Dave’s NanoClaw agent</span></header>
+    <main id="messages" aria-live="polite"><div class="empty">Message NanoClaw directly.<br>Contest Scout and your other tools are available here.</div><div id="activity" class="activity" role="status" hidden><span class="spinner" aria-hidden="true"></span><span id="activity-text"></span></div></main>
+    <footer>
+      <form id="form"><textarea id="input" rows="1" maxlength="8000" placeholder="Ask NanoClaw…" aria-label="Message" required></textarea><button id="send">Send</button></form>
+      <div id="status">Connecting…</div>
+    </footer>
+  </div>
   <script>
     const list = document.getElementById('messages');
+    const chatsNav = document.getElementById('chats');
+    const chatTitle = document.getElementById('chat-title');
+    const newChat = document.getElementById('new-chat');
     const input = document.getElementById('input');
     const form = document.getElementById('form');
     const button = document.getElementById('send');
@@ -50,16 +80,71 @@
     const activity = document.getElementById('activity');
     const activityText = document.getElementById('activity-text');
     const seen = new Set();
-    let sending = false;
+    let selected = location.hash.slice(1) || 'main';
+    let chats = [];
+    let sendingChat = null;
     let connected = null;
     let failure = '';
+    const writeHeaders = { 'X-Webchat-Request': '1' };
+    function currentChat() { return chats.find((chat) => chat.id === selected); }
     function renderState() {
       const last = [...list.querySelectorAll('.row')].at(-1);
       const waiting = last?.classList.contains('user') ?? false;
       const age = waiting ? Date.now() - Date.parse(last.dataset.createdAt) : 0;
+      const sending = sendingChat === selected;
       activity.hidden = !sending && !waiting;
       activityText.textContent = sending ? 'Sending message…' : age > 120000 ? 'No reply yet. Check back here later.' : age > 30000 ? 'Still waiting for NanoClaw…' : 'NanoClaw is working…';
       status.textContent = failure || (sending ? 'Sending…' : waiting ? 'Message received · waiting for reply' : connected === null ? 'Connecting…' : connected ? 'Connected' : 'Reconnecting…');
+    }
+    function renderChats() {
+      chatsNav.replaceChildren();
+      for (const chat of chats) {
+        const item = document.createElement('div');
+        item.className = 'chat-item' + (chat.id === selected ? ' active' : '');
+        const select = document.createElement('button');
+        select.type = 'button'; select.className = 'chat-select';
+        select.textContent = chat.id === 'main' ? '◆ Main' : chat.title;
+        select.title = chat.title;
+        select.onclick = () => selectChat(chat.id);
+        item.append(select);
+        if (chat.id !== 'main') {
+          const remove = document.createElement('button');
+          remove.type = 'button'; remove.className = 'chat-delete';
+          remove.textContent = '×'; remove.title = 'Delete ' + chat.title;
+          remove.setAttribute('aria-label', 'Delete ' + chat.title);
+          remove.onclick = () => deleteChat(chat);
+          item.append(remove);
+        }
+        chatsNav.append(item);
+      }
+      chatTitle.textContent = currentChat()?.title || 'Main';
+    }
+    async function loadChats() {
+      const r = await fetch('/chat/api/chats');
+      if (!r.ok) throw new Error('Could not load chats');
+      chats = (await r.json()).chats;
+      if (!currentChat()) {
+        selected = 'main';
+        history.replaceState(null, '', '#main');
+      }
+      renderChats();
+    }
+    function clearMessages() {
+      list.querySelectorAll('.row, .empty').forEach((node) => node.remove());
+      seen.clear();
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = selected === 'main' ? 'Main chat with NanoClaw.' : 'A fresh conversation with NanoClaw.';
+      list.insertBefore(empty, activity);
+      renderState();
+    }
+    async function selectChat(id) {
+      selected = id;
+      history.replaceState(null, '', '#' + id);
+      failure = '';
+      clearMessages();
+      renderChats();
+      await loadMessages(id);
     }
     function show(message) {
       if (seen.has(message.id)) return;
@@ -89,17 +174,48 @@
       list.scrollTop = list.scrollHeight;
       window.scrollTo(0, document.body.scrollHeight);
     }
-    async function load() {
-      const r = await fetch('/chat/api/messages');
+    async function loadMessages(id = selected) {
+      const r = await fetch('/chat/api/chats/' + id + '/messages');
       if (!r.ok) throw new Error('History unavailable');
+      if (id !== selected) return;
       for (const message of (await r.json()).messages) show(message);
     }
-    load().catch(() => { failure = 'Could not load chat history'; renderState(); });
+    loadChats().then(() => loadMessages()).catch((error) => { failure = error.message; renderState(); });
     const events = new EventSource('/chat/events');
-    events.onopen = () => { connected = true; renderState(); load().catch(() => {}); };
+    events.onopen = () => { connected = true; renderState(); loadChats().then(() => loadMessages()).catch(() => {}); };
     events.onerror = () => { connected = false; renderState(); };
-    events.onmessage = (event) => show(JSON.parse(event.data));
+    events.onmessage = (event) => {
+      const update = JSON.parse(event.data);
+      if (update.type === 'message') {
+        if (update.chat_id === selected) show(update.message);
+        loadChats().catch(() => {});
+      } else if (update.type === 'chat-deleted') {
+        if (update.chat_id === selected) selectChat('main').catch(() => {});
+        loadChats().catch(() => {});
+      } else if (update.type === 'chats-changed') loadChats().catch(() => {});
+    };
     setInterval(renderState, 10000);
+    newChat.onclick = async () => {
+      newChat.disabled = true;
+      try {
+        const r = await fetch('/chat/api/chats', { method: 'POST', headers: writeHeaders });
+        if (!r.ok) throw new Error((await r.json()).error || 'Could not create chat');
+        const chat = await r.json();
+        await loadChats();
+        await selectChat(chat.id);
+        input.focus();
+      } catch (error) { failure = error.message; renderState(); }
+      finally { newChat.disabled = false; }
+    };
+    async function deleteChat(chat) {
+      if (!confirm('Delete “' + chat.title + '” and its NanoClaw conversation?')) return;
+      try {
+        const r = await fetch('/chat/api/chats/' + chat.id, { method: 'DELETE', headers: writeHeaders });
+        if (!r.ok) throw new Error((await r.json()).error || 'Could not delete chat');
+        if (selected === chat.id) await selectChat('main');
+        await loadChats();
+      } catch (error) { failure = error.message; renderState(); }
+    }
     input.addEventListener('keydown', (event) => {
       if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); form.requestSubmit(); }
     });
@@ -107,14 +223,16 @@
       event.preventDefault();
       const text = input.value.trim();
       if (!text) return;
-      button.disabled = true; sending = true; failure = ''; renderState();
+      const id = selected;
+      button.disabled = true; sendingChat = id; failure = ''; renderState();
       try {
-        const r = await fetch('/chat/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Webchat-Request': '1' }, body: JSON.stringify({ text }) });
+        const r = await fetch('/chat/api/chats/' + id + '/messages', { method: 'POST', headers: { ...writeHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
         if (!r.ok) throw new Error((await r.json()).error || 'Send failed');
-        show(await r.json());
-        input.value = '';
-      } catch (error) { failure = error.message; }
-      finally { sending = false; button.disabled = false; renderState(); input.focus(); }
+        const message = await r.json();
+        if (id === selected) show(message);
+        if (id === selected && input.value.trim() === text) input.value = '';
+      } catch (error) { if (id === selected) failure = error.message; }
+      finally { sendingChat = null; button.disabled = false; renderState(); input.focus(); }
     });
   </script>
 </body>
