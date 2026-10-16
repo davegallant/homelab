@@ -52,6 +52,14 @@
           - { port: "853", proto: tcp }
           - { port: "853", proto: udp }
 
+    - name: Allow AdGuard web UI from the LAN and tailnet
+      community.general.ufw:
+        rule: allow
+        port: "{{ item.0 }}"
+        proto: tcp
+        from_ip: "{{ item.1 }}"
+      loop: "{{ query('nested', ['80', '3000'], [homelab_lan_subnet, '100.64.0.0/10']) }}"
+
     - name: Enable UFW
       community.general.ufw:
         state: enabled
