@@ -4,53 +4,56 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>NanoClaw Chat</title>
+  <link rel="icon" type="image/png" href="/chat/favicon.png">
   <style>
     :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; background: #0e141c; color: #e9eef5; }
     * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100dvh; display: grid; grid-template-columns: 250px minmax(0, 1fr); }
+    body { margin: 0; height: 100dvh; overflow: hidden; display: grid; grid-template-columns: 250px minmax(0, 1fr); }
     aside { background: #111b26; border-right: 1px solid #293747; padding: 18px 12px; display: flex; flex-direction: column; gap: 16px; }
     .side-title { font-size: 15px; font-weight: 800; padding: 5px 8px; }
     #new-chat { width: 100%; text-align: left; }
     #chats { display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
     .chat-item { display: flex; align-items: center; gap: 4px; border-radius: 9px; }
     .chat-item.active { background: #1f3741; }
-    .chat-select { flex: 1; min-width: 0; background: transparent; color: #dbe7ef; border: 0; text-align: left; font: inherit; font-weight: 500; padding: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
-    .chat-delete { background: transparent; color: #aebccc; border: 0; padding: 8px 10px; font-size: 18px; cursor: pointer; }
+    .chat-select { flex: 1; min-width: 0; min-height: 44px; background: transparent; color: #dbe7ef; border: 0; text-align: left; font: inherit; font-weight: 500; padding: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+    .chat-delete { min-width: 44px; min-height: 44px; background: transparent; color: #aebccc; border: 0; padding: 8px 10px; font-size: 18px; cursor: pointer; }
     .chat-delete:hover { color: #ff9c9c; }
-    .chat-shell { min-width: 0; height: 100dvh; display: flex; flex-direction: column; }
-    header { border-bottom: 1px solid #293747; padding: 16px max(18px, calc((100vw - 850px)/2)); display: flex; align-items: center; gap: 12px; }
+    .chat-shell { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+    header { border-bottom: 1px solid #293747; padding: 16px 18px; display: flex; align-items: center; gap: 12px; }
     .mark { background: #3edba8; color: #08251d; padding: 7px 9px; border-radius: 10px; font-weight: 900; }
-    h1 { font-size: 18px; margin: 0; }
+    h1 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; margin: 0; }
     .sub { color: #96a7bb; font-size: 13px; margin-left: auto; }
-    main { flex: 1; width: min(100%, 850px); margin: auto; padding: 24px 18px; overflow-y: auto; }
+    main { flex: 1; min-height: 0; width: 100%; padding: 24px 18px; overflow-y: auto; overscroll-behavior: contain; }
     .empty { color: #96a7bb; text-align: center; margin: 25vh auto 0; line-height: 1.6; }
-    .row { display: flex; margin: 0 0 20px; }
+    .row { display: flex; max-width: 850px; margin: 0 auto 20px; }
     .row.user { justify-content: flex-end; }
     .bubble { max-width: min(90%, 700px); padding: 13px 16px; border-radius: 16px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; background: #1b2837; }
     .user .bubble { background: #146c58; color: white; }
     .bubble a { color: #8df2cb; }
     .user .bubble a { color: white; }
-    .activity { display: flex; align-items: center; gap: 10px; color: #b8c9d9; font-size: 14px; padding: 4px 2px 24px; }
+    .activity { display: flex; align-items: center; gap: 10px; max-width: 850px; margin: 0 auto; color: #b8c9d9; font-size: 14px; padding: 4px 2px 24px; }
     .activity[hidden] { display: none; }
     .spinner { width: 16px; height: 16px; border: 2px solid #415668; border-top-color: #3edba8; border-radius: 50%; animation: spin .8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    footer { background: #0e141c; border-top: 1px solid #293747; padding: 15px max(18px, calc((100vw - 850px)/2)) 20px; }
-    form { display: flex; gap: 10px; align-items: end; }
-    textarea { flex: 1; min-height: 48px; max-height: 200px; resize: vertical; border: 1px solid #35485d; border-radius: 12px; background: #192533; color: #fff; padding: 12px 14px; font: inherit; }
+    footer { background: #0e141c; border-top: 1px solid #293747; padding: 15px 18px max(16px, env(safe-area-inset-bottom)); }
+    form { display: flex; width: 100%; gap: 10px; align-items: end; }
+    textarea { flex: 1; min-width: 0; width: 100%; min-height: 48px; max-height: 200px; resize: vertical; border: 1px solid #35485d; border-radius: 12px; background: #192533; color: #fff; padding: 12px 14px; font: inherit; font-size: 16px; }
     textarea:focus { outline: 2px solid #3edba8; border-color: transparent; }
     button { border: 0; border-radius: 12px; padding: 14px 18px; background: #3edba8; color: #08251d; font-weight: 800; cursor: pointer; }
     button:disabled { opacity: .5; cursor: wait; }
     #status { min-height: 18px; color: #96a7bb; font-size: 12px; padding-top: 8px; }
     @media (max-width: 700px) {
       body { display: flex; flex-direction: column; }
-      aside { border-right: 0; border-bottom: 1px solid #293747; gap: 8px; padding: 8px 12px; }
+      aside { flex: 0 0 auto; min-width: 0; border-right: 0; border-bottom: 1px solid #293747; gap: 8px; padding: 8px 12px; }
       .side-title { display: none; }
-      #new-chat { width: auto; align-self: flex-start; padding: 8px 12px; }
-      #chats { flex-direction: row; overflow-x: auto; }
+      #new-chat { width: auto; min-height: 44px; align-self: flex-start; padding: 8px 12px; }
+      #chats { flex-direction: row; overflow-x: auto; overflow-y: hidden; }
       .chat-item { flex: 0 0 auto; max-width: 220px; }
-      .chat-shell { height: calc(100dvh - 94px); min-height: 350px; }
+      .chat-shell { flex: 1; }
       .sub { display: none; }
       .bubble { max-width: 95%; }
+      footer { padding-inline: 12px; }
+      #send { min-height: 48px; }
     }
   </style>
 </head>
@@ -172,7 +175,6 @@
       failure = '';
       renderState();
       list.scrollTop = list.scrollHeight;
-      window.scrollTo(0, document.body.scrollHeight);
     }
     async function loadMessages(id = selected) {
       const r = await fetch('/chat/api/chats/' + id + '/messages');

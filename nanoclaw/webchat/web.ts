@@ -24,6 +24,7 @@ const PORT = 3200;
 const MAX_BODY = 16 * 1024;
 const MAX_TEXT = 8000;
 const HTML = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'web.html'), 'utf8');
+const FAVICON = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'nanoclaw-favicon.png'));
 const SIDE_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const execFileAsync = promisify(execFile);
 const DEFAULTS: ChannelDefaults = {
@@ -159,6 +160,15 @@ function createAdapter(): ChannelAdapter {
         'X-Content-Type-Options': 'nosniff',
       });
       res.end(HTML);
+      return;
+    }
+    if (req.method === 'GET' && pathname === '/favicon.png') {
+      res.writeHead(200, {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'public, max-age=86400',
+        'X-Content-Type-Options': 'nosniff',
+      });
+      res.end(FAVICON);
       return;
     }
     if (req.method === 'GET' && pathname === '/events') {
