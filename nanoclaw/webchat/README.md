@@ -5,8 +5,9 @@ The browser talks directly to NanoClaw through Caddy at
 `https://nanoclaw.tail.davegallant.ca/chat/`. OneCLI remains at `/`.
 
 `web.ts` is installed as `src/channels/web.ts` and imported from
-`src/channels/index.ts` with `import './web.js';`. The HTML and NanoClaw favicon
-are installed at both `src/channels/` and `dist/channels/`; TypeScript does not
+`src/channels/index.ts` with `import './web.js';`. The HTML and
+`favicon-32x32.png` from `https://nanoclaw.dev/favicon-32x32.png` are installed
+at both `src/channels/` and `dist/channels/`; TypeScript does not
 copy static assets during a build. Recopy them after rebuilding. Restart
 `nanoclaw-v2-454ebe7e.service` after changes.
 
