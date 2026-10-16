@@ -34,16 +34,15 @@ fail() {
     exit 1
 }
 
-# sqlite .backup with retries: the DBs are live (Headscale/Pangolin keep
-# writing), so a transient write lock is possible. Tolerates up to ~1 min
-# of lock contention before giving up and alerting.
+# sqlite .backup with a busy timeout and retries: the DBs are live
+# (Headscale/Pangolin keep writing), so transient write locks are possible.
+# Keep retrying for up to 10 minutes before giving up and alerting.
 sqlite_backup() {
-    local src="$1" dest="$2" tries=0
-    while [ "$tries" -lt 6 ]; do
-        if sqlite3 "$src" ".backup '$dest'"; then
+    local src="$1" dest="$2" deadline=$((SECONDS + 600))
+    while [ "$SECONDS" -lt "$deadline" ]; do
+        if sqlite3 -cmd ".timeout 30000" "$src" ".backup '$dest'"; then
             return 0
         fi
-        tries=$((tries + 1))
         sleep 10
     done
     return 1
