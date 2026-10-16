@@ -20,6 +20,12 @@
     .user .bubble { background: #146c58; color: white; }
     .bubble a { color: #8df2cb; }
     .user .bubble a { color: white; }
+    .activity { display: flex; align-items: center; gap: 10px; color: #b8c9d9; font-size: 14px; padding: 4px 2px 24px; }
+    .activity[hidden] { display: none; }
+    .spinner { width: 16px; height: 16px; border: 2px solid #415668; border-top-color: #3edba8; border-radius: 50%; animation: spin .8s linear infinite; }
+    .activity.stalled .spinner { animation: none; border-top-color: #8495a5; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
     footer { background: #0e141c; border-top: 1px solid #293747; padding: 15px max(18px, calc((100vw - 850px)/2)) 20px; }
     form { display: flex; gap: 10px; align-items: end; }
     textarea { flex: 1; min-height: 48px; max-height: 200px; resize: vertical; border: 1px solid #35485d; border-radius: 12px; background: #192533; color: #fff; padding: 12px 14px; font: inherit; }
@@ -32,7 +38,7 @@
 </head>
 <body>
   <header><span class="mark">&gt;&gt;</span><h1>NanoClaw</h1><span class="sub">Dave’s agent · private chat</span></header>
-  <main id="messages" aria-live="polite"><div class="empty">Message NanoClaw directly.<br>Contest Scout and your other tools are available here.</div></main>
+  <main id="messages" aria-live="polite"><div class="empty">Message NanoClaw directly.<br>Contest Scout and your other tools are available here.</div><div id="activity" class="activity" role="status" hidden><span class="spinner" aria-hidden="true"></span><span id="activity-text"></span></div></main>
   <footer>
     <form id="form"><textarea id="input" rows="1" maxlength="8000" placeholder="Ask NanoClaw…" aria-label="Message" required></textarea><button id="send">Send</button></form>
     <div id="status">Connecting…</div>
@@ -43,7 +49,21 @@
     const form = document.getElementById('form');
     const button = document.getElementById('send');
     const status = document.getElementById('status');
+    const activity = document.getElementById('activity');
+    const activityText = document.getElementById('activity-text');
     const seen = new Set();
+    let sending = false;
+    let connected = null;
+    let failure = '';
+    function renderState() {
+      const last = [...list.querySelectorAll('.row')].at(-1);
+      const waiting = last?.classList.contains('user') ?? false;
+      const age = waiting ? Date.now() - Date.parse(last.dataset.createdAt) : 0;
+      activity.hidden = !sending && !waiting;
+      activity.classList.toggle('stalled', !sending && age > 120000);
+      activityText.textContent = sending ? 'Sending message…' : age > 120000 ? 'No reply yet. Check back here later.' : age > 30000 ? 'Still waiting for NanoClaw…' : 'NanoClaw is working…';
+      status.textContent = failure || (sending ? 'Sending…' : waiting ? 'Message received · waiting for reply' : connected === null ? 'Connecting…' : connected ? 'Connected' : 'Reconnecting…');
+    }
     function show(message) {
       if (seen.has(message.id)) return;
       seen.add(message.id);
@@ -66,7 +86,9 @@
       row.append(bubble);
       row.dataset.createdAt = message.created_at;
       const next = [...list.querySelectorAll('.row')].find((item) => item.dataset.createdAt > message.created_at);
-      list.insertBefore(row, next || null);
+      list.insertBefore(row, next || activity);
+      failure = '';
+      renderState();
       list.scrollTop = list.scrollHeight;
       window.scrollTo(0, document.body.scrollHeight);
     }
@@ -75,11 +97,12 @@
       if (!r.ok) throw new Error('History unavailable');
       for (const message of (await r.json()).messages) show(message);
     }
-    load().catch(() => { status.textContent = 'Could not load chat history'; });
+    load().catch(() => { failure = 'Could not load chat history'; renderState(); });
     const events = new EventSource('/chat/events');
-    events.onopen = () => { status.textContent = 'Connected'; };
-    events.onerror = () => { status.textContent = 'Reconnecting…'; };
+    events.onopen = () => { connected = true; renderState(); load().catch(() => {}); };
+    events.onerror = () => { connected = false; renderState(); };
     events.onmessage = (event) => show(JSON.parse(event.data));
+    setInterval(renderState, 10000);
     input.addEventListener('keydown', (event) => {
       if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); form.requestSubmit(); }
     });
@@ -87,14 +110,14 @@
       event.preventDefault();
       const text = input.value.trim();
       if (!text) return;
-      button.disabled = true; status.textContent = 'Sending…';
+      button.disabled = true; sending = true; failure = ''; renderState();
       try {
         const r = await fetch('/chat/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Webchat-Request': '1' }, body: JSON.stringify({ text }) });
         if (!r.ok) throw new Error((await r.json()).error || 'Send failed');
         show(await r.json());
-        input.value = ''; status.textContent = 'Connected';
-      } catch (error) { status.textContent = error.message; }
-      finally { button.disabled = false; input.focus(); }
+        input.value = '';
+      } catch (error) { failure = error.message; }
+      finally { sending = false; button.disabled = false; renderState(); input.focus(); }
     });
   </script>
 </body>
