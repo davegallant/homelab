@@ -143,19 +143,28 @@ namespace, RBAC, ConfigMap, and DaemonSet. The Alloy playbook is manual; the
 Grafana playbook is also part of the normal all-host CI run, so merging this
 branch will reapply its firewall rule. From `ansible/`:
 
-Grafana's 12 GiB LXC root filesystem exhausted its ext4 inodes on Loki chunks
-while 2.1 GiB of blocks remained free, so the first Grafana playbook attempt
-could not create Ansible's temporary directory and changed nothing. Loki was
-returning errors for WAL and chunk writes. Before retrying, use the separate
-`expand-grafana-rootfs.yml` playbook, after explicit approval, to expand CT 115
-from 12 to 24 GiB on `pve-g3-2`; it checks the container identity, local-lvm
-capacity, an existing off-host backup, and free inodes after the resize.
+On 2026-10-21, Grafana's 12 GiB LXC root filesystem exhausted its ext4 inodes
+on Loki chunks while 2.1 GiB of blocks remained free. Loki rejected WAL and
+chunk writes. The separately approved `expand-grafana-rootfs.yml` playbook
+expanded CT 115 to 24 GiB on `pve-g3-2`. It checks the container identity,
+local-lvm capacity, an existing off-host backup, and free inodes after the
+resize. Re-run it only when the root disk is at 12 or 24 GiB; its guard rejects
+other sizes.
 
 ```sh
-ansible-playbook playbooks/talos-cluster/expand-grafana-rootfs.yml -i inventory
+ansible-playbook playbooks/talos-cluster/expand-grafana-rootfs.yml -i inventory \
+  --vault-password-file .vault_pass
 ```
 
-Then continue with the approved firewall and Alloy actions:
+The Grafana playbook subsequently installed the TCP 3100 source exceptions, and
+the Alloy DaemonSet reached three Ready pods. `verify-alloy.yml` confirmed
+cluster pod logs in Loki. The Grafana playbook also restarted Loki; `/ready`
+briefly returned 503 during startup, and Loki reported WAL recovery errors
+from the earlier inode outage. Check for missing log entries around that time.
+A read-only scan found 1,608 chunk files older than 35 days despite 31-day
+retention; review their lifecycle separately before widening log collection.
+
+For later reapplication, use the same playbooks:
 
 ```sh
 ansible-playbook playbooks/grafana/main.yml -i inventory \
