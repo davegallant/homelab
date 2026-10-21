@@ -1,0 +1,90 @@
+---
+- name: Protect Talos etcd with an off-host snapshot
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  vars:
+    talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
+    talos_private_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.local/share/homelab-talos"
+  tasks:
+    - name: Create protected local snapshot directory
+      ansible.builtin.file:
+        path: "{{ talos_private_dir }}/snapshots"
+        state: directory
+        mode: "0700"
+
+    - name: Name this etcd snapshot
+      ansible.builtin.set_fact:
+        talos_snapshot_name: "etcd-homelab-{{ now(utc=true, fmt='%Y%m%dT%H%M%SZ') }}.snap"
+
+    - name: Stream etcd snapshot to protected local storage
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - etcd
+          - snapshot
+          - "{{ talos_private_dir }}/snapshots/{{ talos_snapshot_name }}"
+          - --talosconfig
+          - "{{ talos_private_dir }}/base/talosconfig"
+          - --endpoints
+          - "{{ talos_control_plane_ip }}"
+          - --nodes
+          - "{{ talos_control_plane_ip }}"
+      changed_when: true
+      no_log: true
+
+    - name: Restrict local snapshot permissions
+      ansible.builtin.file:
+        path: "{{ talos_private_dir }}/snapshots/{{ talos_snapshot_name }}"
+        state: file
+        mode: "0600"
+      no_log: true
+
+    - name: Read local snapshot checksum
+      ansible.builtin.stat:
+        path: "{{ talos_private_dir }}/snapshots/{{ talos_snapshot_name }}"
+        checksum_algorithm: sha256
+      register: talos_local_snapshot
+      no_log: true
+
+    - name: Require a nonempty etcd snapshot
+      ansible.builtin.assert:
+        that:
+          - talos_local_snapshot.stat.size > 0
+
+    - name: Create protected off-host snapshot directory
+      ansible.builtin.file:
+        path: /mnt/pve/proxmox-backups/private/talos
+        state: directory
+        mode: "0700"
+      delegate_to: pve-g3-1
+      connection: ssh
+      remote_user: root
+
+    - name: Copy etcd snapshot to off-host Proxmox NFS storage
+      ansible.builtin.copy:
+        src: "{{ talos_private_dir }}/snapshots/{{ talos_snapshot_name }}"
+        dest: "/mnt/pve/proxmox-backups/private/talos/{{ talos_snapshot_name }}"
+        mode: "0600"
+      delegate_to: pve-g3-1
+      connection: ssh
+      remote_user: root
+      no_log: true
+
+    - name: Read off-host snapshot checksum
+      ansible.builtin.stat:
+        path: "/mnt/pve/proxmox-backups/private/talos/{{ talos_snapshot_name }}"
+        checksum_algorithm: sha256
+      delegate_to: pve-g3-1
+      connection: ssh
+      remote_user: root
+      register: talos_offhost_snapshot
+      no_log: true
+
+    - name: Confirm off-host snapshot matches the local copy
+      ansible.builtin.assert:
+        that:
+          - talos_offhost_snapshot.stat.exists
+          - talos_offhost_snapshot.stat.checksum == talos_local_snapshot.stat.checksum

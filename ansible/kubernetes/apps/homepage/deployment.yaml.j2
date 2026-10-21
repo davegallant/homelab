@@ -1,0 +1,218 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homepage
+  namespace: homepage
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: homepage
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: homepage
+      annotations:
+        checksum/config: "{{ (lookup('ansible.builtin.template', playbook_dir + '/../homepage/config/services.yaml') ~ lookup('ansible.builtin.template', playbook_dir + '/../homepage/config/settings.yaml') ~ lookup('ansible.builtin.file', playbook_dir + '/../../kubernetes/apps/homepage/proxy-agent.cjs')) | hash('sha256') }}"
+    spec:
+      serviceAccountName: homepage
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - k8s-w-1
+      containers:
+        - name: homepage
+          image: ghcr.io/gethomepage/homepage:v2.6.0@sha256:3e38fe788223cb46a3ce1f046ef11667b40f7707fdca0dcbfa3f86c5c42bf1e8
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: HOMEPAGE_ALLOWED_HOSTS
+              value: "homepage.{{ headscale_magic_dns_domain }}"
+            - name: HOMEPAGE_TAILNET_PROXY
+              value: http://127.0.0.1:1055
+            - name: NODE_OPTIONS
+              value: --require=/opt/homepage-proxy/proxy-agent.cjs
+          envFrom:
+            - secretRef:
+                name: homepage-environment
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: "homepage.{{ headscale_magic_dns_domain }}"
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 24
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: "homepage.{{ headscale_magic_dns_domain }}"
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: "homepage.{{ headscale_magic_dns_domain }}"
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 30m
+              memory: 512Mi
+            limits:
+              cpu: 100m
+              memory: 1Gi
+          volumeMounts:
+            - name: homepage-config
+              mountPath: /app/config
+            - name: managed-config
+              mountPath: /app/config/services.yaml
+              subPath: services.yaml
+              readOnly: true
+            - name: managed-config
+              mountPath: /app/config/settings.yaml
+              subPath: settings.yaml
+              readOnly: true
+            - name: custom-icons
+              mountPath: /app/public/icons
+              readOnly: true
+            - name: custom-icons
+              mountPath: /app/config/icons
+              readOnly: true
+            - name: node-proxy
+              mountPath: /opt/homepage-proxy
+              readOnly: true
+
+        - name: tailscale
+          image: ghcr.io/tailscale/tailscale:v1.104.1@sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TS_AUTHKEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-tailscale-auth
+                  key: TS_AUTHKEY
+                  optional: true
+            - name: TS_AUTH_ONCE
+              value: "true"
+            - name: TS_HOSTNAME
+              value: "{{ homepage_tailscale_hostname }}"
+            - name: TS_STATE_DIR
+              value: /var/lib/tailscale
+            - name: TS_KUBE_SECRET
+              value: ""
+            - name: TS_USERSPACE
+              value: "true"
+            - name: TS_OUTBOUND_HTTP_PROXY_LISTEN
+              value: 127.0.0.1:1055
+            - name: TS_EXTRA_ARGS
+              value: >-
+                --login-server=https://{{ headscale_server_domain }}
+                --accept-dns=false
+            - name: TS_SERVE_CONFIG
+              value: /etc/tailscale/serve-config.json
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 192Mi
+          volumeMounts:
+            - name: tailscale-state
+              mountPath: /var/lib/tailscale
+            - name: tailscale-config
+              mountPath: /etc/tailscale/serve-config.json
+              subPath: serve-config.json
+              readOnly: true
+
+        - name: caddy
+          image: ghcr.io/davegallant/homelab-caddy-cloudflare:2.11.6-a8737d0@sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
+          imagePullPolicy: IfNotPresent
+          command:
+            - caddy
+          args:
+            - run
+            - --config
+            - /etc/caddy/Caddyfile
+            - --adapter
+            - caddyfile
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: caddy-config
+              mountPath: /etc/caddy/Caddyfile
+              subPath: Caddyfile
+              readOnly: true
+            - name: caddy-state
+              mountPath: /data
+            - name: caddy-runtime
+              mountPath: /config
+            - name: caddy-secret
+              mountPath: /run/secrets/cloudflare_api_token
+              subPath: cloudflare_api_token
+              readOnly: true
+      volumes:
+        - name: homepage-config
+          persistentVolumeClaim:
+            claimName: homepage-config
+        - name: tailscale-state
+          persistentVolumeClaim:
+            claimName: homepage-tailscale
+        - name: caddy-state
+          persistentVolumeClaim:
+            claimName: homepage-caddy
+        - name: caddy-runtime
+          emptyDir: {}
+        - name: managed-config
+          configMap:
+            name: homepage-config
+        - name: custom-icons
+          configMap:
+            name: homepage-icons
+        - name: node-proxy
+          configMap:
+            name: homepage-node-proxy
+        - name: tailscale-config
+          configMap:
+            name: homepage-tailscale
+        - name: caddy-config
+          configMap:
+            name: homepage-caddy
+        - name: caddy-secret
+          secret:
+            secretName: homepage-caddy

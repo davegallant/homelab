@@ -1,9 +1,9 @@
 # AGENTS.md
 
-Docker-based homelab managed with Ansible. Provisions self-hosted services, each
-in a Proxmox LXC container on Ubuntu 24.04 LTS. Each service gets Docker installed
-via Ansible, then a `docker-compose.yml` is deployed and started. Networking is via
-Tailscale. Logging is centralized via Grafana Alloy to Loki.
+Docker-based homelab managed with Ansible. Most self-hosted services run in
+Proxmox LXC containers on Ubuntu 24.04 LTS with Docker Compose. Homepage also
+has a Talos Kubernetes pilot. Networking is via Tailscale. LXC logging is
+centralized via Grafana Alloy to Loki.
 
 ## Build / Run Commands
 
@@ -222,3 +222,31 @@ needs to be reachable from the LAN, it also needs `ufw_docker_allowed_sources`
 widened in its play. If a service's ports must be reachable from the public
 internet (the `pangolin` VPS), list them in `ufw_docker_public_ports` instead --
 specific ports, any source, without opening every published port on the host.
+
+## Talos Kubernetes Pilot
+
+For Talos VM, Kubernetes workload, Homepage cutover, or backup work, first read
+`ansible/kubernetes/README.md` and `ansible/kubernetes/cluster/README.md`. Manage
+infrastructure through `ansible/playbooks/talos-cluster/`; these manual
+playbooks are separate from the all-host playbook and CI flows. Pin Kubernetes
+container images to both a version and SHA digest.
+The Talos playbooks load Vault variables during syntax checking; set
+`ANSIBLE_VAULT_PASSWORD_FILE` to the protected local password helper when
+running `just lint` locally.
+
+- A Tailscale userspace sidecar can receive tailnet traffic without giving its
+  application container outbound tailnet routing or MagicDNS. Verify real
+  application API calls, not only the dashboard root. Homepage v2.6.0 creates
+  custom Node HTTP agents, and its TrueNAS widget uses a WebSocket; both need
+  the proxy handling in `ansible/kubernetes/apps/homepage/proxy-agent.cjs`.
+- Talos enforces the cluster-wide Pod Security baseline. A sidecar needing
+  `NET_ADMIN`, `NET_RAW`, or `/dev/net/tun` requires a separately reviewed
+  policy exception; the Homepage pilot uses a userspace HTTP proxy instead.
+- Headscale's `given_name` controls the MagicDNS label. Use the repo's
+  `cutover-hostname.yml`, `rollback-hostname.yml`, and verification playbooks to
+  move the existing Homepage name. Keep the LXC running as the rollback target.
+- Homepage's local PVCs and Pod are pinned to `k8s-w-1`. Proxmox VM backups
+  cover those disks; an off-host etcd snapshot covers cluster state. Read the
+  recovery constraints in the cluster README before restoring a VM.
+- Render Kubernetes Secrets from Ansible Vault into protected temporary files
+  through the apply playbook. Keep secret values out of Git and command output.

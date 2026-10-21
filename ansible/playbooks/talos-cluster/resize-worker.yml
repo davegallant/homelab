@@ -1,0 +1,58 @@
+---
+- name: Restore Talos worker memory to 2 GiB
+  hosts: pve-g3-2
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  tasks:
+    - name: Read available host memory
+      ansible.builtin.command: cat /proc/meminfo
+      register: talos_host_meminfo
+      changed_when: false
+
+    - name: Require half a GiB for the resize plus a 3 GiB host buffer
+      ansible.builtin.assert:
+        that:
+          - >-
+            (((talos_host_meminfo.stdout_lines | select('match', '^MemAvailable:') | first).split()[1] | int) / 1024)
+            >= 3584
+
+    - name: Read worker VM configuration
+      ansible.builtin.command:
+        argv: [qm, config, "147"]
+      register: talos_worker_config
+      changed_when: false
+
+    - name: Require the expected worker VM
+      ansible.builtin.assert:
+        that:
+          - "'name: k8s-w-2' in talos_worker_config.stdout"
+          - "'memory: 1536' in talos_worker_config.stdout or 'memory: 2048' in talos_worker_config.stdout"
+
+    - name: Shut down worker for cold memory resize
+      ansible.builtin.command:
+        argv: [qm, shutdown, "147", --timeout, "120"]
+      when: "'memory: 1536' in talos_worker_config.stdout"
+      changed_when: true
+
+    - name: Wait for worker VM to stop
+      ansible.builtin.command:
+        argv: [qm, status, "147"]
+      register: talos_worker_status
+      until: "'status: stopped' in talos_worker_status.stdout"
+      retries: 24
+      delay: 5
+      when: "'memory: 1536' in talos_worker_config.stdout"
+      changed_when: false
+
+    - name: Set worker memory to 2 GiB
+      ansible.builtin.command:
+        argv: [qm, set, "147", --memory, "2048"]
+      when: "'memory: 1536' in talos_worker_config.stdout"
+      changed_when: true
+
+    - name: Start resized worker
+      ansible.builtin.command:
+        argv: [qm, start, "147"]
+      when: "'memory: 1536' in talos_worker_config.stdout"
+      changed_when: true

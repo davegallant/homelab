@@ -1,0 +1,47 @@
+---
+- name: Reapply Talos machine configs
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  vars:
+    talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
+    talos_private_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.local/share/homelab-talos"
+  tasks:
+    - name: Confirm authenticated access to all Talos nodes
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - version
+          - --talosconfig
+          - "{{ talos_private_dir }}/base/talosconfig"
+          - --endpoints
+          - "{{ item.address }}"
+          - --nodes
+          - "{{ item.address }}"
+          - --short
+      loop: "{{ talos_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: false
+      no_log: true
+
+    - name: Apply updated machine configs
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - apply-config
+          - --talosconfig
+          - "{{ talos_private_dir }}/base/talosconfig"
+          - --endpoints
+          - "{{ item.address }}"
+          - --nodes
+          - "{{ item.address }}"
+          - --file
+          - "{{ talos_private_dir }}/{{ item.name }}.yaml"
+      changed_when: true
+      loop: "{{ talos_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      no_log: true

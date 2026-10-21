@@ -1,0 +1,30 @@
+machine:
+  network:
+    interfaces:
+      - interface: {{ talos_network_interface }}
+        dhcp: false
+        addresses:
+          - {{ talos_control_plane_ip }}/{{ talos_network_cidr }}
+        routes:
+          - network: 0.0.0.0/0
+            gateway: {{ talos_default_gateway }}
+  files:
+    - content: Talos local Homepage storage root
+      permissions: 0644
+      path: /var/mnt/homepage/config/.keep
+      op: create
+    - content: Talos local Homepage storage root
+      permissions: 0644
+      path: /var/mnt/homepage/tailscale/.keep
+      op: create
+    - content: Talos local Homepage storage root
+      permissions: 0644
+      path: /var/mnt/homepage/caddy/.keep
+      op: create
+---
+apiVersion: v1alpha1
+kind: ResolverConfig
+nameservers:
+{% for server in talos_dns_servers %}
+  - address: {{ server }}
+{% endfor %}

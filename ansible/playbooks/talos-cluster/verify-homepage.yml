@@ -1,0 +1,67 @@
+---
+- name: Verify staged Homepage over the tailnet
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../group_vars/all/vars.yaml
+    - ../../group_vars/all/secrets.yaml
+  tasks:
+    - name: Require a Ready Homepage pod
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - -n
+          - homepage
+          - wait
+          - --for=condition=Ready
+          - --timeout=120s
+          - pod
+          - -l
+          - app.kubernetes.io/name=homepage
+      changed_when: false
+
+    - name: Read staging tailnet IP
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - -n
+          - homepage
+          - exec
+          - deployment/homepage
+          - -c
+          - tailscale
+          - --
+          - tailscale
+          - ip
+          - -4
+      register: homepage_staging_ip
+      changed_when: false
+      no_log: true
+
+    - name: Request the dashboard through Tailscale and Caddy with verified TLS
+      ansible.builtin.command:
+        argv:
+          - curl
+          - --silent
+          - --show-error
+          - --noproxy
+          - "*"
+          - --max-time
+          - "40"
+          - --output
+          - /dev/null
+          - --write-out
+          - "%{http_code}"
+          - --resolve
+          - "homepage.{{ headscale_magic_dns_domain }}:443:{{ homepage_staging_ip.stdout | trim }}"
+          - "https://homepage.{{ headscale_magic_dns_domain }}/"
+      register: homepage_staging_http
+      changed_when: false
+      no_log: true
+
+    - name: Require an HTTP 200 dashboard response
+      ansible.builtin.assert:
+        that:
+          - homepage_staging_http.stdout == '200'
+        fail_msg: "Staging tailnet HTTPS did not return HTTP 200."

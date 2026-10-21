@@ -1,0 +1,57 @@
+---
+- name: Move Homepage MagicDNS name to Talos
+  hosts: pangolin
+  remote_user: root
+  gather_facts: false
+  tasks:
+    - name: Read Headscale nodes before cutover
+      ansible.builtin.command:
+        argv: [docker, exec, headscale, headscale, nodes, list, -o, json]
+      register: homepage_headscale_nodes_raw
+      changed_when: false
+      no_log: true
+
+    - name: Select the LXC and staged Kubernetes nodes
+      ansible.builtin.set_fact:
+        homepage_lxc_node: >-
+          {{ homepage_headscale_nodes_raw.stdout | from_json
+             | selectattr('id', 'equalto', 12) | list | first }}
+        homepage_k8s_node: >-
+          {{ homepage_headscale_nodes_raw.stdout | from_json
+             | selectattr('id', 'equalto', 52) | list | first }}
+
+    - name: Require the verified node identities
+      ansible.builtin.assert:
+        that:
+          - homepage_lxc_node.given_name == 'homepage'
+          - homepage_k8s_node.given_name == 'homepage-k8s'
+          - homepage_lxc_node.online
+          - homepage_k8s_node.online
+        fail_msg: "Headscale node identities changed; refusing hostname cutover."
+
+    - name: Rename still-running LXC node for rollback
+      ansible.builtin.command:
+        argv: [docker, exec, headscale, headscale, nodes, rename, homepage-lxc, -i, "12", --force]
+      changed_when: true
+
+    - name: Assign the existing Homepage name to Talos
+      ansible.builtin.command:
+        argv: [docker, exec, headscale, headscale, nodes, rename, homepage, -i, "52", --force]
+      changed_when: true
+
+    - name: Read Headscale nodes after cutover
+      ansible.builtin.command:
+        argv: [docker, exec, headscale, headscale, nodes, list, -o, json]
+      register: homepage_headscale_after_raw
+      changed_when: false
+      no_log: true
+
+    - name: Confirm names point to the intended nodes
+      ansible.builtin.assert:
+        that:
+          - >-
+            (homepage_headscale_after_raw.stdout | from_json
+             | selectattr('id', 'equalto', 12) | first).given_name == 'homepage-lxc'
+          - >-
+            (homepage_headscale_after_raw.stdout | from_json
+             | selectattr('id', 'equalto', 52) | first).given_name == 'homepage'

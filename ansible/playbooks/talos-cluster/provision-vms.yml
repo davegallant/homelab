@@ -1,0 +1,152 @@
+---
+- name: Prepare Talos installer
+  hosts: pve-g3-1
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  tasks:
+    - name: Check Talos ISO
+      ansible.builtin.stat:
+        path: "/mnt/pve/{{ talos_proxmox_iso_storage }}/template/iso/{{ talos_iso_filename }}"
+        checksum_algorithm: sha256
+      register: talos_iso
+
+    - name: Reject a Talos ISO with an unexpected checksum
+      ansible.builtin.assert:
+        that:
+          - not talos_iso.stat.exists or talos_iso.stat.checksum == talos_iso_sha256
+
+    - name: Download checksum-verified Talos ISO to shared Proxmox storage
+      ansible.builtin.command:
+        argv:
+          - pvesh
+          - create
+          - /nodes/pve-g3-1/storage/{{ talos_proxmox_iso_storage }}/download-url
+          - --content
+          - iso
+          - --filename
+          - "{{ talos_iso_filename }}"
+          - --url
+          - "https://github.com/siderolabs/talos/releases/download/{{ talos_version }}/metal-amd64.iso"
+          - --checksum
+          - "{{ talos_iso_sha256 }}"
+          - --checksum-algorithm
+          - sha256
+      when: not talos_iso.stat.exists
+      changed_when: true
+
+    - name: Verify Talos ISO after download
+      ansible.builtin.stat:
+        path: "/mnt/pve/{{ talos_proxmox_iso_storage }}/template/iso/{{ talos_iso_filename }}"
+        checksum_algorithm: sha256
+      register: talos_verified_iso
+      until: talos_verified_iso.stat.exists and (talos_verified_iso.stat.checksum | default('')) == talos_iso_sha256
+      retries: 60
+      delay: 10
+
+    - name: Require the official Talos ISO checksum
+      ansible.builtin.assert:
+        that:
+          - talos_verified_iso.stat.exists
+          - talos_verified_iso.stat.checksum == talos_iso_sha256
+
+- name: Provision Talos VMs
+  hosts: pve-g3-1:pve-g3-2
+  gather_facts: false
+  serial: 1
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  tasks:
+    - name: Select VMs for this Proxmox host
+      ansible.builtin.set_fact:
+        talos_host_nodes: "{{ talos_nodes | selectattr('host', 'equalto', inventory_hostname) | list }}"
+
+    - name: Check host memory availability
+      ansible.builtin.command: cat /proc/meminfo
+      register: talos_host_meminfo
+      changed_when: false
+
+    - name: Require VM memory plus a 2 GiB host buffer
+      ansible.builtin.assert:
+        that:
+          - >-
+            (((talos_host_meminfo.stdout_lines | select('match', '^MemAvailable:') | first).split()[1] | int) / 1024)
+            >= ((talos_host_nodes | map(attribute='memory_mib') | sum) + 2048)
+        fail_msg: "Insufficient available host RAM for the planned VMs and 2 GiB buffer."
+
+    - name: Inspect cluster VM IDs
+      ansible.builtin.command:
+        argv:
+          - pvesh
+          - get
+          - /cluster/resources
+          - --type
+          - vm
+          - --output-format
+          - json
+      register: talos_cluster_vms
+      changed_when: false
+
+    - name: Reject VM IDs already assigned in the cluster
+      ansible.builtin.assert:
+        that:
+          - >-
+            (talos_cluster_vms.stdout | from_json | selectattr('vmid', 'equalto', item.vmid) | list | length) == 0
+        fail_msg: "VM ID {{ item.vmid }} already exists; inspect it before provisioning."
+      loop: "{{ talos_host_nodes }}"
+      loop_control:
+        label: "{{ item.name }} ({{ item.vmid }})"
+
+    - name: Create Talos VMs
+      ansible.builtin.command:
+        argv:
+          - qm
+          - create
+          - "{{ item.vmid }}"
+          - --name
+          - "{{ item.name }}"
+          - --cores
+          - "{{ item.vcpu }}"
+          - --sockets
+          - "1"
+          - --memory
+          - "{{ item.memory_mib }}"
+          - --machine
+          - q35
+          - --bios
+          - ovmf
+          - --cpu
+          - x86-64-v2-AES
+          - --ostype
+          - l26
+          - --net0
+          - "virtio,bridge={{ talos_proxmox_bridge }}"
+          - --virtio0
+          - "{{ item.storage }}:{{ item.disk_gib }}"
+          - --efidisk0
+          - "{{ item.storage }}:0,efitype=4m"
+          - --ide2
+          - "{{ talos_proxmox_iso_storage }}:iso/{{ talos_iso_filename }},media=cdrom"
+          - --boot
+          - order=virtio0;ide2
+          - --serial0
+          - socket
+          - --vga
+          - serial0
+          - --onboot
+          - "1"
+      loop: "{{ talos_host_nodes }}"
+      loop_control:
+        label: "{{ item.name }} ({{ item.vmid }})"
+      changed_when: true
+
+    - name: Start Talos VMs
+      ansible.builtin.command:
+        argv:
+          - qm
+          - start
+          - "{{ item.vmid }}"
+      loop: "{{ talos_host_nodes }}"
+      loop_control:
+        label: "{{ item.name }} ({{ item.vmid }})"
+      changed_when: true

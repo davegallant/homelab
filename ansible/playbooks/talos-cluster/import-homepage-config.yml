@@ -1,0 +1,58 @@
+---
+- name: Import Homepage runtime config into the Talos PVC
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_prompt:
+    - name: talos_kube_context
+      prompt: Enter the expected kubectl context for the Talos cluster
+      private: false
+    - name: homepage_import_confirmation
+      prompt: Type IMPORT to stream runtime config from the live Homepage LXC into the Talos PVC
+      private: false
+  tasks:
+    - name: Confirm the explicit import request
+      ansible.builtin.assert:
+        that:
+          - homepage_import_confirmation == 'IMPORT'
+        fail_msg: "Config import cancelled; type IMPORT to proceed."
+
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: homepage_kube_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - homepage_kube_context.stdout == talos_kube_context
+        fail_msg: "kubectl current context does not match the explicitly supplied Talos context."
+
+    - name: Wait for the Homepage pod to be Ready
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - -n
+          - homepage
+          - wait
+          - --for=condition=Ready
+          - --timeout=120s
+          - pod
+          - -l
+          - app.kubernetes.io/name=homepage
+      changed_when: false
+
+    - name: Stream non-managed runtime config into the Homepage PVC
+      ansible.builtin.shell:
+        cmd: |
+          set -euo pipefail
+          ssh pve-g3-1 'pct exec 128 -- tar -C /root/config \
+            --exclude=./services.yaml --exclude=./settings.yaml \
+            --exclude=./icons --exclude=./logs --exclude=./.git \
+            -cf - .' |
+            kubectl -n homepage exec -i deployment/homepage -c homepage -- tar -C /app/config -xf -
+        executable: /bin/bash
+      changed_when: true
+      no_log: true

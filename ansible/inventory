@@ -35,3 +35,7 @@ speedtest-tracker
 umami
 upsnap
 watchyourlan
+
+[proxmox]
+pve-g3-1 ansible_user=root
+pve-g3-2 ansible_user=root
