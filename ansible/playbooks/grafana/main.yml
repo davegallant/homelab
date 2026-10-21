@@ -1,6 +1,13 @@
 ---
 - name: Install grafana
   hosts: grafana
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  vars:
+    # Loki is unauthenticated. Admit only the three Talos node IPs to port 3100.
+    ufw_docker_allowed_source_ports:
+      - port: 3100
+        sources: "{{ talos_nodes | map(attribute='address') | list }}"
   tasks:
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-docker.yml

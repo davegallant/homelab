@@ -121,7 +121,40 @@ for recovering the Homepage paths `/var/mnt/homepage/config`,
 must be isolated from the live cluster until node identity and etcd membership
 are reconciled. The LXC remains the immediate application rollback target.
 
-The pilot initially accepts `kubectl logs` and the Homepage file log. Once the
-pilot is accepted, add Alloy as a separate cluster-wide DaemonSet after
-validating Talos log sources and container log paths. Do not add Alloy to this
-initial deployment.
+The Homepage pilot initially used `kubectl logs` and the Homepage file log.
+The Alloy follow-up is prepared under `apps/alloy/`. It reads Kubernetes pod
+logs through the Kubernetes API, with one non-root pod per node and no host
+mounts. This respects Talos's Pod Security baseline. It does not collect
+Talos node service logs or replace Beszel metrics. Each Alloy pod discovers
+only pods on its own node and writes to the existing Loki instance over the
+Grafana LXC's LAN address.
+
+Loki has no authentication. The Grafana playbook's Docker firewall rule admits
+TCP 3100 only from the three Talos node IPs in `cluster/vars.yaml`; existing
+tailnet access stays in place. The Alloy apply playbook checks the configured
+Grafana LAN address before mutating the cluster. The existing Grafana Alloy
+process used about 85 MiB RSS and 0.2% CPU during inspection; the DaemonSet
+requests 128 MiB and 50m CPU per node, with 256 MiB and 200m limits. Review
+the 2 GiB worker's free memory after rollout.
+
+Apply these as two separately approved actions: first run the Grafana playbook
+to admit the Talos node IPs to Loki; then run the Alloy playbook to create the
+namespace, RBAC, ConfigMap, and DaemonSet. The Alloy playbook is manual; the
+Grafana playbook is also part of the normal all-host CI run, so merging this
+branch will reapply its firewall rule. From `ansible/`:
+
+```sh
+ansible-playbook playbooks/grafana/main.yml -i inventory \
+  --vault-password-file .vault_pass
+KUBECONFIG="$HOME/.local/share/homelab-talos/kubeconfig" \
+  ansible-playbook playbooks/talos-cluster/apply-alloy.yml \
+  -i inventory -e talos_kube_context=admin@homelab
+KUBECONFIG="$HOME/.local/share/homelab-talos/kubeconfig" \
+  ansible-playbook playbooks/talos-cluster/verify-alloy.yml -i inventory
+```
+
+If Alloy causes trouble, run `remove-alloy.yml` with the same kubeconfig and
+explicit context to remove its DaemonSet while leaving Homepage running. A
+separate approved Grafana playbook run after removing the source-and-port rule
+from the repo closes the LAN path again. The Alloy RBAC and ConfigMap can stay
+for troubleshooting until their removal is separately approved.

@@ -1,0 +1,56 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy
+  namespace: alloy
+data:
+  config.alloy: |
+    discovery.kubernetes "local_pods" {
+      role = "pod"
+
+      selectors {
+        role  = "pod"
+        field = "spec.nodeName=" + sys.env("NODE_NAME")
+      }
+    }
+
+    discovery.relabel "pod_logs" {
+      targets = discovery.kubernetes.local_pods.targets
+
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        target_label  = "namespace"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        target_label  = "pod"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_name"]
+        target_label  = "container"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_node_name"]
+        target_label  = "host"
+      }
+      rule {
+        replacement  = "homelab"
+        target_label = "cluster"
+      }
+      rule {
+        replacement  = "kubernetes"
+        target_label = "job"
+      }
+    }
+
+    loki.source.kubernetes "pod_logs" {
+      targets    = discovery.relabel.pod_logs.output
+      forward_to = [loki.write.endpoint.receiver]
+    }
+
+    loki.write "endpoint" {
+      endpoint {
+        url = "http://{{ alloy_loki_lan_ip }}:3100/loki/api/v1/push"
+      }
+    }

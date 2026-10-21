@@ -222,6 +222,9 @@ needs to be reachable from the LAN, it also needs `ufw_docker_allowed_sources`
 widened in its play. If a service's ports must be reachable from the public
 internet (the `pangolin` VPS), list them in `ufw_docker_public_ports` instead --
 specific ports, any source, without opening every published port on the host.
+For a trusted source that needs just one published port, use
+`ufw_docker_allowed_source_ports` with `{port, sources}`; widening
+`ufw_docker_allowed_sources` opens every published container port.
 
 ## Talos Kubernetes Pilot
 
@@ -250,3 +253,6 @@ running `just lint` locally.
   recovery constraints in the cluster README before restoring a VM.
 - Render Kubernetes Secrets from Ansible Vault into protected temporary files
   through the apply playbook. Keep secret values out of Git and command output.
+- Alloy's Talos DaemonSet reads pod logs through the Kubernetes API with a
+  node-local pod selector. It cannot read Talos node service logs. Its Loki
+  LAN firewall exception is scoped to TCP 3100 from the Talos node IPs.
