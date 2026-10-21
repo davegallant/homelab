@@ -235,7 +235,9 @@ playbooks are separate from the all-host playbook and CI flows. Pin Kubernetes
 container images to both a version and SHA digest.
 The Talos playbooks load Vault variables during syntax checking; set
 `ANSIBLE_VAULT_PASSWORD_FILE` to the protected local password helper when
-running `just lint` locally.
+running `just lint` locally. Pass `--vault-password-file` to manual playbooks
+too: encrypted group variables load even when the play does not reference a
+secret.
 
 - A Tailscale userspace sidecar can receive tailnet traffic without giving its
   application container outbound tailnet routing or MagicDNS. Verify real
@@ -260,3 +262,5 @@ running `just lint` locally.
   Loki chunks exhausted the 12 GiB LXC's inodes while 2.1 GiB of blocks
   remained free; writes to Loki's WAL and chunks then failed. Expand its root
   disk through `expand-grafana-rootfs.yml` after confirming an off-host backup.
+  Reapplying the Grafana Compose stack restarts Loki; wait for `/ready` to
+  recover before checking ingestion.
