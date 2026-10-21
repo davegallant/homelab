@@ -1,7 +1,7 @@
 services:
   invidious:
     # https://quay.io/repository/invidious/invidious?tab=tags
-    image: quay.io/invidious/invidious:2026.10.13-907fe54@sha256:74098bdecac0cf3c4164b1555af329042aaba1c6fbd6dff2047198cc48f88b70
+    image: quay.io/invidious/invidious:2026.10.19-efcfb1e@sha256:7f1f3ec336a1872e3e1e3351ffe94a73ad55bbe63731e2ed5038c52871c3660a
     container_name: invidious
     restart: always
     networks:
@@ -63,7 +63,7 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
   newt:
-    image: docker.io/fosrl/newt:1.18.1@sha256:7fed6605e0a104a337e1cb903bbb1225f80c7f6e5e56ff1eb1d70c57740d8e0f
+    image: docker.io/fosrl/newt:1.19.0@sha256:0189c8287058b800cca825590e4c39946b3815344ca48678dd0b96616d639319
     container_name: newt-invidious
     restart: unless-stopped
     networks:

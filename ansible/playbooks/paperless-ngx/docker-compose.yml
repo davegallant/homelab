@@ -8,7 +8,7 @@ services:
     volumes:
       - ./redis-data:/data
   paperless-ngx:
-    image: docker.io/paperlessngx/paperless-ngx:3.3.2@sha256:d232cba37cc0bab0d6c6581ecd320383b7a6f49f33e0fd16adda4d009eb600dd
+    image: docker.io/paperlessngx/paperless-ngx:3.3.3@sha256:dba0242c1df1843643df4eb50ce5639f3a7900f414879088fd5bed8eaf2d456d
     container_name: paperless-ngx
     restart: always
     networks:
@@ -33,7 +33,7 @@ services:
       start_period: 40s
 
   newt:
-    image: docker.io/fosrl/newt:1.18.1@sha256:7fed6605e0a104a337e1cb903bbb1225f80c7f6e5e56ff1eb1d70c57740d8e0f
+    image: docker.io/fosrl/newt:1.19.0@sha256:0189c8287058b800cca825590e4c39946b3815344ca48678dd0b96616d639319
     container_name: newt-paperless
     restart: unless-stopped
     networks:
