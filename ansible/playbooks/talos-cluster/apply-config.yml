@@ -1,0 +1,69 @@
+---
+- name: Apply Talos machine configs
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  vars:
+    talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
+    talos_private_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.local/share/homelab-talos"
+  tasks:
+    - name: Check protected machine configs exist
+      ansible.builtin.stat:
+        path: "{{ talos_private_dir }}/{{ item.name }}.yaml"
+      register: talos_machine_configs
+      loop: "{{ talos_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Require validated machine configs
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+        fail_msg: "Generate and validate the Talos configs before applying them."
+      loop: "{{ talos_machine_configs.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+
+    - name: Read maintenance-mode NICs
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - get
+          - links
+          - --insecure
+          - --nodes
+          - "{{ item.address }}"
+          - --output
+          - json
+      register: talos_node_links
+      loop: "{{ talos_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: false
+
+    - name: Confirm each address belongs to its planned VM
+      ansible.builtin.assert:
+        that:
+          - item.item.mac | lower in item.stdout | lower
+        fail_msg: "Address/MAC mismatch for {{ item.item.name }}; refusing to apply a machine config."
+      loop: "{{ talos_node_links.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+
+    - name: Apply Talos machine configs to new VMs
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - apply-config
+          - --insecure
+          - --nodes
+          - "{{ item.address }}"
+          - --file
+          - "{{ talos_private_dir }}/{{ item.name }}.yaml"
+      changed_when: true
+      loop: "{{ talos_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      no_log: true

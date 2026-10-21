@@ -1,0 +1,76 @@
+---
+- name: Move Talos nodes outside the DHCP pool
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  vars:
+    talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
+    talos_private_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.local/share/homelab-talos"
+  tasks:
+    - name: Confirm the new static addresses are absent on the LAN
+      ansible.builtin.command:
+        argv:
+          - nmap
+          - -sn
+          - -PR
+          - "{{ talos_nodes[0].address }}"
+          - "{{ talos_nodes[1].address }}"
+          - "{{ talos_nodes[2].address }}"
+      delegate_to: pve-g3-1
+      connection: ssh
+      remote_user: root
+      register: talos_static_scan
+      changed_when: false
+
+    - name: Refuse occupied static addresses
+      ansible.builtin.assert:
+        that:
+          - "'0 hosts up' in talos_static_scan.stdout"
+
+    - name: Apply static network config to control plane then workers
+      ansible.builtin.include_tasks:
+        file: transition-static-node.yml
+      loop: "{{ talos_nodes }}"
+      loop_control:
+        loop_var: talos_transition_node
+        label: "{{ talos_transition_node.name }}"
+
+    - name: Refresh admin kubeconfig with fixed control plane endpoint
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - kubeconfig
+          - "{{ talos_private_dir }}/kubeconfig"
+          - --merge=false
+          - --force
+          - --talosconfig
+          - "{{ talos_private_dir }}/base/talosconfig"
+          - --endpoints
+          - "{{ talos_control_plane_ip }}"
+          - --nodes
+          - "{{ talos_control_plane_ip }}"
+      changed_when: true
+      no_log: true
+
+    - name: Restrict refreshed kubeconfig permissions
+      ansible.builtin.file:
+        path: "{{ talos_private_dir }}/kubeconfig"
+        state: file
+        mode: "0600"
+      no_log: true
+
+    - name: Wait for all Kubernetes nodes to be Ready again
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --kubeconfig
+          - "{{ talos_private_dir }}/kubeconfig"
+          - wait
+          - --for=condition=Ready
+          - --timeout=300s
+          - node/k8s-cp-1
+          - node/k8s-w-1
+          - node/k8s-w-2
+      changed_when: false

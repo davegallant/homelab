@@ -1,0 +1,169 @@
+---
+- name: Generate Talos machine configs
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  vars:
+    talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
+    talos_private_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.local/share/homelab-talos"
+  tasks:
+    - name: Require observed node addresses
+      ansible.builtin.assert:
+        that:
+          - talos_control_plane_ip | length > 0
+          - talos_nodes | map(attribute='address') | select('equalto', '') | list | length == 0
+          - talos_nodes | map(attribute='address') | unique | list | length == 3
+
+    - name: Check talosctl version
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - version
+          - --client
+          - --short
+      register: talosctl_version
+      changed_when: false
+
+    - name: Require matching talosctl version
+      ansible.builtin.assert:
+        that:
+          - talos_version in talosctl_version.stdout
+
+    - name: Create protected Talos private directory
+      ansible.builtin.file:
+        path: "{{ talos_private_dir }}"
+        state: directory
+        mode: "0700"
+
+    - name: Create protected base config directory
+      ansible.builtin.file:
+        path: "{{ talos_private_dir }}/base"
+        state: directory
+        mode: "0700"
+
+    - name: Render control plane patch
+      ansible.builtin.template:
+        src: ../../kubernetes/cluster/controlplane.patch.yaml.j2
+        dest: "{{ talos_private_dir }}/controlplane.patch.yaml"
+        mode: "0600"
+
+    - name: Render worker patches
+      ansible.builtin.template:
+        src: ../../kubernetes/cluster/worker.patch.yaml.j2
+        dest: "{{ talos_private_dir }}/{{ item.name }}.patch.yaml"
+        mode: "0600"
+      vars:
+        talos_node_name: "{{ item.name }}"
+        talos_node_ip: "{{ item.address }}"
+      loop: "{{ talos_nodes | selectattr('role', 'equalto', 'worker') | list }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Generate Talos cluster secrets once
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - gen
+          - secrets
+          - --output-file
+          - "{{ talos_private_dir }}/secrets.yaml"
+        creates: "{{ talos_private_dir }}/secrets.yaml"
+      no_log: true
+
+    - name: Generate base machine configs once
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - gen
+          - config
+          - "{{ talos_cluster_name }}"
+          - "https://{{ talos_control_plane_ip }}:6443"
+          - --with-secrets
+          - "{{ talos_private_dir }}/secrets.yaml"
+          - --install-disk
+          - "{{ talos_install_disk }}"
+          - --with-docs=false
+          - --with-examples=false
+          - --output
+          - "{{ talos_private_dir }}/base"
+          - --force
+      changed_when: true
+      no_log: true
+
+    - name: Patch control plane machine config
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - machineconfig
+          - patch
+          - "{{ talos_private_dir }}/base/controlplane.yaml"
+          - --patch
+          - "@{{ talos_private_dir }}/controlplane.patch.yaml"
+          - --output
+          - "{{ talos_private_dir }}/k8s-cp-1.yaml"
+      changed_when: true
+      no_log: true
+
+    - name: Patch worker machine configs
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - machineconfig
+          - patch
+          - "{{ talos_private_dir }}/base/worker.yaml"
+          - --patch
+          - "@{{ talos_private_dir }}/{{ item.name }}.patch.yaml"
+          - --output
+          - "{{ talos_private_dir }}/{{ item.name }}.yaml"
+      changed_when: true
+      loop: "{{ talos_nodes | selectattr('role', 'equalto', 'worker') | list }}"
+      loop_control:
+        label: "{{ item.name }}"
+      no_log: true
+
+    - name: Set static Talos hostnames
+      ansible.builtin.replace:
+        path: "{{ talos_private_dir }}/{{ item.name }}.yaml"
+        regexp: '(?m)^auto: stable$'
+        replace: "hostname: {{ item.name }}"
+      loop: "{{ talos_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      no_log: true
+
+    - name: Validate machine configs
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - validate
+          - --config
+          - "{{ talos_private_dir }}/{{ item.name }}.yaml"
+          - --mode
+          - metal
+      loop: "{{ talos_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: false
+      no_log: true
+
+    - name: Restrict base credential file permissions
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: file
+        mode: "0600"
+      loop:
+        - "{{ talos_private_dir }}/secrets.yaml"
+        - "{{ talos_private_dir }}/base/controlplane.yaml"
+        - "{{ talos_private_dir }}/base/worker.yaml"
+        - "{{ talos_private_dir }}/base/talosconfig"
+      no_log: true
+
+    - name: Restrict node machine config permissions
+      ansible.builtin.file:
+        path: "{{ talos_private_dir }}/{{ item.name }}.yaml"
+        state: file
+        mode: "0600"
+      loop: "{{ talos_nodes }}"
+      no_log: true

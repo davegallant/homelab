@@ -1,0 +1,80 @@
+---
+- name: Bootstrap Talos Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  vars:
+    talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
+    talos_private_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.local/share/homelab-talos"
+  tasks:
+    - name: Check local bootstrap marker
+      ansible.builtin.stat:
+        path: "{{ talos_private_dir }}/bootstrap.done"
+      register: talos_bootstrap_marker
+
+    - name: Bootstrap the single control plane once
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - bootstrap
+          - --talosconfig
+          - "{{ talos_private_dir }}/base/talosconfig"
+          - --endpoints
+          - "{{ talos_control_plane_ip }}"
+          - --nodes
+          - "{{ talos_control_plane_ip }}"
+      changed_when: true
+      when: not talos_bootstrap_marker.stat.exists
+      no_log: true
+
+    - name: Record successful bootstrap
+      ansible.builtin.copy:
+        content: "Control plane bootstrapped; do not bootstrap again without a recovery plan.\n"
+        dest: "{{ talos_private_dir }}/bootstrap.done"
+        mode: "0600"
+      when: not talos_bootstrap_marker.stat.exists
+
+    - name: Wait for the control plane etcd member
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - etcd
+          - status
+          - --talosconfig
+          - "{{ talos_private_dir }}/base/talosconfig"
+          - --endpoints
+          - "{{ talos_control_plane_ip }}"
+          - --nodes
+          - "{{ talos_control_plane_ip }}"
+      register: talos_etcd_ready
+      until: talos_etcd_ready.rc == 0
+      retries: 60
+      delay: 10
+      changed_when: false
+      no_log: true
+
+    - name: Download protected admin kubeconfig
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - kubeconfig
+          - "{{ talos_private_dir }}/kubeconfig"
+          - --merge=false
+          - --force
+          - --talosconfig
+          - "{{ talos_private_dir }}/base/talosconfig"
+          - --endpoints
+          - "{{ talos_control_plane_ip }}"
+          - --nodes
+          - "{{ talos_control_plane_ip }}"
+      changed_when: true
+      no_log: true
+
+    - name: Restrict kubeconfig permissions
+      ansible.builtin.file:
+        path: "{{ talos_private_dir }}/kubeconfig"
+        state: file
+        mode: "0600"
+      no_log: true

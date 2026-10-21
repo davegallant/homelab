@@ -1,0 +1,42 @@
+---
+- name: Back up Talos VMs to Proxmox NFS storage
+  hosts: proxmox
+  gather_facts: false
+  serial: 1
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  tasks:
+    - name: Select Talos VMs on this Proxmox host
+      ansible.builtin.set_fact:
+        talos_host_nodes: "{{ talos_nodes | selectattr('host', 'equalto', inventory_hostname) | list }}"
+
+    - name: Run off-host snapshot backups
+      ansible.builtin.command:
+        argv:
+          - vzdump
+          - "{{ item.vmid }}"
+          - --storage
+          - proxmox-backups
+          - --mode
+          - snapshot
+          - --compress
+          - zstd
+      loop: "{{ talos_host_nodes }}"
+      loop_control:
+        label: "{{ item.name }} ({{ item.vmid }})"
+      changed_when: true
+      no_log: true
+
+    - name: List completed backup archives
+      ansible.builtin.command:
+        argv: [pvesm, list, proxmox-backups, --content, backup]
+      register: talos_backup_archives
+      changed_when: false
+
+    - name: Require an archive for each local Talos VM
+      ansible.builtin.assert:
+        that:
+          - talos_backup_archives.stdout is search('vzdump-qemu-' ~ item.vmid ~ '-')
+      loop: "{{ talos_host_nodes }}"
+      loop_control:
+        label: "{{ item.name }} ({{ item.vmid }})"

@@ -1,0 +1,67 @@
+---
+- name: Include Talos VMs in Proxmox backups
+  hosts: pve-g3-1
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  vars:
+    talos_backup_job_id: backup-60dffa30-abad
+  tasks:
+    - name: Read existing Proxmox backup job
+      ansible.builtin.command:
+        argv:
+          - pvesh
+          - get
+          - "/cluster/backup/{{ talos_backup_job_id }}"
+          - --output-format
+          - json
+      register: talos_backup_job_raw
+      changed_when: false
+
+    - name: Parse backup job and preserve its existing VM selection
+      ansible.builtin.set_fact:
+        talos_backup_job: "{{ talos_backup_job_raw.stdout | from_json }}"
+
+    - name: Require the existing off-host snapshot job
+      ansible.builtin.assert:
+        that:
+          - talos_backup_job.enabled == 1
+          - talos_backup_job.storage == 'proxmox-backups'
+          - talos_backup_job.mode == 'snapshot'
+          - talos_backup_job.all | default(0) | int == 0
+
+    - name: Build backup VM list with all Talos nodes
+      ansible.builtin.set_fact:
+        talos_backup_vmids: >-
+          {{ ((talos_backup_job.vmid.split(',') | map('int') | list)
+              + (talos_nodes | map(attribute='vmid') | list)) | unique | sort | join(',') }}
+
+    - name: Add Talos VMs to the scheduled Proxmox backup job
+      ansible.builtin.command:
+        argv:
+          - pvesh
+          - set
+          - "/cluster/backup/{{ talos_backup_job_id }}"
+          - --vmid
+          - "{{ talos_backup_vmids }}"
+      when: talos_backup_job.vmid != talos_backup_vmids
+      changed_when: true
+
+    - name: Verify backup job covers all three Talos VMs
+      ansible.builtin.command:
+        argv:
+          - pvesh
+          - get
+          - "/cluster/backup/{{ talos_backup_job_id }}"
+          - --output-format
+          - json
+      register: talos_backup_verified
+      changed_when: false
+
+    - name: Confirm each VM ID is selected
+      ansible.builtin.assert:
+        that:
+          - item.vmid | string in (talos_backup_verified.stdout | from_json).vmid.split(',')
+      loop: "{{ talos_nodes }}"
+      loop_control:
+        label: "{{ item.name }} ({{ item.vmid }})"

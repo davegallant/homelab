@@ -1,0 +1,45 @@
+---
+- name: Verify Homepage has returned to its LXC
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../group_vars/all/secrets.yaml
+  tasks:
+    - name: Read the LXC tailnet IP
+      ansible.builtin.command:
+        argv: [tailscale, ip, -4]
+      delegate_to: homepage
+      connection: ssh
+      remote_user: root
+      register: homepage_lxc_ip
+      changed_when: false
+      no_log: true
+
+    - name: Wait for the normal hostname to reach the LXC with valid TLS
+      ansible.builtin.command:
+        argv:
+          - curl
+          - --silent
+          - --show-error
+          - --noproxy
+          - "*"
+          - --ipv4
+          - --max-time
+          - "15"
+          - --output
+          - /dev/null
+          - --write-out
+          - "%{remote_ip} %{http_code}"
+          - "https://homepage.{{ headscale_magic_dns_domain }}/"
+      register: homepage_rollback_http
+      until: homepage_rollback_http.rc == 0 and homepage_rollback_http.stdout == (homepage_lxc_ip.stdout | trim) ~ ' 200'
+      retries: 24
+      delay: 5
+      changed_when: false
+      no_log: true
+
+    - name: Confirm the original LXC serves Homepage
+      ansible.builtin.assert:
+        that:
+          - homepage_rollback_http.stdout == (homepage_lxc_ip.stdout | trim) ~ ' 200'

@@ -1,0 +1,49 @@
+---
+- name: Return Homepage MagicDNS name to the LXC
+  hosts: pangolin
+  remote_user: root
+  gather_facts: false
+  tasks:
+    - name: Read Headscale nodes before rollback
+      ansible.builtin.command:
+        argv: [docker, exec, headscale, headscale, nodes, list, -o, json]
+      register: homepage_headscale_nodes_raw
+      changed_when: false
+      no_log: true
+
+    - name: Require expected cutover node names
+      ansible.builtin.assert:
+        that:
+          - >-
+            (homepage_headscale_nodes_raw.stdout | from_json
+             | selectattr('id', 'equalto', 12) | first).given_name == 'homepage-lxc'
+          - >-
+            (homepage_headscale_nodes_raw.stdout | from_json
+             | selectattr('id', 'equalto', 52) | first).given_name == 'homepage'
+
+    - name: Return Talos node to staging name
+      ansible.builtin.command:
+        argv: [docker, exec, headscale, headscale, nodes, rename, homepage-k8s, -i, "52", --force]
+      changed_when: true
+
+    - name: Point Homepage name back at the running LXC
+      ansible.builtin.command:
+        argv: [docker, exec, headscale, headscale, nodes, rename, homepage, -i, "12", --force]
+      changed_when: true
+
+    - name: Read Headscale nodes after rollback
+      ansible.builtin.command:
+        argv: [docker, exec, headscale, headscale, nodes, list, -o, json]
+      register: homepage_headscale_after_raw
+      changed_when: false
+      no_log: true
+
+    - name: Confirm Homepage name points to the LXC again
+      ansible.builtin.assert:
+        that:
+          - >-
+            (homepage_headscale_after_raw.stdout | from_json
+             | selectattr('id', 'equalto', 12) | first).given_name == 'homepage'
+          - >-
+            (homepage_headscale_after_raw.stdout | from_json
+             | selectattr('id', 'equalto', 52) | first).given_name == 'homepage-k8s'

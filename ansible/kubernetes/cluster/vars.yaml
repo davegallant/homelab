@@ -1,0 +1,54 @@
+---
+talos_version: v1.14.1
+talos_iso_filename: metal-amd64-v1.14.1.iso
+talos_iso_sha256: eb29a0a3c49b19a69a2be11e4ba06cc0837fc61a528af62fea2e803eb9e6d19f
+talos_proxmox_iso_storage: proxmox-iso
+talos_proxmox_bridge: vmbr0
+talos_cluster_name: homelab
+talos_install_disk: /dev/vda
+talos_network_interface: ens18
+talos_network_cidr: 24
+talos_default_gateway: 192.168.1.1
+talos_dns_servers:
+  - 192.168.1.77
+  - 192.168.1.1
+talos_control_plane_ip: 192.168.1.210
+
+talos_nodes:
+  - name: k8s-cp-1
+    host: pve-g3-1
+    role: controlplane
+    vmid: 142
+    address: 192.168.1.210
+    previous_address: 192.168.1.6
+    mac: BC:24:11:6C:72:BB
+    vcpu: 2
+    memory_mib: 4096
+    disk_gib: 25
+    storage: moredata
+  - name: k8s-w-1
+    host: pve-g3-1
+    role: worker
+    vmid: 146
+    address: 192.168.1.211
+    previous_address: 192.168.1.4
+    mac: BC:24:11:5B:26:C6
+    vcpu: 2
+    memory_mib: 3072
+    disk_gib: 25
+    storage: moredata
+  - name: k8s-w-2
+    host: pve-g3-2
+    role: worker
+    vmid: 147
+    address: 192.168.1.212
+    previous_address: 192.168.1.7
+    mac: BC:24:11:9F:DF:4D
+    vcpu: 2
+    memory_mib: 2048
+    disk_gib: 25
+    storage: local-lvm
+
+# Static addresses are outside OPNsense's active 192.168.1.2-99 DHCP pool.
+# The previous_address values record the one-time maintenance-to-static move.
+# Never put machine secrets in this file.

@@ -1,0 +1,56 @@
+---
+- name: Refresh Homepage tailnet connectivity
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Require persisted Tailscale identity without an auth Secret
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - -n
+          - homepage
+          - exec
+          - deployment/homepage
+          - -c
+          - tailscale
+          - --
+          - tailscale
+          - ip
+          - -4
+      register: homepage_tailnet_ip_before_restart
+      changed_when: false
+      no_log: true
+
+    - name: Restart Homepage after worker network change
+      ansible.builtin.command:
+        argv: [kubectl, -n, homepage, rollout, restart, deployment/homepage]
+      changed_when: true
+
+    - name: Wait for refreshed Homepage pod
+      ansible.builtin.command:
+        argv: [kubectl, -n, homepage, rollout, status, deployment/homepage, --timeout=300s]
+      changed_when: false
+
+    - name: Require the same persisted tailnet IP
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - -n
+          - homepage
+          - exec
+          - deployment/homepage
+          - -c
+          - tailscale
+          - --
+          - tailscale
+          - ip
+          - -4
+      register: homepage_tailnet_ip_after_restart
+      changed_when: false
+      no_log: true
+
+    - name: Confirm Tailscale identity persisted
+      ansible.builtin.assert:
+        that:
+          - homepage_tailnet_ip_after_restart.stdout == homepage_tailnet_ip_before_restart.stdout

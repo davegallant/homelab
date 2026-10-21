@@ -1,0 +1,60 @@
+- name: Read current NIC identity
+  ansible.builtin.command:
+    argv:
+      - "{{ talosctl_binary }}"
+      - get
+      - links
+      - --talosconfig
+      - "{{ talos_private_dir }}/base/talosconfig"
+      - --endpoints
+      - "{{ talos_transition_node.previous_address }}"
+      - --nodes
+      - "{{ talos_transition_node.previous_address }}"
+      - --output
+      - json
+  register: talos_transition_links
+  changed_when: false
+  no_log: true
+
+- name: Require the planned VM MAC before changing its IP
+  ansible.builtin.assert:
+    that:
+      - talos_transition_node.mac | lower in talos_transition_links.stdout | lower
+    fail_msg: "Current address does not match {{ talos_transition_node.name }}."
+
+- name: Apply fixed network address
+  ansible.builtin.command:
+    argv:
+      - "{{ talosctl_binary }}"
+      - apply-config
+      - --talosconfig
+      - "{{ talos_private_dir }}/base/talosconfig"
+      - --endpoints
+      - "{{ talos_transition_node.previous_address }}"
+      - --nodes
+      - "{{ talos_transition_node.previous_address }}"
+      - --file
+      - "{{ talos_private_dir }}/{{ talos_transition_node.name }}.yaml"
+  register: talos_transition_apply
+  changed_when: true
+  failed_when: false
+  no_log: true
+
+- name: Wait for Talos API at fixed address
+  ansible.builtin.command:
+    argv:
+      - "{{ talosctl_binary }}"
+      - version
+      - --talosconfig
+      - "{{ talos_private_dir }}/base/talosconfig"
+      - --endpoints
+      - "{{ talos_transition_node.address }}"
+      - --nodes
+      - "{{ talos_transition_node.address }}"
+      - --short
+  register: talos_static_api
+  until: talos_static_api.rc == 0
+  retries: 30
+  delay: 5
+  changed_when: false
+  no_log: true
