@@ -1,0 +1,57 @@
+---
+- name: Expand Grafana root filesystem for Loki inodes
+  hosts: pve-g3-2
+  gather_facts: false
+  vars:
+    grafana_vmid: "115"
+  tasks:
+    - name: Read Grafana container configuration
+      ansible.builtin.command:
+        argv: [pct, config, "{{ grafana_vmid }}"]
+      register: grafana_container_config
+      changed_when: false
+
+    - name: Require the expected Grafana root disk
+      ansible.builtin.assert:
+        that:
+          - "'hostname: grafana' in grafana_container_config.stdout"
+          - "'rootfs: local-lvm:vm-115-disk-1,size=12G' in grafana_container_config.stdout or 'rootfs: local-lvm:vm-115-disk-1,size=24G' in grafana_container_config.stdout"
+
+    - name: Read local-lvm capacity
+      ansible.builtin.command:
+        argv: [pvesm, status, --storage, local-lvm]
+      register: grafana_storage_status
+      changed_when: false
+
+    - name: Require at least 20 GiB free in local-lvm
+      ansible.builtin.assert:
+        that:
+          - "(grafana_storage_status.stdout_lines[1].split()[5] | int) > 20971520"
+
+    - name: Require an existing off-host Grafana backup
+      ansible.builtin.command:
+        argv: [pvesm, list, proxmox-backups, --content, backup]
+      register: grafana_backup_archives
+      changed_when: false
+
+    - name: Check Grafana backup archive is present
+      ansible.builtin.assert:
+        that:
+          - grafana_backup_archives.stdout is search('vzdump-lxc-115-')
+
+    - name: Expand Grafana root disk from 12 GiB to 24 GiB
+      ansible.builtin.command:
+        argv: [pct, resize, "{{ grafana_vmid }}", rootfs, 24G]
+      when: "'size=12G' in grafana_container_config.stdout"
+      changed_when: true
+
+    - name: Read inode capacity inside Grafana
+      ansible.builtin.command:
+        argv: [pct, exec, "{{ grafana_vmid }}", --, df, -Pi, /]
+      register: grafana_inodes
+      changed_when: false
+
+    - name: Require more than 500000 free inodes
+      ansible.builtin.assert:
+        that:
+          - "(grafana_inodes.stdout_lines[1].split()[3] | int) > 500000"

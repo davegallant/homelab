@@ -143,6 +143,20 @@ namespace, RBAC, ConfigMap, and DaemonSet. The Alloy playbook is manual; the
 Grafana playbook is also part of the normal all-host CI run, so merging this
 branch will reapply its firewall rule. From `ansible/`:
 
+Grafana's 12 GiB LXC root filesystem exhausted its ext4 inodes on Loki chunks
+while 2.1 GiB of blocks remained free, so the first Grafana playbook attempt
+could not create Ansible's temporary directory and changed nothing. Loki was
+returning errors for WAL and chunk writes. Before retrying, use the separate
+`expand-grafana-rootfs.yml` playbook, after explicit approval, to expand CT 115
+from 12 to 24 GiB on `pve-g3-2`; it checks the container identity, local-lvm
+capacity, an existing off-host backup, and free inodes after the resize.
+
+```sh
+ansible-playbook playbooks/talos-cluster/expand-grafana-rootfs.yml -i inventory
+```
+
+Then continue with the approved firewall and Alloy actions:
+
 ```sh
 ansible-playbook playbooks/grafana/main.yml -i inventory \
   --vault-password-file .vault_pass

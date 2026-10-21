@@ -256,3 +256,7 @@ running `just lint` locally.
 - Alloy's Talos DaemonSet reads pod logs through the Kubernetes API with a
   node-local pod selector. It cannot read Talos node service logs. Its Loki
   LAN firewall exception is scoped to TCP 3100 from the Talos node IPs.
+- Before adding Loki sources, check Grafana's `df -i /` as well as `df -h /`.
+  Loki chunks exhausted the 12 GiB LXC's inodes while 2.1 GiB of blocks
+  remained free; writes to Loki's WAL and chunks then failed. Expand its root
+  disk through `expand-grafana-rootfs.yml` after confirming an off-host backup.
