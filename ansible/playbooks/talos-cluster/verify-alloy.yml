@@ -1,0 +1,40 @@
+---
+- name: Verify Alloy pod logs in Loki
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Read Alloy DaemonSet status
+      ansible.builtin.command:
+        argv: [kubectl, -n, alloy, get, daemonset/alloy, -o, json]
+      register: alloy_daemonset_status
+      changed_when: false
+
+    - name: Require one Ready Alloy pod on each Talos node
+      ansible.builtin.assert:
+        that:
+          - (alloy_daemonset_status.stdout | from_json).status.desiredNumberScheduled == 3
+          - (alloy_daemonset_status.stdout | from_json).status.numberReady == 3
+
+    - name: Wait for cluster pod logs in Loki
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:3100/loki/api/v1/query_range?query=%7Bcluster%3D%22homelab%22%2Cnamespace%3D%22alloy%22%7D&limit=1'
+        method: GET
+        return_content: true
+      delegate_to: grafana
+      connection: ssh
+      remote_user: root
+      register: alloy_loki_query
+      until: >-
+        alloy_loki_query.status == 200 and
+        alloy_loki_query.json.data.result | default([]) | length > 0
+      retries: 12
+      delay: 5
+      changed_when: false
+      no_log: true
+
+    - name: Confirm Alloy logs reached Loki
+      ansible.builtin.assert:
+        that:
+          - alloy_loki_query.status == 200
+          - alloy_loki_query.json.data.result | length > 0

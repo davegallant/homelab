@@ -75,6 +75,13 @@
       -A DOCKER-USER -s {{ source }} -j RETURN
       {% endfor %}
 
+      # Trusted sources for a specific published container port.
+      {% for rule in ufw_docker_allowed_source_ports | default([]) %}
+      {% for source in rule.sources %}
+      -A DOCKER-USER -s {{ source }} -p {{ rule.proto | default('tcp') }} --dport {{ rule.port }} -j RETURN
+      {% endfor %}
+      {% endfor %}
+
       # Published ports intentionally reachable from anywhere (edge hosts like
       # the Pangolin VPS). Narrower than widening ufw_docker_allowed_sources:
       # specific ports, any source.

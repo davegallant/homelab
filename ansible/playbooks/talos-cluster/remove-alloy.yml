@@ -1,0 +1,27 @@
+---
+- name: Remove Alloy DaemonSet from Talos Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_prompt:
+    - name: talos_kube_context
+      prompt: Enter the expected kubectl context for the Talos cluster
+      private: false
+  tasks:
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: alloy_kube_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - alloy_kube_context.stdout == talos_kube_context
+
+    - name: Delete Alloy DaemonSet
+      ansible.builtin.command:
+        argv: [kubectl, -n, alloy, delete, daemonset/alloy, --ignore-not-found=true]
+      register: alloy_delete_daemonset
+      changed_when: "'deleted' in alloy_delete_daemonset.stdout"

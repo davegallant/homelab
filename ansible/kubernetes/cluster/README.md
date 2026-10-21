@@ -33,8 +33,9 @@ stores them on `proxmox-backups` NFS. `backup-now.yml` takes a manual
 backup; `snapshot-etcd.yml` also stores an etcd snapshot containing cluster state
 in a protected directory on the same off-host store. VM backups include the
 Homepage local PV paths. Before retiring the Homepage LXC, complete a recovery
-drill and separately protect the operator's Talos credentials. Alloy is a
-follow-up cluster-wide DaemonSet after pilot acceptance.
+drill and separately protect the operator's Talos credentials. The Alloy
+DaemonSet follow-up is described in `../README.md`; it collects pod logs through
+the Kubernetes API without node filesystem mounts.
 
 Run these playbooks manually from `ansible/`, with the Ansible Vault password
 file and `TALOSCTL` pointing at the matching v1.14.1 binary. Keep the

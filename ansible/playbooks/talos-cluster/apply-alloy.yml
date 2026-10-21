@@ -1,0 +1,140 @@
+---
+- name: Apply Alloy pod logging to Talos Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/apps/alloy/vars.yaml
+  vars_prompt:
+    - name: talos_kube_context
+      prompt: Enter the expected kubectl context for the Talos cluster
+      private: false
+  tasks:
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: alloy_kube_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - alloy_kube_context.stdout == talos_kube_context
+
+    - name: Verify all Talos nodes are Ready
+      ansible.builtin.command:
+        argv: [kubectl, wait, --for=condition=Ready, --timeout=120s, node/k8s-cp-1, node/k8s-w-1, node/k8s-w-2]
+      changed_when: false
+
+    - name: Read Grafana LXC LAN addresses
+      ansible.builtin.command:
+        argv: [hostname, -I]
+      delegate_to: grafana
+      connection: ssh
+      remote_user: root
+      register: alloy_grafana_addresses
+      changed_when: false
+
+    - name: Require the configured Loki LAN address on Grafana
+      ansible.builtin.assert:
+        that:
+          - alloy_loki_lan_ip in alloy_grafana_addresses.stdout.split()
+        fail_msg: "The configured Loki LAN address is not on Grafana; refusing the Alloy apply."
+
+    - name: Create a protected temporary render directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: alloy-k8s-
+      register: alloy_render_dir
+
+    - name: Render and apply Alloy resources
+      block:
+        - name: Restrict the render directory
+          ansible.builtin.file:
+            path: "{{ alloy_render_dir.path }}"
+            state: directory
+            mode: "0700"
+
+        - name: Copy Alloy namespace manifest
+          ansible.builtin.copy:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/alloy/namespace.yaml"
+            dest: "{{ alloy_render_dir.path }}/namespace.yaml"
+            mode: "0600"
+
+        - name: Copy Alloy ServiceAccount manifest
+          ansible.builtin.copy:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/alloy/serviceaccount.yaml"
+            dest: "{{ alloy_render_dir.path }}/serviceaccount.yaml"
+            mode: "0600"
+
+        - name: Copy Alloy RBAC manifest
+          ansible.builtin.copy:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/alloy/rbac.yaml"
+            dest: "{{ alloy_render_dir.path }}/rbac.yaml"
+            mode: "0600"
+
+        - name: Render Alloy ConfigMap
+          ansible.builtin.template:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/alloy/configmap.yaml.j2"
+            dest: "{{ alloy_render_dir.path }}/configmap.yaml"
+            mode: "0600"
+
+        - name: Render Alloy DaemonSet
+          ansible.builtin.template:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/alloy/daemonset.yaml.j2"
+            dest: "{{ alloy_render_dir.path }}/daemonset.yaml"
+            mode: "0600"
+
+        - name: Apply Alloy namespace
+          ansible.builtin.command:
+            argv: [kubectl, apply, -f, "{{ alloy_render_dir.path }}/namespace.yaml"]
+          register: alloy_apply_namespace
+          changed_when: "'created' in alloy_apply_namespace.stdout or 'configured' in alloy_apply_namespace.stdout"
+
+        - name: Apply Alloy ServiceAccount
+          ansible.builtin.command:
+            argv: [kubectl, apply, -f, "{{ alloy_render_dir.path }}/serviceaccount.yaml"]
+          register: alloy_apply_serviceaccount
+          changed_when: "'created' in alloy_apply_serviceaccount.stdout or 'configured' in alloy_apply_serviceaccount.stdout"
+
+        - name: Apply Alloy RBAC
+          ansible.builtin.command:
+            argv: [kubectl, apply, -f, "{{ alloy_render_dir.path }}/rbac.yaml"]
+          register: alloy_apply_rbac
+          changed_when: "'created' in alloy_apply_rbac.stdout or 'configured' in alloy_apply_rbac.stdout"
+
+        - name: Apply Alloy ConfigMap
+          ansible.builtin.command:
+            argv: [kubectl, apply, -f, "{{ alloy_render_dir.path }}/configmap.yaml"]
+          register: alloy_apply_configmap
+          changed_when: "'created' in alloy_apply_configmap.stdout or 'configured' in alloy_apply_configmap.stdout"
+
+        - name: Apply Alloy DaemonSet
+          ansible.builtin.command:
+            argv: [kubectl, apply, -f, "{{ alloy_render_dir.path }}/daemonset.yaml"]
+          register: alloy_apply_daemonset
+          changed_when: "'created' in alloy_apply_daemonset.stdout or 'configured' in alloy_apply_daemonset.stdout"
+
+        - name: Wait for Alloy rollout
+          ansible.builtin.command:
+            argv: [kubectl, -n, alloy, rollout, status, daemonset/alloy, --timeout=300s]
+          changed_when: false
+
+        - name: Read Alloy DaemonSet status
+          ansible.builtin.command:
+            argv: [kubectl, -n, alloy, get, daemonset/alloy, -o, json]
+          register: alloy_daemonset_status
+          changed_when: false
+
+        - name: Require one Ready Alloy pod on each Talos node
+          ansible.builtin.assert:
+            that:
+              - (alloy_daemonset_status.stdout | from_json).status.desiredNumberScheduled == 3
+              - (alloy_daemonset_status.stdout | from_json).status.numberReady == 3
+      always:
+        - name: Remove temporary rendered Alloy manifests
+          ansible.builtin.file:
+            path: "{{ alloy_render_dir.path }}"
+            state: absent
+          when: alloy_render_dir.path is defined

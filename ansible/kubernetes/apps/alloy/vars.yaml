@@ -1,0 +1,3 @@
+---
+# Grafana LXC's LAN address. apply-alloy.yml confirms it before applying.
+alloy_loki_lan_ip: 192.168.1.56
