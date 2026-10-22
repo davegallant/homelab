@@ -36,7 +36,6 @@ jobs:
             --exclude playbooks/talos-cluster/apply-homepage.yml \
             --exclude playbooks/talos-cluster/verify-cutover.yml \
             --exclude playbooks/talos-cluster/verify-homepage.yml \
-            --exclude playbooks/talos-cluster/verify-rollback.yml
 
       - name: Run shellcheck
         run: shellcheck generate-containers-table.sh scripts/*.sh

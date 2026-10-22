@@ -126,7 +126,7 @@
         - name: Read custom icons as binary data
           ansible.builtin.slurp:
             src: "{{ item }}"
-          loop: "{{ query('ansible.builtin.fileglob', playbook_dir + '/../homepage/config/icons/*') | sort }}"
+          loop: "{{ query('ansible.builtin.fileglob', playbook_dir + '/../../kubernetes/apps/homepage/config/icons/*') | sort }}"
           register: homepage_icon_files
           no_log: true
 

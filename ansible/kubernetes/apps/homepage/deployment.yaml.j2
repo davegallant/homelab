@@ -16,7 +16,7 @@ spec:
       labels:
         app.kubernetes.io/name: homepage
       annotations:
-        checksum/config: "{{ (lookup('ansible.builtin.template', playbook_dir + '/../homepage/config/services.yaml') ~ lookup('ansible.builtin.template', playbook_dir + '/../homepage/config/settings.yaml') ~ lookup('ansible.builtin.file', playbook_dir + '/../../kubernetes/apps/homepage/proxy-agent.cjs')) | hash('sha256') }}"
+        checksum/config: "{{ (lookup('ansible.builtin.template', playbook_dir + '/../../kubernetes/apps/homepage/config/services.yaml') ~ lookup('ansible.builtin.template', playbook_dir + '/../../kubernetes/apps/homepage/config/settings.yaml') ~ lookup('ansible.builtin.file', playbook_dir + '/../../kubernetes/apps/homepage/proxy-agent.cjs')) | hash('sha256') }}"
     spec:
       serviceAccountName: homepage
       automountServiceAccountToken: false
