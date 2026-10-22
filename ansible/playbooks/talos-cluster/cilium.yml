@@ -1,0 +1,163 @@
+---
+- name: Install Cilium in secondary migration mode on Talos Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/apps/cilium/vars.yaml
+  vars:
+    talos_kube_context: ""
+    cilium_apps_dir: "{{ playbook_dir }}/../../kubernetes/apps/cilium"
+  tasks:
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: cilium_kube_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - cilium_kube_context.stdout == talos_kube_context
+        fail_msg: "Pass -e talos_kube_context=<the Talos context> matching the active kubectl context."
+
+    - name: Verify all Talos nodes are Ready before installation
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - wait
+          - --for=condition=Ready
+          - --timeout=120s
+          - node/k8s-cp-1
+          - node/k8s-w-1
+          - node/k8s-w-2
+      changed_when: false
+
+    - name: Confirm Flannel remains the active CNI
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - kube-system
+          - get
+          - daemonset/kube-flannel
+          - -o
+          - jsonpath={.status.numberReady}
+      register: cilium_flannel_ready
+      changed_when: false
+
+    - name: Require all Flannel agents before secondary installation
+      ansible.builtin.assert:
+        that:
+          - cilium_flannel_ready.stdout | int == 3
+        fail_msg: "Flannel is not healthy on all three nodes; do not start the migration."
+
+    - name: Apply the Cilium Pod Security exception namespace
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - apply
+          - -f
+          - "{{ cilium_apps_dir }}/namespace.yaml"
+      changed_when: false
+
+    - name: Validate the pinned secondary-mode Cilium chart
+      ansible.builtin.command:
+        argv:
+          - helm
+          - template
+          - cilium
+          - cilium
+          - --repo
+          - "{{ cilium_chart_repo }}"
+          - --version
+          - "{{ cilium_chart_version }}"
+          - --namespace
+          - cilium-system
+          - --values
+          - "{{ cilium_apps_dir }}/values-migration.yaml"
+      changed_when: false
+
+    - name: Install pinned Cilium in secondary mode
+      ansible.builtin.command:
+        argv:
+          - helm
+          - upgrade
+          - --install
+          - cilium
+          - cilium
+          - --repo
+          - "{{ cilium_chart_repo }}"
+          - --version
+          - "{{ cilium_chart_version }}"
+          - --kube-context
+          - "{{ talos_kube_context }}"
+          - --namespace
+          - cilium-system
+          - --values
+          - "{{ cilium_apps_dir }}/values-migration.yaml"
+          - --wait
+          - --timeout
+          - 10m
+      changed_when: true
+
+    - name: Apply the selector-based per-node migration configuration
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - apply
+          - --server-side
+          - -f
+          - "{{ cilium_apps_dir }}/nodeconfig.yaml"
+      changed_when: true
+
+    - name: Verify Cilium agents are ready in secondary mode
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - cilium-system
+          - rollout
+          - status
+          - daemonset/cilium
+          - --timeout=300s
+      changed_when: false
+
+    - name: Verify the Cilium operator is ready
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - cilium-system
+          - rollout
+          - status
+          - deployment/cilium-operator
+          - --timeout=300s
+      changed_when: false
+
+    - name: Verify Hubble Relay is ready
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - cilium-system
+          - rollout
+          - status
+          - deployment/hubble-relay
+          - --timeout=300s
+      changed_when: false

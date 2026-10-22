@@ -561,3 +561,21 @@ explicit context to remove its DaemonSet while leaving Homepage running. A
 separate approved Grafana playbook run after removing the source-and-port rule
 from the repo closes the LAN path again. The Alloy RBAC and ConfigMap can stay
 for troubleshooting until their removal is separately approved.
+
+## Planned hardening
+
+- **Cilium CNI migration (decided 2026-10-22; implementation design).** The
+  cluster runs Talos-managed Flannel on `10.244.0.0/16` with VXLAN UDP 8472.
+  Cilium 1.20.3 will be installed in secondary mode with cluster-pool IPAM on
+  `10.245.0.0/16`, VXLAN UDP 8473, and policy enforcement disabled during
+  node-by-node migration. The design, values, Talos patch, bootstrap playbook,
+  and compatibility exit gate are in [`apps/cilium`](apps/cilium/README.md).
+  Kubernetes is v1.37.0, outside Cilium 1.20.3's tested 1.33–1.36 matrix;
+  the w-2 canary is the hard exit gate. kube-proxy remains enabled. Following
+  migration, default-deny policies will be added per namespace with explicit
+  Tailscale, Cloudflare, DNS, cluster, and documented application egress.
+- **Kyverno: deferred.** Admission policy via Kyverno was considered and set
+  aside: Argo CD AppProject whitelists, Pod Security baseline labels, and
+  digest-pinned images already cover the admission side at this scale.
+  Revisit if image signature verification (cosign) is wanted or repo review
+  becomes the bottleneck.

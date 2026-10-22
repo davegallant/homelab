@@ -1,0 +1,78 @@
+ipam:
+  mode: cluster-pool
+  operator:
+    clusterPoolIPv4PodCIDRList:
+      - 10.245.0.0/16
+    clusterPoolIPv4MaskSize: 24
+routingMode: tunnel
+tunnelProtocol: vxlan
+tunnelPort: 8473
+kubeProxyReplacement: false
+policyEnforcementMode: default
+operator:
+  replicas: 1
+  nodeSelector:
+    kubernetes.io/hostname: k8s-w-1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 96Mi
+    limits:
+      memory: 192Mi
+  unmanagedPodWatcher:
+    restart: true
+bpf:
+  autoMount:
+    enabled: false
+  root: /sys/fs/bpf
+  hostLegacyRouting: true
+cgroup:
+  autoMount:
+    enabled: false
+  hostRoot: /sys/fs/cgroup
+cni:
+  customConf: false
+  uninstall: false
+  confPath: /etc/cni/net.d
+  hostConfDirMountPath: /host/etc/cni/net.d
+securityContext:
+  capabilities:
+    ciliumAgent:
+      - CHOWN
+      - KILL
+      - NET_ADMIN
+      - NET_RAW
+      - IPC_LOCK
+      - SYS_ADMIN
+      - SYS_RESOURCE
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    cleanCiliumState:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_RESOURCE
+resources:
+  requests:
+    cpu: 100m
+    memory: 192Mi
+  limits:
+    memory: 256Mi
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+    replicas: 1
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+    nodeSelector:
+      kubernetes.io/hostname: k8s-w-1
+  ui:
+    enabled: false
+  metrics:
+    enabled: []
