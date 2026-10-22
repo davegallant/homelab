@@ -1,0 +1,85 @@
+- name: Reboot to clear Cilium host networking state on {{ cilium_reset_node.name }}
+  ansible.builtin.command:
+    argv:
+      - "{{ talosctl_binary }}"
+      - reboot
+      - --talosconfig
+      - "{{ talos_private_dir }}/base/talosconfig"
+      - --endpoints
+      - "{{ cilium_reset_node.address }}"
+      - --nodes
+      - "{{ cilium_reset_node.address }}"
+      - --timeout
+      - 10m
+  changed_when: true
+
+- name: "Wait for the node to return Ready: {{ cilium_reset_node.name }}"
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - wait
+      - --for=condition=Ready
+      - --timeout=10m
+      - "node/{{ cilium_reset_node.name }}"
+  register: cilium_reset_node_ready
+  until: cilium_reset_node_ready.rc == 0
+  retries: 12
+  delay: 10
+  changed_when: false
+
+- name: "Verify the Talos LAN address: {{ cilium_reset_node.name }}"
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - get
+      - "node/{{ cilium_reset_node.name }}"
+      - -o
+      - 'jsonpath={range .status.addresses[?(@.type=="InternalIP")]}{.address}{","}{end}'
+  register: cilium_reset_node_ip
+  changed_when: false
+
+- name: Require the original LAN InternalIP for {{ cilium_reset_node.name }}
+  ansible.builtin.assert:
+    that:
+      - cilium_reset_node.address + ',' == cilium_reset_node_ip.stdout
+    fail_msg: "{{ cilium_reset_node.name }} has not returned to its configured Talos LAN address."
+
+- name: Verify Flannel is ready after rebooting {{ cilium_reset_node.name }}
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - -n
+      - kube-system
+      - rollout
+      - status
+      - daemonset/kube-flannel
+      - --timeout=180s
+  changed_when: false
+
+- name: Read Argo CD application health after rebooting {{ cilium_reset_node.name }}
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - -n
+      - argocd
+      - get
+      - applications
+      - -o
+      - jsonpath={range .items[*]}{.status.sync.status}{" "}{.status.health.status}{"\n"}{end}
+  register: cilium_reset_apps
+  changed_when: false
+
+- name: Require all applications remain synced and healthy after reboot
+  ansible.builtin.assert:
+    that:
+      - cilium_reset_apps.stdout_lines | length > 0
+      - cilium_reset_apps.stdout_lines | reject('equalto', 'Synced Healthy') | list | length == 0
+    fail_msg: "An Argo CD application did not remain Synced and Healthy after node recovery."

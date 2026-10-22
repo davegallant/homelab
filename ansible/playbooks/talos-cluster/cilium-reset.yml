@@ -1,0 +1,179 @@
+---
+- name: Remove incomplete secondary-mode Cilium installation
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  vars:
+    talos_kube_context: ""
+    talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
+    talos_private_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.local/share/homelab-talos"
+    cilium_reset_nodes: >-
+      {{ [
+        talos_nodes | selectattr('name', 'equalto', 'k8s-w-2') | first,
+        talos_nodes | selectattr('name', 'equalto', 'k8s-w-1') | first,
+        talos_nodes | selectattr('name', 'equalto', 'k8s-cp-1') | first
+      ] }}
+  tasks:
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: cilium_reset_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - cilium_reset_context.stdout == talos_kube_context
+        fail_msg: "Pass -e talos_kube_context=<the Talos context> matching the active kubectl context."
+
+    - name: Remove the incomplete Helm release
+      ansible.builtin.command:
+        argv:
+          - helm
+          - uninstall
+          - cilium
+          - --kube-context
+          - "{{ talos_kube_context }}"
+          - --namespace
+          - cilium-system
+          - --wait
+          - --timeout
+          - 3m
+      register: cilium_reset_uninstall
+      failed_when: cilium_reset_uninstall.rc != 0 and 'not found' not in cilium_reset_uninstall.stderr
+      changed_when: "'uninstalled' in cilium_reset_uninstall.stdout"
+
+    - name: Read Cilium custom resource definitions
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - get
+          - crd
+          - -o
+          - name
+      register: cilium_reset_crds
+      changed_when: false
+
+    - name: Remove Cilium custom resource definitions and their objects
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - delete
+          - "{{ item }}"
+          - --wait=true
+      loop: "{{ cilium_reset_crds.stdout_lines | select('search', '\\.cilium\\.io$') | list }}"
+      loop_control:
+        label: "{{ item }}"
+      changed_when: true
+
+    - name: Remove the Cilium namespace
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - delete
+          - namespace
+          - cilium-system
+          - --wait=true
+      register: cilium_reset_namespace
+      failed_when: false
+      changed_when: "'deleted' in cilium_reset_namespace.stdout"
+
+    - name: Reboot nodes sequentially to clear Cilium host networking state
+      ansible.builtin.include_tasks:
+        file: cilium-reset-node.yml
+      loop: "{{ cilium_reset_nodes }}"
+      loop_control:
+        loop_var: cilium_reset_node
+        label: "{{ cilium_reset_node.name }}"
+
+    - name: Verify the Cilium release was removed
+      ansible.builtin.command:
+        argv:
+          - helm
+          - status
+          - cilium
+          - --kube-context
+          - "{{ talos_kube_context }}"
+          - --namespace
+          - cilium-system
+      register: cilium_reset_status
+      failed_when: cilium_reset_status.rc == 0
+      changed_when: false
+
+    - name: Verify Cilium pods were removed
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - cilium-system
+          - get
+          - pods
+          - -o
+          - name
+      register: cilium_reset_pods
+      failed_when: cilium_reset_pods.stdout | trim | length > 0
+      changed_when: false
+
+    - name: Verify the Cilium namespace was removed
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - get
+          - namespace
+          - cilium-system
+      register: cilium_reset_namespace_status
+      failed_when: cilium_reset_namespace_status.rc == 0
+      changed_when: false
+
+    - name: Verify Cilium custom resource definitions were removed
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - get
+          - crd
+          - -o
+          - name
+      register: cilium_reset_crds_after
+      changed_when: false
+
+    - name: Require all Cilium custom resource definitions were removed
+      ansible.builtin.assert:
+        that:
+          - cilium_reset_crds_after.stdout_lines | select('search', '\\.cilium\\.io$') | list | length == 0
+        fail_msg: "Cilium custom resource definitions remain after rollback."
+
+    - name: Verify all Flannel agents are still healthy
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - kube-system
+          - get
+          - daemonset/kube-flannel
+          - -o
+          - jsonpath={.status.numberReady}
+      register: cilium_reset_flannel_ready
+      changed_when: false
+
+    - name: Require all Flannel agents after Cilium rollback
+      ansible.builtin.assert:
+        that:
+          - cilium_reset_flannel_ready.stdout | int == 3
+        fail_msg: "Flannel did not return to the expected three-node baseline."
