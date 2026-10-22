@@ -73,6 +73,23 @@
         label: "{{ item }}"
       changed_when: true
 
+    - name: Remove Cilium agent-not-ready taints left on nodes
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - taint
+          - node
+          - "{{ item.name }}"
+          - node.cilium.io/agent-not-ready-
+      register: cilium_reset_taint
+      loop: "{{ talos_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      failed_when: cilium_reset_taint.rc != 0 and 'not found' not in cilium_reset_taint.stderr
+      changed_when: "'untainted' in cilium_reset_taint.stdout"
+
     - name: Remove the Cilium namespace
       ansible.builtin.command:
         argv:
@@ -156,6 +173,25 @@
         that:
           - cilium_reset_crds_after.stdout_lines | select('search', '\\.cilium\\.io$') | list | length == 0
         fail_msg: "Cilium custom resource definitions remain after rollback."
+
+    - name: Verify Cilium agent-not-ready taints were removed
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - get
+          - nodes
+          - -o
+          - 'jsonpath={range .items[*]}{range .spec.taints[*]}{.key}{"\n"}{end}{end}'
+      register: cilium_reset_taints
+      changed_when: false
+
+    - name: Require no Cilium agent-not-ready taints remain
+      ansible.builtin.assert:
+        that:
+          - "'node.cilium.io/agent-not-ready' not in cilium_reset_taints.stdout"
+        fail_msg: "A Cilium agent-not-ready taint remains after rollback."
 
     - name: Verify all Flannel agents are still healthy
       ansible.builtin.command:

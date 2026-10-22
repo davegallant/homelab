@@ -75,6 +75,11 @@
       - -o
       - jsonpath={range .items[*]}{.status.sync.status}{" "}{.status.health.status}{"\n"}{end}
   register: cilium_reset_apps
+  until: >-
+    cilium_reset_apps.stdout_lines | length > 0 and
+    cilium_reset_apps.stdout_lines | reject('equalto', 'Synced Healthy') | list | length == 0
+  retries: 30
+  delay: 10
   changed_when: false
 
 - name: Require all applications remain synced and healthy after reboot
