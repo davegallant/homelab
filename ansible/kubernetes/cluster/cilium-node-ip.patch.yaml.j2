@@ -1,0 +1,5 @@
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+nodeIP:
+  validSubnets:
+    - {{ talos_kubelet_node_ip_subnet }}

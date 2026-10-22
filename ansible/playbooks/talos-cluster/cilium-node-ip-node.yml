@@ -1,0 +1,126 @@
+- name: Verify Flannel before changing {{ cilium_node_ip_node.name }}
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - -n
+      - kube-system
+      - get
+      - daemonset/kube-flannel
+      - -o
+      - jsonpath={.status.numberReady}
+  register: cilium_node_ip_flannel_before
+  changed_when: false
+
+- name: Require all Flannel agents before changing {{ cilium_node_ip_node.name }}
+  ansible.builtin.assert:
+    that:
+      - cilium_node_ip_flannel_before.stdout | int == 3
+    fail_msg: "Flannel is not ready on all nodes; do not change Talos node IP selection."
+
+- name: Validate the Talos node IP patch on {{ cilium_node_ip_node.name }}
+  ansible.builtin.command:
+    argv:
+      - "{{ talosctl_binary }}"
+      - patch
+      - machineconfig
+      - --talosconfig
+      - "{{ talos_private_dir }}/base/talosconfig"
+      - --endpoints
+      - "{{ cilium_node_ip_node.address }}"
+      - --nodes
+      - "{{ cilium_node_ip_node.address }}"
+      - --patch-file
+      - "{{ talos_private_dir }}/cilium-node-ip.patch.yaml"
+      - --dry-run
+  changed_when: false
+  no_log: true
+
+- name: Apply the Talos node IP patch to {{ cilium_node_ip_node.name }}
+  ansible.builtin.command:
+    argv:
+      - "{{ talosctl_binary }}"
+      - patch
+      - machineconfig
+      - --talosconfig
+      - "{{ talos_private_dir }}/base/talosconfig"
+      - --endpoints
+      - "{{ cilium_node_ip_node.address }}"
+      - --nodes
+      - "{{ cilium_node_ip_node.address }}"
+      - --patch-file
+      - "{{ talos_private_dir }}/cilium-node-ip.patch.yaml"
+      - --mode
+      - auto
+  changed_when: true
+  no_log: true
+
+- name: "Wait for the node to return Ready: {{ cilium_node_ip_node.name }}"
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - wait
+      - --for=condition=Ready
+      - --timeout=10m
+      - "node/{{ cilium_node_ip_node.name }}"
+  register: cilium_node_ip_ready
+  until: cilium_node_ip_ready.rc == 0
+  retries: 12
+  delay: 10
+  changed_when: false
+
+- name: Read the InternalIP addresses for {{ cilium_node_ip_node.name }}
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - get
+      - "node/{{ cilium_node_ip_node.name }}"
+      - -o
+      - 'jsonpath={range .status.addresses[?(@.type=="InternalIP")]}{.address}{","}{end}'
+  register: cilium_node_ip_address
+  changed_when: false
+
+- name: Require the configured LAN InternalIP on {{ cilium_node_ip_node.name }}
+  ansible.builtin.assert:
+    that:
+      - cilium_node_ip_node.address + ',' == cilium_node_ip_address.stdout
+    fail_msg: "{{ cilium_node_ip_node.name }} must report only its configured LAN InternalIP."
+
+- name: Verify Flannel after changing {{ cilium_node_ip_node.name }}
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - -n
+      - kube-system
+      - rollout
+      - status
+      - daemonset/kube-flannel
+      - --timeout=180s
+  changed_when: false
+
+- name: Read Argo CD application health after changing {{ cilium_node_ip_node.name }}
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - -n
+      - argocd
+      - get
+      - applications
+      - -o
+      - jsonpath={range .items[*]}{.status.sync.status}{" "}{.status.health.status}{"\n"}{end}
+  register: cilium_node_ip_apps
+  until: >-
+    cilium_node_ip_apps.stdout_lines | length > 0 and
+    cilium_node_ip_apps.stdout_lines | reject('equalto', 'Synced Healthy') | list | length == 0
+  retries: 30
+  delay: 10
+  changed_when: false

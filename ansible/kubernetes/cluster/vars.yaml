@@ -9,6 +9,7 @@ talos_install_disk: /dev/vda
 talos_network_interface: ens18
 talos_network_cidr: 24
 talos_default_gateway: 192.168.1.1
+talos_kubelet_node_ip_subnet: 192.168.1.0/24
 talos_dns_servers:
   - 192.168.1.77
   - 192.168.1.1

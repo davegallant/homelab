@@ -33,6 +33,7 @@ cgroup:
 cni:
   customConf: true
   uninstall: false
+  exclusive: false
   confPath: /etc/cni/net.d
   hostConfDirMountPath: /host/etc/cni/net.d
 securityContext:

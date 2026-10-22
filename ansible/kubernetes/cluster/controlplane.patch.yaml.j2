@@ -2,6 +2,12 @@ apiVersion: v1alpha1
 kind: KubeFlannelCNIConfig
 $patch: delete
 ---
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+nodeIP:
+  validSubnets:
+    - {{ talos_kubelet_node_ip_subnet }}
+---
 machine:
   network:
     interfaces:
