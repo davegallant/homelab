@@ -22,7 +22,13 @@ Secrets stay in Vault and outside Argo's ownership:
 bootstrap-only one-use `maloja-tailscale-auth`.
 
 Backups: Velero Schedule `maloja` (in the values, opt-in mode)
-with pod annotation `backup.velero.io/backup-volumes: data`.
+with pod annotation `backup.velero.io/backup-volumes: data-local`.
+The local-path provisioner creates hostPath-backed PVs, which Velero does
+not support for PodVolumeBackup. After verifying the copied data, the
+`maloja-data-local` claim points to the same directory via a static local
+PV. Its worker and path are specific to this staged copy and must be taken
+from the bound `maloja-data` PV during a fresh migration; the original PVC
+stays present for rollback.
 
 ## Prerequisites (once)
 
@@ -84,6 +90,16 @@ kubectl --context admin@homelab apply -f ansible/kubernetes/apps/argocd/applicat
    continuing. Directory metadata is excluded because the LXC and PVC
    filesystems can report different directory sizes.
 
+   Apply the repo-managed local PV for the copied directory:
+
+   ```sh
+   kubectl --context admin@homelab apply -f ansible/kubernetes/apps/maloja/data-local-pv.yaml
+   ```
+
+   Commit and push the values update while `replicas: 0` remains set, then
+   manually Sync Maloja. Confirm `maloja-data-local` is Bound before
+   continuing; the active app will use this claim after the final flip.
+
 3. Retire the LXC's tailnet node on the Headscale host
    (`headscale nodes delete --identifier <old-maloja-id>`).
 4. Create the one-use key + Secret (`maloja-tailscale-auth`, key
@@ -104,12 +120,12 @@ kubectl --context admin@homelab apply -f ansible/kubernetes/apps/argocd/applicat
      --for=jsonpath='{.status.phase}'=Completed "backup/$BACKUP" --timeout=600s
    PVBS="$(kubectl --context admin@homelab -n velero \
      get podvolumebackups.velero.io -l "velero.io/backup-name=$BACKUP" -o json)"
-   PVB="$(jq -er --arg volume data '
+   PVB="$(jq -er --arg volume data-local '
      .items as $items
      | if ($items | length) == 1 and $items[0].spec.volume == $volume
         and $items[0].status.phase == "Completed"
        then $items[0].metadata.name
-       else error("expected one Completed data PodVolumeBackup") end' <<<"$PVBS")"
+       else error("expected one Completed data-local PodVolumeBackup") end' <<<"$PVBS")"
    printf 'Verified backup %s; PodVolumeBackup %s: Completed\n' "$BACKUP" "$PVB"
    ```
 
