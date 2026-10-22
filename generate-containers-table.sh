@@ -19,7 +19,7 @@ generate_table() {
 
   # Find all docker-compose.yml files tracked by git
   git ls-files | grep "docker-compose.yml$" | while read -r compose_file; do
-    yq eval '.services | keys' "$compose_file" | sed 's/^- //' | while read -r service; do
+    yq eval '.services | keys | .[]' "$compose_file" | while read -r service; do
       image=$(yq eval ".services.\"$service\".image" "$compose_file" 2>/dev/null)
       if [[ -n "$image" && "$image" != "null" ]]; then
         no_digest="${image%@*}"

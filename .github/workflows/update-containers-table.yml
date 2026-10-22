@@ -6,9 +6,11 @@ on:
       - main
     paths:
       - "**/docker-compose.yml"
+      - "generate-containers-table.sh"
   pull_request:
     paths:
       - "**/docker-compose.yml"
+      - "generate-containers-table.sh"
 
 jobs:
   update-readme:

@@ -1,21 +1,22 @@
 # BentoPDF on Talos (Helm)
 
-The GitOps handoff is defined in `../argocd/README.md`. Production values are
+Argo CD now manages the production Deployment, Service, and Velero Schedule
+from GitHub `main`, with manual sync approval. The first handoff completed
+with the public endpoint verified. The setup is defined in `../argocd/README.md`. Production values are
 in `values.production.yaml`, with the Newt Secret supplied separately by
 `playbooks/talos-cluster/bentopdf-secret.yml`. Once Argo CD has synced this
 workload, use Git changes and approved syncs for deployments. The lifecycle
 playbook below then supports verification only; its mutation actions are
 guarded against Argo CD ownership.
 
-Migration of the `bento-pdf` LXC Compose stack (BentoPDF + Newt) to the
-Talos cluster, packaged as a local Helm chart. Everything is driven by
-one playbook:
+The `bento-pdf` LXC Compose stack (BentoPDF + Newt) was migrated to Talos
+using the local Helm chart. The legacy migration playbook retains a
+read-only verification action:
 
 ```sh
-ansible-playbook playbooks/talos-cluster/bentopdf.yml -i inventory --vault-password-file .vault_pass
-# -e bentopdf_action=verify    re-run in-cluster verification only
-# -e bentopdf_action=cutover   -e bentopdf_public_url=https://...   move the Pangolin identity
-# -e bentopdf_action=rollback  -e bentopdf_public_url=https://...   back to the LXC
+ansible-playbook playbooks/talos-cluster/bentopdf.yml -i inventory \
+  --vault-password-file .vault_pass -e bentopdf_action=verify \
+  -e talos_kube_context=admin@homelab
 ```
 
 ## Layout

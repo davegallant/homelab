@@ -248,12 +248,11 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/paperlessngx/paperless-ngx | 3.3.3 |
 | docker.io/postgres | 18.6 |
 | docker.io/rommapp/romm | 5.4.0 |
-| docker.io/searxng/searxng | 2026.10.19-d47cb96bf |
 | docker.io/traefik | v3.7 |
 | docker.io/twinproduction/gatus | v5.37.0 |
 | docker.io/valkey/valkey | 9 |
+| docker.io/victoriametrics/victoria-metrics | v1.121.0 |
 | ghcr.io/advplyr/audiobookshelf | 2.37.1 |
-| ghcr.io/alam00000/bentopdf | 2.8.10 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.6.0.1 |
 | ghcr.io/dispatcharr/dispatcharr | 0.32.0 |
 | ghcr.io/flaresolverr/flaresolverr | v3.5.2 |
