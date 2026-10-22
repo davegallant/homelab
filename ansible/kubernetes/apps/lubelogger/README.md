@@ -23,12 +23,10 @@ Secrets stay in Vault and outside Argo's ownership:
 bootstrap-only one-use `lubelogger-tailscale-auth`.
 
 Backups: Velero Schedule `lubelogger` (in the values, opt-in
-mode) with pod annotation `backup.velero.io/backup-volumes: data`.
-
-**Pre-cutover TODO:** the app image is tag-pinned only. Resolve and
-pin the digest before the cutover sync:
-`crane digest ghcr.io/hargata/lubelogger:v1.4.5`, then add
-`digest: sha256:...` beside the tag in `values.production.yaml`.
+mode) with pod annotation `backup.velero.io/backup-volumes: data-local`.
+The copied local-path directory is exposed through a static local PV so
+Velero can make a filesystem backup. The original claim stays mounted
+read-only for rollback.
 
 ## Prerequisites (once)
 
@@ -110,6 +108,17 @@ kubectl --context admin@homelab apply -f ansible/kubernetes/apps/argocd/applicat
    corresponding PVC subdirectory and LXC volume before continuing.
    Directory metadata is excluded because the LXC and PVC filesystems
    can report different directory sizes.
+
+   Bind the copied directory through the repo-managed static local PV;
+   this keeps the data on the worker selected by the helper pod and makes
+   it eligible for Velero filesystem backups:
+
+   ```sh
+   kubectl --context admin@homelab apply -f ansible/kubernetes/apps/lubelogger/data-local-pv.yaml
+   ```
+
+   The application values retain `lubelogger-data` read-only and mount
+   `lubelogger-data-local` read-write at the same eight subpaths.
 
 3. Retire the LXC's tailnet node on the Headscale host
    (`headscale nodes delete --identifier <old-lubelogger-id>`).
