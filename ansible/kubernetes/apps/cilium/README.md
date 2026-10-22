@@ -25,6 +25,13 @@ be applied through the manual Talos Ansible flow. Cilium reuses Talos's
 existing cgroup v2 and bpffs mounts; chart auto-mounting is disabled, the
 cgroup root is `/sys/fs/cgroup`, and `SYS_MODULE` is omitted. kube-proxy stays
 enabled, so KubePrism-specific kube-proxy replacement settings are not used.
+Talos 1.14's [configuration changes](https://github.com/siderolabs/talos/releases/tag/v1.14.0)
+also support pinning kubelet node IP selection to `192.168.1.0/24` with
+`KubeNodeConfig`; this keeps the
+reachable LAN address as the Kubernetes InternalIP when Cilium creates its
+`cilium_host` interface. Secondary mode sets `cni.exclusive: false` so
+Flannel's CNI file remains in place until each node is explicitly selected
+through `CiliumNodeConfig`.
 
 ## Compatibility exit gate
 

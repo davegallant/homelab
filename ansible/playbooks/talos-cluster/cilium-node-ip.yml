@@ -1,0 +1,50 @@
+---
+- name: Pin Talos kubelet node IPs to the LAN before Cilium installation
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  vars:
+    talos_kube_context: ""
+    talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
+    talos_private_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.local/share/homelab-talos"
+    cilium_node_ip_nodes: >-
+      {{ [
+        talos_nodes | selectattr('name', 'equalto', 'k8s-w-2') | first,
+        talos_nodes | selectattr('name', 'equalto', 'k8s-w-1') | first,
+        talos_nodes | selectattr('name', 'equalto', 'k8s-cp-1') | first
+      ] }}
+  tasks:
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: cilium_node_ip_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - cilium_node_ip_context.stdout == talos_kube_context
+        fail_msg: "Pass -e talos_kube_context=<the Talos context> matching the active Talos context."
+
+    - name: Create the protected Talos configuration directory
+      ansible.builtin.file:
+        path: "{{ talos_private_dir }}"
+        state: directory
+        mode: "0700"
+
+    - name: Render the Talos kubelet node IP patch
+      ansible.builtin.template:
+        src: ../../kubernetes/cluster/cilium-node-ip.patch.yaml.j2
+        dest: "{{ talos_private_dir }}/cilium-node-ip.patch.yaml"
+        mode: "0600"
+
+    - name: Pin each node to its reachable LAN InternalIP
+      ansible.builtin.include_tasks:
+        file: cilium-node-ip-node.yml
+      loop: "{{ cilium_node_ip_nodes }}"
+      loop_control:
+        loop_var: cilium_node_ip_node
+        label: "{{ cilium_node_ip_node.name }}"
