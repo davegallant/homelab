@@ -4,6 +4,9 @@ extends: default
 ignore:
   - .direnv/
   - ansible/group_vars/all/secrets.yaml
+  # Helm templates contain Go template directives that yamllint cannot parse;
+  # validate these with helm lint and helm template instead.
+  - ansible/kubernetes/apps/searxng/chart/templates/
 
 rules:
   # Playbook main.yml files start with ---; shared task files and

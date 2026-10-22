@@ -1,0 +1,554 @@
+---
+# One playbook for the whole SearXNG lifecycle on Talos. The Helm chart
+# (ansible/kubernetes/apps/searxng/chart) owns the in-cluster packaging; this
+# playbook owns the choreography Helm cannot do: Vault-rendered values,
+# functional verification, and the LXC <-> cluster cutover of the Pangolin
+# Newt identity.
+#
+# Actions (pass with -e searxng_action=<action>):
+#   stage    (default) install/upgrade the release with Newt disabled,
+#            verify it in-cluster, and take a first Velero backup.
+#   verify   re-run the in-cluster verification only.
+#   cutover  stage + verify, stop the LXC stack, enable Newt in the
+#            cluster, and gate on the public health endpoint (needs -e
+#            searxng_public_url=https://...).
+#   rollback re-assert the release with Newt disabled, restart the LXC
+#            stack, and gate on the public health endpoint.
+- name: Manage SearXNG on Talos Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../group_vars/all/vars.yaml
+    - ../../group_vars/all/secrets.yaml
+  vars:
+    searxng_action: stage
+    searxng_public_url: ""
+    searxng_chart_dir: "{{ playbook_dir }}/../../kubernetes/apps/searxng/chart"
+  vars_prompt:
+    - name: talos_kube_context
+      prompt: Enter the expected kubectl context for the Talos cluster
+      private: false
+  tasks:
+    - name: Require a known action
+      ansible.builtin.assert:
+        that:
+          - searxng_action in ['stage', 'verify', 'cutover', 'rollback']
+        fail_msg: "searxng_action must be one of stage, verify, cutover, rollback."
+
+    - name: Require the SearXNG Vault variables
+      ansible.builtin.assert:
+        that:
+          - searxng_secret_key is defined
+          - searxng_secret_key | length > 0
+          - searxng_newt_id is defined
+          - searxng_newt_secret is defined
+          - pangolin_endpoint is defined
+        fail_msg: "Missing Vault variables. searxng_secret_key must be added to group_vars/all/secrets.yaml (see ansible/kubernetes/apps/searxng/README.md)."
+      when: searxng_action != 'verify'
+
+    - name: Require the public URL for cutover and rollback
+      ansible.builtin.assert:
+        that:
+          - searxng_public_url | length > 0
+        fail_msg: "Pass the public SearXNG URL with -e searxng_public_url=https://... for this action."
+      when: searxng_action in ['cutover', 'rollback']
+
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: searxng_kube_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - searxng_kube_context.stdout == talos_kube_context
+        fail_msg: "kubectl current context does not match the explicitly supplied Talos context."
+
+    - name: Verify all three Talos nodes are Ready
+      ansible.builtin.command:
+        argv: [kubectl, wait, --for=condition=Ready, --timeout=120s, node/k8s-cp-1, node/k8s-w-1, node/k8s-w-2]
+      changed_when: false
+
+    - name: Create a protected temporary render directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: searxng-k8s-
+      register: searxng_render_dir
+      when: searxng_action != 'verify'
+
+    - name: Run the requested action
+      when: searxng_render_dir.path is defined or searxng_action == 'verify'
+      block:
+        - name: Render Vault-backed Helm values
+          ansible.builtin.template:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/searxng/values.secrets.yaml.j2"
+            dest: "{{ searxng_render_dir.path }}/values.secrets.yaml"
+            mode: "0600"
+          no_log: true
+          when: searxng_action != 'verify'
+
+        - name: Validate the chart and values with helm template
+          ansible.builtin.command:
+            argv:
+              - helm
+              - template
+              - searxng
+              - "{{ searxng_chart_dir }}"
+              - --namespace
+              - searxng
+              - --values
+              - "{{ searxng_render_dir.path }}/values.secrets.yaml"
+          changed_when: false
+          when: searxng_action in ['stage', 'cutover']
+
+        - name: Install or upgrade the staging release with Newt disabled
+          ansible.builtin.command:
+            argv:
+              - helm
+              - upgrade
+              - --install
+              - --take-ownership
+              - --force-conflicts
+              - --server-side=true
+              - searxng
+              - "{{ searxng_chart_dir }}"
+              - --namespace
+              - searxng
+              - --create-namespace
+              - --values
+              - "{{ searxng_render_dir.path }}/values.secrets.yaml"
+              - --set
+              - newt.enabled=false
+          register: searxng_helm_stage
+          changed_when: "'Release' in searxng_helm_stage.stdout"
+          when: searxng_action in ['stage', 'cutover']
+
+        - name: Remove a stale Newt container before staging
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - searxng
+              - patch
+              - deployment/searxng
+              - --type=strategic
+              - --patch
+              - '{"spec":{"template":{"spec":{"containers":[{"name":"newt","$patch":"delete"}]}}}}'
+          register: searxng_stage_newt_prune
+          changed_when: "'(no change)' not in searxng_stage_newt_prune.stdout"
+          when: searxng_action in ['stage', 'cutover']
+
+        - name: Wait for the staging rollouts
+          ansible.builtin.command:
+            argv: [kubectl, -n, searxng, rollout, status, "deployment/{{ item }}", --timeout=300s]
+          loop:
+            - valkey
+            - searxng
+          changed_when: false
+          when: searxng_action in ['stage', 'cutover']
+
+        - name: Verify the staged release in-cluster
+          when: searxng_action in ['stage', 'verify', 'cutover']
+          block:
+            - name: Require Ready SearXNG and Valkey pods
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - searxng
+                  - wait
+                  - --for=condition=Ready
+                  - --timeout=120s
+                  - pod
+                  - -l
+                  - app.kubernetes.io/name in (searxng, valkey)
+              changed_when: false
+
+            - name: Require Valkey to answer PING
+              ansible.builtin.command:
+                argv: [kubectl, -n, searxng, exec, deployment/valkey, --, valkey-cli, ping]
+              register: searxng_valkey_ping
+              changed_when: false
+              failed_when: searxng_valkey_ping.stdout | trim != 'PONG'
+
+            - name: Require the Newt sidecar to be absent while staging
+              ansible.builtin.command:
+                argv: [kubectl, -n, searxng, get, deployment, searxng, -o, json]
+              register: searxng_deployment_status
+              changed_when: false
+
+            - name: Assert no Newt container is running yet
+              ansible.builtin.assert:
+                that:
+                  - "'newt' not in (searxng_deployment_status.stdout | from_json).spec.template.spec.containers | map(attribute='name') | list"
+                fail_msg: "The Newt sidecar is present before cutover; the Pangolin identity may have two owners."
+
+            - name: Verify SearXNG over a port-forward from this host
+              block:
+                - name: Start a port-forward to the SearXNG Service
+                  ansible.builtin.command:
+                    argv: [kubectl, -n, searxng, port-forward, service/searxng, "18080:8080"]
+                  async: 180
+                  poll: 0
+                  register: searxng_port_forward
+                  changed_when: true
+
+                - name: Wait for the port-forward to listen
+                  ansible.builtin.wait_for:
+                    host: 127.0.0.1
+                    port: 18080
+                    timeout: 30
+
+                - name: Request the SearXNG health endpoint
+                  ansible.builtin.command:
+                    argv:
+                      - curl
+                      - --silent
+                      - --show-error
+                      - --noproxy
+                      - "*"
+                      - --max-time
+                      - "15"
+                      - --output
+                      - /dev/null
+                      - --write-out
+                      - "%{http_code}"
+                      - http://127.0.0.1:18080/healthz
+                  register: searxng_health_http
+                  changed_when: false
+
+                - name: Require an HTTP 200 health response
+                  ansible.builtin.assert:
+                    that:
+                      - searxng_health_http.stdout == '200'
+                    fail_msg: "SearXNG /healthz did not return HTTP 200 through the Service."
+
+                - name: Run a real search query in JSON format
+                  ansible.builtin.command:
+                    argv:
+                      - curl
+                      - --silent
+                      - --show-error
+                      - --noproxy
+                      - "*"
+                      - --max-time
+                      - "40"
+                      - --write-out
+                      - "\n%{http_code}"
+                      - "http://127.0.0.1:18080/search?q=talos&format=json"
+                  register: searxng_search_http
+                  changed_when: false
+
+                - name: Require search results, not an engine error page
+                  ansible.builtin.assert:
+                    that:
+                      - searxng_search_http.stdout_lines[-1] == '200'
+                      - ((searxng_search_http.stdout_lines[:-1] | join('\n') | from_json).results | default([]) | length) > 0
+                    fail_msg: "The search query did not return results. Check the app logs for engine or limiter errors before cutting over."
+              always:
+                - name: Stop the port-forward
+                  ansible.builtin.command:
+                    argv: [pkill, -f, "port-forward service/searxng"]
+                  changed_when: false
+                  failed_when: false
+
+        - name: Cut over from the LXC to the cluster
+          when: searxng_action == 'cutover'
+          block:
+            - name: Stop the SearXNG Compose stack on the LXC
+              ansible.builtin.command:
+                argv: [docker, compose, stop]
+                chdir: /root
+              delegate_to: searxng
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              register: searxng_lxc_stop
+              changed_when: true
+
+            - name: Require the LXC stack to have stopped
+              ansible.builtin.assert:
+                that:
+                  - searxng_lxc_stop.rc == 0
+                fail_msg: >-
+                  docker compose stop failed on the searxng LXC
+                  (rc={{ searxng_lxc_stop.rc }}). The Newt identity still
+                  belongs to the LXC; the cluster sidecar has not been enabled.
+
+            - name: Confirm no LXC containers remain running
+              ansible.builtin.command:
+                argv: [docker, compose, ps, -q]
+                chdir: /root
+              delegate_to: searxng
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              register: searxng_lxc_ps
+              changed_when: false
+
+            - name: Require an empty LXC container list
+              ansible.builtin.assert:
+                that:
+                  - searxng_lxc_ps.stdout | trim | length == 0
+                fail_msg: >-
+                  Containers are still running on the searxng LXC. Resolve that
+                  before enabling the cluster Newt sidecar, so the Pangolin
+                  site never has two owners.
+
+            - name: Enable Newt in the cluster release
+              ansible.builtin.command:
+                argv:
+                  - helm
+                  - upgrade
+                  - --install
+                  - --take-ownership
+                  - searxng
+                  - "{{ searxng_chart_dir }}"
+                  - --namespace
+                  - searxng
+                  - --create-namespace
+                  - --values
+                  - "{{ searxng_render_dir.path }}/values.secrets.yaml"
+                  - --set
+                  - newt.enabled=true
+              register: searxng_helm_cutover
+              changed_when: "'Release' in searxng_helm_cutover.stdout"
+
+            - name: Wait for the SearXNG rollout with Newt
+              ansible.builtin.command:
+                argv: [kubectl, -n, searxng, rollout, status, deployment/searxng, --timeout=300s]
+              changed_when: false
+
+            - name: Read recent Newt sidecar logs
+              ansible.builtin.command:
+                argv: [kubectl, -n, searxng, logs, deployment/searxng, -c, newt, --tail=50]
+              register: searxng_newt_logs
+              changed_when: false
+              failed_when: false
+
+            - name: Report Newt sidecar logs
+              ansible.builtin.debug:
+                msg: "{{ searxng_newt_logs.stdout_lines | default([]) }}"
+
+            - name: Wait for the public health endpoint to serve the cluster instance
+              ansible.builtin.command:
+                argv:
+                  - curl
+                  - --silent
+                  - --show-error
+                  - --noproxy
+                  - "*"
+                  - --max-time
+                  - "15"
+                  - --output
+                  - /dev/null
+                  - --write-out
+                  - "%{http_code}"
+                  - "{{ searxng_public_url }}/healthz"
+              register: searxng_public_http
+              until: searxng_public_http.rc == 0 and searxng_public_http.stdout == '200'
+              retries: 24
+              delay: 5
+              changed_when: false
+
+            - name: Confirm the public health endpoint is live after the LXC stopped
+              ansible.builtin.assert:
+                that:
+                  - searxng_public_http.stdout == '200'
+                fail_msg: >-
+                  The public health endpoint did not return HTTP 200 with the
+                  LXC stopped. Re-run with -e searxng_action=rollback to
+                  restore the LXC stack.
+
+            - name: Report cutover complete
+              ansible.builtin.debug:
+                msg: >-
+                  Cutover complete: the LXC stack is stopped and the public
+                  health endpoint answers from the cluster. The stopped LXC stack remains the
+                  rollback target.
+
+        - name: Roll back to the LXC
+          when: searxng_action == 'rollback'
+          block:
+            - name: Re-assert the release with Newt disabled
+              ansible.builtin.command:
+                argv:
+                  - helm
+                  - upgrade
+                  - --install
+                  - --take-ownership
+                  - searxng
+                  - "{{ searxng_chart_dir }}"
+                  - --namespace
+                  - searxng
+                  - --create-namespace
+                  - --values
+                  - "{{ searxng_render_dir.path }}/values.secrets.yaml"
+                  - --set
+                  - newt.enabled=false
+              register: searxng_helm_rollback
+              changed_when: "'Release' in searxng_helm_rollback.stdout"
+
+            - name: Remove a stale Newt container before restarting the LXC
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - searxng
+                  - patch
+                  - deployment/searxng
+                  - --type=strategic
+                  - --patch
+                  - '{"spec":{"template":{"spec":{"containers":[{"name":"newt","$patch":"delete"}]}}}}'
+              register: searxng_rollback_newt_prune
+              changed_when: "'(no change)' not in searxng_rollback_newt_prune.stdout"
+
+            - name: Wait for the SearXNG rollout without Newt
+              ansible.builtin.command:
+                argv: [kubectl, -n, searxng, rollout, status, deployment/searxng, --timeout=300s]
+              changed_when: false
+
+            - name: Start the SearXNG Compose stack on the LXC
+              ansible.builtin.command:
+                argv: [docker, compose, start]
+                chdir: /root
+              delegate_to: searxng
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              register: searxng_lxc_start
+              changed_when: true
+
+            - name: Require the LXC stack to have started
+              ansible.builtin.assert:
+                that:
+                  - searxng_lxc_start.rc == 0
+                fail_msg: "docker compose start failed on the searxng LXC (rc={{ searxng_lxc_start.rc }}). The public URL is down until this is resolved."
+
+            - name: Wait for the public health endpoint to serve the LXC instance again
+              ansible.builtin.command:
+                argv:
+                  - curl
+                  - --silent
+                  - --show-error
+                  - --noproxy
+                  - "*"
+                  - --max-time
+                  - "15"
+                  - --output
+                  - /dev/null
+                  - --write-out
+                  - "%{http_code}"
+                  - "{{ searxng_public_url }}/healthz"
+              register: searxng_rollback_http
+              until: searxng_rollback_http.rc == 0 and searxng_rollback_http.stdout == '200'
+              retries: 24
+              delay: 5
+              changed_when: false
+
+            - name: Confirm rollback restored the public health endpoint
+              ansible.builtin.assert:
+                that:
+                  - searxng_rollback_http.stdout == '200'
+
+            - name: Report rollback complete
+              ansible.builtin.debug:
+                msg: >-
+                  Rollback complete: the cluster Newt sidecar is disabled and
+                  the LXC stack serves the public health endpoint again. The cluster
+                  release remains staged for a future cutover attempt.
+
+        - name: Take and verify a Velero backup of the namespace
+          when: searxng_action in ['stage', 'cutover']
+          block:
+            - name: Trigger a backup from searxng-daily
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - velero
+                  - exec
+                  - deployment/velero
+                  - --
+                  - /velero
+                  - backup
+                  - create
+                  - --from-schedule
+                  - searxng-daily
+              register: searxng_backup_create
+              changed_when: "'Backup request' in searxng_backup_create.stdout or 'backup' in searxng_backup_create.stdout"
+
+            - name: Read SearXNG backups from the schedule
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - velero
+                  - get
+                  - backups.velero.io
+                  - -l
+                  - velero.io/schedule-name=searxng-daily
+                  - -o
+                  - json
+              register: searxng_backup_list
+              changed_when: false
+
+            - name: Select the newest SearXNG backup name
+              ansible.builtin.set_fact:
+                searxng_backup_name_value: >-
+                  {{ ((searxng_backup_list.stdout | from_json)['items']
+                  | sort(attribute='metadata.creationTimestamp') | last).metadata.name }}
+
+            - name: Require a backup name from the schedule
+              ansible.builtin.assert:
+                that:
+                  - searxng_backup_name_value | length > 0
+
+            - name: Wait for the SearXNG backup to complete
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - velero
+                  - wait
+                  - "--for=jsonpath={.status.phase}=Completed"
+                  - "backup/{{ searxng_backup_name_value }}"
+                  - --timeout=600s
+              changed_when: false
+
+            - name: Read PodVolumeBackup results for the SearXNG backup
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - velero
+                  - get
+                  - podvolumebackups.velero.io
+                  - -l
+                  - "velero.io/backup-name={{ searxng_backup_name_value }}"
+                  - -o
+                  - json
+              register: searxng_pvb_results
+              changed_when: false
+
+            - name: Require a manifests-only backup by design
+              ansible.builtin.assert:
+                that:
+                  - (searxng_pvb_results.stdout | from_json)['items'] | length == 0
+                fail_msg: >-
+                  Expected zero PodVolumeBackups for the stateless searxng
+                  namespace. If volumes were added deliberately, update this
+                  check and the app README together.
+
+            - name: Report the verified backup name
+              ansible.builtin.debug:
+                msg: "Verified backup: {{ searxng_backup_name_value }} (Completed, manifests-only as designed)"
+      always:
+        - name: Remove temporary rendered values
+          ansible.builtin.file:
+            path: "{{ searxng_render_dir.path }}"
+            state: absent
+          when: searxng_render_dir.path is defined

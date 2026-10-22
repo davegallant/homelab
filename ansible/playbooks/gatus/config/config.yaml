@@ -60,6 +60,10 @@ endpoints:
     url: "{{ seerr_url }}"
     <<: *defaults
 
+  - name: searxng
+    url: "{{ searxng_url }}/healthz"
+    <<: *defaults
+
   - name: speedtest-tracker
     url: "{{ speedtest_tracker_url }}/admin/login"
     <<: *defaults

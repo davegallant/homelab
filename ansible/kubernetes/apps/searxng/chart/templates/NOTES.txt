@@ -1,0 +1,9 @@
+SearXNG release {{ .Release.Name }} installed in namespace {{ .Release.Namespace }}.
+
+Newt sidecar enabled: {{ .Values.newt.enabled }}
+{{- if not .Values.newt.enabled }}
+
+This is a STAGING install: the public Pangolin route still belongs to the
+LXC stack. Verify in-cluster, then cut over with the searxng.yml playbook
+(-e searxng_action=cutover), which stops the LXC before enabling Newt here.
+{{- end }}
