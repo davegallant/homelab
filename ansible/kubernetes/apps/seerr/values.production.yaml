@@ -200,6 +200,15 @@ configMaps:
         syncBuiltinESMExports();
 
 persistence:
+  # Keep the original hostPath-backed claim present for rollback. It is
+  # deliberately unmounted; Velero cannot make a PodVolumeBackup from it.
+  config:
+    type: persistentVolumeClaim
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 1Gi
   config-local:
     type: persistentVolumeClaim
     annotations:
