@@ -25,7 +25,7 @@ Secrets stay in Vault and outside Argo's ownership:
   preauth key created by hand at first registration (below), deleted
   once the identity persists in the `seerr-tailscale-state` PVC.
 
-Backups: the values carry a Velero Schedule (`seerr-daily`, into the
+Backups: the values carry a Velero Schedule (`seerr`, into the
 velero namespace) in opt-in mode; the pod annotates
 `backup.velero.io/backup-volumes: config`, so only the app config
 volume is filesystem-backed-up. The tailscale identity volume is never
@@ -123,9 +123,9 @@ No pod starts; the LXC keeps serving.
      ```sh
      set -euo pipefail
      kubectl --context admin@homelab -n velero exec deployment/velero -- \
-       /velero backup create --from-schedule seerr-daily --wait
+       /velero backup create --from-schedule seerr --wait
      BACKUP="$(kubectl --context admin@homelab -n velero get backups.velero.io \
-       -l velero.io/schedule-name=seerr-daily -o json \
+       -l velero.io/schedule-name=seerr -o json \
        | jq -r '.items | sort_by(.metadata.creationTimestamp) | last | .metadata.name')"
      kubectl --context admin@homelab -n velero wait \
        --for=jsonpath='{.status.phase}'=Completed "backup/$BACKUP" --timeout=600s

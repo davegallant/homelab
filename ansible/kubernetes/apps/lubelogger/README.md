@@ -22,7 +22,7 @@ Secrets stay in Vault and outside Argo's ownership:
 `lubelogger-caddy-external` (from `gitops-secrets.yml`) and the
 bootstrap-only one-use `lubelogger-tailscale-auth`.
 
-Backups: Velero Schedule `lubelogger-daily` (in the values, opt-in
+Backups: Velero Schedule `lubelogger` (in the values, opt-in
 mode) with pod annotation `backup.velero.io/backup-volumes: data`.
 
 **Pre-cutover TODO:** the app image is tag-pinned only. Resolve and
@@ -124,9 +124,9 @@ kubectl --context admin@homelab apply -f ansible/kubernetes/apps/argocd/applicat
    ```sh
    set -euo pipefail
    kubectl --context admin@homelab -n velero exec deployment/velero -- \
-     /velero backup create --from-schedule lubelogger-daily --wait
+     /velero backup create --from-schedule lubelogger --wait
    BACKUP="$(kubectl --context admin@homelab -n velero get backups.velero.io \
-     -l velero.io/schedule-name=lubelogger-daily -o json \
+     -l velero.io/schedule-name=lubelogger -o json \
      | jq -r '.items | sort_by(.metadata.creationTimestamp) | last | .metadata.name')"
    kubectl --context admin@homelab -n velero wait \
      --for=jsonpath='{.status.phase}'=Completed "backup/$BACKUP" --timeout=600s
