@@ -1,0 +1,43 @@
+# Default values for the bentopdf chart.
+# Secret-bearing values (newt credentials) ship empty and are supplied at
+# deploy time from Ansible Vault -- see ../values.secrets.yaml.j2 and
+# playbooks/talos-cluster/bentopdf.yml.
+
+bentopdf:
+  image: ghcr.io/alam00000/bentopdf:2.8.10@sha256:039239902a01e58a5a0f52e29039fafa18ffc2a481bb8acd807599f1c6dde7ef
+  # nginx-unprivileged in the image listens on 8080 by default
+  # (PORT env var upstream); the Compose stack sets no PORT override.
+  port: 8080
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+# The Newt sidecar owns the Pangolin site identity. Keep this false while
+# staging: the identity must never have two owners. The bentopdf.yml
+# playbook flips it during its cutover action, after the LXC stack is
+# stopped.
+newt:
+  enabled: false
+  image: docker.io/fosrl/newt:1.19.0@sha256:0189c8287058b800cca825590e4c39946b3815344ca48678dd0b96616d639319
+  pangolinEndpoint: ""
+  id: ""
+  secret: ""
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# Velero Schedule for this namespace (applied into the velero namespace).
+# Manifests-only by design: the app is fully stateless, Secrets are
+# excluded (re-creatable from Vault), and there are no volumes.
+backup:
+  enabled: true
+  schedule: "0 3 * * *"
+  ttl: 336h

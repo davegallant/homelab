@@ -7,6 +7,7 @@ ignore:
   # Helm templates contain Go template directives that yamllint cannot parse;
   # validate these with helm lint and helm template instead.
   - ansible/kubernetes/apps/searxng/chart/templates/
+  - ansible/kubernetes/apps/bentopdf/chart/templates/
   - ansible/kubernetes/apps/homepage/chart/templates/
 
 rules:

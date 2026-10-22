@@ -1,0 +1,13 @@
+BentoPDF release installed into namespace {{ .Release.Namespace }}.
+{{- if .Values.newt.enabled }}
+
+Newt is ENABLED: this pod owns the Pangolin site identity. Make sure the
+LXC stack on bento-pdf is stopped -- the identity must never have two
+owners. Only flip this via the bentopdf.yml playbook's cutover/rollback
+actions.
+{{- else }}
+
+Newt is disabled (staging): the Pangolin identity still belongs to the
+LXC stack on bento-pdf. Enable it only through the playbook's cutover
+action, after the LXC stack is stopped.
+{{- end }}

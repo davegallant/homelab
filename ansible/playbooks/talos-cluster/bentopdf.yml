@@ -1,0 +1,528 @@
+---
+# One playbook for the whole BentoPDF lifecycle on Talos. The Helm chart
+# (ansible/kubernetes/apps/bentopdf/chart) owns the in-cluster packaging;
+# this playbook owns the choreography Helm cannot do: Vault-rendered
+# values, functional verification, and the LXC <-> cluster cutover of
+# the Pangolin Newt identity.
+#
+# Actions (pass with -e bentopdf_action=<action>):
+#   stage    (default) install/upgrade the release with Newt disabled,
+#            verify it in-cluster, and take a first Velero backup.
+#   verify   re-run the in-cluster verification only.
+#   cutover  stage + verify, stop the LXC stack, enable Newt in the
+#            cluster, and gate on the public URL (needs -e
+#            bentopdf_public_url=https://...).
+#   rollback re-assert the release with Newt disabled, restart the LXC
+#            stack, and gate on the public URL.
+- name: Manage BentoPDF on Talos Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../group_vars/all/vars.yaml
+    - ../../group_vars/all/secrets.yaml
+  vars:
+    bentopdf_action: stage
+    bentopdf_public_url: ""
+    bentopdf_chart_dir: "{{ playbook_dir }}/../../kubernetes/apps/bentopdf/chart"
+  vars_prompt:
+    - name: talos_kube_context
+      prompt: Enter the expected kubectl context for the Talos cluster
+      private: false
+  tasks:
+    - name: Require a known action
+      ansible.builtin.assert:
+        that:
+          - bentopdf_action in ['stage', 'verify', 'cutover', 'rollback']
+        fail_msg: "bentopdf_action must be one of stage, verify, cutover, rollback."
+
+    - name: Require the BentoPDF Vault variables
+      ansible.builtin.assert:
+        that:
+          - bentopdf_newt_id is defined
+          - bentopdf_newt_secret is defined
+          - pangolin_endpoint is defined
+        fail_msg: "Missing Vault variables (bentopdf_newt_id, bentopdf_newt_secret, pangolin_endpoint) in group_vars/all/secrets.yaml."
+      when: bentopdf_action != 'verify'
+
+    - name: Require the public URL for cutover and rollback
+      ansible.builtin.assert:
+        that:
+          - bentopdf_public_url | length > 0
+        fail_msg: "Pass the public BentoPDF URL with -e bentopdf_public_url=https://... for this action."
+      when: bentopdf_action in ['cutover', 'rollback']
+
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: bentopdf_kube_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - bentopdf_kube_context.stdout == talos_kube_context
+        fail_msg: "kubectl current context does not match the explicitly supplied Talos context."
+
+    - name: Verify all three Talos nodes are Ready
+      ansible.builtin.command:
+        argv: [kubectl, wait, --for=condition=Ready, --timeout=120s, node/k8s-cp-1, node/k8s-w-1, node/k8s-w-2]
+      changed_when: false
+
+    - name: Create a protected temporary render directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: bentopdf-k8s-
+      register: bentopdf_render_dir
+      when: bentopdf_action != 'verify'
+
+    - name: Run the requested action
+      when: bentopdf_render_dir.path is defined or bentopdf_action == 'verify'
+      block:
+        - name: Render Vault-backed Helm values
+          ansible.builtin.template:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/bentopdf/values.secrets.yaml.j2"
+            dest: "{{ bentopdf_render_dir.path }}/values.secrets.yaml"
+            mode: "0600"
+          no_log: true
+          when: bentopdf_action != 'verify'
+
+        - name: Validate the chart and values with helm template
+          ansible.builtin.command:
+            argv:
+              - helm
+              - template
+              - bentopdf
+              - "{{ bentopdf_chart_dir }}"
+              - --namespace
+              - bentopdf
+              - --values
+              - "{{ bentopdf_render_dir.path }}/values.secrets.yaml"
+          changed_when: false
+          when: bentopdf_action in ['stage', 'cutover']
+
+        - name: Install or upgrade the staging release with Newt disabled
+          ansible.builtin.command:
+            argv:
+              - helm
+              - upgrade
+              - --install
+              - --take-ownership
+              - --force-conflicts
+              - --server-side=true
+              - bentopdf
+              - "{{ bentopdf_chart_dir }}"
+              - --namespace
+              - bentopdf
+              - --create-namespace
+              - --values
+              - "{{ bentopdf_render_dir.path }}/values.secrets.yaml"
+              - --set
+              - newt.enabled=false
+          register: bentopdf_helm_stage
+          changed_when: "'Release' in bentopdf_helm_stage.stdout"
+          when: bentopdf_action in ['stage', 'cutover']
+
+        - name: Remove a stale Newt container before staging
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - bentopdf
+              - patch
+              - deployment/bentopdf
+              - --type=strategic
+              - --patch
+              - '{"spec":{"template":{"spec":{"containers":[{"name":"newt","$patch":"delete"}]}}}}'
+          register: bentopdf_stage_newt_prune
+          changed_when: "'(no change)' not in bentopdf_stage_newt_prune.stdout"
+          when: bentopdf_action in ['stage', 'cutover']
+
+        - name: Wait for the staging rollout
+          ansible.builtin.command:
+            argv: [kubectl, -n, bentopdf, rollout, status, deployment/bentopdf, --timeout=300s]
+          changed_when: false
+          when: bentopdf_action in ['stage', 'cutover']
+
+        - name: Verify the staged release in-cluster
+          when: bentopdf_action in ['stage', 'verify', 'cutover']
+          block:
+            - name: Require a Ready BentoPDF pod
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - bentopdf
+                  - wait
+                  - --for=condition=Ready
+                  - --timeout=120s
+                  - pod
+                  - -l
+                  - app.kubernetes.io/name=bentopdf
+              changed_when: false
+
+            - name: Require the Newt sidecar to be absent while staging
+              ansible.builtin.command:
+                argv: [kubectl, -n, bentopdf, get, deployment, bentopdf, -o, json]
+              register: bentopdf_deployment_status
+              changed_when: false
+              when: bentopdf_action != 'cutover'
+
+            - name: Assert no Newt container is running yet
+              ansible.builtin.assert:
+                that:
+                  - "'newt' not in (bentopdf_deployment_status.stdout | from_json).spec.template.spec.containers | map(attribute='name') | list"
+                fail_msg: "The Newt sidecar is present before cutover; the Pangolin identity may have two owners."
+              when: bentopdf_action != 'cutover'
+
+            - name: Verify BentoPDF over a port-forward from this host
+              block:
+                - name: Start a port-forward to the BentoPDF Service
+                  ansible.builtin.command:
+                    argv: [kubectl, -n, bentopdf, port-forward, service/bentopdf, "18082:8080"]
+                  async: 180
+                  poll: 0
+                  register: bentopdf_port_forward
+                  changed_when: true
+
+                - name: Wait for the port-forward to listen
+                  ansible.builtin.wait_for:
+                    host: 127.0.0.1
+                    port: 18082
+                    timeout: 30
+
+                - name: Request the BentoPDF root page
+                  ansible.builtin.command:
+                    argv:
+                      - curl
+                      - --silent
+                      - --show-error
+                      - --noproxy
+                      - "*"
+                      - --max-time
+                      - "15"
+                      - --write-out
+                      - "\n%{http_code}"
+                      - http://127.0.0.1:18082/
+                  register: bentopdf_root_http
+                  changed_when: false
+
+                - name: Require the real BentoPDF page, not an error
+                  ansible.builtin.assert:
+                    that:
+                      - bentopdf_root_http.stdout_lines[-1] == '200'
+                      - bentopdf_root_http.stdout is search('BentoPDF')
+                    fail_msg: >-
+                      The root page did not return HTTP 200 with BentoPDF content.
+                      Check the app logs and container port (values: bentopdf.port)
+                      before cutting over.
+              always:
+                - name: Stop the port-forward
+                  ansible.builtin.command:
+                    argv: [pkill, -f, "port-forward service/bentopdf"]
+                  changed_when: false
+                  failed_when: false
+        - name: Cut over from the LXC to the cluster
+          when: bentopdf_action == 'cutover'
+          block:
+            - name: Stop the BentoPDF Compose stack on the LXC
+              ansible.builtin.command:
+                argv: [docker, compose, stop]
+                chdir: /root
+              delegate_to: bento-pdf
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              register: bentopdf_lxc_stop
+              changed_when: true
+
+            - name: Require the LXC stack to have stopped
+              ansible.builtin.assert:
+                that:
+                  - bentopdf_lxc_stop.rc == 0
+                fail_msg: >-
+                  docker compose stop failed on the bento-pdf LXC
+                  (rc={{ bentopdf_lxc_stop.rc }}). The Newt identity still
+                  belongs to the LXC; the cluster sidecar has not been enabled.
+
+            - name: Confirm no LXC containers remain running
+              ansible.builtin.command:
+                argv: [docker, compose, ps, -q]
+                chdir: /root
+              delegate_to: bento-pdf
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              register: bentopdf_lxc_ps
+              changed_when: false
+
+            - name: Require an empty LXC container list
+              ansible.builtin.assert:
+                that:
+                  - bentopdf_lxc_ps.stdout | trim | length == 0
+                fail_msg: >-
+                  Containers are still running on the bento-pdf LXC. Resolve that
+                  before enabling the cluster Newt sidecar, so the Pangolin
+                  site never has two owners.
+
+            - name: Enable Newt in the cluster release
+              ansible.builtin.command:
+                argv:
+                  - helm
+                  - upgrade
+                  - --install
+                  - --take-ownership
+                  - --force-conflicts
+                  - --server-side=true
+                  - bentopdf
+                  - "{{ bentopdf_chart_dir }}"
+                  - --namespace
+                  - bentopdf
+                  - --create-namespace
+                  - --values
+                  - "{{ bentopdf_render_dir.path }}/values.secrets.yaml"
+                  - --set
+                  - newt.enabled=true
+              register: bentopdf_helm_cutover
+              changed_when: "'Release' in bentopdf_helm_cutover.stdout"
+
+            - name: Wait for the BentoPDF rollout with Newt
+              ansible.builtin.command:
+                argv: [kubectl, -n, bentopdf, rollout, status, deployment/bentopdf, --timeout=300s]
+              changed_when: false
+
+            - name: Read recent Newt sidecar logs
+              ansible.builtin.command:
+                argv: [kubectl, -n, bentopdf, logs, deployment/bentopdf, -c, newt, --tail=50]
+              register: bentopdf_newt_logs
+              changed_when: false
+              failed_when: false
+
+            - name: Report Newt sidecar logs
+              ansible.builtin.debug:
+                msg: "{{ bentopdf_newt_logs.stdout_lines | default([]) }}"
+
+            - name: Wait for the public URL to serve the cluster instance
+              ansible.builtin.command:
+                argv:
+                  - curl
+                  - --silent
+                  - --show-error
+                  - --noproxy
+                  - "*"
+                  - --max-time
+                  - "15"
+                  - --output
+                  - /dev/null
+                  - --write-out
+                  - "%{http_code}"
+                  - "{{ bentopdf_public_url }}/"
+              register: bentopdf_public_http
+              until: bentopdf_public_http.rc == 0 and bentopdf_public_http.stdout == '200'
+              retries: 24
+              delay: 5
+              changed_when: false
+
+            - name: Confirm the public URL is live after the LXC stopped
+              ansible.builtin.assert:
+                that:
+                  - bentopdf_public_http.stdout == '200'
+                fail_msg: >-
+                  The public URL did not return HTTP 200 with the LXC stopped.
+                  If Pangolin SSO protects this site, a 302 to the auth portal
+                  also proves the tunnel routes -- check the last observed code
+                  in the task output before concluding failure. Otherwise
+                  re-run with -e bentopdf_action=rollback to restore the LXC.
+
+            - name: Report cutover complete
+              ansible.builtin.debug:
+                msg: >-
+                  Cutover complete: the LXC stack is stopped and the public
+                  URL answers from the cluster. The stopped LXC stack remains the
+                  rollback target.
+
+        - name: Roll back to the LXC
+          when: bentopdf_action == 'rollback'
+          block:
+            - name: Re-assert the release with Newt disabled
+              ansible.builtin.command:
+                argv:
+                  - helm
+                  - upgrade
+                  - --install
+                  - --take-ownership
+                  - --force-conflicts
+                  - --server-side=true
+                  - bentopdf
+                  - "{{ bentopdf_chart_dir }}"
+                  - --namespace
+                  - bentopdf
+                  - --create-namespace
+                  - --values
+                  - "{{ bentopdf_render_dir.path }}/values.secrets.yaml"
+                  - --set
+                  - newt.enabled=false
+              register: bentopdf_helm_rollback
+              changed_when: "'Release' in bentopdf_helm_rollback.stdout"
+
+            - name: Remove a stale Newt container before restarting the LXC
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - bentopdf
+                  - patch
+                  - deployment/bentopdf
+                  - --type=strategic
+                  - --patch
+                  - '{"spec":{"template":{"spec":{"containers":[{"name":"newt","$patch":"delete"}]}}}}'
+              register: bentopdf_rollback_newt_prune
+              changed_when: "'(no change)' not in bentopdf_rollback_newt_prune.stdout"
+
+            - name: Wait for the BentoPDF rollout without Newt
+              ansible.builtin.command:
+                argv: [kubectl, -n, bentopdf, rollout, status, deployment/bentopdf, --timeout=300s]
+              changed_when: false
+
+            - name: Start the BentoPDF Compose stack on the LXC
+              ansible.builtin.command:
+                argv: [docker, compose, start]
+                chdir: /root
+              delegate_to: bento-pdf
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              register: bentopdf_lxc_start
+              changed_when: true
+
+            - name: Require the LXC stack to have started
+              ansible.builtin.assert:
+                that:
+                  - bentopdf_lxc_start.rc == 0
+                fail_msg: "docker compose start failed on the bento-pdf LXC (rc={{ bentopdf_lxc_start.rc }}). The public URL is down until this is resolved."
+
+            - name: Wait for the public URL to serve the LXC instance again
+              ansible.builtin.command:
+                argv:
+                  - curl
+                  - --silent
+                  - --show-error
+                  - --noproxy
+                  - "*"
+                  - --max-time
+                  - "15"
+                  - --output
+                  - /dev/null
+                  - --write-out
+                  - "%{http_code}"
+                  - "{{ bentopdf_public_url }}/"
+              register: bentopdf_rollback_http
+              until: bentopdf_rollback_http.rc == 0 and bentopdf_rollback_http.stdout == '200'
+              retries: 24
+              delay: 5
+              changed_when: false
+
+            - name: Confirm rollback restored the public URL
+              ansible.builtin.assert:
+                that:
+                  - bentopdf_rollback_http.stdout == '200'
+
+            - name: Report rollback complete
+              ansible.builtin.debug:
+                msg: >-
+                  Rollback complete: the cluster Newt sidecar is disabled and
+                  the LXC stack serves the public URL again. The cluster
+                  release remains staged for a future cutover attempt.
+
+        - name: Take and verify a Velero backup of the namespace
+          when: bentopdf_action in ['stage', 'cutover']
+          block:
+            - name: Trigger a backup from bentopdf-daily
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - velero
+                  - exec
+                  - deployment/velero
+                  - --
+                  - /velero
+                  - backup
+                  - create
+                  - --from-schedule
+                  - bentopdf-daily
+              register: bentopdf_backup_create
+              changed_when: "'Backup request' in bentopdf_backup_create.stdout or 'backup' in bentopdf_backup_create.stdout"
+
+            - name: Read BentoPDF backups from the schedule
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - velero
+                  - get
+                  - backups.velero.io
+                  - -l
+                  - velero.io/schedule-name=bentopdf-daily
+                  - -o
+                  - json
+              register: bentopdf_backup_list
+              changed_when: false
+
+            - name: Select the newest BentoPDF backup name
+              ansible.builtin.set_fact:
+                bentopdf_backup_name_value: >-
+                  {{ ((bentopdf_backup_list.stdout | from_json)['items']
+                  | sort(attribute='metadata.creationTimestamp') | last).metadata.name }}
+
+            - name: Require a backup name from the schedule
+              ansible.builtin.assert:
+                that:
+                  - bentopdf_backup_name_value | length > 0
+
+            - name: Wait for the BentoPDF backup to complete
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - velero
+                  - wait
+                  - "--for=jsonpath={.status.phase}=Completed"
+                  - "backup/{{ bentopdf_backup_name_value }}"
+                  - --timeout=600s
+              changed_when: false
+
+            - name: Read PodVolumeBackup results for the BentoPDF backup
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - velero
+                  - get
+                  - podvolumebackups.velero.io
+                  - -l
+                  - "velero.io/backup-name={{ bentopdf_backup_name_value }}"
+                  - -o
+                  - json
+              register: bentopdf_pvb_results
+              changed_when: false
+
+            - name: Require a manifests-only backup by design
+              ansible.builtin.assert:
+                that:
+                  - (bentopdf_pvb_results.stdout | from_json)['items'] | length == 0
+                fail_msg: >-
+                  Expected zero PodVolumeBackups for the stateless bentopdf
+                  namespace. If volumes were added deliberately, update this
+                  check and the app README together.
+
+            - name: Report the verified backup name
+              ansible.builtin.debug:
+                msg: "Verified backup: {{ bentopdf_backup_name_value }} (Completed, manifests-only as designed)"
+      always:
+        - name: Remove temporary rendered values
+          ansible.builtin.file:
+            path: "{{ bentopdf_render_dir.path }}"
+            state: absent
+          when: bentopdf_render_dir.path is defined

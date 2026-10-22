@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bentopdf
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bentopdf
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: bentopdf
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: bentopdf
+          image: {{ .Values.bentopdf.image }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: {{ .Values.bentopdf.port }}
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 24
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.bentopdf.resources | nindent 12 }}
+        {{- if .Values.newt.enabled }}
+        - name: newt
+          image: {{ .Values.newt.image }}
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: bentopdf-newt
+          resources:
+            {{- toYaml .Values.newt.resources | nindent 12 }}
+        {{- end }}
