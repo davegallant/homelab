@@ -17,9 +17,6 @@ controllers:
   changedetection:
     type: deployment
     strategy: Recreate
-    # STAGING: 0 until the LXC config has been copied into the PVC
-    # (see README.md). The cutover commit removes this line.
-    replicas: 0
     pod:
       annotations:
         # Opt-in filesystem backup of the app config volume only;
