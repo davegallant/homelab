@@ -1,14 +1,16 @@
+{{- if .Values.backup.enabled }}
 apiVersion: velero.io/v1
 kind: Schedule
 metadata:
   name: searxng-daily
   namespace: velero
 spec:
-  schedule: "0 3 * * *"
+  schedule: {{ .Values.backup.schedule | quote }}
   template:
-    ttl: 336h
+    ttl: {{ .Values.backup.ttl }}
     includedNamespaces:
-      - searxng
+      - {{ .Release.Namespace }}
     excludedResources:
       - secrets
     defaultVolumesToFsBackup: false
+{{- end }}

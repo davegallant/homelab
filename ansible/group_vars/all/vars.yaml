@@ -20,6 +20,9 @@ ufw_docker_allowed_sources:
 # and the Gatus endpoint. Verified against the live VPS config (2026-10-03).
 pangolin_dashboard_domain: "pangolin.davegallant.ca"
 
+# Public SearXNG endpoint, exposed through the Pangolin Newt sidecar.
+searxng_url: "https://searxng.davegallant.ca"
+
 # Headscale tailnet IPv4 allocation range.
 headscale_v4_prefix: "100.100.0.0/16"
 headscale_secondary_dns_ip: "100.100.0.11" # Gatus host

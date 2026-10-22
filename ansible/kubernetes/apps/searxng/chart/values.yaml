@@ -1,0 +1,173 @@
+# Default values for the searxng chart.
+# Secret-bearing values (settings.secretKey, newt credentials) ship empty and
+# are supplied at deploy time from Ansible Vault -- see
+# ../values.secrets.yaml.j2 and playbooks/talos-cluster/searxng.yml.
+
+searxng:
+  image: docker.io/searxng/searxng:2026.10.19-d47cb96bf@sha256:d81e14a4328ba7a57f297dff0472be629d30bf29580406c0d5b3bdab563c9bed
+  uwsgiWorkers: "4"
+  uwsgiThreads: "4"
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+valkey:
+  image: docker.io/valkey/valkey:9@sha256:418652cfb58ef879d4978c33553735d7147016032d5aefaa14c828e611eb9dfd
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+# The Newt sidecar owns the Pangolin site identity. Keep this false while
+# staging: the identity must never have two owners. The searxng.yml playbook
+# flips it during its cutover action, after the LXC stack is stopped.
+newt:
+  enabled: false
+  image: docker.io/fosrl/newt:1.19.0@sha256:0189c8287058b800cca825590e4c39946b3815344ca48678dd0b96616d639319
+  pangolinEndpoint: ""
+  id: ""
+  secret: ""
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# Non-secret SearXNG settings (rendered into the settings Secret alongside
+# secretKey). Reconcile against the live LXC settings before first deploy --
+# see ../README.md.
+settings:
+  secretKey: ""
+  instanceName: "searxng"
+  safeSearch: 0
+  autocomplete: ""
+  defaultLang: "auto"
+  formats:
+    - html
+    - json
+  limiter: false
+  imageProxy: false
+  disabledEngines:
+    - "1337x"
+    - "1x"
+    - "9gag"
+    - "alpine linux packages"
+    - anaconda
+    - "annas archive"
+    - "apk mirror"
+    - "apple app store"
+    - "apple maps"
+    - bilibili
+    - bing
+    - bitbucket
+    - bpb
+    - btdigg
+    - "caddy.community"
+    - cloudflareai
+    - codeberg
+    - "crates.io"
+    - crossref
+    - crowdview
+    - "ddg definitions"
+    - deezer
+    - destatis
+    - "discuss.python"
+    - "duckduckgo images"
+    - "duckduckgo news"
+    - "duckduckgo videos"
+    - "duckduckgo weather"
+    - duden
+    - emojipedia
+    - encyclosearch
+    - erowid
+    - fdroid
+    - findthatmeme
+    - "free software directory"
+    - frinkiac
+    - fyyd
+    - geizhals
+    - "gitea.com"
+    - gitlab
+    - goodreads
+    - "google play apps"
+    - "google play movies"
+    - habrahabr
+    - hackernews
+    - hex
+    - imdb
+    - imgur
+    - ina
+    - jisho
+    - "lib.rs"
+    - "library genesis"
+    - libretranslate
+    - "lobste.rs"
+    - "material icons"
+    - "media.ccc.de"
+    - mediathekviewweb
+    - metacpan
+    - mojeek
+    - "mojeek images"
+    - "mojeek news"
+    - moviepilot
+    - mozhi
+    - mwmbl
+    - naver
+    - npm
+    - nyaa
+    - odysee
+    - openmeteo
+    - openrepos
+    - packagist
+    - peertube
+    - "pi-hole.community"
+    - pixiv
+    - "pkg.go.dev"
+    - "pub.dev"
+    - rottentomatoes
+    - rubygems
+    - rumble
+    - searchmysite
+    - "semantic scholar"
+    - seznam
+    - sourcehut
+    - startpage
+    - tagesschau
+    - tineye
+    - tmdb
+    - tokyotoshokan
+    - voidlinux
+    - wiby
+    - wikibooks
+    - wikimini
+    - wikiquote
+    - wikisource
+    - wikispecies
+    - wikiversity
+    - wikivoyage
+    - wolframalpha
+    - "woxikon.de synonyme"
+    - yacy
+    - "yacy images"
+    - yahoo
+    - yandex
+    - "yandex images"
+    - "yandex music"
+    - yep
+
+# Velero Schedule for this namespace (applied into the velero namespace).
+# Manifests-only by design: Secrets are excluded (re-creatable from Vault)
+# and there are no persistent volumes to capture.
+backup:
+  enabled: true
+  schedule: "0 3 * * *"
+  ttl: 336h

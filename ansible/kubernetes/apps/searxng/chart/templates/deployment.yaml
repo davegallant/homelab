@@ -1,9 +1,8 @@
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: searxng
-  namespace: searxng
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   strategy:
@@ -16,18 +15,18 @@ spec:
       labels:
         app.kubernetes.io/name: searxng
       annotations:
-        checksum/settings: "{{ lookup('ansible.builtin.template', playbook_dir + '/../../kubernetes/apps/searxng/settings.yaml.j2') | hash('sha256') }}"
+        checksum/settings: {{ include (print $.Template.BasePath "/secret-settings.yaml") . | sha256sum }}
     spec:
       automountServiceAccountToken: false
       containers:
         - name: searxng
-          image: docker.io/searxng/searxng:2026.10.19-d47cb96bf@sha256:d81e14a4328ba7a57f297dff0472be629d30bf29580406c0d5b3bdab563c9bed
+          image: {{ .Values.searxng.image }}
           imagePullPolicy: IfNotPresent
           env:
             - name: UWSGI_WORKERS
-              value: "4"
+              value: {{ .Values.searxng.uwsgiWorkers | quote }}
             - name: UWSGI_THREADS
-              value: "4"
+              value: {{ .Values.searxng.uwsgiThreads | quote }}
           ports:
             - name: http
               containerPort: 8080
@@ -54,12 +53,7 @@ spec:
             timeoutSeconds: 3
             failureThreshold: 3
           resources:
-            requests:
-              cpu: 250m
-              memory: 512Mi
-            limits:
-              cpu: "1"
-              memory: 1Gi
+            {{- toYaml .Values.searxng.resources | nindent 12 }}
           securityContext:
             capabilities:
               drop:
@@ -73,21 +67,16 @@ spec:
               mountPath: /etc/searxng/settings.yml
               subPath: settings.yml
               readOnly: true
-{% if searxng_newt_enabled %}
+        {{- if .Values.newt.enabled }}
         - name: newt
-          image: docker.io/fosrl/newt:1.19.0@sha256:0189c8287058b800cca825590e4c39946b3815344ca48678dd0b96616d639319
+          image: {{ .Values.newt.image }}
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
                 name: searxng-newt
           resources:
-            requests:
-              cpu: 25m
-              memory: 32Mi
-            limits:
-              cpu: 100m
-              memory: 128Mi
-{% endif %}
+            {{- toYaml .Values.newt.resources | nindent 12 }}
+        {{- end }}
       volumes:
         - name: searxng-settings
           secret:

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: searxng
+description: SearXNG + Valkey, with an optional Newt sidecar for Pangolin exposure and a Velero backup Schedule.
+type: application
+version: 0.1.0
+appVersion: "2026.10.19-d47cb96bf"
