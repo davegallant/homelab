@@ -1,3 +1,4 @@
+{{- if not .Values.configFiles.existingConfigMap }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -8,7 +9,9 @@ data:
 {{- .Values.configFiles.servicesYaml | nindent 4 }}
   settings.yaml: |
 {{- .Values.configFiles.settingsYaml | nindent 4 }}
+{{- end }}
 
+{{- if not .Values.configFiles.proxyExistingConfigMap }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -18,6 +21,7 @@ metadata:
 data:
   proxy-agent.cjs: |
 {{- .Values.configFiles.proxyAgentCjs | nindent 4 }}
+{{- end }}
 
 ---
 apiVersion: v1

@@ -1,0 +1,8 @@
+---
+magicDnsDomain: tail.davegallant.ca
+headscaleDomain: hs.davegallant.ca
+tailscaleHostname: kiwix
+caddy:
+  existingSecret: kiwix-caddy-external
+tailscale:
+  enabled: true

@@ -1,0 +1,13 @@
+---
+magicDnsDomain: tail.davegallant.ca
+headscaleDomain: hs.davegallant.ca
+tailscaleHostname: homepage
+caddy:
+  existingSecret: homepage-caddy-external
+homepage:
+  existingSecret: homepage-environment-external
+configFiles:
+  existingConfigMap: homepage-config
+  proxyExistingConfigMap: homepage-node-proxy
+configChecksum: 61e9a052fe7a6f3fc60ceea5bf7ee5eb075aaef4a2d13e3cfbbdd9807a61e7aa
+restartTimestamp: '2026-10-21T18:18:26-04:00'

@@ -1,0 +1,7 @@
+---
+configs:
+  cm:
+    url: https://argocd.tail.davegallant.ca
+server:
+  podAnnotations:
+    checksum/tailnet: 100560ad9237c9b796899f87afa44093278e30efcd9e851d6b0a99b73073a048

@@ -1,5 +1,9 @@
 # Argo CD bootstrap and BentoPDF handoff
 
+The full release inventory and ongoing workflow are in
+[`MANAGEMENT.md`](MANAGEMENT.md). All releases now have Application definitions,
+including Argo CD itself; the bootstrap below remains the recovery path.
+
 Ansible installs Argo CD from the pinned upstream Helm chart and provisions
 application Secrets from Vault. Argo CD reads desired application state from
 `https://github.com/davegallant/homelab.git`, branch `main`. Forgejo remains a

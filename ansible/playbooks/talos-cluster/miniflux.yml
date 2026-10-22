@@ -41,6 +41,14 @@
       UNION ALL SELECT 'entries|' || count(*) FROM entries
       ORDER BY 1
   tasks:
+    - name: Check that Helm is still the release manager
+      ansible.builtin.include_tasks:
+        file: ../../tasks/assert-not-argocd-managed.yml
+      vars:
+        gitops_guard_namespace: miniflux
+        gitops_guard_name: miniflux
+      when: miniflux_action != 'verify'
+
     - name: Require a known action
       ansible.builtin.assert:
         that:

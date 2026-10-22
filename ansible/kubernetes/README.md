@@ -10,7 +10,10 @@ has been retired.
 
 Argo CD bootstrap and the first BentoPDF handoff are documented in
 [`apps/argocd/README.md`](apps/argocd/README.md). The bootstrap remains
-Ansible-managed; application syncs read GitHub `main` and require approval.
+available for recovery; all Helm releases, including Argo CD itself, are
+managed by Applications that read GitHub `main` and require sync approval.
+See [`apps/argocd/MANAGEMENT.md`](apps/argocd/MANAGEMENT.md) for the inventory,
+external-resource workflow, and recovery safeguards.
 
 The application charts can consume Secrets provisioned separately from Helm.
 Empty `existingSecret` values preserve the current Vault-to-Helm deployment

@@ -1,0 +1,25 @@
+- name: Read the resource ownership marker before Helm changes
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - -n
+      - "{{ gitops_guard_namespace }}"
+      - get
+      - "{{ gitops_guard_kind | default('deployment') }}"
+      - "{{ gitops_guard_name }}"
+      - --ignore-not-found=true
+      - -o
+      - 'jsonpath={.metadata.annotations.argocd\.argoproj\.io/tracking-id}'
+  register: gitops_guard_owner
+  changed_when: false
+
+- name: Require Helm to leave Argo CD resources under Git management
+  ansible.builtin.assert:
+    that:
+      - gitops_guard_owner.stdout | trim | length == 0
+    fail_msg: >-
+      This release is managed by Argo CD. Change its configuration in Git
+      and approve a sync. The Ansible Helm installer is for bootstrap or
+      recovery only; verification actions remain available.

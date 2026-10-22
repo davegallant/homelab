@@ -1,0 +1,6 @@
+---
+newt:
+  enabled: true
+  existingSecret: searxng-newt-external
+settings:
+  existingSecret: searxng-settings-external

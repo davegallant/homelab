@@ -13,10 +13,24 @@ spec:
       namespace: bentopdf
     - server: https://kubernetes.default.svc
       namespace: velero
+    - server: https://kubernetes.default.svc
+      namespace: homepage
+    - server: https://kubernetes.default.svc
+      namespace: kiwix
+    - server: https://kubernetes.default.svc
+      namespace: miniflux
+    - server: https://kubernetes.default.svc
+      namespace: searxng
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
     - group: apps
       kind: Deployment
+    - group: apps
+      kind: StatefulSet
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: ServiceAccount
     - group: ""
       kind: Service
     - group: velero.io

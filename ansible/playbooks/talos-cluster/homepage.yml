@@ -36,6 +36,14 @@
       prompt: Enter the expected kubectl context for the Talos cluster
       private: false
   tasks:
+    - name: Check that Helm is still the release manager
+      ansible.builtin.include_tasks:
+        file: ../../tasks/assert-not-argocd-managed.yml
+      vars:
+        gitops_guard_namespace: homepage
+        gitops_guard_name: homepage
+      when: homepage_action == 'adopt'
+
     - name: Require a known action
       ansible.builtin.assert:
         that:

@@ -1,0 +1,6 @@
+---
+baseUrl: https://miniflux.davegallant.ca
+pangolinEndpoint: https://pangolin.davegallant.ca
+existingSecret: miniflux-external
+newt:
+  enabled: true

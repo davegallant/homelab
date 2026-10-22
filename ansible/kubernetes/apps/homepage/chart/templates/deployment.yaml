@@ -15,7 +15,7 @@ spec:
       labels:
         app.kubernetes.io/name: homepage
       annotations:
-        checksum/config: {{ printf "%s%s%s" .Values.configFiles.servicesYaml .Values.configFiles.settingsYaml .Values.configFiles.proxyAgentCjs | sha256sum | quote }}
+        checksum/config: {{ .Values.configChecksum | default (printf "%s%s%s" .Values.configFiles.servicesYaml .Values.configFiles.settingsYaml .Values.configFiles.proxyAgentCjs | sha256sum) | quote }}
         backup.velero.io/backup-volumes-excludes: tailscale-state,caddy-runtime
         {{- with .Values.restartTimestamp }}
         kubectl.kubernetes.io/restartedAt: {{ . | quote }}
@@ -188,13 +188,13 @@ spec:
           emptyDir: {}
         - name: managed-config
           configMap:
-            name: homepage-config
+            name: {{ .Values.configFiles.existingConfigMap | default "homepage-config" | quote }}
         - name: custom-icons
           configMap:
             name: homepage-icons
         - name: node-proxy
           configMap:
-            name: homepage-node-proxy
+            name: {{ .Values.configFiles.proxyExistingConfigMap | default "homepage-node-proxy" | quote }}
         - name: tailscale-config
           configMap:
             name: homepage-tailscale

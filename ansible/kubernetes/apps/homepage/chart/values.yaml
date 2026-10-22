@@ -70,6 +70,9 @@ cloudflareApiToken: ""
 # {{HOMEPAGE_VAR_*}} placeholders survive via {% raw %} in the sources),
 # plus the raw proxy-agent.cjs.
 configFiles:
+  # Keep source config managed by Ansible while Argo CD owns the workload.
+  existingConfigMap: ""
+  proxyExistingConfigMap: ""
   servicesYaml: ""
   settingsYaml: ""
   proxyAgentCjs: ""
@@ -77,6 +80,7 @@ configFiles:
 # Preserve the existing rollout marker during in-place Helm adoption. The
 # Ansible bridge reads it from the live Deployment.
 restartTimestamp: ""
+configChecksum: ""
 
 # Velero Schedule for this namespace (applied into the velero namespace).
 # fs-backup is ON (the config and caddy PVCs are the point), Secrets are
