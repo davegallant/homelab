@@ -1,3 +1,56 @@
+- name: Verify the node is Ready before changing {{ cilium_node_ip_node.name }}
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - wait
+      - --for=condition=Ready
+      - --timeout=120s
+      - "node/{{ cilium_node_ip_node.name }}"
+  changed_when: false
+
+- name: Read Argo CD application health before changing {{ cilium_node_ip_node.name }}
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - -n
+      - argocd
+      - get
+      - applications
+      - -o
+      - jsonpath={range .items[*]}{.status.sync.status}{" "}{.status.health.status}{"\n"}{end}
+  register: cilium_node_ip_apps_before
+  changed_when: false
+
+- name: Require all applications healthy before changing {{ cilium_node_ip_node.name }}
+  ansible.builtin.assert:
+    that:
+      - cilium_node_ip_apps_before.stdout_lines | length > 0
+      - cilium_node_ip_apps_before.stdout_lines | reject('equalto', 'Synced Healthy') | list | length == 0
+    fail_msg: "All Argo CD applications must be Synced and Healthy before changing a Talos node."
+
+- name: Read the current InternalIP for {{ cilium_node_ip_node.name }}
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - get
+      - "node/{{ cilium_node_ip_node.name }}"
+      - -o
+      - 'jsonpath={range .status.addresses[?(@.type=="InternalIP")]}{.address}{","}{end}'
+  register: cilium_node_ip_address_before
+  changed_when: false
+
+- name: Require the original LAN InternalIP before changing {{ cilium_node_ip_node.name }}
+  ansible.builtin.assert:
+    that:
+      - cilium_node_ip_node.address + ',' == cilium_node_ip_address_before.stdout
+    fail_msg: "{{ cilium_node_ip_node.name }} must report only its configured LAN InternalIP before this change."
+
 - name: Verify Flannel before changing {{ cilium_node_ip_node.name }}
   ansible.builtin.command:
     argv:
