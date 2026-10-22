@@ -1,0 +1,13 @@
+---
+# The homepage-icons ConfigMap is applied by the playbook, NOT the Helm
+# chart: the 24 icons are ~660 KiB of binaries, and carrying them as
+# Helm values would push the release record past the 1 MiB object limit.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-icons
+  namespace: {{ homepage_target_namespace }}
+binaryData:
+{% for icon in homepage_icon_files.results %}
+  {{ icon.source | basename }}: {{ icon.content }}
+{% endfor %}

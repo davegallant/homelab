@@ -1,0 +1,86 @@
+# Default values for the homepage chart.
+#
+# Values that originate in Ansible (Vault secrets, group_vars, and the
+# rendered config files under ../config) ship empty here and are supplied
+# at deploy time through ../values.ansible.yaml.j2, rendered by
+# playbooks/talos-cluster/homepage.yml into a protected temp file.
+# Templates fail to render (required) when the critical ones are missing.
+
+homepage:
+  image: ghcr.io/gethomepage/homepage:v2.6.0@sha256:3e38fe788223cb46a3ce1f046ef11667b40f7707fdca0dcbfa3f86c5c42bf1e8
+  puid: "1000"
+  pgid: "1000"
+  resources:
+    requests:
+      cpu: 30m
+      memory: 512Mi
+    limits:
+      cpu: 100m
+      memory: 1Gi
+
+tailscale:
+  image: ghcr.io/tailscale/tailscale:v1.104.1@sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 192Mi
+
+caddy:
+  image: ghcr.io/davegallant/homelab-caddy-cloudflare:2.11.6-a8737d0@sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# The pod is pinned to the worker that hosts the static local PVs
+# (../storage.yaml -- deliberately NOT managed by this chart; the chart
+# adopts the existing PVCs and never recreates them).
+nodeHostname: k8s-w-1
+fsGroup: 1000
+
+# --- Supplied by the Ansible bridge (values.ansible.yaml.j2) ---
+
+# Headscale MagicDNS domain (e.g. tail.example.com) and the Headscale
+# server domain used for --login-server.
+magicDnsDomain: ""
+headscaleDomain: ""
+
+# Tailscale hostname for the sidecar (from ../vars.yaml).
+tailscaleHostname: ""
+
+# HOMEPAGE_VAR_* environment for the homepage-environment Secret
+# (widget API keys and service URLs), keyed by variable name.
+homepageEnv: {}
+
+# Cloudflare DNS API token for the homepage-caddy Secret.
+cloudflareApiToken: ""
+
+# Rendered config file contents: config/services.yaml and
+# config/settings.yaml after Ansible templating (Homepage's own
+# {{HOMEPAGE_VAR_*}} placeholders survive via {% raw %} in the sources),
+# plus the raw proxy-agent.cjs.
+configFiles:
+  servicesYaml: ""
+  settingsYaml: ""
+  proxyAgentCjs: ""
+
+# Preserve the existing rollout marker during in-place Helm adoption. The
+# Ansible bridge reads it from the live Deployment.
+restartTimestamp: ""
+
+# Velero Schedule for this namespace (applied into the velero namespace).
+# fs-backup is ON (the config and caddy PVCs are the point), Secrets are
+# excluded, and tailscale-state plus the ephemeral caddy-runtime volume are
+# excluded through the Deployment pod annotation. Restoring tailscale-state
+# would clone a live tailnet identity; caddy-runtime is disposable. Disable for rehearsal installs (the drill namespace must not
+# hijack the production homepage-daily Schedule).
+backup:
+  enabled: true
+  schedule: "0 3 * * *"
+  ttl: 336h
