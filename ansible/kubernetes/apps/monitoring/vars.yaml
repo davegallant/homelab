@@ -1,0 +1,14 @@
+---
+# Cluster monitoring is three upstream products installed from their
+# official Helm charts — vendor charts, the same exception class as
+# Velero. Nothing here is a hand-rolled manifest except the namespace
+# (the charts don't manage Pod Security labels).
+#
+# Verify each pin still exists before installing. If a pinned version
+# is gone, take the nearest current release of the same chart and update
+# the pin in the same change — never float on latest.
+monitoring_prometheus_community_repo: "https://prometheus-community.github.io/helm-charts"
+monitoring_node_exporter_chart_version: "4.60.0"
+monitoring_kube_state_metrics_chart_version: "5.30.0"
+monitoring_metrics_server_repo: "https://kubernetes-sigs.github.io/metrics-server/"
+monitoring_metrics_server_chart_version: "3.12.2"

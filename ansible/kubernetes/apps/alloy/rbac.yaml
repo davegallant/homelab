@@ -23,3 +23,34 @@ subjects:
   - kind: ServiceAccount
     name: alloy
     namespace: alloy
+---
+# Metrics scraping: node discovery + kubelet authorization for the
+# kubelet/cAdvisor scrapes, and services/endpoints discovery for
+# annotation-based scrape targets (kube-state-metrics today).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: alloy-metrics
+rules:
+  - apiGroups: [""]
+    resources: [nodes]
+    verbs: [get, list, watch]
+  - apiGroups: [""]
+    resources: [nodes/metrics, nodes/proxy]
+    verbs: [get]
+  - apiGroups: [""]
+    resources: [services, endpoints]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: alloy-metrics
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: alloy-metrics
+subjects:
+  - kind: ServiceAccount
+    name: alloy
+    namespace: alloy

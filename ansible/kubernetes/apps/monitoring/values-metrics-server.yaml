@@ -1,0 +1,19 @@
+---
+# kubernetes-sigs/metrics-server (version pinned in vars.yaml).
+# Talos kubelets serve certificates that metrics-server cannot validate
+# against node IPs, so --kubelet-insecure-tls is the standard Talos
+# recipe; without it kubectl top stays empty.
+defaultArgs:
+  - --cert-dir=/tmp
+  - --kubelet-preferred-address-types=InternalIP,Hostname
+  - --kubelet-use-node-status-port
+  - --metric-resolution=60s
+  - --kubelet-insecure-tls
+args: []
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi

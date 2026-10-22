@@ -54,3 +54,153 @@ data:
         url = "http://{{ alloy_loki_lan_ip }}:3100/loki/api/v1/push"
       }
     }
+
+    // ---- Metrics -----------------------------------------------------
+    // Scraped in-cluster, remote-written to VictoriaMetrics on the
+    // Grafana host (unauthenticated; that host's firewall admits 8428
+    // only from the Talos node IPs — same posture as Loki on 3100).
+
+    prometheus.remote_write "victoriametrics" {
+      endpoint {
+        url = "http://{{ alloy_metrics_lan_ip }}:8428/api/v1/write"
+      }
+    }
+
+    // Kubelet + cAdvisor: one target per node, scraped over HTTPS with
+    // this pod's ServiceAccount token (RBAC: alloy-metrics).
+    discovery.kubernetes "nodes" {
+      role = "node"
+    }
+
+    discovery.relabel "kubelet" {
+      targets = discovery.kubernetes.nodes.targets
+
+      rule {
+        source_labels = ["__meta_kubernetes_node_name"]
+        target_label  = "node"
+      }
+      rule {
+        replacement  = "homelab"
+        target_label = "cluster"
+      }
+    }
+
+    prometheus.scrape "kubelet" {
+      targets           = discovery.relabel.kubelet.output
+      job_name          = "kubelet"
+      scheme            = "https"
+      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+      tls_config {
+        ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+        insecure_skip_verify = true
+      }
+
+      forward_to = [prometheus.remote_write.victoriametrics.receiver]
+    }
+
+    prometheus.scrape "cadvisor" {
+      targets           = discovery.relabel.kubelet.output
+      job_name          = "cadvisor"
+      scheme            = "https"
+      metrics_path      = "/metrics/cadvisor"
+      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+      tls_config {
+        ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+        insecure_skip_verify = true
+      }
+
+      forward_to = [prometheus.remote_write.victoriametrics.receiver]
+    }
+
+    // node-exporter: discovered by pod label, scraped per pod. The
+    // instance label is rewritten to the node name so dashboards group
+    // by node, not by pod IP.
+    discovery.kubernetes "node_exporter_pods" {
+      role = "pod"
+
+      selectors {
+        role  = "pod"
+        label = "app.kubernetes.io/name=node-exporter"
+      }
+    }
+
+    discovery.relabel "node_exporter" {
+      targets = discovery.kubernetes.node_exporter_pods.targets
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_port_name"]
+        regex         = "metrics"
+        action        = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_node_name"]
+        target_label  = "instance"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_node_name"]
+        target_label  = "node"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        target_label  = "namespace"
+      }
+      rule {
+        replacement  = "homelab"
+        target_label = "cluster"
+      }
+    }
+
+    prometheus.scrape "node_exporter" {
+      targets    = discovery.relabel.node_exporter.output
+      job_name   = "node-exporter"
+      forward_to = [prometheus.remote_write.victoriametrics.receiver]
+    }
+
+    // Annotation-driven targets: any Service annotated
+    // prometheus.io/scrape=true is scraped (kube-state-metrics today).
+    discovery.kubernetes "service_endpoints" {
+      role = "endpoints"
+    }
+
+    discovery.relabel "annotated_services" {
+      targets = discovery.kubernetes.service_endpoints.targets
+
+      rule {
+        source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scrape"]
+        regex         = "true"
+        action        = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_path"]
+        regex         = "(.+)"
+        target_label  = "__metrics_path__"
+      }
+      rule {
+        source_labels = ["__address__", "__meta_kubernetes_service_annotation_prometheus_io_port"]
+        regex         = "([^:]+)(?::\\d+)?;(\\d+)"
+        replacement   = "$1:$2"
+        target_label  = "__address__"
+      }
+      // No namespace/pod target labels in this chain: kube-state-metrics
+      // emits its own namespace and pod labels, and scrape target labels
+      // win over sample labels — setting them stamped every KSM series
+      // with the scrape target's namespace/pod (the running-pods panel
+      // collapsed to a single "monitoring" series during the first
+      // deploy). Services whose metrics do not self-label still get the
+      // service label below.
+      rule {
+        source_labels = ["__meta_kubernetes_service_name"]
+        target_label  = "service"
+      }
+      rule {
+        replacement  = "homelab"
+        target_label = "cluster"
+      }
+    }
+
+    prometheus.scrape "annotated_services" {
+      targets    = discovery.relabel.annotated_services.output
+      forward_to = [prometheus.remote_write.victoriametrics.receiver]
+    }

@@ -11,6 +11,22 @@ services:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
     command: -config.file=/etc/loki/local-config.yaml
 
+  # Metrics store for the Talos cluster. Alloy remote-writes to it from
+  # the cluster; like Loki it is unauthenticated, and the host firewall
+  # admits 8428 only from the three Talos node IPs (see main.yml). The
+  # Keep the image pinned by tag and manifest-list digest. Verify both
+  # before changing the version (repo convention — never invent a digest).
+  victoriametrics:
+    image: docker.io/victoriametrics/victoria-metrics:v1.121.0@sha256:4f65d40da793ee125f7fbf9f882114520b0168949c4b9fb2c11403168d9dc3f9
+    container_name: victoriametrics
+    user: "0"
+    restart: always
+    ports:
+      - "8428:8428"
+    volumes:
+      - ./data/victoriametrics:/victoria-metrics-data
+    command: -storageDataPath=/victoria-metrics-data -retentionPeriod=12
+
   grafana:
     image: docker.io/grafana/grafana:13.2.4@sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f
     container_name: grafana
@@ -23,24 +39,6 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     user: "0"
-    entrypoint:
-      - sh
-      - -euc
-      - |
-        mkdir -p /etc/grafana/provisioning/datasources
-        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
-        apiVersion: 1
-        datasources:
-        - name: Loki
-          type: loki
-          access: proxy
-          orgId: 1
-          url: http://loki:3100
-          basicAuth: true
-          isDefault: true
-          version: 1
-          editable: false
-        EOF
-        /run.sh
     volumes:
       - "./data/grafana:/var/lib/grafana"
+      - "./provisioning:/etc/grafana/provisioning"

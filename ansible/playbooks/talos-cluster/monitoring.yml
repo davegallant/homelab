@@ -1,0 +1,284 @@
+---
+# Cluster vitals: node-exporter + kube-state-metrics + metrics-server,
+# each from its official Helm chart (versions/repos pinned in
+# ../../kubernetes/apps/monitoring/vars.yaml). Alloy (apply-alloy.yml)
+# scrapes them and remote-writes to VictoriaMetrics on the Grafana host.
+#
+# Actions (monitoring_action):
+#   install (default) - namespace + the three charts + cluster-side
+#                       verification (rollouts, kubectl top).
+#   verify            - end-to-end check that series land in
+#                       VictoriaMetrics. Run AFTER the Grafana playbook
+#                       has added VictoriaMetrics; install alone cannot
+#                       pass it (the store does not exist yet).
+- name: Install and verify cluster monitoring on Talos Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+    - ../../kubernetes/apps/monitoring/vars.yaml
+  vars:
+    monitoring_action: install
+    talos_kube_context: ""
+    monitoring_apps_dir: "{{ playbook_dir }}/../../kubernetes/apps/monitoring"
+  tasks:
+    - name: Require a supported monitoring action
+      ansible.builtin.assert:
+        that:
+          - monitoring_action in ['install', 'verify']
+        fail_msg: "monitoring_action must be install or verify."
+
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: monitoring_kube_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - monitoring_kube_context.stdout == talos_kube_context
+        fail_msg: "Pass -e talos_kube_context=<the Talos context> matching the active kubectl context."
+
+    - name: Verify all Talos nodes are Ready
+      ansible.builtin.command:
+        argv: [kubectl, wait, --for=condition=Ready, --timeout=120s, node/k8s-cp-1, node/k8s-w-1, node/k8s-w-2]
+      changed_when: false
+
+    - name: Install the monitoring stack
+      when: monitoring_action == 'install'
+      block:
+        - name: Validate the node-exporter chart and values
+          ansible.builtin.command:
+            argv:
+              - helm
+              - template
+              - node-exporter
+              - prometheus-node-exporter
+              - --repo
+              - "{{ monitoring_prometheus_community_repo }}"
+              - --version
+              - "{{ monitoring_node_exporter_chart_version }}"
+              - --namespace
+              - monitoring
+              - --values
+              - "{{ monitoring_apps_dir }}/values-node-exporter.yaml"
+          changed_when: false
+
+        - name: Validate the kube-state-metrics chart and values
+          ansible.builtin.command:
+            argv:
+              - helm
+              - template
+              - kube-state-metrics
+              - kube-state-metrics
+              - --repo
+              - "{{ monitoring_prometheus_community_repo }}"
+              - --version
+              - "{{ monitoring_kube_state_metrics_chart_version }}"
+              - --namespace
+              - monitoring
+              - --values
+              - "{{ monitoring_apps_dir }}/values-kube-state-metrics.yaml"
+          changed_when: false
+
+        - name: Validate the metrics-server chart and values
+          ansible.builtin.command:
+            argv:
+              - helm
+              - template
+              - metrics-server
+              - metrics-server
+              - --repo
+              - "{{ monitoring_metrics_server_repo }}"
+              - --version
+              - "{{ monitoring_metrics_server_chart_version }}"
+              - --namespace
+              - kube-system
+              - --values
+              - "{{ monitoring_apps_dir }}/values-metrics-server.yaml"
+          changed_when: false
+
+        - name: Apply the monitoring namespace (Pod Security labels)
+          ansible.builtin.command:
+            argv: [kubectl, apply, -f, "{{ monitoring_apps_dir }}/namespace.yaml"]
+          register: monitoring_apply_namespace
+          changed_when: "'created' in monitoring_apply_namespace.stdout or 'configured' in monitoring_apply_namespace.stdout"
+
+        - name: Install node-exporter from the pinned chart
+          ansible.builtin.command:
+            argv:
+              - helm
+              - upgrade
+              - --install
+              - node-exporter
+              - prometheus-node-exporter
+              - --repo
+              - "{{ monitoring_prometheus_community_repo }}"
+              - --version
+              - "{{ monitoring_node_exporter_chart_version }}"
+              - --namespace
+              - monitoring
+              - --values
+              - "{{ monitoring_apps_dir }}/values-node-exporter.yaml"
+          register: monitoring_helm_node_exporter
+          changed_when: "'Release' in monitoring_helm_node_exporter.stdout"
+
+        - name: Install kube-state-metrics from the pinned chart
+          ansible.builtin.command:
+            argv:
+              - helm
+              - upgrade
+              - --install
+              - kube-state-metrics
+              - kube-state-metrics
+              - --repo
+              - "{{ monitoring_prometheus_community_repo }}"
+              - --version
+              - "{{ monitoring_kube_state_metrics_chart_version }}"
+              - --namespace
+              - monitoring
+              - --values
+              - "{{ monitoring_apps_dir }}/values-kube-state-metrics.yaml"
+          register: monitoring_helm_ksm
+          changed_when: "'Release' in monitoring_helm_ksm.stdout"
+
+        - name: Install metrics-server from the pinned chart
+          ansible.builtin.command:
+            argv:
+              - helm
+              - upgrade
+              - --install
+              - metrics-server
+              - metrics-server
+              - --repo
+              - "{{ monitoring_metrics_server_repo }}"
+              - --version
+              - "{{ monitoring_metrics_server_chart_version }}"
+              - --namespace
+              - kube-system
+              - --values
+              - "{{ monitoring_apps_dir }}/values-metrics-server.yaml"
+          register: monitoring_helm_metrics_server
+          changed_when: "'Release' in monitoring_helm_metrics_server.stdout"
+
+        - name: Wait for the node-exporter rollout
+          ansible.builtin.command:
+            argv: [kubectl, -n, monitoring, rollout, status, daemonset/node-exporter, --timeout=300s]
+          changed_when: false
+
+        - name: Wait for the kube-state-metrics rollout
+          ansible.builtin.command:
+            argv: [kubectl, -n, monitoring, rollout, status, deployment/kube-state-metrics, --timeout=300s]
+          changed_when: false
+
+        - name: Wait for the metrics-server rollout
+          ansible.builtin.command:
+            argv: [kubectl, -n, kube-system, rollout, status, deployment/metrics-server, --timeout=300s]
+          changed_when: false
+
+        - name: Require one node-exporter pod per node
+          ansible.builtin.command:
+            argv: [kubectl, -n, monitoring, get, daemonset/node-exporter, -o, json]
+          register: monitoring_node_exporter_status
+          changed_when: false
+
+        - name: Assert node-exporter is fully rolled out
+          ansible.builtin.assert:
+            that:
+              - (monitoring_node_exporter_status.stdout | from_json).status.desiredNumberScheduled == 3
+              - (monitoring_node_exporter_status.stdout | from_json).status.numberReady == 3
+
+        - name: Wait for kubectl top nodes to answer
+          ansible.builtin.command:
+            argv: [kubectl, top, nodes]
+          register: monitoring_top_nodes
+          changed_when: false
+          until: monitoring_top_nodes.rc == 0 and 'k8s-cp-1' in monitoring_top_nodes.stdout
+          retries: 18
+          delay: 10
+
+        - name: Report node resource usage
+          ansible.builtin.debug:
+            msg: "{{ monitoring_top_nodes.stdout_lines }}"
+
+    - name: Verify metrics reach VictoriaMetrics end to end
+      when: monitoring_action == 'verify'
+      block:
+        - name: Wait for node-exporter series from all three nodes
+          ansible.builtin.uri:
+            url: "http://127.0.0.1:8428/api/v1/query?query=count(node_uname_info)"
+            method: GET
+            return_content: true
+          delegate_to: grafana
+          connection: ssh
+          remote_user: root
+          register: monitoring_vm_nodes
+          changed_when: false
+          until: >-
+            monitoring_vm_nodes.status == 200 and
+            (monitoring_vm_nodes.json.data.result | default([]) | length) > 0 and
+            (monitoring_vm_nodes.json.data.result[0].value[1] | int) == 3
+          retries: 18
+          delay: 10
+
+        - name: Wait for kube-state-metrics series
+          ansible.builtin.uri:
+            url: "http://127.0.0.1:8428/api/v1/query?query=count(kube_pod_info)"
+            method: GET
+            return_content: true
+          delegate_to: grafana
+          connection: ssh
+          remote_user: root
+          register: monitoring_vm_ksm
+          changed_when: false
+          until: >-
+            monitoring_vm_ksm.status == 200 and
+            (monitoring_vm_ksm.json.data.result | default([]) | length) > 0 and
+            (monitoring_vm_ksm.json.data.result[0].value[1] | int) > 0
+          retries: 18
+          delay: 10
+
+        - name: Wait for kubelet series from all three nodes
+          ansible.builtin.uri:
+            url: "http://127.0.0.1:8428/api/v1/query?query=count(kubelet_running_pods)"
+            method: GET
+            return_content: true
+          delegate_to: grafana
+          connection: ssh
+          remote_user: root
+          register: monitoring_vm_kubelet
+          changed_when: false
+          until: >-
+            monitoring_vm_kubelet.status == 200 and
+            (monitoring_vm_kubelet.json.data.result | default([]) | length) > 0 and
+            (monitoring_vm_kubelet.json.data.result[0].value[1] | int) == 3
+          retries: 18
+          delay: 10
+
+        - name: Wait for cAdvisor container series
+          ansible.builtin.uri:
+            url: "http://127.0.0.1:8428/api/v1/query?query=count(container_cpu_usage_seconds_total)"
+            method: GET
+            return_content: true
+          delegate_to: grafana
+          connection: ssh
+          remote_user: root
+          register: monitoring_vm_cadvisor
+          changed_when: false
+          until: >-
+            monitoring_vm_cadvisor.status == 200 and
+            (monitoring_vm_cadvisor.json.data.result | default([]) | length) > 0 and
+            (monitoring_vm_cadvisor.json.data.result[0].value[1] | int) > 0
+          retries: 18
+          delay: 10
+
+        - name: Report the verified series counts
+          ansible.builtin.debug:
+            msg:
+              - "node_uname_info series: {{ monitoring_vm_nodes.json.data.result[0].value[1] }}"
+              - "kube_pod_info series: {{ monitoring_vm_ksm.json.data.result[0].value[1] }}"
+              - "kubelet_running_pods series: {{ monitoring_vm_kubelet.json.data.result[0].value[1] }}"
+              - "container_cpu_usage_seconds_total series: {{ monitoring_vm_cadvisor.json.data.result[0].value[1] }}"

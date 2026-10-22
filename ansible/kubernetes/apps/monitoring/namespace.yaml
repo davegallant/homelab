@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    # node-exporter mounts host /proc, /sys and / read-only. Pod Security
+    # baseline forbids hostPath volumes entirely, so this namespace takes
+    # the same scoped exception as velero: enforce privileged, keep
+    # baseline audit/warn so violations stay visible. The workloads
+    # themselves stay hardened (non-root, drop ALL, no privileged flag).
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline

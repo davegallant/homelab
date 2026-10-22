@@ -1,0 +1,48 @@
+---
+# prometheus-community/kube-state-metrics (version pinned in vars.yaml).
+# The chart generates the ServiceAccount and the ClusterRole scoped to
+# the collectors below — that RBAC is upstream's job to keep current,
+# not a manifest this repo maintains.
+nameOverride: kube-state-metrics
+fullnameOverride: kube-state-metrics
+# Curated collector set: what the vitals dashboards use. Secrets and
+# ConfigMaps are deliberately not collected (their list/watch RBAC is
+# broader than this needs).
+collectors:
+  - pods
+  - nodes
+  - services
+  - endpoints
+  - namespaces
+  - persistentvolumeclaims
+  - persistentvolumes
+  - replicationcontrollers
+  - resourcequotas
+  - limitranges
+  - deployments
+  - daemonsets
+  - statefulsets
+  - replicasets
+  - jobs
+  - cronjobs
+  - ingresses
+  - networkpolicies
+  - poddisruptionbudgets
+  - horizontalpodautoscalers
+  - storageclasses
+  - volumeattachments
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+service:
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+prometheus:
+  monitor:
+    enabled: false

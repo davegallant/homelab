@@ -1,0 +1,26 @@
+---
+# prometheus-community/prometheus-node-exporter (version pinned in
+# vars.yaml). The chart already wires the host /proc, /sys and /
+# read-only mounts node-exporter needs; the overrides here are naming,
+# placement, and sizing only.
+nameOverride: node-exporter
+fullnameOverride: node-exporter
+# Alloy scrapes node-exporter pods directly, rewriting instance to the
+# node name. Keep the chart's Service out of the annotation-driven path
+# to avoid scraping the same exporter a second time.
+service:
+  annotations:
+    prometheus.io/scrape: "false"
+# Metrics come from /host/proc; the host PID namespace is not needed.
+hostPID: false
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+resources:
+  requests:
+    cpu: 15m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi

@@ -4,9 +4,13 @@
   vars_files:
     - ../../kubernetes/cluster/vars.yaml
   vars:
-    # Loki is unauthenticated. Admit only the three Talos node IPs to port 3100.
+    # Loki and VictoriaMetrics are unauthenticated. Admit only the three
+    # Talos node IPs to their ports (Loki push 3100, metrics remote-write
+    # and queries 8428).
     ufw_docker_allowed_source_ports:
       - port: 3100
+        sources: "{{ talos_nodes | map(attribute='address') | list }}"
+      - port: 8428
         sources: "{{ talos_nodes | map(attribute='address') | list }}"
   tasks:
     - ansible.builtin.include_tasks:
@@ -30,6 +34,15 @@
         src: loki-config.yaml
         dest: "~/loki-config.yaml"
         mode: "0640"
+
+    # Provisioning is copied, never templated: dashboard JSON is full of
+    # braces that Jinja would eat.
+    - name: Copy Grafana provisioning (datasources and dashboards)
+      ansible.builtin.copy:
+        src: provisioning/
+        dest: "~/provisioning/"
+        mode: "0640"
+        directory_mode: "0750"
 
     - name: Enable UFW
       community.general.ufw:

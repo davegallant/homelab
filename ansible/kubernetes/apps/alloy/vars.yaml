@@ -1,3 +1,7 @@
 ---
 # Grafana LXC's LAN address. apply-alloy.yml confirms it before applying.
 alloy_loki_lan_ip: 192.168.1.56
+# VictoriaMetrics lives on the same Grafana host (see playbooks/grafana).
+# Alloy remote-writes cluster metrics to it; the Grafana host's firewall
+# admits port 8428 only from the three Talos node IPs.
+alloy_metrics_lan_ip: 192.168.1.56
