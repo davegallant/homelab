@@ -2,7 +2,7 @@
 
 This repo contains [Ansible playbooks](./ansible/playbooks/) and Docker Compose files that provision and manage a fully self-hosted homelab running on [Proxmox](https://proxmox.com).
 
-Every service lives in its own LXC container running Ubuntu. Ansible deploys Docker and a `docker-compose.yml` to each container; [Headscale](https://headscale.net) (self-hosted Tailscale control plane) handles all networking; [Grafana Alloy](https://grafana.com/docs/alloy/) ships logs to Loki.
+Most services run in individual Ubuntu LXC containers managed by Ansible. Homepage runs on the Talos Kubernetes pilot. [Headscale](https://headscale.net) (self-hosted Tailscale control plane) handles networking, and [Grafana Alloy](https://grafana.com/docs/alloy/) ships logs to Loki.
 
 > **Why Proxmox + LXC instead of a single Docker host?**
 > Proxmox makes it trivial to snapshot, backup, and live-migrate individual services between nodes from a single web UI. LXC containers are lightweight enough that 36+ services run comfortably without fighting for resources.
@@ -27,12 +27,15 @@ graph TD
         subgraph N2["Node 2"]
             grafana["grafana + loki"]
             beszel["beszel"]
-            homepage["homepage"]
             jellyfin["jellyfin"]
             sonarr["sonarr / radarr"]
             n2etc["..."]
         end
         N1 <-->|"direct WireGuard mesh\n(SSH + ACLs, no central hop)"| N2
+    end
+
+    subgraph Talos["Talos Kubernetes pilot"]
+        homepage["homepage"]
     end
 
     N1 -.->|"coordination"| headscale
@@ -51,7 +54,7 @@ graph TD
     beszelagent -->|"system metrics"| beszel
 ```
 
-Each LXC container runs:
+Each Ansible-managed LXC container runs:
 - **Docker** (installed via Ansible)
 - **Grafana Alloy** (systemd service — ships journald + Docker logs → central Loki)
 - **beszel-agent** (systemd service — reports system metrics → central Beszel)
@@ -254,7 +257,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | ghcr.io/androidseb25/igotify-notification-assist | v1.6.0.1 |
 | ghcr.io/dispatcharr/dispatcharr | 0.32.0 |
 | ghcr.io/flaresolverr/flaresolverr | v3.5.2 |
-| ghcr.io/gethomepage/homepage | v2.6.0 |
 | ghcr.io/hargata/lubelogger | v1.4.5 |
 | ghcr.io/immich-app/immich-machine-learning | v3.3.5 |
 | ghcr.io/immich-app/immich-server | v3.3.5 |

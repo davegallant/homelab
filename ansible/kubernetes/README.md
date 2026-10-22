@@ -2,8 +2,8 @@
 
 This repository stores Kubernetes workloads as raw manifests plus Ansible Jinja
 templates. The Homepage pilot does not use Helm. Its source config remains in
-`ansible/playbooks/homepage/config/`; the existing Homepage playbook continues
-to own the LXC until a separately approved retirement.
+`ansible/kubernetes/apps/homepage/config/`. The former Homepage LXC playbook
+has been retired; Homepage now runs on the Talos cluster.
 
 ## Homepage
 
@@ -35,14 +35,14 @@ and Caddy certificate state have separate local PVCs. All three PVs and the Pod
 are pinned to `k8s-w-1` on `pve-g3-1`.
 
 Edit the tracked `services.yaml`, `settings.yaml`, and icon files in
-`ansible/playbooks/homepage/config/`; those remain Ansible-managed. The initial
-runtime-config import streams the other live config files directly from the
-Homepage LXC into the PVC, excluding those managed files, icons, logs, and Git
-metadata. Their contents never enter the repository or a local temporary file.
-For future edits to an imported file, add it to the repo as an Ansible-managed
-template before changing it; until then, edit it on the PVC with `kubectl
-cp`/`kubectl exec`. Edit Kubernetes resources under
-`ansible/kubernetes/apps/homepage/`. The manual Ansible apply renders the Jinja files into a private temporary directory,
+`ansible/kubernetes/apps/homepage/config/`; those remain Ansible-managed.
+During migration, the remaining runtime config was streamed directly from the
+former Homepage LXC into the PVC, excluding the managed files, icons, logs, and
+Git metadata. Its contents never entered the repository or a local temporary
+file. Edit imported files on the PVC with `kubectl cp`/`kubectl exec` until they
+are added to the repo as Ansible-managed templates. Edit Kubernetes resources
+under `ansible/kubernetes/apps/homepage/`. The manual Ansible apply renders the
+Jinja files into a private temporary directory,
 applies them to the explicitly confirmed current kubectl context, waits for the
 rollout, confirms persistent Tailscale state, removes the one-use auth Secret,
 and deletes the temporary render directory. Secret values are loaded from the
@@ -64,43 +64,19 @@ Secret, and removes the Secret after Tailscale identity persists across a pod
 restart. Later applies reuse the PVC-backed identity. Do not run this playbook
 in CI or as part of the normal all-host playbook list.
 
-After the first deployment, import the remaining live Homepage config once:
+The Homepage hostname has been moved to the Kubernetes tailnet node.
+`verify-cutover.yml` confirms that it resolves to the Kubernetes tailnet IP
+and returns HTTP 200 with valid TLS. The former LXC is retired from Ansible and
+is no longer a supported rollback target. The verification playbook requires
+the Vault password file and the protected Talos kubeconfig as `KUBECONFIG`.
+
+From `ansible/`, verify the active Homepage hostname with:
 
 ```sh
-ansible-playbook playbooks/talos-cluster/import-homepage-config.yml -i inventory
-```
-
-That playbook prompts for the expected context and requires typing `IMPORT`.
-It streams the files over SSH and the Kubernetes API without displaying or
-writing their contents to the checkout. It does not switch the tailnet hostname.
-
-The hostname move is managed by `cutover-hostname.yml`; it renames the two
-specific Headscale node IDs after checking that both are online. Headscale's
-`given_name` is the MagicDNS label, while `name` remains the raw client
-hostname. `verify-cutover.yml` confirms that the normal hostname resolves to
-the Kubernetes tailnet IP and returns HTTP 200 with valid TLS. For immediate
-rollback, run `rollback-hostname.yml` to return the existing hostname to the
-still-running LXC, then change `apps/homepage/vars.yaml` back to
-`homepage-k8s` before the next application rollout. All three playbooks require
-the Vault password file. The verification playbook also requires the protected
-Talos kubeconfig as `KUBECONFIG`.
-
-From `ansible/`, the cutover and rollback commands are:
-
-```sh
-ansible-playbook playbooks/talos-cluster/cutover-hostname.yml \
-  -i inventory --vault-password-file .vault_pass
 KUBECONFIG="$HOME/.local/share/homelab-talos/kubeconfig" \
   ansible-playbook playbooks/talos-cluster/verify-cutover.yml \
   -i inventory --vault-password-file .vault_pass
-ansible-playbook playbooks/talos-cluster/rollback-hostname.yml \
-  -i inventory --vault-password-file .vault_pass
 ```
-
-The rollback command is for recovery only; do not run it after a healthy
-cutover. It changes the MagicDNS labels and leaves both machines running.
-Run `verify-rollback.yml` after rollback to confirm the original LXC answers
-the normal hostname over valid TLS.
 
 ## Capacity, backups, and observability
 
@@ -113,13 +89,12 @@ and deliberately relocated.
 
 Proxmox `vzdump` is the first backup layer and includes all three Talos VMs;
 that captures the worker's local PV data as part of its VM disk. A separate
-off-host etcd snapshot is also taken through `snapshot-etcd.yml`. Before
-retiring the LXC, verify secure recovery of Talos credentials and Ansible
-Vault, and complete a tested procedure
-for recovering the Homepage paths `/var/mnt/homepage/config`,
+off-host etcd snapshot is also taken through `snapshot-etcd.yml`. Keep secure
+recovery of Talos credentials and Ansible Vault, and a tested procedure for
+recovering the Homepage paths `/var/mnt/homepage/config`,
 `/var/mnt/homepage/tailscale`, and `/var/mnt/homepage/caddy`. A full VM restore
 must be isolated from the live cluster until node identity and etcd membership
-are reconciled. The LXC remains the immediate application rollback target.
+are reconciled. The retired Homepage LXC is not a rollback target.
 
 ### Velero namespace restore
 

@@ -247,9 +247,9 @@ secret.
 - Talos enforces the cluster-wide Pod Security baseline. A sidecar needing
   `NET_ADMIN`, `NET_RAW`, or `/dev/net/tun` requires a separately reviewed
   policy exception; the Homepage pilot uses a userspace HTTP proxy instead.
-- Headscale's `given_name` controls the MagicDNS label. Use the repo's
-  `cutover-hostname.yml`, `rollback-hostname.yml`, and verification playbooks to
-  move the existing Homepage name. Keep the LXC running as the rollback target.
+- Headscale's `given_name` controls the MagicDNS label. Homepage now runs on
+  Talos; its LXC playbook and LXC rollback path are retired. Use
+  `verify-cutover.yml` to confirm the active hostname reaches Kubernetes.
 - Homepage's local PVCs and Pod are pinned to `k8s-w-1`. Proxmox VM backups
   cover those disks; an off-host etcd snapshot covers cluster state. Read the
   recovery constraints in the cluster README before restoring a VM.

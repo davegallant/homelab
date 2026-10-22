@@ -6,9 +6,9 @@ metadata:
   namespace: homepage
 data:
   services.yaml: |
-{{ lookup('ansible.builtin.template', playbook_dir + '/../homepage/config/services.yaml') | indent(4, true) }}
+{{ lookup('ansible.builtin.template', playbook_dir + '/../../kubernetes/apps/homepage/config/services.yaml') | indent(4, true) }}
   settings.yaml: |
-{{ lookup('ansible.builtin.template', playbook_dir + '/../homepage/config/settings.yaml') | indent(4, true) }}
+{{ lookup('ansible.builtin.template', playbook_dir + '/../../kubernetes/apps/homepage/config/settings.yaml') | indent(4, true) }}
 
 ---
 apiVersion: v1
