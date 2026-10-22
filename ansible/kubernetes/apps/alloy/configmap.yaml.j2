@@ -183,13 +183,8 @@ data:
         replacement   = "$1:$2"
         target_label  = "__address__"
       }
-      // No namespace/pod target labels in this chain: kube-state-metrics
-      // emits its own namespace and pod labels, and scrape target labels
-      // win over sample labels — setting them stamped every KSM series
-      // with the scrape target's namespace/pod (the running-pods panel
-      // collapsed to a single "monitoring" series during the first
-      // deploy). Services whose metrics do not self-label still get the
-      // service label below.
+      // Keep the target identity on generated up series while honoring
+      // namespace and pod labels emitted by the scraped metrics below.
       rule {
         source_labels = ["__meta_kubernetes_service_name"]
         target_label  = "service"
@@ -203,4 +198,5 @@ data:
     prometheus.scrape "annotated_services" {
       targets    = discovery.relabel.annotated_services.output
       forward_to = [prometheus.remote_write.victoriametrics.receiver]
+      honor_labels = true
     }
