@@ -168,6 +168,8 @@ configMaps:
 persistence:
   config:
     type: persistentVolumeClaim
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 1Gi
@@ -177,6 +179,8 @@ persistence:
           - path: /app/config
   tailscale-state:
     type: persistentVolumeClaim
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 64Mi
@@ -204,6 +208,8 @@ persistence:
             readOnly: true
   caddy-state:
     type: persistentVolumeClaim
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 256Mi
