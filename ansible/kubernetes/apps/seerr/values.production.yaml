@@ -35,9 +35,7 @@ controllers:
         env:
           LOG_LEVEL: debug
           TZ: America/Toronto
-          HTTP_PROXY: http://127.0.0.1:1055
-          HTTPS_PROXY: http://127.0.0.1:1055
-          NO_PROXY: localhost,127.0.0.1,.svc,.cluster.local
+          NODE_OPTIONS: --require=/opt/seerr-proxy/proxy-agent.cjs
         probes:
           startup:
             enabled: true
@@ -167,6 +165,39 @@ configMaps:
 
           reverse_proxy 127.0.0.1:5055
         }
+  proxyAgent:
+    data:
+      proxy-agent.cjs: |
+        "use strict";
+
+        const http = require("node:http");
+        const https = require("node:https");
+        const { syncBuiltinESMExports } = require("node:module");
+
+        const proxyEnv = {
+          HTTP_PROXY: "http://127.0.0.1:1055",
+          HTTPS_PROXY: "http://127.0.0.1:1055",
+          NO_PROXY: "",
+        };
+        const tailnetDomain = "tail.davegallant.ca";
+
+        for (const transport of [http, https]) {
+          const request = transport.request;
+          transport.request = function tailnetRequest(options, ...args) {
+            const hostname = (options.hostname ?? options.host ?? "")
+              .toLowerCase()
+              .replace(/\.$/, "");
+            if (hostname === tailnetDomain || hostname.endsWith(`.${tailnetDomain}`)) {
+              return request.call(this, {
+                ...options,
+                agent: new transport.Agent({ proxyEnv }),
+              }, ...args);
+            }
+            return request.call(this, options, ...args);
+          };
+        }
+
+        syncBuiltinESMExports();
 
 persistence:
   config:
@@ -208,6 +239,15 @@ persistence:
         caddy:
           - path: /etc/caddy/Caddyfile
             subPath: Caddyfile
+            readOnly: true
+  proxy-agent:
+    type: configMap
+    name: seerr-proxy-agent
+    advancedMounts:
+      seerr:
+        app:
+          - path: /opt/seerr-proxy/proxy-agent.cjs
+            subPath: proxy-agent.cjs
             readOnly: true
   caddy-state:
     type: persistentVolumeClaim
