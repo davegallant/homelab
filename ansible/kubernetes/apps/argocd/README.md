@@ -6,12 +6,26 @@ application Secrets from Vault. Argo CD reads desired application state from
 recovery mirror. Argo CD polls for commits; every application sync requires
 manual approval. There is no automated sync, pruning, or deletion finalizer.
 
-The initial installation is a single controller, repo server, API server and
-Redis. Dex and notifications are disabled; ApplicationSet has zero replicas.
-All images have version and digest pins. The server is a ClusterIP Service
-with its default TLS and admin authentication. No public ingress or additional
-Tailscale identity is required. Resource requests total 352Mi of memory;
-revisit sizing as applications are added.
+The installation is a single controller, repo server, API server and Redis.
+Dex and notifications are disabled; ApplicationSet has zero replicas.
+All images have version and digest pins. The server remains a ClusterIP
+Service and runs with `--insecure`: Caddy owns TLS. Tailscale and Caddy run
+as extra containers in the upstream chart's server Pod, using the same
+userspace pattern as Homepage and Kiwix. Tailscale Serve forwards tailnet
+TCP 443 to Caddy at `127.0.0.1:8443`; Caddy obtains its certificate through
+Cloudflare DNS-01 and proxies to Argo CD at `http://127.0.0.1:8080`.
+There is no Pangolin/Newt tunnel, public ingress, NodePort or LoadBalancer.
+Requests total 448Mi of memory; revisit sizing as applications are added.
+
+The URL is `https://argocd.<headscale_magic_dns_domain>`. The domain and
+Headscale login server come from Ansible variables. The Cloudflare token
+is streamed from Vault into `argocd-caddy`, without writing it locally.
+`argocd-tailscale` and `argocd-caddy` are Retain-policy local-path PVCs for
+the tailnet identity and certificate state. They bind the server Pod to
+one worker; Recreate prevents two Pods from sharing the live identity.
+First registration uses a one-use Headscale key, removed from Kubernetes
+after verification. The bootstrap then restarts the Pod and checks the
+same tailnet address again without the key.
 
 ## Bootstrap
 
@@ -31,14 +45,15 @@ The Secret playbook streams base64-encoded Vault data to Kubernetes through
 stdin with Ansible logging disabled. It creates `bentopdf-newt-external`;
 the currently Helm-owned `bentopdf-newt` remains available during handoff.
 
-Access the UI through a local port-forward:
+Use the tailnet URL printed by the bootstrap playbook. For local diagnostic
+access without the proxy, port-forward the HTTP server:
 
 ```sh
-kubectl --context admin@homelab -n argocd port-forward service/argocd-server 8080:443
+kubectl --context admin@homelab -n argocd port-forward service/argocd-server 8080:80
 ```
 
-Open `https://localhost:8080` and accept the local self-signed certificate.
-Log in as `admin`. Retrieve the initial password in a private terminal:
+The diagnostic URL is `http://localhost:8080`; normal tailnet access uses
+trusted HTTPS. Log in as `admin`. Retrieve the initial password in a private terminal:
 
 ```sh
 kubectl --context admin@homelab -n argocd get secret argocd-initial-admin-secret \
@@ -89,10 +104,17 @@ Helm-owned Secret/records in a separate explicit cleanup.
 For a workload rollback, revert its Git configuration and approve another
 sync. Deleting the Application preserves BentoPDF because it has no deletion
 finalizer. If Argo CD itself is lost, rerun the bootstrap and Secret playbooks,
-then reapply the Application from Git. Argo CD has no persistent data volume;
-Git plus Ansible Vault hold its desired application configuration and secrets.
+then reapply the Application from Git. Git plus Ansible Vault hold the
+desired application configuration and secrets; the proxy PVCs hold runtime
+tailnet identity and certificate state.
 The local Argo CD admin password is cluster state and must be reset on a
-fresh installation. BentoPDF remains covered by its existing Velero schedule.
+fresh installation. Tailnet identity and certificate state are node-local
+PVCs covered by the worker VM backup. Do not clone the live tailnet identity
+into a restore drill; use a new identity if relocating the service. Caddy
+can reissue certificates when necessary. BentoPDF remains covered by its
+existing Velero schedule. Changes to the tailnet ConfigMap trigger a server
+rollout through its checksum annotation; after rotating the Cloudflare token,
+restart the server to refresh its subPath-mounted credential.
 
 Upstream references: [Helm integration](https://argo-cd.readthedocs.io/en/stable/user-guide/helm/),
 [declarative applications](https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/).

@@ -33,6 +33,7 @@ jobs:
           # These manual operational playbooks load Vault directly. GitHub PR
           # lint runs without secrets; local `just lint` validates them fully.
           ansible-lint \
+            --exclude playbooks/talos-cluster/argocd.yml \
             --exclude playbooks/talos-cluster/bentopdf-secret.yml \
             --exclude playbooks/talos-cluster/bentopdf.yml \
             --exclude playbooks/talos-cluster/kiwix.yml \
