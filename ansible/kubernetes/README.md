@@ -111,7 +111,7 @@ backup, or Garage storage location is not healthy:
 
 ```bash
 set -euo pipefail
-CTX=admin@homelab
+CTX=homelab
 BACKUP=homepage-daily-20261022020014
 kubectl --context "$CTX" get nodes
 kubectl --context "$CTX" -n velero get backup "$BACKUP"
@@ -130,7 +130,7 @@ verify the directories with `talosctl list` before applying PVs:
 
 ```bash
 set -euo pipefail
-CTX=admin@homelab
+CTX=homelab
 W1_ADDR="$(kubectl --context "$CTX" get node k8s-w-1 -o jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')"
 TALOSCONFIG="$HOME/.local/share/homelab-talos/base/talosconfig"
 WORK="$(mktemp -d)"
@@ -245,7 +245,7 @@ an in-cluster drill where the source namespace still exists, copy Secret objects
 without printing their data:
 
 ```bash
-CTX=admin@homelab
+CTX=homelab
 SOURCE_NS=homepage
 TARGET_NS=homepage-drill
 kubectl --context "$CTX" create namespace "$TARGET_NS"
@@ -265,7 +265,7 @@ file keys are the `HOMEPAGE_VAR_*` entries from
 
 ```bash
 set -euo pipefail
-CTX=admin@homelab
+CTX=homelab
 TARGET_NS=homepage-drill
 umask 077
 HOMEPAGE_SECRETS_ENV_FILE="$HOME/.local/share/homepage-secrets.env"
@@ -284,7 +284,7 @@ the backup's PV objects encounters the already-existing production PV names,
 while the restored claims bind only to the scratch PVs:
 
 ```bash
-CTX=admin@homelab
+CTX=homelab
 TARGET_NS=homepage-drill
 BACKUP=homepage-daily-20261022020014
 kubectl --context "$CTX" -n velero apply -f - <<'YAML'
@@ -339,7 +339,7 @@ the volume restores complete, drop the Tailscale and Caddy sidecars in the
 scratch Deployment so the Homepage container can be evaluated by itself:
 
 ```bash
-CTX=admin@homelab
+CTX=homelab
 kubectl --context "$CTX" -n homepage-drill patch deployment homepage \
   --type=json \
   --patch='[{"op":"remove","path":"/spec/template/spec/containers/1"},{"op":"remove","path":"/spec/template/spec/containers/1"}]'
@@ -352,7 +352,7 @@ logs, icons, the Velero-generated `.velero/` marker, and the ConfigMap-managed
 `manifest.json`, `services.yaml`, and `settings.yaml` from the config comparison:
 
 ```bash
-CTX=admin@homelab
+CTX=homelab
 diff -u \
   <(kubectl --context "$CTX" -n homepage get all,pvc -o name | sort) \
   <(kubectl --context "$CTX" -n homepage-drill get all,pvc -o name | sort) || true
@@ -367,7 +367,7 @@ through its ClusterIP using the Host header from the production readiness
 probe:
 
 ```bash
-CTX=admin@homelab
+CTX=homelab
 SERVICE_IP="$(kubectl --context "$CTX" -n homepage-drill get service homepage -o jsonpath='{.spec.clusterIP}')"
 HOST="$(kubectl --context "$CTX" -n homepage get deployment homepage -o json \
   | jq -r '.spec.template.spec.containers[] | select(.name=="homepage") | .readinessProbe.httpGet.httpHeaders[] | select(.name=="Host") | .value')"
@@ -385,7 +385,7 @@ configuration containing the three production `.keep` entries and no
 `homepage-drill` entries:
 
 ```bash
-CTX=admin@homelab
+CTX=homelab
 W1_ADDR="$(kubectl --context "$CTX" get node k8s-w-1 -o jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')"
 TALOSCONFIG="$HOME/.local/share/homelab-talos/base/talosconfig"
 BASELINE="$HOME/.local/share/homelab-talos/k8s-w-1.yaml"
@@ -508,7 +508,7 @@ ansible-playbook playbooks/grafana/main.yml -i inventory \
   --vault-password-file .vault_pass
 KUBECONFIG="$HOME/.local/share/homelab-talos/kubeconfig" \
   ansible-playbook playbooks/talos-cluster/apply-alloy.yml \
-  -i inventory -e talos_kube_context=admin@homelab
+  -i inventory -e talos_kube_context=homelab
 KUBECONFIG="$HOME/.local/share/homelab-talos/kubeconfig" \
   ansible-playbook playbooks/talos-cluster/verify-alloy.yml -i inventory
 ```
