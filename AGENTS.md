@@ -42,8 +42,10 @@ against real infrastructure. The vault password is injected from
 `secrets.ANSIBLE_VAULT_PASSWORD` via an executable vault password file, so it is
 never written to the runner's disk.
 
-Because a push to `main` under `ansible/**` applies to live hosts (and the daily
-cron re-applies within 24h), land changes on a branch and merge deliberately.
+Keep all repository work on local `main`: edit, review, and commit there. Create
+another branch or worktree only when Dave explicitly asks. Push only on explicit
+request; a push to `main` under `ansible/**` applies to live hosts, and the daily
+cron re-applies those changes within 24 hours.
 
 ## Ansible Playbook Conventions
 
