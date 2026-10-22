@@ -209,6 +209,7 @@ persistence:
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 1Gi
+    advancedMounts: {}
   config-local:
     type: persistentVolumeClaim
     annotations:
