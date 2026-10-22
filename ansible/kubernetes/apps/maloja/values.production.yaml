@@ -1,0 +1,253 @@
+---
+# Maloja — Argo CD production values (bjw-s app-template 5.3.0).
+# Source of truth for the workload: playbooks/maloja/docker-compose.yml
+# (image docker.io/krateng/maloja 3.2.9, port 42010, $PWD/data:/data).
+# Tailnet-only: exposure mirrors the Kiwix pod — userspace Tailscale
+# sidecar TCP-forwarding 443 to an in-pod Caddy (8443), which
+# terminates a real certificate (Cloudflare DNS-01) and proxies to
+# Maloja on 127.0.0.1:42010.
+#
+# Secrets stay outside Git and outside Argo's ownership:
+#   maloja-caddy-external    (key cloudflare_api_token) — Ansible/Vault
+#   maloja-tailscale-auth    (key TS_AUTHKEY, one-use)  — bootstrap only
+controllers:
+  maloja:
+    type: deployment
+    strategy: Recreate
+    # STAGING: 0 until the LXC config has been copied into the PVC
+    # (see README.md). The cutover commit removes this line.
+    replicas: 0
+    pod:
+      annotations:
+        # Opt-in filesystem backup of the app config volume only;
+        # the sidecar volumes are excluded by omission (the Schedule
+        # is opt-in), and the tailscale identity must never be
+        # captured for restore.
+        backup.velero.io/backup-volumes: data
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+    containers:
+      app:
+        image:
+          repository: docker.io/krateng/maloja
+          tag: 3.2.9
+          digest: sha256:313b58d282934b2e7dc27f794462eb2ceb1567db23806b49f78b706dd86afe09
+        env:
+          # Parity with the LXC compose. MALOJA_FORCE_PASSWORD=stub is
+          # already committed in the LXC playbook; it is not a real
+          # credential — access control is the tailnet itself.
+          MALOJA_SKIP_SETUP: "true"
+          MALOJA_FORCE_PASSWORD: stub
+          MALOJA_DATA_DIRECTORY: /data
+        probes:
+          startup:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 42010
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 24
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 42010
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 42010
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+      tailscale:
+        image:
+          repository: ghcr.io/tailscale/tailscale
+          tag: v1.104.1
+          digest: sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
+        envFrom:
+          # The bootstrap-created Secret holds exactly one key
+          # (TS_AUTHKEY), imported here as the env var of that name.
+          # Optional: once the identity persists in tailscale-state,
+          # the Secret is deleted and the sidecar runs without it.
+          - secretRef:
+              name: maloja-tailscale-auth
+              optional: true
+        env:
+          TS_AUTH_ONCE: "true"
+          TS_HOSTNAME: maloja
+          TS_STATE_DIR: /var/lib/tailscale
+          TS_KUBE_SECRET: ""
+          TS_USERSPACE: "true"
+          TS_EXTRA_ARGS: --login-server=https://hs.davegallant.ca --accept-dns=false
+          TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 192Mi
+      caddy:
+        image:
+          repository: ghcr.io/davegallant/homelab-caddy-cloudflare
+          tag: 2.11.6-a8737d0
+          digest: sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
+        command:
+          - caddy
+        args:
+          - run
+          - --config
+          - /etc/caddy/Caddyfile
+          - --adapter
+          - caddyfile
+        resources:
+          requests:
+            cpu: 25m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+
+service:
+  maloja:
+    controller: maloja
+    ports:
+      http:
+        port: 42010
+
+configMaps:
+  # Keys are short on purpose: bjw-s names the rendered ConfigMaps
+  # <release>-<key>, and the persistence entries below reference the
+  # resulting maloja-tailscale / maloja-caddy names.
+  tailscale:
+    data:
+      serve-config.json: |
+        {
+          "TCP": {
+            "443": {
+              "TCPForward": "127.0.0.1:8443"
+            }
+          }
+        }
+  caddy:
+    data:
+      Caddyfile: |
+        {
+          auto_https disable_redirects
+          https_port 8443
+          tls_resolvers 1.1.1.1
+          servers {
+            protocols h1 h2
+          }
+        }
+
+        maloja.tail.davegallant.ca {
+          bind 127.0.0.1
+
+          tls {
+            dns cloudflare {file./run/secrets/cloudflare_api_token}
+            propagation_delay 30s
+            propagation_timeout -1
+          }
+
+          reverse_proxy 127.0.0.1:42010
+        }
+
+persistence:
+  data:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    advancedMounts:
+      maloja:
+        app:
+          - path: /data
+  tailscale-state:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 64Mi
+    advancedMounts:
+      maloja:
+        tailscale:
+          - path: /var/lib/tailscale
+  tailscale-config:
+    type: configMap
+    name: maloja-tailscale
+    advancedMounts:
+      maloja:
+        tailscale:
+          - path: /etc/tailscale/serve-config.json
+            subPath: serve-config.json
+            readOnly: true
+  caddy-config:
+    type: configMap
+    name: maloja-caddy
+    advancedMounts:
+      maloja:
+        caddy:
+          - path: /etc/caddy/Caddyfile
+            subPath: Caddyfile
+            readOnly: true
+  caddy-state:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 256Mi
+    advancedMounts:
+      maloja:
+        caddy:
+          - path: /data
+  caddy-runtime:
+    type: emptyDir
+    advancedMounts:
+      maloja:
+        caddy:
+          - path: /config
+  caddy-secret:
+    type: secret
+    name: maloja-caddy-external
+    advancedMounts:
+      maloja:
+        caddy:
+          - path: /run/secrets/cloudflare_api_token
+            subPath: cloudflare_api_token
+            readOnly: true
+
+rawResources:
+  backupSchedule:
+    enabled: true
+    manifest:
+      apiVersion: velero.io/v1
+      kind: Schedule
+      metadata:
+        name: maloja-daily
+        namespace: velero
+      spec:
+        schedule: "0 3 * * *"
+        template:
+          ttl: 336h
+          includedNamespaces:
+            - maloja
+          excludedResources:
+            - secrets
+          defaultVolumesToFsBackup: false
+          snapshotVolumes: false
+          storageLocation: default

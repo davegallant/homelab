@@ -1,0 +1,14 @@
+---
+# Namespace for changedetection, applied once by hand (see README.md) and
+# deliberately NOT managed by Argo CD: the homelab AppProject allows
+# namespace-scoped resources only, so namespaces stay an Ansible /
+# kubectl concern. The PVCs themselves are chart-managed
+# (local-path, dynamically provisioned) — nothing else lives here.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: changedetection
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline

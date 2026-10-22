@@ -8,6 +8,10 @@ spec:
   description: Manually approved homelab applications
   sourceRepos:
     - https://github.com/davegallant/homelab.git
+    # Batch A: the bjw-s app-template chart for the simple workloads
+    # (Sol review #4 — pilot on new apps, bespoke charts stay for
+    # unusual topologies).
+    - https://bjw-s-labs.github.io/helm-charts
   destinations:
     - server: https://kubernetes.default.svc
       namespace: bentopdf
@@ -21,6 +25,14 @@ spec:
       namespace: miniflux
     - server: https://kubernetes.default.svc
       namespace: searxng
+    - server: https://kubernetes.default.svc
+      namespace: seerr
+    - server: https://kubernetes.default.svc
+      namespace: lubelogger
+    - server: https://kubernetes.default.svc
+      namespace: maloja
+    - server: https://kubernetes.default.svc
+      namespace: changedetection
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
     - group: apps
@@ -29,6 +41,8 @@ spec:
       kind: StatefulSet
     - group: ""
       kind: ConfigMap
+    - group: ""
+      kind: PersistentVolumeClaim
     - group: ""
       kind: ServiceAccount
     - group: ""
