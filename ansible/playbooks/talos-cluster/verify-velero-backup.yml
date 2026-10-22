@@ -75,8 +75,16 @@
       ansible.builtin.assert:
         that:
           - (velero_verify_pvbs.stdout | from_json)['items'] | length >= 2
-          - "(velero_verify_pvbs.stdout | from_json)['items'] | selectattr('spec.volume', 'equalto', 'homepage-config') | selectattr('status.phase', 'equalto', 'Completed') | list | length == 1"
-          - "(velero_verify_pvbs.stdout | from_json)['items'] | selectattr('spec.volume', 'equalto', 'caddy-state') | selectattr('status.phase', 'equalto', 'Completed') | list | length == 1"
+          - >-
+            (velero_verify_pvbs.stdout | from_json)['items']
+            | selectattr('spec.volume', 'equalto', 'homepage-config')
+            | selectattr('status.phase', 'equalto', 'Completed')
+            | list | length == 1
+          - >-
+            (velero_verify_pvbs.stdout | from_json)['items']
+            | selectattr('spec.volume', 'equalto', 'caddy-state')
+            | selectattr('status.phase', 'equalto', 'Completed')
+            | list | length == 1
           - "(velero_verify_pvbs.stdout | from_json)['items'] | selectattr('status.phase', 'equalto', 'Failed') | list | length == 0"
           - "(velero_verify_pvbs.stdout | from_json)['items'] | selectattr('spec.volume', 'equalto', 'tailscale-state') | list | length == 0"
 
