@@ -1,0 +1,16 @@
+Kiwix is deployed in namespace {{ .Release.Namespace }}.
+
+Data: the ZIM library is the static NFS PVC kiwix-data
+(192.168.1.16:/mnt/tank/media/kiwix, read-only) from ../storage.yaml.
+
+{{- if .Values.tailscale.enabled }}
+Tailnet: https://kiwix.{{ .Values.magicDnsDomain }}/ via the in-pod
+Tailscale sidecar (TCP forward) and Caddy (Let's Encrypt via
+Cloudflare DNS-01). Identity state lives in the kiwix-tailscale PVC;
+the one-use auth Secret is applied by the playbook only when no
+identity exists yet and removed after verification.
+{{- else }}
+Tailnet sidecars are DISABLED (staging): reach the app through the
+ClusterIP Service or a port-forward. The kiwix LXC still owns the
+tailnet identity until cutover.
+{{- end }}

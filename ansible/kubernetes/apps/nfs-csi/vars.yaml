@@ -1,0 +1,11 @@
+---
+# NFS storage for the cluster comes from the upstream kubernetes-csi
+# csi-driver-nfs, installed from its official Helm chart (vendor chart,
+# the Velero/monitoring exception class). Talos has no NFS client
+# tooling in the host OS; the driver carries its own inside its pods.
+#
+# Verify the pin still exists before installing. If it is gone, take
+# the nearest current release of the same chart and update the pin in
+# the same change — never float on latest.
+nfs_csi_chart_repo: "https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts"
+nfs_csi_chart_version: "4.9.0"

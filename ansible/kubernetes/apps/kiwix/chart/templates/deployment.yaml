@@ -1,0 +1,163 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kiwix
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kiwix
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kiwix
+      annotations:
+        # Nothing in this pod is ever filesystem-backed-up: the data
+        # volume is the TrueNAS ZIM library, tailscale-state is a
+        # live identity, caddy-runtime is disposable.
+        backup.velero.io/backup-volumes-excludes: data,tailscale-state,caddy-runtime
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: {{ .Values.fsGroup }}
+        fsGroupChangePolicy: OnRootMismatch
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - {{ .Values.nodeHostname }}
+      containers:
+        - name: kiwix
+          image: {{ .Values.kiwix.image }}
+          imagePullPolicy: IfNotPresent
+          # The LXC Compose passes command "*.zim"; in Kubernetes the
+          # image entrypoint stays and the glob is the argument,
+          # expanded by the image's shell in /data exactly as under
+          # Compose.
+          args:
+            - "*.zim"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 24
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.kiwix.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+              readOnly: true
+{{- if .Values.tailscale.enabled }}
+        - name: tailscale
+          image: {{ .Values.tailscale.image }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TS_AUTHKEY
+              valueFrom:
+                secretKeyRef:
+                  name: kiwix-tailscale-auth
+                  key: TS_AUTHKEY
+                  optional: true
+            - name: TS_AUTH_ONCE
+              value: "true"
+            - name: TS_HOSTNAME
+              value: {{ required "tailscaleHostname must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.tailscaleHostname | quote }}
+            - name: TS_STATE_DIR
+              value: /var/lib/tailscale
+            - name: TS_KUBE_SECRET
+              value: ""
+            - name: TS_USERSPACE
+              value: "true"
+            - name: TS_EXTRA_ARGS
+              value: >-
+                --login-server=https://{{ required "headscaleDomain must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.headscaleDomain }}
+                --accept-dns=false
+            - name: TS_SERVE_CONFIG
+              value: /etc/tailscale/serve-config.json
+          resources:
+            {{- toYaml .Values.tailscale.resources | nindent 12 }}
+          volumeMounts:
+            - name: tailscale-state
+              mountPath: /var/lib/tailscale
+            - name: tailscale-config
+              mountPath: /etc/tailscale/serve-config.json
+              subPath: serve-config.json
+              readOnly: true
+        - name: caddy
+          image: {{ .Values.caddy.image }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - caddy
+          args:
+            - run
+            - --config
+            - /etc/caddy/Caddyfile
+            - --adapter
+            - caddyfile
+          resources:
+            {{- toYaml .Values.caddy.resources | nindent 12 }}
+          volumeMounts:
+            - name: caddy-config
+              mountPath: /etc/caddy/Caddyfile
+              subPath: Caddyfile
+              readOnly: true
+            - name: caddy-state
+              mountPath: /data
+            - name: caddy-runtime
+              mountPath: /config
+            - name: caddy-secret
+              mountPath: /run/secrets/cloudflare_api_token
+              subPath: cloudflare_api_token
+              readOnly: true
+{{- end }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: kiwix-data
+            readOnly: true
+{{- if .Values.tailscale.enabled }}
+        - name: tailscale-state
+          persistentVolumeClaim:
+            claimName: kiwix-tailscale
+        - name: caddy-state
+          persistentVolumeClaim:
+            claimName: kiwix-caddy
+        - name: caddy-runtime
+          emptyDir: {}
+        - name: tailscale-config
+          configMap:
+            name: kiwix-tailscale
+        - name: caddy-config
+          configMap:
+            name: kiwix-caddy
+        - name: caddy-secret
+          secret:
+            secretName: kiwix-caddy
+{{- end }}

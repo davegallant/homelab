@@ -1,0 +1,482 @@
+---
+# Kiwix migration: Helm owns the workload; this playbook owns what
+# Helm cannot — the storage objects, the Vault/group_vars bridge, the
+# one-use Headscale preauth-key lifecycle (ported from homepage.yml),
+# the LXC<->cluster cutover sequencing, and functional verification.
+#
+# Actions (kiwix_action):
+#   stage (default) - apply storage, install the chart with the
+#                     tailnet sidecars DISABLED (the LXC keeps sole
+#                     ownership of the kiwix tailnet identity), verify
+#                     the NFS mount and app in-cluster, trigger a
+#                     manifests-only backup.
+#   verify          - re-check the staged app (ZIM listing + HTTP).
+#   cutover         - stop the LXC stack, create a one-use Headscale
+#                     key if no identity exists yet, enable the
+#                     sidecars, verify https://kiwix.<tailnet>/ via
+#                     the sidecar IP, remove the auth Secret, and
+#                     prove the identity survives a restart without
+#                     it. Requires the k8s-w-1 local dirs to exist
+#                     (machine-config .keep entries + node reboot).
+#   rollback        - disable the sidecars and start the LXC stack.
+#
+# Prerequisite: the NFS CSI driver (nfs-csi.yml install + smoke).
+- name: Run the Kiwix Talos migration action
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../group_vars/all/secrets.yaml
+    - ../../kubernetes/apps/kiwix/vars.yaml
+  vars:
+    kiwix_action: stage
+    talos_kube_context: ""
+    kiwix_namespace: kiwix
+    kiwix_apps_dir: "{{ playbook_dir }}/../../kubernetes/apps/kiwix"
+    kiwix_chart_dir: "{{ playbook_dir }}/../../kubernetes/apps/kiwix/chart"
+    kiwix_tailscale_authkey: ""
+  tasks:
+    - name: Require a supported Kiwix action
+      ansible.builtin.assert:
+        that:
+          - kiwix_action in ['stage', 'verify', 'cutover', 'rollback']
+        fail_msg: "kiwix_action must be stage, verify, cutover, or rollback."
+
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: kiwix_kube_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - kiwix_kube_context.stdout == talos_kube_context
+        fail_msg: "Pass -e talos_kube_context=<the Talos context> matching the active kubectl context."
+
+    - name: Verify all Talos nodes are Ready
+      ansible.builtin.command:
+        argv: [kubectl, wait, --for=condition=Ready, --timeout=120s, node/k8s-cp-1, node/k8s-w-1, node/k8s-w-2]
+      changed_when: false
+
+    - name: Require the NFS CSI driver
+      ansible.builtin.command:
+        argv: [kubectl, get, csidriver, nfs.csi.k8s.io]
+      changed_when: false
+
+    - name: Create a protected temporary directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: kiwix-migration-
+      register: kiwix_render_dir
+      when: kiwix_action in ['stage', 'cutover', 'rollback']
+
+    - name: Run the selected Kiwix action
+      when: kiwix_action in ['stage', 'cutover', 'rollback']
+      block:
+        - name: Render the Ansible-to-Helm values bridge
+          ansible.builtin.template:
+            src: "{{ kiwix_apps_dir }}/values.ansible.yaml.j2"
+            dest: "{{ kiwix_render_dir.path }}/values.ansible.yaml"
+            mode: "0600"
+          no_log: true
+
+        - name: Prepare tailscale state for this action
+          when: kiwix_action == 'cutover'
+          block:
+            - name: Check for an existing online Kiwix tailnet identity
+              ansible.builtin.command:
+                argv: [kubectl, -n, kiwix, exec, deployment/kiwix, -c, tailscale, --, tailscale, ip, -4]
+              register: kiwix_existing_tailnet_identity
+              failed_when: false
+              changed_when: false
+              no_log: true
+
+            - name: Create a one-use Headscale registration key
+              ansible.builtin.command:
+                argv:
+                  - docker
+                  - exec
+                  - headscale
+                  - headscale
+                  - preauthkeys
+                  - create
+                  - --user
+                  - "1"
+                  - --expiration
+                  - 1h
+                  - --output
+                  - json
+              delegate_to: pangolin
+              connection: ssh
+              remote_user: root
+              register: kiwix_new_preauthkey
+              changed_when: true
+              when: kiwix_existing_tailnet_identity.rc != 0 or kiwix_existing_tailnet_identity.stdout | trim | length == 0
+              failed_when: false
+              no_log: true
+
+            - name: Require successful Headscale key creation
+              ansible.builtin.assert:
+                that:
+                  - kiwix_new_preauthkey.rc == 0
+                fail_msg: >-
+                  Headscale key creation failed (rc={{ kiwix_new_preauthkey.rc }};
+                  stderr={{ kiwix_new_preauthkey.stderr | regex_replace('[A-Za-z0-9+/=_-]{16,}', '[redacted]') }}).
+              when: kiwix_new_preauthkey is not skipped
+
+            - name: Hold the one-use key only in Ansible memory
+              ansible.builtin.set_fact:
+                kiwix_tailscale_authkey: "{{ (kiwix_new_preauthkey.stdout | from_json).key }}"
+              when: kiwix_new_preauthkey is not skipped
+              no_log: true
+
+            - name: Render the one-use Tailscale auth Secret
+              ansible.builtin.template:
+                src: "{{ kiwix_apps_dir }}/tailscale-auth-secret.yaml.j2"
+                dest: "{{ kiwix_render_dir.path }}/tailscale-auth-secret.yaml"
+                mode: "0600"
+              when: kiwix_tailscale_authkey | length > 0
+              no_log: true
+
+            - name: Apply the one-use Tailscale auth Secret
+              ansible.builtin.command:
+                argv: [kubectl, apply, -f, "{{ kiwix_render_dir.path }}/tailscale-auth-secret.yaml"]
+              when: kiwix_tailscale_authkey | length > 0
+              register: kiwix_apply_tailscale_secret
+              changed_when: "'created' in kiwix_apply_tailscale_secret.stdout or 'configured' in kiwix_apply_tailscale_secret.stdout"
+              no_log: true
+
+        - name: Apply Kiwix storage before staging
+          when: kiwix_action == 'stage'
+          block:
+            - name: Apply Kiwix storage objects
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - apply
+                  - --server-side=true
+                  - --force-conflicts
+                  - -f
+                  - "{{ kiwix_apps_dir }}/storage.yaml"
+              register: kiwix_storage_apply
+              changed_when: "'created' in kiwix_storage_apply.stdout or 'configured' in kiwix_storage_apply.stdout"
+
+            - name: Require the NFS data claim to bind
+              ansible.builtin.command:
+                argv: [kubectl, -n, kiwix, wait, "--for=jsonpath={.status.phase}=Bound", pvc/kiwix-data, --timeout=120s]
+              changed_when: false
+
+        - name: Validate the kiwix chart and rendered values
+          ansible.builtin.command:
+            argv:
+              - helm
+              - template
+              - kiwix
+              - "{{ kiwix_chart_dir }}"
+              - --namespace
+              - "{{ kiwix_namespace }}"
+              - --values
+              - "{{ kiwix_render_dir.path }}/values.ansible.yaml"
+              - --set
+              - "tailscale.enabled={{ 'true' if kiwix_action == 'cutover' else 'false' }}"
+          changed_when: false
+          no_log: true
+
+        - name: Stop the Kiwix LXC stack before cutover
+          when: kiwix_action == 'cutover'
+          block:
+            - name: Stop the Kiwix LXC services
+              ansible.builtin.command:
+                argv: [docker, compose, stop]
+                chdir: /root
+              delegate_to: kiwix
+              connection: ssh
+              remote_user: root
+              register: kiwix_lxc_stop
+              changed_when: kiwix_lxc_stop.stdout | length > 0 or kiwix_lxc_stop.stderr | length > 0
+
+            - name: Require no running Kiwix LXC services
+              ansible.builtin.command:
+                argv:
+                  - docker
+                  - compose
+                  - ps
+                  - --services
+                  - --filter
+                  - status=running
+                chdir: /root
+              delegate_to: kiwix
+              connection: ssh
+              remote_user: root
+              register: kiwix_lxc_running
+              changed_when: false
+
+            - name: Assert the Kiwix LXC stack is stopped
+              ansible.builtin.assert:
+                that:
+                  - kiwix_lxc_running.stdout | trim | length == 0
+                fail_msg: "Kiwix LXC services are still running: {{ kiwix_lxc_running.stdout }}"
+
+        - name: Install or upgrade the kiwix release
+          ansible.builtin.command:
+            argv:
+              - helm
+              - upgrade
+              - --install
+              - kiwix
+              - "{{ kiwix_chart_dir }}"
+              - --namespace
+              - "{{ kiwix_namespace }}"
+              - --create-namespace
+              - --values
+              - "{{ kiwix_render_dir.path }}/values.ansible.yaml"
+              - --set
+              - "tailscale.enabled={{ 'true' if kiwix_action == 'cutover' else 'false' }}"
+              - --server-side=true
+              - --force-conflicts
+              - --take-ownership
+          register: kiwix_helm_upgrade
+          changed_when: "'STATUS: deployed' in kiwix_helm_upgrade.stdout"
+          no_log: true
+
+        - name: Wait for the kiwix deployment rollout
+          ansible.builtin.command:
+            argv: [kubectl, -n, kiwix, rollout, status, deployment/kiwix, --timeout=300s]
+          changed_when: false
+
+        - name: Verify the staged Kiwix application
+          when: kiwix_action == 'stage'
+          block:
+            - name: List the ZIM library inside the running pod
+              ansible.builtin.command:
+                argv: [kubectl, -n, kiwix, exec, deployment/kiwix, -c, kiwix, --, ls, /data]
+              register: kiwix_data_listing
+              changed_when: false
+
+            - name: Require ZIM files visible through the NFS mount
+              ansible.builtin.assert:
+                that:
+                  - kiwix_data_listing.stdout_lines | select('match', '.*\\.zim$') | list | length > 0
+                fail_msg: "No .zim files visible in /data: {{ kiwix_data_listing.stdout_lines }}"
+
+            - name: Check the staged Kiwix app over a port-forward
+              block:
+                - name: Start a temporary port-forward to the staged Kiwix service
+                  ansible.builtin.shell: >-
+                    nohup kubectl --context {{ talos_kube_context }} -n kiwix
+                    port-forward service/kiwix 18099:8080
+                    >/tmp/kiwix-port-forward.log 2>&1 &
+                  changed_when: true
+
+                - name: Wait for the temporary port-forward to listen
+                  ansible.builtin.wait_for:
+                    host: 127.0.0.1
+                    port: 18099
+                    timeout: 60
+
+                - name: Fetch the staged Kiwix front page
+                  ansible.builtin.uri:
+                    url: http://127.0.0.1:18099/
+                    return_content: true
+                    status_code: 200
+                  register: kiwix_staged_front_page
+                  until: kiwix_staged_front_page.status == 200
+                  retries: 12
+                  delay: 5
+
+                - name: Require Kiwix content from the staged app
+                  ansible.builtin.assert:
+                    that:
+                      - "'Kiwix' in kiwix_staged_front_page.content"
+              always:
+                - name: Stop the temporary Kiwix port-forward
+                  ansible.builtin.command:
+                    argv: [pkill, -f, "port-forward service/kiwix 18099:8080"]
+                  changed_when: false
+                  failed_when: false
+
+            - name: Trigger a Kiwix backup from the Helm schedule
+              ansible.builtin.command:
+                argv: [kubectl, -n, velero, exec, deployment/velero, --, /velero, backup, create, --from-schedule, kiwix-daily, --wait]
+              register: kiwix_backup_create
+              changed_when: true
+
+            - name: Extract the triggered backup name
+              ansible.builtin.set_fact:
+                kiwix_backup_name: "{{ (kiwix_backup_create.stdout | regex_findall('Backup request \"(.*)\" submitted successfully[.]'))[0] }}"
+
+            - name: Read the completed Kiwix backup
+              ansible.builtin.command:
+                argv: [kubectl, -n, velero, exec, deployment/velero, --, /velero, backup, describe, "{{ kiwix_backup_name }}", --details, -o, json]
+              register: kiwix_backup_details
+              changed_when: false
+
+            - name: Require a completed backup with no pod volume backups
+              ansible.builtin.assert:
+                that:
+                  - (kiwix_backup_details.stdout | from_json).phase == 'Completed'
+                  - (kiwix_backup_details.stdout | from_json).status.backupVolumes.podVolumeBackups == '<none included>'
+
+        - name: Verify the cut-over Kiwix tailnet endpoint
+          when: kiwix_action == 'cutover'
+          block:
+            - name: Read the Tailscale node identity
+              ansible.builtin.command:
+                argv: [kubectl, -n, kiwix, exec, deployment/kiwix, -c, tailscale, --, tailscale, ip, -4]
+              register: kiwix_tailnet_ip
+              changed_when: false
+              no_log: true
+
+            - name: Require a Tailscale IPv4 address
+              ansible.builtin.assert:
+                that:
+                  - kiwix_tailnet_ip.stdout | trim | length > 0
+
+            - name: Fetch Kiwix over the tailnet endpoint
+              ansible.builtin.command:
+                argv:
+                  - curl
+                  - --silent
+                  - --show-error
+                  - --fail
+                  - --resolve
+                  - "kiwix.{{ headscale_magic_dns_domain }}:443:{{ kiwix_tailnet_ip.stdout | trim }}"
+                  - "https://kiwix.{{ headscale_magic_dns_domain }}/"
+              register: kiwix_tailnet_page
+              changed_when: false
+              until: kiwix_tailnet_page.rc == 0 and 'Kiwix' in kiwix_tailnet_page.stdout
+              retries: 12
+              delay: 10
+
+            - name: Remove the one-use Tailscale auth Secret after identity verification
+              ansible.builtin.command:
+                argv: [kubectl, -n, kiwix, delete, secret, kiwix-tailscale-auth, --ignore-not-found=true]
+              when: kiwix_tailscale_authkey | length > 0
+              changed_when: true
+              no_log: true
+
+            - name: Prove the identity survives a restart without the auth Secret
+              when: kiwix_tailscale_authkey | length > 0
+              block:
+                - name: Restart the kiwix deployment
+                  ansible.builtin.command:
+                    argv: [kubectl, -n, kiwix, rollout, restart, deployment/kiwix]
+                  changed_when: true
+
+                - name: Wait for the restarted kiwix deployment
+                  ansible.builtin.command:
+                    argv: [kubectl, -n, kiwix, rollout, status, deployment/kiwix, --timeout=300s]
+                  changed_when: false
+
+                - name: Re-fetch Kiwix over the tailnet endpoint
+                  ansible.builtin.command:
+                    argv:
+                      - curl
+                      - --silent
+                      - --show-error
+                      - --fail
+                      - --resolve
+                      - "kiwix.{{ headscale_magic_dns_domain }}:443:{{ kiwix_tailnet_ip.stdout | trim }}"
+                      - "https://kiwix.{{ headscale_magic_dns_domain }}/"
+                  register: kiwix_tailnet_page_after_restart
+                  changed_when: false
+                  until: kiwix_tailnet_page_after_restart.rc == 0 and 'Kiwix' in kiwix_tailnet_page_after_restart.stdout
+                  retries: 12
+                  delay: 10
+
+        - name: Restore the Kiwix LXC stack after rollback
+          when: kiwix_action == 'rollback'
+          block:
+            - name: Remove any leftover Tailscale auth Secret
+              ansible.builtin.command:
+                argv: [kubectl, -n, kiwix, delete, secret, kiwix-tailscale-auth, --ignore-not-found=true]
+              changed_when: false
+
+            - name: Start the Kiwix LXC services
+              ansible.builtin.command:
+                argv: [docker, compose, up, -d]
+                chdir: /root
+              delegate_to: kiwix
+              connection: ssh
+              remote_user: root
+              register: kiwix_lxc_start
+              changed_when: kiwix_lxc_start.stdout | length > 0 or kiwix_lxc_start.stderr | length > 0
+
+            - name: Require the Kiwix LXC application to respond
+              ansible.builtin.command:
+                argv: [curl, --silent, --show-error, --fail, http://127.0.0.1:8080/]
+              delegate_to: kiwix
+              connection: ssh
+              remote_user: root
+              register: kiwix_lxc_page
+              changed_when: false
+              until: kiwix_lxc_page.rc == 0 and 'Kiwix' in kiwix_lxc_page.stdout
+              retries: 12
+              delay: 5
+      always:
+        - name: Remove temporary Kiwix migration files
+          ansible.builtin.file:
+            path: "{{ kiwix_render_dir.path }}"
+            state: absent
+          when: kiwix_render_dir.path is defined
+
+    - name: Verify the staged Kiwix application (verify action)
+      when: kiwix_action == 'verify'
+      block:
+        - name: List the ZIM library inside the running pod
+          ansible.builtin.command:
+            argv: [kubectl, -n, kiwix, exec, deployment/kiwix, -c, kiwix, --, ls, /data]
+          register: kiwix_verify_listing
+          changed_when: false
+
+        - name: Require ZIM files visible through the NFS mount
+          ansible.builtin.assert:
+            that:
+              - kiwix_verify_listing.stdout_lines | select('match', '.*\\.zim$') | list | length > 0
+            fail_msg: "No .zim files visible in /data: {{ kiwix_verify_listing.stdout_lines }}"
+
+        - name: Check Kiwix over a port-forward
+          block:
+            - name: Start a temporary port-forward to the Kiwix service
+              ansible.builtin.shell: >-
+                nohup kubectl --context {{ talos_kube_context }} -n kiwix
+                port-forward service/kiwix 18099:8080
+                >/tmp/kiwix-port-forward.log 2>&1 &
+              changed_when: true
+
+            - name: Wait for the temporary port-forward to listen
+              ansible.builtin.wait_for:
+                host: 127.0.0.1
+                port: 18099
+                timeout: 60
+
+            - name: Fetch the Kiwix front page
+              ansible.builtin.uri:
+                url: http://127.0.0.1:18099/
+                return_content: true
+                status_code: 200
+              register: kiwix_verify_front_page
+              until: kiwix_verify_front_page.status == 200
+              retries: 12
+              delay: 5
+
+            - name: Require Kiwix content from the app
+              ansible.builtin.assert:
+                that:
+                  - "'Kiwix' in kiwix_verify_front_page.content"
+          always:
+            - name: Stop the temporary Kiwix port-forward
+              ansible.builtin.command:
+                argv: [pkill, -f, "port-forward service/kiwix 18099:8080"]
+              changed_when: false
+              failed_when: false
+
+    - name: Report the completed Kiwix action
+      ansible.builtin.debug:
+        msg: >-
+          Kiwix action '{{ kiwix_action }}' completed.
+          {{ 'The cluster serves the ZIM library from the TrueNAS NFS export; the LXC still owns the tailnet identity.' if kiwix_action == 'stage' else '' }}
+          {{ 'The cluster owns kiwix on the tailnet; the LXC stack is stopped as the rollback target.' if kiwix_action == 'cutover' else '' }}
+          {{ 'The LXC stack is serving again and the cluster sidecars are disabled.' if kiwix_action == 'rollback' else '' }}

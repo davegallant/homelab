@@ -1,0 +1,230 @@
+---
+# NFS CSI driver: the cluster's NAS-mount platform piece (see
+# ../../kubernetes/apps/nfs-csi/README.md). Installs the upstream
+# csi-driver-nfs chart into kube-system; the smoke action proves a real
+# mount against the TrueNAS Kiwix export with a throwaway rig.
+#
+# Actions (nfs_csi_action):
+#   install (default) - helm template validate + install/upgrade +
+#                       rollout waits.
+#   smoke             - temporary namespace + static PV/PVC + pod that
+#                       lists *.zim on the Kiwix export; asserts the
+#                       listing is non-empty; tears everything down.
+- name: Install and verify the NFS CSI driver on Talos Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/apps/nfs-csi/vars.yaml
+  vars:
+    nfs_csi_action: install
+    talos_kube_context: ""
+    nfs_csi_apps_dir: "{{ playbook_dir }}/../../kubernetes/apps/nfs-csi"
+  tasks:
+    - name: Require a supported NFS CSI action
+      ansible.builtin.assert:
+        that:
+          - nfs_csi_action in ['install', 'smoke']
+        fail_msg: "nfs_csi_action must be install or smoke."
+
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: nfs_csi_kube_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - nfs_csi_kube_context.stdout == talos_kube_context
+        fail_msg: "Pass -e talos_kube_context=<the Talos context> matching the active kubectl context."
+
+    - name: Verify all Talos nodes are Ready
+      ansible.builtin.command:
+        argv: [kubectl, wait, --for=condition=Ready, --timeout=120s, node/k8s-cp-1, node/k8s-w-1, node/k8s-w-2]
+      changed_when: false
+
+    - name: Install the NFS CSI driver
+      when: nfs_csi_action == 'install'
+      block:
+        - name: Validate the csi-driver-nfs chart and values
+          ansible.builtin.command:
+            argv:
+              - helm
+              - template
+              - csi-driver-nfs
+              - csi-driver-nfs
+              - --repo
+              - "{{ nfs_csi_chart_repo }}"
+              - --version
+              - "{{ nfs_csi_chart_version }}"
+              - --namespace
+              - kube-system
+              - --values
+              - "{{ nfs_csi_apps_dir }}/values.yaml"
+          changed_when: false
+
+        - name: Install csi-driver-nfs from the pinned chart
+          ansible.builtin.command:
+            argv:
+              - helm
+              - upgrade
+              - --install
+              - csi-driver-nfs
+              - csi-driver-nfs
+              - --repo
+              - "{{ nfs_csi_chart_repo }}"
+              - --version
+              - "{{ nfs_csi_chart_version }}"
+              - --namespace
+              - kube-system
+              - --values
+              - "{{ nfs_csi_apps_dir }}/values.yaml"
+          register: nfs_csi_helm_install
+          changed_when: "'Release' in nfs_csi_helm_install.stdout"
+
+        - name: Wait for the CSI controller rollout
+          ansible.builtin.command:
+            argv: [kubectl, -n, kube-system, rollout, status, deployment/csi-nfs-controller, --timeout=300s]
+          changed_when: false
+
+        - name: Wait for the CSI node plugin rollout
+          ansible.builtin.command:
+            argv: [kubectl, -n, kube-system, rollout, status, daemonset/csi-nfs-node, --timeout=300s]
+          changed_when: false
+
+        - name: Require one CSI node pod per Talos node
+          ansible.builtin.command:
+            argv: [kubectl, -n, kube-system, get, daemonset/csi-nfs-node, -o, json]
+          register: nfs_csi_node_status
+          changed_when: false
+
+        - name: Assert the node plugin is fully rolled out
+          ansible.builtin.assert:
+            that:
+              - (nfs_csi_node_status.stdout | from_json).status.desiredNumberScheduled == 3
+              - (nfs_csi_node_status.stdout | from_json).status.numberReady == 3
+
+    - name: Smoke-test an NFS mount against the Kiwix export
+      when: nfs_csi_action == 'smoke'
+      block:
+        - name: Create a protected temporary directory
+          ansible.builtin.tempfile:
+            state: directory
+            prefix: nfs-smoke-
+          register: nfs_smoke_dir
+
+        - name: Write the smoke-test rig
+          ansible.builtin.copy:
+            dest: "{{ nfs_smoke_dir.path }}/smoke.yaml"
+            mode: "0600"
+            content: |
+              ---
+              apiVersion: v1
+              kind: Namespace
+              metadata:
+                name: nfs-csi-smoke
+              ---
+              apiVersion: v1
+              kind: PersistentVolume
+              metadata:
+                name: nfs-csi-smoke-kiwix
+              spec:
+                capacity:
+                  storage: 1Ti
+                accessModes:
+                  - ReadOnlyMany
+                persistentVolumeReclaimPolicy: Retain
+                storageClassName: ""
+                mountOptions:
+                  - hard
+                  - nfsvers=4.1
+                  - noatime
+                csi:
+                  driver: nfs.csi.k8s.io
+                  readOnly: true
+                  volumeHandle: nfs-csi-smoke-kiwix
+                  volumeAttributes:
+                    server: 192.168.1.16
+                    share: /mnt/tank/media/kiwix
+              ---
+              apiVersion: v1
+              kind: PersistentVolumeClaim
+              metadata:
+                name: kiwix-data
+                namespace: nfs-csi-smoke
+              spec:
+                accessModes:
+                  - ReadOnlyMany
+                storageClassName: ""
+                volumeName: nfs-csi-smoke-kiwix
+                resources:
+                  requests:
+                    storage: 1Ti
+              ---
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                name: nfs-smoke
+                namespace: nfs-csi-smoke
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: reader
+                    image: docker.io/library/busybox:1.37@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e
+                    command: ["ls", "/data"]
+                    volumeMounts:
+                      - name: data
+                        mountPath: /data
+                        readOnly: true
+                volumes:
+                  - name: data
+                    persistentVolumeClaim:
+                      claimName: kiwix-data
+
+        - name: Apply the smoke-test rig
+          ansible.builtin.command:
+            argv: [kubectl, apply, -f, "{{ nfs_smoke_dir.path }}/smoke.yaml"]
+          changed_when: true
+
+        - name: Wait for the smoke pod to finish
+          ansible.builtin.command:
+            argv: [kubectl, -n, nfs-csi-smoke, wait, "--for=jsonpath={.status.phase}=Succeeded", pod/nfs-smoke, --timeout=180s]
+          changed_when: false
+
+        - name: Read the smoke pod listing
+          ansible.builtin.command:
+            argv: [kubectl, -n, nfs-csi-smoke, logs, pod/nfs-smoke]
+          register: nfs_smoke_listing
+          changed_when: false
+
+        - name: Require ZIM files on the export
+          ansible.builtin.assert:
+            that:
+              - nfs_smoke_listing.stdout_lines | select('match', '.*\\.zim$') | list | length > 0
+            fail_msg: "The Kiwix export mounted but no .zim files were listed: {{ nfs_smoke_listing.stdout_lines }}"
+
+        - name: Report the smoke-test result
+          ansible.builtin.debug:
+            msg: >-
+              Mounted 192.168.1.16:/mnt/tank/media/kiwix;
+              {{ nfs_smoke_listing.stdout_lines | select('match', '.*\\.zim$') | list | length }} ZIM file(s) listed.
+      always:
+        - name: Remove the smoke-test namespace
+          ansible.builtin.command:
+            argv: [kubectl, delete, namespace, nfs-csi-smoke, --ignore-not-found=true]
+          changed_when: false
+          failed_when: false
+
+        - name: Remove the smoke-test PersistentVolume
+          ansible.builtin.command:
+            argv: [kubectl, delete, pv, nfs-csi-smoke-kiwix, --ignore-not-found=true]
+          changed_when: false
+          failed_when: false
+
+        - name: Remove temporary smoke-test files
+          ansible.builtin.file:
+            path: "{{ nfs_smoke_dir.path }}"
+            state: absent
+          when: nfs_smoke_dir.path is defined

@@ -1,0 +1,45 @@
+{{- if .Values.tailscale.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kiwix-tailscale
+  namespace: {{ .Release.Namespace }}
+data:
+  serve-config.json: |
+    {
+      "TCP": {
+        "443": {
+          "TCPForward": "127.0.0.1:8443"
+        }
+      }
+    }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kiwix-caddy
+  namespace: {{ .Release.Namespace }}
+data:
+  Caddyfile: |
+    {
+      auto_https disable_redirects
+      https_port 8443
+      tls_resolvers 1.1.1.1
+      servers {
+        protocols h1 h2
+      }
+    }
+
+    kiwix.{{ required "magicDnsDomain must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.magicDnsDomain }} {
+      bind 127.0.0.1
+
+      tls {
+        dns cloudflare {file./run/secrets/cloudflare_api_token}
+        propagation_delay 30s
+        propagation_timeout -1
+      }
+
+      reverse_proxy 127.0.0.1:8080
+    }
+{{- end }}

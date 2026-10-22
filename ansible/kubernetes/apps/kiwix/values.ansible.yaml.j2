@@ -1,0 +1,10 @@
+# Ansible-to-Helm values bridge for the kiwix chart.
+#
+# Rendered by playbooks/talos-cluster/kiwix.yml into a protected
+# temporary file (0600, deleted after the run) and passed to Helm with
+# -f. This is the ONLY channel through which Vault/group_vars values
+# reach the chart. Never commit a rendered copy.
+magicDnsDomain: {{ headscale_magic_dns_domain | to_json }}
+headscaleDomain: {{ headscale_server_domain | to_json }}
+tailscaleHostname: {{ kiwix_tailscale_hostname | to_json }}
+cloudflareApiToken: {{ cloudflare_dns_api_token | to_json }}

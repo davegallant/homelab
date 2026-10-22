@@ -1,0 +1,77 @@
+# Default values for the kiwix chart.
+#
+# Values that originate in Ansible (Vault secrets, group_vars) ship
+# empty here and are supplied at deploy time through
+# ../values.ansible.yaml.j2, rendered by
+# playbooks/talos-cluster/kiwix.yml into a protected temp file.
+# Templates fail to render (required) when the critical ones are
+# missing AND the tailnet sidecars are enabled.
+
+kiwix:
+  # Source of truth: playbooks/kiwix/docker-compose.yml on the LXC.
+  image: ghcr.io/kiwix/kiwix-serve:3.8.2@sha256:e478554a9920412eeb5ce1d73f24e4b28445ebed233187cdd03c623c32be46a5
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+# Tailnet exposure, mirroring the Homepage pod: userspace Tailscale
+# sidecar TCP-forwarding 443 to an in-pod Caddy, which terminates a
+# real Let's Encrypt certificate (Cloudflare DNS-01) for
+# kiwix.<magicDnsDomain> and proxies to kiwix-serve on 127.0.0.1:8080.
+# Disabled while staging so the kiwix LXC keeps sole ownership of the
+# tailnet identity; cutover flips it on.
+tailscale:
+  enabled: false
+  image: ghcr.io/tailscale/tailscale:v1.104.1@sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 192Mi
+
+caddy:
+  image: ghcr.io/davegallant/homelab-caddy-cloudflare:2.11.6-a8737d0@sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# The pod is pinned to the worker that hosts the static local PVs
+# (../storage.yaml -- deliberately NOT managed by this chart; the
+# chart adopts the existing PVCs and never recreates them). The ZIM
+# data itself is NFS and would float; the sidecar identity pins us.
+nodeHostname: k8s-w-1
+fsGroup: 1000
+
+# --- Supplied by the Ansible bridge (values.ansible.yaml.j2) ---
+
+# Headscale MagicDNS domain and the Headscale server domain used for
+# --login-server.
+magicDnsDomain: ""
+headscaleDomain: ""
+
+# Tailscale hostname for the sidecar (from ../vars.yaml).
+tailscaleHostname: ""
+
+# Cloudflare DNS API token for the kiwix-caddy Secret.
+cloudflareApiToken: ""
+
+# Velero Schedule for this namespace (applied into the velero
+# namespace). Manifests-only BY DESIGN: the ZIM library is an NFS
+# mount whose protection is TrueNAS snapshots + Drive sync, and the
+# tailscale-state PVC must never be restored (it would clone a live
+# tailnet identity). The Deployment pod annotation names all three
+# volumes in backup-volumes-excludes for explicitness.
+backup:
+  enabled: true
+  schedule: "0 3 * * *"
+  ttl: 336h

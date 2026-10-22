@@ -1,0 +1,21 @@
+{{- if .Values.backup.enabled }}
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: kiwix-daily
+  namespace: velero
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  template:
+    ttl: {{ .Values.backup.ttl }}
+    includedNamespaces:
+      - {{ .Release.Namespace }}
+    excludedResources:
+      - secrets
+    # Manifests only: no volume data is filesystem-backed-up. The
+    # ZIM library lives on TrueNAS (snapshots + Drive sync) and the
+    # tailscale identity must never be captured for restore.
+    defaultVolumesToFsBackup: false
+    snapshotVolumes: false
+    storageLocation: default
+{{- end }}

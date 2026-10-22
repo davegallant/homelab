@@ -1,0 +1,5 @@
+apiVersion: v2
+name: kiwix
+version: 0.1.0
+appVersion: "3.8.2"
+description: Kiwix offline-content server over an NFS-mounted ZIM library, with the Homepage-pattern Tailscale + Caddy tailnet sidecars.

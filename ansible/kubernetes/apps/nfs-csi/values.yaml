@@ -1,0 +1,9 @@
+---
+# csi-driver-nfs overrides. Deliberately minimal: the driver's defaults
+# are the product. v1 is static provisioning only — workloads bind
+# pre-created PVs that point at existing TrueNAS exports (see the
+# kiwix storage.yaml for the shape). No StorageClass yet: dynamic
+# provisioning arrives with the first consumer that actually needs
+# per-PVC directories (RomM/Navidrome tier), with its own design.
+storageClass:
+  create: false
