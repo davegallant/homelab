@@ -62,8 +62,12 @@
     - name: Require an existing Velero namespace to have the scoped policy
       ansible.builtin.assert:
         that:
-          - velero_existing_namespace.rc != 0 or (velero_existing_namespace.stdout | from_json).metadata.labels['pod-security.kubernetes.io/enforce'] == 'privileged'
-          - velero_existing_namespace.rc != 0 or (velero_existing_namespace.stdout | from_json).metadata.labels['pod-security.kubernetes.io/audit'] == 'baseline'
+          - >-
+            velero_existing_namespace.rc != 0 or
+            (velero_existing_namespace.stdout | from_json).metadata.labels['pod-security.kubernetes.io/enforce'] == 'privileged'
+          - >-
+            velero_existing_namespace.rc != 0 or
+            (velero_existing_namespace.stdout | from_json).metadata.labels['pod-security.kubernetes.io/audit'] == 'baseline'
           - velero_existing_namespace.rc != 0 or (velero_existing_namespace.stdout | from_json).metadata.labels['pod-security.kubernetes.io/warn'] == 'baseline'
 
     - name: Create a protected temporary render directory
@@ -230,7 +234,15 @@
 
         - name: Verify the Homepage exclusion annotation reached its pod template
           ansible.builtin.command:
-            argv: [kubectl, -n, homepage, get, deployment, homepage, -o, 'jsonpath={.spec.template.metadata.annotations.backup\.velero\.io/backup-volumes-excludes}']
+            argv:
+              - kubectl
+              - -n
+              - homepage
+              - get
+              - deployment
+              - homepage
+              - -o
+              - 'jsonpath={.spec.template.metadata.annotations.backup\.velero\.io/backup-volumes-excludes}'
           register: velero_homepage_exclusion
           changed_when: false
 
@@ -273,7 +285,9 @@
 
         - name: Select the newest Homepage backup name
           ansible.builtin.set_fact:
-            velero_backup_name_value: "{{ ((velero_backup_name.stdout | from_json)['items'] | sort(attribute='metadata.creationTimestamp') | last).metadata.name }}"
+            velero_backup_name_value: >-
+              {{ ((velero_backup_name.stdout | from_json)['items']
+              | sort(attribute='metadata.creationTimestamp') | last).metadata.name }}
 
         - name: Require a backup name from the schedule
           ansible.builtin.assert:
@@ -347,8 +361,16 @@
           ansible.builtin.assert:
             that:
               - (velero_pvb_results.stdout | from_json)['items'] | length >= 2
-              - "(velero_pvb_results.stdout | from_json)['items'] | selectattr('spec.volume', 'equalto', 'homepage-config') | selectattr('status.phase', 'equalto', 'Completed') | list | length == 1"
-              - "(velero_pvb_results.stdout | from_json)['items'] | selectattr('spec.volume', 'equalto', 'caddy-state') | selectattr('status.phase', 'equalto', 'Completed') | list | length == 1"
+              - >-
+                (velero_pvb_results.stdout | from_json)['items']
+                | selectattr('spec.volume', 'equalto', 'homepage-config')
+                | selectattr('status.phase', 'equalto', 'Completed')
+                | list | length == 1
+              - >-
+                (velero_pvb_results.stdout | from_json)['items']
+                | selectattr('spec.volume', 'equalto', 'caddy-state')
+                | selectattr('status.phase', 'equalto', 'Completed')
+                | list | length == 1
               - "(velero_pvb_results.stdout | from_json)['items'] | selectattr('status.phase', 'equalto', 'Failed') | list | length == 0"
               - "(velero_pvb_results.stdout | from_json)['items'] | selectattr('spec.volume', 'equalto', 'tailscale-state') | list | length == 0"
             fail_msg: "The completed backup did not include completed Homepage config and Caddy volume backups with no failed or Tailscale volume backups."
