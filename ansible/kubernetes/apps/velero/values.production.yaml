@@ -18,6 +18,10 @@ credentials:
   existingSecret: velero-garage-credentials
   useSecret: true
 deployNodeAgent: true
+# Keep the Velero controller on the larger worker; w-2's memory headroom
+# is too small during concurrent filesystem backups and Kopia maintenance.
+nodeSelector:
+  kubernetes.io/hostname: k8s-w-1
 image:
   digest: sha256:37396519f399536e5f01427d723565ae69294ec3fb5625cf1c87c09eaa9de16b
   repository: docker.io/velero/velero:v1.18.2
