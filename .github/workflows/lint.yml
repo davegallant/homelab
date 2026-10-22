@@ -33,11 +33,10 @@ jobs:
           # These manual operational playbooks load Vault directly. GitHub PR
           # lint runs without secrets; local `just lint` validates them fully.
           ansible-lint \
-            --exclude playbooks/talos-cluster/apply-homepage.yml \
+            --exclude playbooks/talos-cluster/homepage.yml \
             --exclude playbooks/talos-cluster/apply-velero.yml \
             --exclude playbooks/talos-cluster/searxng.yml \
             --exclude playbooks/talos-cluster/verify-cutover.yml \
-            --exclude playbooks/talos-cluster/verify-homepage.yml \
             --exclude playbooks/talos-cluster/verify-velero-backup.yml
 
       - name: Run shellcheck

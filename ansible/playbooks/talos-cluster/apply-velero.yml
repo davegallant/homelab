@@ -109,18 +109,6 @@
             dest: "{{ velero_render_dir.path }}/garage-list-job.yaml"
             mode: "0600"
 
-        - name: Copy Homepage backup Schedule manifest
-          ansible.builtin.copy:
-            src: "{{ playbook_dir }}/../../kubernetes/apps/velero/schedule.yaml"
-            dest: "{{ velero_render_dir.path }}/schedule.yaml"
-            mode: "0600"
-
-        - name: Copy Homepage filesystem backup patch
-          ansible.builtin.copy:
-            src: "{{ playbook_dir }}/../../kubernetes/apps/velero/homepage-fsb-patch.yaml"
-            dest: "{{ velero_render_dir.path }}/homepage-fsb-patch.yaml"
-            mode: "0600"
-
         - name: Validate the pinned Velero Helm chart and values
           ansible.builtin.command:
             argv:
@@ -149,21 +137,6 @@
           changed_when: "'created' in velero_apply_credentials.stdout or 'configured' in velero_apply_credentials.stdout"
           no_log: true
 
-        - name: Apply Homepage filesystem backup exclusion
-          ansible.builtin.command:
-            argv:
-              - kubectl
-              - -n
-              - homepage
-              - patch
-              - deployment
-              - homepage
-              - --type=merge
-              - --patch-file
-              - "{{ velero_render_dir.path }}/homepage-fsb-patch.yaml"
-          register: velero_apply_homepage_patch
-          changed_when: "'patched' in velero_apply_homepage_patch.stdout"
-
         - name: Install Velero from the pinned Helm chart
           ansible.builtin.command:
             argv:
@@ -180,12 +153,6 @@
               - "{{ velero_render_dir.path }}/values.yaml"
           register: velero_helm_install
           changed_when: "'Release' in velero_helm_install.stdout or 'Pulled:' in velero_helm_install.stdout"
-
-        - name: Apply the homepage-daily Schedule with its exact requested name
-          ansible.builtin.command:
-            argv: [kubectl, apply, -f, "{{ velero_render_dir.path }}/schedule.yaml"]
-          register: velero_apply_schedule
-          changed_when: "'created' in velero_apply_schedule.stdout or 'configured' in velero_apply_schedule.stdout"
 
         - name: Wait for the Velero server rollout
           ansible.builtin.command:

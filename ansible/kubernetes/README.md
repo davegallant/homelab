@@ -1,9 +1,10 @@
 # Kubernetes workloads
 
-This repository stores Kubernetes workloads as raw manifests plus Ansible Jinja
-templates. The Homepage pilot does not use Helm. Its source config remains in
+This repository stores Kubernetes workloads as Helm charts and Ansible-managed
+manifests. Homepage runs on Talos and is managed by the local Helm chart in
+`ansible/kubernetes/apps/homepage/chart/`. Its source config remains in
 `ansible/kubernetes/apps/homepage/config/`. The former Homepage LXC playbook
-has been retired; Homepage now runs on the Talos cluster.
+has been retired.
 
 ## Homepage
 
@@ -40,28 +41,29 @@ During migration, the remaining runtime config was streamed directly from the
 former Homepage LXC into the PVC, excluding the managed files, icons, logs, and
 Git metadata. Its contents never entered the repository or a local temporary
 file. Edit imported files on the PVC with `kubectl cp`/`kubectl exec` until they
-are added to the repo as Ansible-managed templates. Edit Kubernetes resources
-under `ansible/kubernetes/apps/homepage/`. The manual Ansible apply renders the
-Jinja files into a private temporary directory,
-applies them to the explicitly confirmed current kubectl context, waits for the
-rollout, confirms persistent Tailscale state, removes the one-use auth Secret,
-and deletes the temporary render directory. Secret values are loaded from the
-existing Ansible Vault variables; rendered Secret documents are never stored in
-Git.
+are added to the repo as Ansible-managed templates. Edit the Helm chart under
+`ansible/kubernetes/apps/homepage/chart/` and the Ansible-to-Helm values bridge
+at `ansible/kubernetes/apps/homepage/values.ansible.yaml.j2`. The playbook
+validates the chart and values, then manages the deployed release. The default
+`verify` action is read-only; `rehearse` installs into the drill namespace, and
+`adopt` updates production and verifies its backup. Vault values are rendered
+to a protected temporary file and removed after the run.
 
 From `ansible/`, after the Talos cluster and its protected kubeconfig exist:
 
 ```sh
-ansible-playbook playbooks/talos-cluster/apply-homepage.yml \
+ansible-playbook playbooks/talos-cluster/homepage.yml \
   -i inventory \
   --vault-password-file .vault_pass
 ```
 
-The playbook prompts for the expected kubectl context. On first registration,
+The playbook defaults to read-only verification. To adopt or rehearse, pass
+`-e homepage_action=adopt` or `-e homepage_action=rehearse`. It prompts for the
+expected kubectl context. On first registration,
 it creates a one-use Headscale preauth key through the repo's `pangolin` SSH
 connection, holds the value only in Ansible memory and a short-lived Kubernetes
 Secret, and removes the Secret after Tailscale identity persists across a pod
-restart. Later applies reuse the PVC-backed identity. Do not run this playbook
+restart. Later runs reuse the PVC-backed identity. Do not run this playbook
 in CI or as part of the normal all-host playbook list.
 
 The Homepage hostname has been moved to the Kubernetes tailnet node.
@@ -260,8 +262,8 @@ done
 For a recovery where the source namespace is unavailable, create the two
 Homepage Secrets from protected local files populated from the existing Vault
 values. Keep the files outside the repository with mode `0600`; the environment
-file keys are the `HOMEPAGE_VAR_*` entries from
-`apps/homepage/secrets.yaml.j2`:
+file keys are the `HOMEPAGE_VAR_*` entries supplied by Vault through
+`apps/homepage/values.ansible.yaml.j2`:
 
 ```bash
 set -euo pipefail

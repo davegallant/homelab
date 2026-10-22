@@ -50,8 +50,8 @@ ansible-playbook playbooks/talos-cluster/homepage.yml -i inventory --vault-passw
 ## Design
 
 - **Adopt, never recreate.** `helm upgrade --install --take-ownership
-  --force-conflicts --server-side=true` takes ownership of the objects
-  `apply-homepage.yml` created. The Deployment selector
+  --force-conflicts --server-side=true` takes ownership of the objects created
+  by the original raw-manifest install. The Deployment selector
   (`app.kubernetes.io/name: homepage`) and pod template labels are
   byte-identical to the original manifest; the only expected pod
   template change is the `checksum/config` annotation value (Helm's
@@ -80,9 +80,8 @@ ansible-playbook playbooks/talos-cluster/homepage.yml -i inventory --vault-passw
   the proxy-agent preloader hijacks that process's outbound HTTP.
 - **Verification is functional, not cosmetic.** Production verify =
   pod Ready + `tailscale ip` + hostname assert + a TLS-verified HTTPS
-  request to the dashboard through the tailnet IP (the old
-  verify-homepage.yml flow). Adopt additionally triggers a
-  `homepage-daily` backup and applies the strict standard: backup
+  request to the dashboard through the tailnet IP. Adopt additionally
+  triggers a `homepage-daily` backup and applies the strict standard: backup
   Completed AND exactly two Completed PodVolumeBackups (config and
   caddy), with `tailscale-state` and ephemeral `caddy-runtime` excluded.
   Restoring `tailscale-state` would clone a live tailnet identity.
@@ -90,19 +89,15 @@ ansible-playbook playbooks/talos-cluster/homepage.yml -i inventory --vault-passw
   (Secrets excluded and `defaultVolumesToFsBackup: true`). The Deployment pod
   template excludes Tailscale identity state and the disposable Caddy runtime
   emptyDir, leaving only the config and Caddy state PVCs for file system backup.
-  Once adoption succeeds, remove the Schedule handling from
-  `apply-velero.yml` and retire `apps/velero/schedule.yaml` and
-  `apps/velero/homepage-fsb-patch.yaml` -- two managers must not own
-  the same Schedule.
+  The Velero playbook validates the Deployment annotation and triggers backups
+  from this chart-managed Schedule; it does not manage the Schedule itself.
 
-## Retiring the old path (after a successful adopt)
+## Retired raw-manifest path
 
-Move to Trash (recoverable; git history is the deeper rollback):
-`playbooks/talos-cluster/apply-homepage.yml`,
-`playbooks/talos-cluster/verify-homepage.yml`, `deployment.yaml.j2`,
-`configmap.yaml.j2`, `secrets.yaml.j2`, `namespace.yaml`,
-`service.yaml`, `serviceaccount.yaml` (all now chart-owned), plus the
-two velero files above. Keep: `storage.yaml`,
+After the successful production adoption, the old apply and verification
+playbooks and raw workload manifests were removed. The Homepage Helm chart owns
+the workload resources. The Velero playbook does not apply a second Schedule
+or patch the Helm-managed Deployment. Keep: `storage.yaml`,
 `tailscale-auth-secret.yaml.j2`, `vars.yaml`, `config/`,
 `proxy-agent.cjs`, `icons-configmap.yaml.j2`,
 `values.ansible.yaml.j2`, `chart/`.
