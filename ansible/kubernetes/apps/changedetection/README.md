@@ -76,12 +76,14 @@ kubectl --context admin@homelab apply -f ansible/kubernetes/apps/argocd/applicat
    kubectl --context admin@homelab -n changedetection wait --for=condition=Ready pod/datacopy --timeout=120s
    ssh root@changedetection 'tar -C /root/changedetection -cf - .' | kubectl --context admin@homelab -n changedetection exec -i datacopy -- tar -C /data -xf -
    kubectl --context admin@homelab -n changedetection exec datacopy -- chown -R 1000:1000 /data
-   kubectl --context admin@homelab -n changedetection exec datacopy -- sh -c 'find /data -type f | wc -l; du -sb /data'
-   ssh root@changedetection 'find /root/changedetection -type f | wc -l; du -sb /root/changedetection'
+   kubectl --context admin@homelab -n changedetection exec datacopy -- sh -c 'find /data -type f | wc -l; find /data -type f -exec stat -c %s {} \; | awk "{total += \$1} END {print total+0}"'
+   ssh root@changedetection 'find /root/changedetection -type f | wc -l; find /root/changedetection -type f -exec stat -c %s {} \; | awk "{total += \$1} END {print total+0}"'
    kubectl --context admin@homelab -n changedetection delete pod datacopy
    ```
 
-   File count and byte total must match before continuing.
+   File count and the sum of regular-file byte sizes must match before
+   continuing. Directory metadata is excluded because the LXC and PVC
+   filesystems can report different directory sizes.
 
 3. Retire the LXC's tailnet node on the Headscale host
    (`headscale nodes delete --identifier <old-changedetection-id>`).
