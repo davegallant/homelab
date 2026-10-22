@@ -29,6 +29,8 @@ valkey:
 # staging: the identity must never have two owners. The searxng.yml playbook
 # flips it during its cutover action, after the LXC stack is stopped.
 newt:
+  # Existing Secret keys: PANGOLIN_ENDPOINT, NEWT_ID, NEWT_SECRET.
+  existingSecret: ""
   enabled: false
   image: docker.io/fosrl/newt:1.19.0@sha256:0189c8287058b800cca825590e4c39946b3815344ca48678dd0b96616d639319
   pangolinEndpoint: ""
@@ -46,6 +48,8 @@ newt:
 # secretKey). Reconcile against the live LXC settings before first deploy --
 # see ../README.md.
 settings:
+  # Existing Secret must contain the complete settings.yml file.
+  existingSecret: ""
   secretKey: ""
   instanceName: "searxng"
   safeSearch: 0

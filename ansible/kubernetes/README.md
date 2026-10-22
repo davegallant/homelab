@@ -6,6 +6,39 @@ manifests. Homepage runs on Talos and is managed by the local Helm chart in
 `ansible/kubernetes/apps/homepage/config/`. The former Homepage LXC playbook
 has been retired.
 
+## Existing Secrets and future GitOps ownership
+
+The application charts can consume Secrets provisioned separately from Helm.
+Empty `existingSecret` values preserve the current Vault-to-Helm deployment
+path. Set the following values to use an existing Secret instead; the chart
+then references it without rendering or requiring its secret values:
+
+| Chart value | Required Secret keys |
+|---|---|
+| BentoPDF / SearXNG `newt.existingSecret` | `PANGOLIN_ENDPOINT`, `NEWT_ID`, `NEWT_SECRET` |
+| SearXNG `settings.existingSecret` | `settings.yml` (complete application settings) |
+| Miniflux `existingSecret` | `db-user`, `db-password`, `admin-username`, `admin-password`; `newt-id`, `newt-secret` when Newt is enabled |
+| Homepage `homepage.existingSecret` | Existing `HOMEPAGE_VAR_*` environment keys |
+| Homepage / Kiwix `caddy.existingSecret` | `cloudflare_api_token` |
+
+Non-secret configuration such as hostnames, Miniflux's base URL and Pangolin
+endpoint, and Homepage's rendered config files still needs to be supplied.
+The one-use Tailscale auth Secret remains part of the registration workflow.
+
+For a future ownership transfer, create Secrets under **new names** from
+Vault before selecting them in values. Switching to the name of an existing
+Helm-owned Secret without first transferring ownership can cause Helm to
+delete that Secret on upgrade. Keep secret values out of Git. Let one tool
+own each Secret; Argo CD can later own the charts while Ansible supplies
+the external Secrets.
+
+Changing an external Secret does not automatically roll pods. Restart
+workloads after environment-variable changes; SearXNG also needs a restart
+because its settings file uses a subPath mount. Its settings checksum is
+only rendered when the chart manages the settings Secret. Credential
+rotation for an existing PostgreSQL database must update the database role
+as well as the Secret; changing `POSTGRES_PASSWORD` alone does not rotate it.
+
 ## Homepage
 
 The pilot runs Homepage, Caddy, and a Tailscale sidecar in one Pod. Tailscale

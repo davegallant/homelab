@@ -14,8 +14,10 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: searxng
+      {{- if not .Values.settings.existingSecret }}
       annotations:
         checksum/settings: {{ include (print $.Template.BasePath "/secret-settings.yaml") . | sha256sum }}
+      {{- end }}
     spec:
       automountServiceAccountToken: false
       containers:
@@ -73,11 +75,11 @@ spec:
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
-                name: searxng-newt
+                name: {{ .Values.newt.existingSecret | default "searxng-newt" | quote }}
           resources:
             {{- toYaml .Values.newt.resources | nindent 12 }}
         {{- end }}
       volumes:
         - name: searxng-settings
           secret:
-            secretName: searxng-settings
+            secretName: {{ .Values.settings.existingSecret | default "searxng-settings" | quote }}

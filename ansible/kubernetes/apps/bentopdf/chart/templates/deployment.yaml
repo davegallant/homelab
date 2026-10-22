@@ -53,7 +53,7 @@ spec:
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
-                name: bentopdf-newt
+                name: {{ .Values.newt.existingSecret | default "bentopdf-newt" | quote }}
           resources:
             {{- toYaml .Values.newt.resources | nindent 12 }}
         {{- end }}

@@ -33,12 +33,12 @@ spec:
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
-                  name: miniflux
+                  name: {{ .Values.existingSecret | default "miniflux" | quote }}
                   key: db-user
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: miniflux
+                  name: {{ .Values.existingSecret | default "miniflux" | quote }}
                   key: db-password
             - name: DATABASE_URL
               value: "postgres://$(DB_USER):$(DB_PASSWORD)@miniflux-db:5432/{{ .Values.db.name }}?sslmode=disable"
@@ -49,12 +49,12 @@ spec:
             - name: ADMIN_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: miniflux
+                  name: {{ .Values.existingSecret | default "miniflux" | quote }}
                   key: admin-username
             - name: ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: miniflux
+                  name: {{ .Values.existingSecret | default "miniflux" | quote }}
                   key: admin-password
             - name: BASE_URL
               value: {{ required "baseUrl must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.baseUrl | quote }}
@@ -95,12 +95,12 @@ spec:
             - name: NEWT_ID
               valueFrom:
                 secretKeyRef:
-                  name: miniflux
+                  name: {{ .Values.existingSecret | default "miniflux" | quote }}
                   key: newt-id
             - name: NEWT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: miniflux
+                  name: {{ .Values.existingSecret | default "miniflux" | quote }}
                   key: newt-secret
           resources:
             {{- toYaml .Values.newt.resources | nindent 12 }}

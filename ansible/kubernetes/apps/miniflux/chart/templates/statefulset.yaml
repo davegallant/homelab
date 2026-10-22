@@ -40,13 +40,16 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: POSTGRES_USER
-              value: {{ required "dbUser must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.dbUser | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecret | default "miniflux" | quote }}
+                  key: db-user
             - name: POSTGRES_DB
               value: {{ .Values.db.name | quote }}
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: miniflux
+                  name: {{ .Values.existingSecret | default "miniflux" | quote }}
                   key: db-password
           ports:
             - name: pg
@@ -54,13 +57,13 @@ spec:
               protocol: TCP
           startupProbe:
             exec:
-              command: ["pg_isready", "-U", {{ required "dbUser must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.dbUser | quote }}]
+              command: ["/bin/sh", "-c", 'pg_isready -U "$POSTGRES_USER"']
             periodSeconds: 5
             timeoutSeconds: 3
             failureThreshold: 18
           readinessProbe:
             exec:
-              command: ["pg_isready", "-U", {{ required "dbUser must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.dbUser | quote }}]
+              command: ["/bin/sh", "-c", 'pg_isready -U "$POSTGRES_USER"']
             periodSeconds: 10
             timeoutSeconds: 3
             failureThreshold: 3

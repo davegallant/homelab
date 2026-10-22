@@ -52,7 +52,7 @@ spec:
               value: --require=/opt/homepage-proxy/proxy-agent.cjs
           envFrom:
             - secretRef:
-                name: homepage-environment
+                name: {{ .Values.homepage.existingSecret | default "homepage-environment" | quote }}
           ports:
             - name: http
               containerPort: 3000
@@ -203,4 +203,4 @@ spec:
             name: homepage-caddy
         - name: caddy-secret
           secret:
-            secretName: homepage-caddy
+            secretName: {{ .Values.caddy.existingSecret | default "homepage-caddy" | quote }}

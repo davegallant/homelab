@@ -159,5 +159,5 @@ spec:
             name: kiwix-caddy
         - name: caddy-secret
           secret:
-            secretName: kiwix-caddy
+            secretName: {{ .Values.caddy.existingSecret | default "kiwix-caddy" | quote }}
 {{- end }}

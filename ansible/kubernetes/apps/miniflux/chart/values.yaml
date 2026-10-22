@@ -7,6 +7,10 @@
 # Templates fail to render (required) when the critical ones are
 # missing.
 
+# Existing Secret keys: db-user, db-password, admin-username,
+# admin-password, and (when Newt is enabled) newt-id, newt-secret.
+existingSecret: ""
+
 miniflux:
   # Source of truth: playbooks/miniflux/docker-compose.yml on the LXC.
   image: docker.io/miniflux/miniflux:2.3.4@sha256:72e49f513a63104506aab98ba8cfc3a409d4fde23550a583dec07ec941f1e94e
