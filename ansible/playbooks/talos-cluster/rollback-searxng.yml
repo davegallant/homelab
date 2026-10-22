@@ -1,0 +1,112 @@
+---
+- name: Roll SearXNG back from Talos Kubernetes to the LXC
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../group_vars/all/vars.yaml
+    - ../../group_vars/all/secrets.yaml
+    - ../../kubernetes/apps/searxng/vars.yaml
+  vars_prompt:
+    - name: talos_kube_context
+      prompt: Enter the expected kubectl context for the Talos cluster
+      private: false
+    - name: searxng_public_url
+      prompt: Enter the public SearXNG URL served through Pangolin (e.g. https://search.example.com/)
+      private: false
+  tasks:
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: searxng_rollback_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - searxng_rollback_context.stdout == talos_kube_context
+        fail_msg: "kubectl current context does not match the explicitly supplied Talos context."
+
+    - name: Disable the Newt sidecar for this run
+      ansible.builtin.set_fact:
+        searxng_newt_enabled: false
+
+    - name: Create a protected temporary render directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: searxng-rollback-
+      register: searxng_rollback_render_dir
+
+    - name: Render and apply the Deployment without Newt
+      block:
+        - name: Render SearXNG Deployment without Newt
+          ansible.builtin.template:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/searxng/deployment.yaml.j2"
+            dest: "{{ searxng_rollback_render_dir.path }}/deployment.yaml"
+            mode: "0600"
+
+        - name: Apply SearXNG Deployment without Newt
+          ansible.builtin.command:
+            argv: [kubectl, apply, -f, "{{ searxng_rollback_render_dir.path }}/deployment.yaml"]
+          register: searxng_rollback_apply
+          changed_when: "'created' in searxng_rollback_apply.stdout or 'configured' in searxng_rollback_apply.stdout"
+
+        - name: Wait for SearXNG rollout without Newt
+          ansible.builtin.command:
+            argv: [kubectl, -n, searxng, rollout, status, deployment/searxng, --timeout=300s]
+          changed_when: false
+      always:
+        - name: Remove temporary rendered manifests
+          ansible.builtin.file:
+            path: "{{ searxng_rollback_render_dir.path }}"
+            state: absent
+          when: searxng_rollback_render_dir.path is defined
+
+    - name: Start the SearXNG Compose stack on the LXC
+      ansible.builtin.command:
+        argv: [docker, compose, start]
+        chdir: /root
+      delegate_to: searxng
+      connection: ssh
+      register: searxng_lxc_start
+      changed_when: true
+
+    - name: Require the LXC stack to have started
+      ansible.builtin.assert:
+        that:
+          - searxng_lxc_start.rc == 0
+        fail_msg: "docker compose start failed on the searxng LXC (rc={{ searxng_lxc_start.rc }}). The public URL is down until this is resolved."
+
+    - name: Wait for the public URL to serve the LXC instance again
+      ansible.builtin.command:
+        argv:
+          - curl
+          - --silent
+          - --show-error
+          - --noproxy
+          - "*"
+          - --max-time
+          - "15"
+          - --output
+          - /dev/null
+          - --write-out
+          - "%{http_code}"
+          - "{{ searxng_public_url }}"
+      register: searxng_rollback_http
+      until: searxng_rollback_http.rc == 0 and searxng_rollback_http.stdout == '200'
+      retries: 24
+      delay: 5
+      changed_when: false
+
+    - name: Confirm rollback restored the public URL
+      ansible.builtin.assert:
+        that:
+          - searxng_rollback_http.stdout == '200'
+
+    - name: Report rollback complete
+      ansible.builtin.debug:
+        msg: >-
+          Rollback complete: the cluster Newt sidecar is disabled and the LXC
+          stack serves the public URL again. The cluster namespace remains
+          deployed (staged) for a future cutover attempt.
