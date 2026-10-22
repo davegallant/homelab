@@ -209,7 +209,11 @@ persistence:
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 1Gi
-    advancedMounts: {}
+    advancedMounts:
+      seerr:
+        app:
+          - path: /mnt/seerr-rollback-config
+            readOnly: true
   config-local:
     type: persistentVolumeClaim
     annotations:
