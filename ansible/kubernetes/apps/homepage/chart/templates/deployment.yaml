@@ -1,0 +1,206 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homepage
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: homepage
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: homepage
+      annotations:
+        checksum/config: {{ printf "%s%s%s" .Values.configFiles.servicesYaml .Values.configFiles.settingsYaml .Values.configFiles.proxyAgentCjs | sha256sum | quote }}
+        backup.velero.io/backup-volumes-excludes: tailscale-state,caddy-runtime
+        {{- with .Values.restartTimestamp }}
+        kubectl.kubernetes.io/restartedAt: {{ . | quote }}
+        {{- end }}
+    spec:
+      serviceAccountName: homepage
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: {{ .Values.fsGroup }}
+        fsGroupChangePolicy: OnRootMismatch
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - {{ .Values.nodeHostname }}
+      containers:
+        - name: homepage
+          image: {{ .Values.homepage.image }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PUID
+              value: {{ .Values.homepage.puid | quote }}
+            - name: PGID
+              value: {{ .Values.homepage.pgid | quote }}
+            - name: HOMEPAGE_ALLOWED_HOSTS
+              value: "homepage.{{ required "magicDnsDomain must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.magicDnsDomain }}"
+            - name: HOMEPAGE_TAILNET_PROXY
+              value: http://127.0.0.1:1055
+            - name: NODE_OPTIONS
+              value: --require=/opt/homepage-proxy/proxy-agent.cjs
+          envFrom:
+            - secretRef:
+                name: homepage-environment
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: "homepage.{{ .Values.magicDnsDomain }}"
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 24
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: "homepage.{{ .Values.magicDnsDomain }}"
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: "homepage.{{ .Values.magicDnsDomain }}"
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.homepage.resources | nindent 12 }}
+          volumeMounts:
+            - name: homepage-config
+              mountPath: /app/config
+            - name: managed-config
+              mountPath: /app/config/services.yaml
+              subPath: services.yaml
+              readOnly: true
+            - name: managed-config
+              mountPath: /app/config/settings.yaml
+              subPath: settings.yaml
+              readOnly: true
+            - name: custom-icons
+              mountPath: /app/public/icons
+              readOnly: true
+            - name: custom-icons
+              mountPath: /app/config/icons
+              readOnly: true
+            - name: node-proxy
+              mountPath: /opt/homepage-proxy
+              readOnly: true
+
+        - name: tailscale
+          image: {{ .Values.tailscale.image }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TS_AUTHKEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-tailscale-auth
+                  key: TS_AUTHKEY
+                  optional: true
+            - name: TS_AUTH_ONCE
+              value: "true"
+            - name: TS_HOSTNAME
+              value: {{ required "tailscaleHostname must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.tailscaleHostname | quote }}
+            - name: TS_STATE_DIR
+              value: /var/lib/tailscale
+            - name: TS_KUBE_SECRET
+              value: ""
+            - name: TS_USERSPACE
+              value: "true"
+            - name: TS_OUTBOUND_HTTP_PROXY_LISTEN
+              value: 127.0.0.1:1055
+            - name: TS_EXTRA_ARGS
+              value: >-
+                --login-server=https://{{ required "headscaleDomain must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.headscaleDomain }}
+                --accept-dns=false
+            - name: TS_SERVE_CONFIG
+              value: /etc/tailscale/serve-config.json
+          resources:
+            {{- toYaml .Values.tailscale.resources | nindent 12 }}
+          volumeMounts:
+            - name: tailscale-state
+              mountPath: /var/lib/tailscale
+            - name: tailscale-config
+              mountPath: /etc/tailscale/serve-config.json
+              subPath: serve-config.json
+              readOnly: true
+
+        - name: caddy
+          image: {{ .Values.caddy.image }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - caddy
+          args:
+            - run
+            - --config
+            - /etc/caddy/Caddyfile
+            - --adapter
+            - caddyfile
+          resources:
+            {{- toYaml .Values.caddy.resources | nindent 12 }}
+          volumeMounts:
+            - name: caddy-config
+              mountPath: /etc/caddy/Caddyfile
+              subPath: Caddyfile
+              readOnly: true
+            - name: caddy-state
+              mountPath: /data
+            - name: caddy-runtime
+              mountPath: /config
+            - name: caddy-secret
+              mountPath: /run/secrets/cloudflare_api_token
+              subPath: cloudflare_api_token
+              readOnly: true
+      volumes:
+        - name: homepage-config
+          persistentVolumeClaim:
+            claimName: homepage-config
+        - name: tailscale-state
+          persistentVolumeClaim:
+            claimName: homepage-tailscale
+        - name: caddy-state
+          persistentVolumeClaim:
+            claimName: homepage-caddy
+        - name: caddy-runtime
+          emptyDir: {}
+        - name: managed-config
+          configMap:
+            name: homepage-config
+        - name: custom-icons
+          configMap:
+            name: homepage-icons
+        - name: node-proxy
+          configMap:
+            name: homepage-node-proxy
+        - name: tailscale-config
+          configMap:
+            name: homepage-tailscale
+        - name: caddy-config
+          configMap:
+            name: homepage-caddy
+        - name: caddy-secret
+          secret:
+            secretName: homepage-caddy

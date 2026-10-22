@@ -1,0 +1,626 @@
+---
+# One playbook for Homepage on Talos. The Helm chart
+# (ansible/kubernetes/apps/homepage/chart) owns the in-cluster packaging;
+# this playbook owns what Helm cannot: the Vault-rendered values bridge,
+# the icons ConfigMap (too large for Helm values), the one-use Headscale
+# preauth-key lifecycle, adoption of the pre-Helm objects without
+# recreating them, and functional verification.
+#
+# Actions (pass with -e homepage_action=<action>):
+#   verify   (default) read-only checks of the production deployment:
+#            pod Ready, Tailscale identity online with the configured
+#            hostname, dashboard answering HTTPS over the tailnet.
+#   rehearse install the chart into the homepage-drill namespace
+#            (backup disabled, NO preauth key -- the drill sidecar must
+#            stay logged out so it can never register a second
+#            "homepage" node), and verify it in-cluster.
+#   adopt    take Helm ownership of the running production deployment
+#            in place: same objects, same UIDs, same PVCs, then verify
+#            over the tailnet and prove a manifests+fs Velero backup.
+- name: Manage Homepage on Talos Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../group_vars/all/vars.yaml
+    - ../../group_vars/all/secrets.yaml
+    - ../../kubernetes/apps/homepage/vars.yaml
+  vars:
+    homepage_action: verify
+    homepage_chart_dir: "{{ playbook_dir }}/../../kubernetes/apps/homepage/chart"
+    homepage_drill_namespace: homepage-drill
+    homepage_tailscale_authkey: ""
+    homepage_restart_timestamp: ""
+  vars_prompt:
+    - name: talos_kube_context
+      prompt: Enter the expected kubectl context for the Talos cluster
+      private: false
+  tasks:
+    - name: Require a known action
+      ansible.builtin.assert:
+        that:
+          - homepage_action in ['rehearse', 'adopt', 'verify']
+        fail_msg: "homepage_action must be one of rehearse, adopt, verify."
+
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: homepage_kube_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - homepage_kube_context.stdout == talos_kube_context
+        fail_msg: "kubectl current context does not match the explicitly supplied Talos context."
+
+    - name: Verify all three Talos nodes are Ready
+      ansible.builtin.command:
+        argv: [kubectl, wait, --for=condition=Ready, --timeout=120s, node/k8s-cp-1, node/k8s-w-1, node/k8s-w-2]
+      changed_when: false
+
+    - name: Verify the production deployment (read-only)
+      when: homepage_action == 'verify'
+      block:
+        - name: Require a Ready Homepage pod
+          ansible.builtin.command:
+            argv: [kubectl, -n, homepage, wait, --for=condition=Ready, --timeout=120s, pod, -l, app.kubernetes.io/name=homepage]
+          changed_when: false
+
+        - name: Read the production tailnet IP
+          ansible.builtin.command:
+            argv: [kubectl, -n, homepage, exec, deployment/homepage, -c, tailscale, --, tailscale, ip, -4]
+          register: homepage_tailnet_ip
+          changed_when: false
+          failed_when: homepage_tailnet_ip.rc != 0 or homepage_tailnet_ip.stdout | trim | length == 0
+          no_log: true
+
+        - name: Request the dashboard through Tailscale and Caddy with verified TLS
+          ansible.builtin.command:
+            argv:
+              - curl
+              - --silent
+              - --show-error
+              - --noproxy
+              - "*"
+              - --max-time
+              - "40"
+              - --output
+              - /dev/null
+              - --write-out
+              - "%{http_code}"
+              - --resolve
+              - "homepage.{{ headscale_magic_dns_domain }}:443:{{ homepage_tailnet_ip.stdout | trim }}"
+              - "https://homepage.{{ headscale_magic_dns_domain }}/"
+          register: homepage_tailnet_http
+          changed_when: false
+          no_log: true
+
+        - name: Require an HTTP 200 dashboard response
+          ansible.builtin.assert:
+            that:
+              - homepage_tailnet_http.stdout == '200'
+            fail_msg: "Production tailnet HTTPS did not return HTTP 200."
+
+    - name: Create a protected temporary render directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: homepage-k8s-
+      register: homepage_render_dir
+      when: homepage_action in ['rehearse', 'adopt']
+
+    - name: Run the requested install action
+      when: homepage_render_dir.path is defined
+      block:
+        - name: Select the target namespace
+          ansible.builtin.set_fact:
+            homepage_target_namespace: "{{ homepage_drill_namespace if homepage_action == 'rehearse' else 'homepage' }}"
+
+        - name: Read the existing rollout restart marker for adoption
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - homepage
+              - get
+              - deployment/homepage
+              - -o
+              - 'jsonpath={.spec.template.metadata.annotations.kubectl\.kubernetes\.io/restartedAt}'
+          register: homepage_existing_restart_timestamp
+          changed_when: false
+          when: homepage_action == 'adopt'
+
+        - name: Preserve the existing rollout restart marker
+          ansible.builtin.set_fact:
+            homepage_restart_timestamp: "{{ homepage_existing_restart_timestamp.stdout | trim }}"
+          when: homepage_action == 'adopt'
+
+        - name: Build the Helm backup toggle for this action
+          ansible.builtin.set_fact:
+            homepage_helm_backup_args: "{{ ['--set', 'backup.enabled=false'] if homepage_action == 'rehearse' else [] }}"
+
+        - name: Require the target namespace to exist
+          ansible.builtin.command:
+            argv: [kubectl, get, namespace, "{{ homepage_target_namespace }}"]
+          changed_when: false
+
+        - name: Require the three Homepage PVCs to be Bound in the target namespace
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - "{{ homepage_target_namespace }}"
+              - get
+              - persistentvolumeclaim/homepage-config
+              - persistentvolumeclaim/homepage-tailscale
+              - persistentvolumeclaim/homepage-caddy
+              - -o
+              - json
+          register: homepage_pvcs
+          changed_when: false
+          failed_when: >-
+            homepage_pvcs.rc != 0 or
+            (homepage_pvcs.stdout | from_json)['items'] | length != 3 or
+            (homepage_pvcs.stdout | from_json)['items'] | map(attribute='status.phase') | list | unique | list != ['Bound']
+
+        - name: Read custom icons as binary data
+          ansible.builtin.slurp:
+            src: "{{ item }}"
+          loop: "{{ query('ansible.builtin.fileglob', playbook_dir + '/../../kubernetes/apps/homepage/config/icons/*') | sort }}"
+          register: homepage_icon_files
+          no_log: true
+
+        - name: Render the icons ConfigMap
+          ansible.builtin.template:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/homepage/icons-configmap.yaml.j2"
+            dest: "{{ homepage_render_dir.path }}/icons-configmap.yaml"
+            mode: "0600"
+          no_log: true
+
+        - name: Apply the icons ConfigMap
+          ansible.builtin.command:
+            argv: [kubectl, apply, --server-side, -f, "{{ homepage_render_dir.path }}/icons-configmap.yaml"]
+          register: homepage_apply_icons
+          changed_when: "'created' in homepage_apply_icons.stdout or 'configured' in homepage_apply_icons.stdout"
+          no_log: true
+
+        - name: Render the Ansible-to-Helm values bridge
+          ansible.builtin.template:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/homepage/values.ansible.yaml.j2"
+            dest: "{{ homepage_render_dir.path }}/values.ansible.yaml"
+            mode: "0600"
+          no_log: true
+
+        - name: Validate the chart and values with helm template
+          ansible.builtin.command:
+            argv: >-
+              {{ ['helm', 'template', 'homepage', homepage_chart_dir, '--namespace',
+              homepage_target_namespace, '--values', homepage_render_dir.path +
+              '/values.ansible.yaml'] + homepage_helm_backup_args }}
+          register: homepage_helm_template
+          changed_when: false
+          no_log: true
+
+        - name: Require the Velero Schedule in a production render
+          ansible.builtin.assert:
+            that:
+              - "'name: homepage-daily' in homepage_helm_template.stdout"
+            fail_msg: "The production render does not contain the homepage-daily Velero Schedule."
+          when: homepage_action == 'adopt'
+
+        - name: Require no Velero Schedule in a rehearsal render
+          ansible.builtin.assert:
+            that:
+              - homepage_helm_template.stdout is not search('kind: Schedule')
+            fail_msg: "The rehearsal render contains a Velero Schedule; it would hijack the production homepage-daily schedule."
+          when: homepage_action == 'rehearse'
+
+        - name: Prepare production adoption
+          when: homepage_action == 'adopt'
+          block:
+            - name: Capture pre-adoption object UIDs
+              ansible.builtin.command:
+                argv: [kubectl, -n, homepage, get, "{{ item }}", -o, "jsonpath={.metadata.uid}"]
+              loop:
+                - deployment/homepage
+                - service/homepage
+                - configmap/homepage-config
+                - secret/homepage-environment
+                - secret/homepage-caddy
+                - persistentvolumeclaim/homepage-config
+                - persistentvolumeclaim/homepage-tailscale
+                - persistentvolumeclaim/homepage-caddy
+              register: homepage_uids_before
+              changed_when: false
+              no_log: true
+
+            - name: Check for an existing online Homepage tailnet identity
+              ansible.builtin.command:
+                argv: [kubectl, -n, homepage, exec, deployment/homepage, -c, tailscale, --, tailscale, ip, -4]
+              register: homepage_existing_tailnet_identity
+              failed_when: false
+              changed_when: false
+              no_log: true
+
+            - name: Create a one-use Headscale registration key
+              ansible.builtin.command:
+                argv:
+                  - docker
+                  - exec
+                  - headscale
+                  - headscale
+                  - preauthkeys
+                  - create
+                  - --user
+                  - "1"
+                  - --expiration
+                  - 1h
+                  - --output
+                  - json
+              delegate_to: pangolin
+              connection: ssh
+              remote_user: root
+              register: homepage_new_preauthkey
+              changed_when: true
+              when: homepage_existing_tailnet_identity.rc != 0 or homepage_existing_tailnet_identity.stdout | trim | length == 0
+              failed_when: false
+              no_log: true
+
+            - name: Require successful Headscale key creation
+              ansible.builtin.assert:
+                that:
+                  - homepage_new_preauthkey.rc == 0
+                fail_msg: >-
+                  Headscale key creation failed (rc={{ homepage_new_preauthkey.rc }};
+                  stderr={{ homepage_new_preauthkey.stderr | regex_replace('[A-Za-z0-9+/=_-]{16,}', '[redacted]') }}).
+              when: homepage_new_preauthkey is not skipped
+
+            - name: Hold the one-use key only in Ansible memory
+              ansible.builtin.set_fact:
+                homepage_tailscale_authkey: "{{ (homepage_new_preauthkey.stdout | from_json).key }}"
+              when: homepage_new_preauthkey is not skipped
+              no_log: true
+
+            - name: Render the one-use Tailscale auth Secret
+              ansible.builtin.template:
+                src: "{{ playbook_dir }}/../../kubernetes/apps/homepage/tailscale-auth-secret.yaml.j2"
+                dest: "{{ homepage_render_dir.path }}/tailscale-auth-secret.yaml"
+                mode: "0600"
+              when: homepage_tailscale_authkey | length > 0
+              no_log: true
+
+            - name: Apply the one-use Tailscale auth Secret
+              ansible.builtin.command:
+                argv: [kubectl, apply, -f, "{{ homepage_render_dir.path }}/tailscale-auth-secret.yaml"]
+              when: homepage_tailscale_authkey | length > 0
+              register: homepage_apply_tailscale_secret
+              changed_when: "'created' in homepage_apply_tailscale_secret.stdout or 'configured' in homepage_apply_tailscale_secret.stdout"
+              no_log: true
+        - name: Install or upgrade the Homepage release
+          ansible.builtin.command:
+            argv: >-
+              {{ ['helm', 'upgrade', '--install', '--take-ownership',
+              '--force-conflicts', '--server-side=true', 'homepage',
+              homepage_chart_dir, '--namespace', homepage_target_namespace,
+              '--create-namespace', '--values', homepage_render_dir.path +
+              '/values.ansible.yaml'] + homepage_helm_backup_args }}
+          register: homepage_helm_upgrade
+          changed_when: "'Release' in homepage_helm_upgrade.stdout"
+          no_log: true
+
+        - name: Wait for the Homepage rollout
+          ansible.builtin.command:
+            argv: [kubectl, -n, "{{ homepage_target_namespace }}", rollout, status, deployment/homepage, --timeout=300s]
+          changed_when: false
+
+        - name: Verify the rehearsal install
+          when: homepage_action == 'rehearse'
+          block:
+            - name: Require no Tailscale auth Secret in the drill namespace
+              ansible.builtin.command:
+                argv: [kubectl, -n, "{{ homepage_target_namespace }}", get, secret, homepage-tailscale-auth]
+              register: homepage_drill_auth_secret
+              failed_when: false
+              changed_when: false
+
+            - name: Assert the drill namespace holds no auth material
+              ansible.builtin.assert:
+                that:
+                  - homepage_drill_auth_secret.rc != 0
+                fail_msg: "A homepage-tailscale-auth Secret exists in the drill namespace; the drill sidecar could register a duplicate node."
+
+            - name: Check the drill Tailscale state
+              ansible.builtin.command:
+                argv: [kubectl, -n, "{{ homepage_target_namespace }}", exec, deployment/homepage, -c, tailscale, --, tailscale, ip, -4]
+              register: homepage_drill_tailnet_ip
+              failed_when: false
+              changed_when: false
+              no_log: true
+
+            - name: Require the drill sidecar to be logged out
+              ansible.builtin.assert:
+                that:
+                  - homepage_drill_tailnet_ip.rc != 0 or homepage_drill_tailnet_ip.stdout | trim | length == 0
+                fail_msg: "The drill sidecar reports a tailnet IP; rehearsal must never authenticate (duplicate \"homepage\" node risk)."
+              no_log: true
+
+            - name: Verify the drill dashboard over a port-forward from this host
+              block:
+                - name: Start a port-forward to the drill Homepage Service
+                  ansible.builtin.command:
+                    argv: [kubectl, -n, "{{ homepage_target_namespace }}", port-forward, service/homepage, "18081:3000"]
+                  async: 180
+                  poll: 0
+                  register: homepage_drill_port_forward
+                  changed_when: true
+
+                - name: Wait for the port-forward to listen
+                  ansible.builtin.wait_for:
+                    host: 127.0.0.1
+                    port: 18081
+                    timeout: 30
+
+                - name: Request the drill dashboard with the production Host header
+                  ansible.builtin.command:
+                    argv:
+                      - curl
+                      - --silent
+                      - --show-error
+                      - --noproxy
+                      - "*"
+                      - --max-time
+                      - "15"
+                      - --output
+                      - /dev/null
+                      - --write-out
+                      - "%{http_code}"
+                      - -H
+                      - "Host: homepage.{{ headscale_magic_dns_domain }}"
+                      - http://127.0.0.1:18081/
+                  register: homepage_drill_http
+                  changed_when: false
+
+                - name: Require an HTTP 200 drill dashboard response
+                  ansible.builtin.assert:
+                    that:
+                      - homepage_drill_http.stdout == '200'
+                    fail_msg: "The drill dashboard did not return HTTP 200 through the Service."
+              always:
+                - name: Stop the port-forward
+                  ansible.builtin.command:
+                    argv: [pkill, -f, "port-forward service/homepage"]
+                  changed_when: false
+                  failed_when: false
+
+            - name: Report rehearsal complete
+              ansible.builtin.debug:
+                msg: >-
+                  Rehearsal complete: the chart installed into {{ homepage_target_namespace }},
+                  the dashboard answers, and the drill sidecar stayed logged out.
+                  Known side effect: the drill Caddy issues a duplicate certificate for
+                  the production hostname onto the scratch caddy PVC -- harmless, but do
+                  not loop rehearsals (Let's Encrypt duplicate-certificate rate limits).
+
+        - name: Verify production adoption
+          when: homepage_action == 'adopt'
+          block:
+            - name: Capture post-adoption object UIDs
+              ansible.builtin.command:
+                argv: [kubectl, -n, homepage, get, "{{ item }}", -o, "jsonpath={.metadata.uid}"]
+              loop:
+                - deployment/homepage
+                - service/homepage
+                - configmap/homepage-config
+                - secret/homepage-environment
+                - secret/homepage-caddy
+                - persistentvolumeclaim/homepage-config
+                - persistentvolumeclaim/homepage-tailscale
+                - persistentvolumeclaim/homepage-caddy
+              register: homepage_uids_after
+              changed_when: false
+              no_log: true
+
+            - name: Require adoption without recreation
+              ansible.builtin.assert:
+                that:
+                  - homepage_uids_after.results | map(attribute='stdout') | list == homepage_uids_before.results | map(attribute='stdout') | list
+                fail_msg: >-
+                  Object UIDs changed during adoption -- something was recreated instead
+                  of adopted. The PVC entries are the critical ones: a recreated
+                  homepage-tailscale claim would orphan the live tailnet identity.
+              no_log: true
+
+            - name: Restart Homepage to load the one-use Tailscale auth Secret
+              ansible.builtin.command:
+                argv: [kubectl, -n, homepage, rollout, restart, deployment/homepage]
+              when: homepage_tailscale_authkey | length > 0
+              changed_when: true
+              no_log: true
+
+            - name: Wait for Homepage rollout after the restart
+              ansible.builtin.command:
+                argv: [kubectl, -n, homepage, rollout, status, deployment/homepage, --timeout=300s]
+              when: homepage_tailscale_authkey | length > 0
+              changed_when: false
+
+            - name: Confirm Tailscale has an assigned tailnet IP
+              ansible.builtin.command:
+                argv: [kubectl, -n, homepage, exec, deployment/homepage, -c, tailscale, --, tailscale, ip, -4]
+              register: homepage_tailnet_ip
+              changed_when: false
+              failed_when: homepage_tailnet_ip.rc != 0 or homepage_tailnet_ip.stdout | trim | length == 0
+              no_log: true
+
+            - name: Read the Tailscale node identity
+              ansible.builtin.command:
+                argv: [kubectl, -n, homepage, exec, deployment/homepage, -c, tailscale, --, tailscale, status, --json]
+              register: homepage_tailscale_status
+              changed_when: false
+              no_log: true
+
+            - name: Confirm Tailscale uses the configured hostname
+              ansible.builtin.assert:
+                that:
+                  - (homepage_tailscale_status.stdout | from_json).Self.HostName == homepage_tailscale_hostname
+                fail_msg: "The Tailscale node does not have the configured hostname."
+              no_log: true
+
+            - name: Remove the one-use Tailscale auth Secret after identity verification
+              ansible.builtin.command:
+                argv: [kubectl, -n, homepage, delete, secret, homepage-tailscale-auth, --ignore-not-found=true]
+              when: homepage_tailscale_authkey | length > 0
+              register: homepage_delete_tailscale_secret
+              changed_when: "'deleted' in homepage_delete_tailscale_secret.stdout"
+              no_log: true
+
+            - name: Restart Homepage after removing the one-use auth Secret
+              ansible.builtin.command:
+                argv: [kubectl, -n, homepage, rollout, restart, deployment/homepage]
+              when: homepage_delete_tailscale_secret.stdout is defined and homepage_delete_tailscale_secret.stdout is search('deleted')
+              changed_when: true
+              no_log: true
+
+            - name: Wait for Homepage rollout without the one-use auth Secret
+              ansible.builtin.command:
+                argv: [kubectl, -n, homepage, rollout, status, deployment/homepage, --timeout=300s]
+              when: homepage_delete_tailscale_secret.stdout is defined and homepage_delete_tailscale_secret.stdout is search('deleted')
+              changed_when: false
+
+            - name: Confirm Tailscale identity survives without the auth Secret
+              ansible.builtin.command:
+                argv: [kubectl, -n, homepage, exec, deployment/homepage, -c, tailscale, --, tailscale, ip, -4]
+              register: homepage_tailnet_ip_after_restart
+              when: homepage_delete_tailscale_secret.stdout is defined and homepage_delete_tailscale_secret.stdout is search('deleted')
+              changed_when: false
+              failed_when: homepage_tailnet_ip_after_restart.rc != 0 or homepage_tailnet_ip_after_restart.stdout | trim | length == 0
+              no_log: true
+
+            - name: Request the dashboard through Tailscale and Caddy with verified TLS
+              ansible.builtin.command:
+                argv:
+                  - curl
+                  - --silent
+                  - --show-error
+                  - --noproxy
+                  - "*"
+                  - --max-time
+                  - "40"
+                  - --output
+                  - /dev/null
+                  - --write-out
+                  - "%{http_code}"
+                  - --resolve
+                  - "homepage.{{ headscale_magic_dns_domain }}:443:{{ homepage_tailnet_ip.stdout | trim }}"
+                  - "https://homepage.{{ headscale_magic_dns_domain }}/"
+              register: homepage_tailnet_http
+              changed_when: false
+              no_log: true
+
+            - name: Require an HTTP 200 dashboard response
+              ansible.builtin.assert:
+                that:
+                  - homepage_tailnet_http.stdout == '200'
+                fail_msg: "Production tailnet HTTPS did not return HTTP 200 after adoption."
+
+            - name: Take and verify a Velero backup of the namespace
+              block:
+                - name: Trigger a backup from homepage-daily
+                  ansible.builtin.command:
+                    argv:
+                      - kubectl
+                      - -n
+                      - velero
+                      - exec
+                      - deployment/velero
+                      - --
+                      - /velero
+                      - backup
+                      - create
+                      - --from-schedule
+                      - homepage-daily
+                  register: homepage_backup_create
+                  changed_when: "'Backup request' in homepage_backup_create.stdout or 'backup' in homepage_backup_create.stdout"
+
+                - name: Read Homepage backups from the schedule
+                  ansible.builtin.command:
+                    argv:
+                      - kubectl
+                      - -n
+                      - velero
+                      - get
+                      - backups.velero.io
+                      - -l
+                      - velero.io/schedule-name=homepage-daily
+                      - -o
+                      - json
+                  register: homepage_backup_list
+                  changed_when: false
+
+                - name: Select the newest Homepage backup name
+                  ansible.builtin.set_fact:
+                    homepage_backup_name_value: >-
+                      {{ ((homepage_backup_list.stdout | from_json)['items']
+                      | sort(attribute='metadata.creationTimestamp') | last).metadata.name }}
+
+                - name: Require a backup name from the schedule
+                  ansible.builtin.assert:
+                    that:
+                      - homepage_backup_name_value | length > 0
+
+                - name: Wait for the Homepage backup to complete
+                  ansible.builtin.command:
+                    argv:
+                      - kubectl
+                      - -n
+                      - velero
+                      - wait
+                      - "--for=jsonpath={.status.phase}=Completed"
+                      - "backup/{{ homepage_backup_name_value }}"
+                      - --timeout=600s
+                  changed_when: false
+
+                - name: Read PodVolumeBackup results for the Homepage backup
+                  ansible.builtin.command:
+                    argv:
+                      - kubectl
+                      - -n
+                      - velero
+                      - get
+                      - podvolumebackups.velero.io
+                      - -l
+                      - "velero.io/backup-name={{ homepage_backup_name_value }}"
+                      - -o
+                      - json
+                  register: homepage_pvb_results
+                  changed_when: false
+
+                - name: Require only the config and caddy volumes backed up
+                  ansible.builtin.assert:
+                    that:
+                      - (homepage_pvb_results.stdout | from_json)['items'] | length == 2
+                      - (homepage_pvb_results.stdout | from_json)['items'] | map(attribute='status.phase') | list | unique | list == ['Completed']
+                      - (homepage_pvb_results.stdout | from_json)['items'] | map(attribute='spec.volume') | sort | list == ['caddy-state', 'homepage-config']
+                    fail_msg: >-
+                      Expected exactly two Completed PodVolumeBackups for caddy-state
+                      and homepage-config. Anything else means the fs-backup posture
+                      changed during adoption.
+
+                - name: Report the verified backup name
+                  ansible.builtin.debug:
+                    msg: "Verified backup: {{ homepage_backup_name_value }} (Completed, homepage-config + caddy-state PodVolumeBackups Completed)"
+
+            - name: Report adoption complete
+              ansible.builtin.debug:
+                msg: >-
+                  Adoption complete: Helm owns the Homepage release, every pre-existing
+                  object kept its UID, the tailnet identity is unchanged, and a fresh
+                  Velero backup verified. Keep the old apply path until one scheduled
+                  homepage-daily backup completes under Helm ownership; then retire it
+                  as described in apps/homepage/README.md.
+      always:
+        - name: Remove temporary rendered files
+          ansible.builtin.file:
+            path: "{{ homepage_render_dir.path }}"
+            state: absent
+          when: homepage_render_dir.path is defined

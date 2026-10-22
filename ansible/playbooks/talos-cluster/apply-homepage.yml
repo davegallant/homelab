@@ -176,6 +176,7 @@
                   - pods
                   - -l
                   - app.kubernetes.io/name=homepage
+                  - --field-selector=status.phase=Running
                   - -o
                   - jsonpath={.items[0].metadata.name}
               register: homepage_existing_pod

@@ -2,4 +2,4 @@ spec:
   template:
     metadata:
       annotations:
-        backup.velero.io/backup-volumes-excludes: tailscale-state
+        backup.velero.io/backup-volumes-excludes: tailscale-state,caddy-runtime
