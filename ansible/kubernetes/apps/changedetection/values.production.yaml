@@ -66,7 +66,7 @@ controllers:
         resources:
           requests:
             cpu: 100m
-            memory: 224Mi
+            memory: 192Mi
           limits:
             cpu: 1000m
             memory: 1Gi
@@ -94,7 +94,7 @@ controllers:
         resources:
           requests:
             cpu: 25m
-            memory: 48Mi
+            memory: 40Mi
           limits:
             cpu: 200m
             memory: 192Mi
@@ -114,7 +114,7 @@ controllers:
         resources:
           requests:
             cpu: 25m
-            memory: 24Mi
+            memory: 16Mi
           limits:
             cpu: 100m
             memory: 128Mi
