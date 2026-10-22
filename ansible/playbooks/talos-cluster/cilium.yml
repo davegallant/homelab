@@ -36,6 +36,49 @@
           - node/k8s-w-2
       changed_when: false
 
+    - name: Read Argo CD application health before installation
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - argocd
+          - get
+          - applications
+          - -o
+          - jsonpath={range .items[*]}{.status.sync.status}{" "}{.status.health.status}{"\n"}{end}
+      register: cilium_apps_before
+      changed_when: false
+
+    - name: Require all applications Synced and Healthy before installation
+      ansible.builtin.assert:
+        that:
+          - cilium_apps_before.stdout_lines | length > 0
+          - cilium_apps_before.stdout_lines | reject('equalto', 'Synced Healthy') | list | length == 0
+        fail_msg: "All Argo CD applications must be Synced and Healthy before Cilium installation."
+
+    - name: Read node InternalIP addresses before installation
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - get
+          - nodes
+          - -o
+          - 'jsonpath={range .items[*]}{.metadata.name}{" "}{range .status.addresses[?(@.type=="InternalIP")]}{.address}{","}{end}{"\n"}{end}'
+      register: cilium_node_ips_before
+      changed_when: false
+
+    - name: Require the three configured LAN node addresses before installation
+      ansible.builtin.assert:
+        that:
+          - "'k8s-cp-1 192.168.1.210,' in cilium_node_ips_before.stdout_lines"
+          - "'k8s-w-1 192.168.1.211,' in cilium_node_ips_before.stdout_lines"
+          - "'k8s-w-2 192.168.1.212,' in cilium_node_ips_before.stdout_lines"
+        fail_msg: "Talos nodes must report only their configured LAN InternalIPs before Cilium installation."
+
     - name: Confirm Flannel remains the active CNI
       ansible.builtin.command:
         argv:
