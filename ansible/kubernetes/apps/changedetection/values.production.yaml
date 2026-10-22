@@ -26,7 +26,7 @@ controllers:
         # the sidecar volumes are excluded by omission (the Schedule
         # is opt-in), and the tailscale identity must never be
         # captured for restore.
-        backup.velero.io/backup-volumes: datastore
+        backup.velero.io/backup-volumes: datastore-local
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
@@ -168,11 +168,25 @@ configMaps:
         }
 
 persistence:
+  # Keep the original hostPath-backed claim mounted for rollback. Velero
+  # cannot make a PodVolumeBackup from it.
   datastore:
     type: persistentVolumeClaim
     annotations:
       argocd.argoproj.io/ignore-healthcheck: "true"
     storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    advancedMounts:
+      changedetection:
+        app:
+          - path: /mnt/changedetection-rollback-datastore
+            readOnly: true
+  datastore-local:
+    type: persistentVolumeClaim
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
+    storageClass: pve-g3-1-local
     accessMode: ReadWriteOnce
     size: 1Gi
     advancedMounts:
