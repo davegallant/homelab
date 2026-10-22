@@ -1,0 +1,29 @@
+---
+# This cutover-specific static local PV points at the directory provisioned
+# by the initial maloja-data local-path claim. Velero can back up local PVs,
+# while its filesystem backup does not support the original hostPath PV.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: maloja-data-local
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  local:
+    path: /var/mnt/local-path/pvc-92746181-8f1d-4d0b-baff-320304d9578e_maloja_maloja-data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w-1
+  claimRef:
+    namespace: maloja
+    name: maloja-data-local
