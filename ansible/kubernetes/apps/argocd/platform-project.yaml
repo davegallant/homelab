@@ -13,6 +13,7 @@ spec:
     - https://kubernetes-sigs.github.io/metrics-server/
     - ghcr.io/vmware-tanzu/charts
     - https://argoproj.github.io/argo-helm
+    - https://helm.cilium.io/
   destinations:
     - server: https://kubernetes.default.svc
       namespace: kube-system
@@ -22,6 +23,8 @@ spec:
       namespace: velero
     - server: https://kubernetes.default.svc
       namespace: argocd
+    - server: https://kubernetes.default.svc
+      namespace: cilium-system
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
@@ -35,6 +38,14 @@ spec:
       kind: APIService
     - group: apiextensions.k8s.io
       kind: CustomResourceDefinition
+    - group: cilium.io
+      kind: CiliumIdentity
+    - group: cilium.io
+      kind: CiliumCIDRGroup
+    - group: cilium.io
+      kind: CiliumEgressGatewayPolicy
+    - group: cilium.io
+      kind: CiliumLocalRedirectPolicy
   namespaceResourceWhitelist:
     - group: ""
       kind: ServiceAccount
@@ -62,6 +73,16 @@ spec:
       kind: PodDisruptionBudget
     - group: networking.k8s.io
       kind: NetworkPolicy
+    - group: cilium.io
+      kind: CiliumNetworkPolicy
+    - group: cilium.io
+      kind: CiliumClusterwideNetworkPolicy
+    - group: cilium.io
+      kind: CiliumNodeConfig
+    - group: cilium.io
+      kind: CiliumEndpoint
+    - group: cilium.io
+      kind: CiliumNode
     - group: velero.io
       kind: BackupStorageLocation
     - group: velero.io
