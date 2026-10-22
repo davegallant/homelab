@@ -22,7 +22,7 @@ controllers:
         # the sidecar volumes are excluded by omission (the Schedule
         # is opt-in), and the tailscale identity must never be
         # captured for restore.
-        backup.velero.io/backup-volumes: config
+        backup.velero.io/backup-volumes: config-local
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
@@ -200,11 +200,11 @@ configMaps:
         syncBuiltinESMExports();
 
 persistence:
-  config:
+  config-local:
     type: persistentVolumeClaim
     annotations:
       argocd.argoproj.io/ignore-healthcheck: "true"
-    storageClass: local-path
+    storageClass: pve-g3-1-local
     accessMode: ReadWriteOnce
     size: 1Gi
     advancedMounts:

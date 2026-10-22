@@ -1,0 +1,29 @@
+---
+# This cutover-specific static local PV points at the directory provisioned
+# by the initial seerr-config local-path claim. Velero can back up local PVs,
+# while its filesystem backup does not support the original hostPath PV.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: seerr-config-local
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  local:
+    path: /var/mnt/local-path/pvc-ea120932-bf2b-453c-b89f-98b70cb53ba0_seerr_seerr-config
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w-2
+  claimRef:
+    namespace: seerr
+    name: seerr-config-local

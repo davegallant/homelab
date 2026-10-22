@@ -27,9 +27,17 @@ Secrets stay in Vault and outside Argo's ownership:
 
 Backups: the values carry a Velero Schedule (`seerr`, into the
 velero namespace) in opt-in mode; the pod annotates
-`backup.velero.io/backup-volumes: config`, so only the app config
+`backup.velero.io/backup-volumes: config-local`, so only the app config
 volume is filesystem-backed-up. The tailscale identity volume is never
 captured — restoring it would clone a live tailnet identity.
+
+The local-path provisioner creates hostPath-backed PVs, which Velero does
+not support for PodVolumeBackup. After copying and verifying the LXC config,
+apply `config-local-pv.yaml` and sync the production values: the new
+`seerr-config-local` claim references the same existing data directory via a
+static local PV. The manifest's worker and path are specific to this staged
+copy and must be taken from the bound `seerr-config` PV during a fresh
+migration.
 
 ## Prerequisites (once)
 
@@ -94,6 +102,13 @@ No pod starts; the LXC keeps serving.
    File count and the sum of regular-file byte sizes must match the LXC
    side before continuing. Directory metadata is excluded because the
    LXC and PVC filesystems can report different directory sizes.
+
+   Apply the repo-managed local PV for the copied config directory before
+   starting the Talos replica:
+
+   ```sh
+   kubectl --context admin@homelab apply -f ansible/kubernetes/apps/seerr/config-local-pv.yaml
+   ```
 
 3. Retire the LXC's tailnet node so the sidecar takes the clean name:
    on the Headscale host, `headscale nodes list`, then
