@@ -117,8 +117,9 @@ kubectl --context admin@homelab apply -f ansible/kubernetes/apps/argocd/applicat
    kubectl --context admin@homelab apply -f ansible/kubernetes/apps/lubelogger/data-local-pv.yaml
    ```
 
-   The application values retain `lubelogger-data` read-only and mount
-   `lubelogger-data-local` read-write at the same eight subpaths.
+   The application values retain `lubelogger-data` read-only under
+   `/mnt/lubelogger-rollback/` and mount `lubelogger-data-local`
+   read-write at the app's eight data paths.
 
 3. Retire the LXC's tailnet node on the Headscale host
    (`headscale nodes delete --identifier <old-lubelogger-id>`).
