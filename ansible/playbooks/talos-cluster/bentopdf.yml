@@ -70,6 +70,31 @@
         argv: [kubectl, wait, --for=condition=Ready, --timeout=120s, node/k8s-cp-1, node/k8s-w-1, node/k8s-w-2]
       changed_when: false
 
+    - name: Read any Argo CD ownership marker before changing BentoPDF
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - bentopdf
+          - get
+          - deployment
+          - bentopdf
+          - --ignore-not-found=true
+          - -o
+          - 'jsonpath={.metadata.annotations.argocd\.argoproj\.io/tracking-id}'
+      register: bentopdf_argocd_owner
+      changed_when: false
+      when: bentopdf_action != 'verify'
+
+    - name: Prevent Helm changes after Argo CD takes ownership
+      ansible.builtin.assert:
+        that:
+          - bentopdf_argocd_owner.stdout | trim | length == 0
+        fail_msg: "BentoPDF is managed by Argo CD. Change its chart and production values in Git, then approve a sync."
+      when: bentopdf_action != 'verify'
+
     - name: Create a protected temporary render directory
       ansible.builtin.tempfile:
         state: directory

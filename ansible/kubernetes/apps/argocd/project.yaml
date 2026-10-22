@@ -1,0 +1,23 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: homelab
+  namespace: argocd
+spec:
+  description: Manually approved homelab applications
+  sourceRepos:
+    - https://github.com/davegallant/homelab.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: bentopdf
+    - server: https://kubernetes.default.svc
+      namespace: velero
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: Service
+    - group: velero.io
+      kind: Schedule

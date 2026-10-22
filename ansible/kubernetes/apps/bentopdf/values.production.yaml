@@ -1,0 +1,4 @@
+---
+newt:
+  enabled: true
+  existingSecret: bentopdf-newt-external

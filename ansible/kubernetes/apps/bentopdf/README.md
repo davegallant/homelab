@@ -1,5 +1,12 @@
 # BentoPDF on Talos (Helm)
 
+The GitOps handoff is defined in `../argocd/README.md`. Production values are
+in `values.production.yaml`, with the Newt Secret supplied separately by
+`playbooks/talos-cluster/bentopdf-secret.yml`. Once Argo CD has synced this
+workload, use Git changes and approved syncs for deployments. The lifecycle
+playbook below then supports verification only; its mutation actions are
+guarded against Argo CD ownership.
+
 Migration of the `bento-pdf` LXC Compose stack (BentoPDF + Newt) to the
 Talos cluster, packaged as a local Helm chart. Everything is driven by
 one playbook:

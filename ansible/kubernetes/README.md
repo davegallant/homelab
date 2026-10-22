@@ -8,6 +8,10 @@ has been retired.
 
 ## Existing Secrets and future GitOps ownership
 
+Argo CD bootstrap and the first BentoPDF handoff are documented in
+[`apps/argocd/README.md`](apps/argocd/README.md). The bootstrap remains
+Ansible-managed; application syncs read GitHub `main` and require approval.
+
 The application charts can consume Secrets provisioned separately from Helm.
 Empty `existingSecret` values preserve the current Vault-to-Helm deployment
 path. Set the following values to use an existing Secret instead; the chart

@@ -1,0 +1,24 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bentopdf
+  namespace: argocd
+spec:
+  project: homelab
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: ansible/kubernetes/apps/bentopdf/chart
+    helm:
+      releaseName: bentopdf
+      valueFiles:
+        - ../values.production.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bentopdf
+  # No automated sync or deletion finalizer: syncs require approval,
+  # and deleting this Application preserves its workloads.
+  syncPolicy:
+    syncOptions:
+      - FailOnSharedResource=true
