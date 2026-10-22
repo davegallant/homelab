@@ -1,0 +1,15 @@
+---
+# The provisioner's namespace, applied BEFORE the upstream manifest
+# (and re-asserted after) so the Pod Security labels survive: the
+# helper pods the provisioner spawns to create/delete directories run
+# privileged with host paths — privileged is scoped to this one
+# system namespace, the same exception shape as monitoring and
+# velero.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: local-path-storage
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged

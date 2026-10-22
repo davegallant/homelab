@@ -33,6 +33,10 @@ machine:
       permissions: 0644
       path: /var/mnt/miniflux/postgres/.keep
       op: create
+    - content: Talos local-path-provisioner storage root
+      permissions: 0644
+      path: /var/mnt/local-path/.keep
+      op: create
 ---
 apiVersion: v1alpha1
 kind: ResolverConfig

@@ -1,0 +1,412 @@
+---
+# local-path-provisioner: dynamic node-local storage for the cluster
+# (see ../../kubernetes/apps/local-path/README.md). New stateful apps
+# get local volumes from a PVC — no machine-config .keep entry, no
+# node reboot.
+#
+# Actions (local_path_action):
+#   install (default) - apply our namespace, fetch + apply the pinned
+#                       upstream manifest, rewrite the provisioner's
+#                       base path to /var/mnt/local-path (read-modify-
+#                       write of the nodePathMap field only), replace
+#                       the StorageClass with our Retain variant,
+#                       restart the provisioner, verify.
+#   smoke             - throwaway namespace + Delete-policy class:
+#                       write a marker from one pod, read it back
+#                       from a second pod on the same PVC, then prove
+#                       teardown removes the PV.
+- name: Install and verify local-path-provisioner on Talos Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/apps/local-path/vars.yaml
+  vars:
+    local_path_action: install
+    talos_kube_context: ""
+    local_path_apps_dir: "{{ playbook_dir }}/../../kubernetes/apps/local-path"
+  tasks:
+    - name: Require a supported local-path action
+      ansible.builtin.assert:
+        that:
+          - local_path_action in ['install', 'smoke']
+        fail_msg: "local_path_action must be install or smoke."
+
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: local_path_kube_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - local_path_kube_context.stdout == talos_kube_context
+        fail_msg: "Pass -e talos_kube_context=<the Talos context> matching the active kubectl context."
+
+    - name: Verify all Talos nodes are Ready
+      ansible.builtin.command:
+        argv: [kubectl, wait, --for=condition=Ready, --timeout=120s, node/k8s-cp-1, node/k8s-w-1, node/k8s-w-2]
+      changed_when: false
+
+    - name: Install local-path-provisioner
+      when: local_path_action == 'install'
+      block:
+        - name: Create a protected temporary directory
+          ansible.builtin.tempfile:
+            state: directory
+            prefix: local-path-
+          register: local_path_dir
+
+        - name: Fetch the pinned upstream manifest
+          ansible.builtin.get_url:
+            url: "{{ local_path_manifest_url }}"
+            dest: "{{ local_path_dir.path }}/local-path-storage.yaml"
+            mode: "0600"
+            checksum: "{{ 'sha256:' + local_path_manifest_sha256 if local_path_manifest_sha256 | length > 0 else omit }}"
+
+        - name: Read the fetched manifest checksum
+          ansible.builtin.stat:
+            path: "{{ local_path_dir.path }}/local-path-storage.yaml"
+            checksum_algorithm: sha256
+          register: local_path_manifest_stat
+
+        - name: Report the manifest checksum for vars.yaml
+          ansible.builtin.debug:
+            msg: >-
+              Manifest sha256: {{ local_path_manifest_stat.stat.checksum }}
+              {{ '(matches the recorded pin)' if local_path_manifest_sha256 | length > 0
+              else '(NOT pinned yet — record this value as local_path_manifest_sha256 in apps/local-path/vars.yaml)' }}
+
+        - name: Read upstream manifest documents
+          ansible.builtin.set_fact:
+            local_path_upstream_docs: "{{ lookup('file', local_path_dir.path + '/local-path-storage.yaml') | from_yaml_all | list }}"
+
+        - name: Write the upstream manifest without its immutable StorageClass
+          ansible.builtin.copy:
+            dest: "{{ local_path_dir.path }}/local-path-storage-apply.yaml"
+            mode: "0600"
+            content: "{{ '---\n' + (local_path_upstream_docs | rejectattr('kind', 'equalto', 'StorageClass') | map('to_nice_yaml') | join('---\n')) }}"
+
+        - name: Apply the provisioner namespace with its Pod Security labels
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - apply
+              - --server-side=true
+              - --force-conflicts
+              - -f
+              - "{{ local_path_apps_dir }}/namespace.yaml"
+          changed_when: true
+
+        - name: Apply the upstream manifest
+          ansible.builtin.command:
+            argv: [kubectl, apply, -f, "{{ local_path_dir.path }}/local-path-storage-apply.yaml"]
+          register: local_path_manifest_apply
+          changed_when: "'created' in local_path_manifest_apply.stdout or 'configured' in local_path_manifest_apply.stdout"
+
+        - name: Re-assert the provisioner namespace labels
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - apply
+              - --server-side=true
+              - --force-conflicts
+              - -f
+              - "{{ local_path_apps_dir }}/namespace.yaml"
+          changed_when: false
+
+        - name: Wait for the provisioner rollout
+          ansible.builtin.command:
+            argv: [kubectl, -n, local-path-storage, rollout, status, deployment/local-path-provisioner, --timeout=300s]
+          changed_when: false
+
+        - name: Read the live provisioner ConfigMap
+          ansible.builtin.command:
+            argv: [kubectl, -n, local-path-storage, get, configmap, local-path-config, -o, json]
+          register: local_path_cm
+          changed_when: false
+
+        - name: Compute the config.json with our base path
+          ansible.builtin.set_fact:
+            local_path_config: >-
+              {{
+                ((local_path_cm.stdout | from_json).data['config.json'] | from_json)
+                | combine(
+                    {
+                      'nodePathMap': [
+                        {
+                          'node': 'DEFAULT_PATH_FOR_NON_LISTED_NODES',
+                          'paths': [local_path_base_path]
+                        }
+                      ]
+                    },
+                    recursive=true
+                  )
+              }}
+
+        # Patch config.json in place and touch nothing else. The
+        # upstream ConfigMap also carries setup, teardown, and
+        # helperPod.yaml keys that the helper pods mount; rebuilding
+        # the ConfigMap from a subset of keys silently deleted them
+        # (found by the first Codex run, 2026-10-22).
+        - name: Patch only config.json in the provisioner ConfigMap
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - local-path-storage
+              - patch
+              - configmap
+              - local-path-config
+              - --type
+              - merge
+              - -p
+              - "{{ {'data': {'config.json': local_path_config | to_json}} | to_json }}"
+          changed_when: true
+
+        - name: Re-read the provisioner ConfigMap after the patch
+          ansible.builtin.command:
+            argv: [kubectl, -n, local-path-storage, get, configmap, local-path-config, -o, json]
+          register: local_path_cm_after
+          changed_when: false
+
+        - name: Require the patch to preserve the upstream keys
+          ansible.builtin.assert:
+            that:
+              - "'setup' in (local_path_cm_after.stdout | from_json).data"
+              - "'teardown' in (local_path_cm_after.stdout | from_json).data"
+              - "'helperPod.yaml' in (local_path_cm_after.stdout | from_json).data"
+              - ((local_path_cm_after.stdout | from_json).data['config.json'] | from_json).nodePathMap[0].paths == [local_path_base_path]
+            fail_msg: "The ConfigMap patch must change only the nodePathMap paths and preserve setup, teardown, and helperPod.yaml."
+
+        - name: Remove the upstream StorageClass (reclaimPolicy is immutable)
+          ansible.builtin.command:
+            argv: [kubectl, delete, storageclass, "{{ local_path_storage_class }}", --ignore-not-found=true]
+          changed_when: true
+
+        - name: Apply our Retain StorageClass
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - apply
+              - --server-side=true
+              - --force-conflicts
+              - -f
+              - "{{ local_path_apps_dir }}/storageclass.yaml"
+          changed_when: true
+
+        - name: Restart the provisioner onto the patched config
+          ansible.builtin.command:
+            argv: [kubectl, -n, local-path-storage, rollout, restart, deployment/local-path-provisioner]
+          changed_when: true
+
+        - name: Wait for the provisioner rollout after the restart
+          ansible.builtin.command:
+            argv: [kubectl, -n, local-path-storage, rollout, status, deployment/local-path-provisioner, --timeout=300s]
+          changed_when: false
+
+        - name: Read the live StorageClass
+          ansible.builtin.command:
+            argv: [kubectl, get, storageclass, "{{ local_path_storage_class }}", -o, json]
+          register: local_path_sc
+          changed_when: false
+
+        - name: Require the Retain local-path StorageClass
+          ansible.builtin.assert:
+            that:
+              - (local_path_sc.stdout | from_json).provisioner == 'rancher.io/local-path'
+              - (local_path_sc.stdout | from_json).reclaimPolicy == 'Retain'
+              - (local_path_sc.stdout | from_json).volumeBindingMode == 'WaitForFirstConsumer'
+              - (local_path_sc.stdout | from_json).allowVolumeExpansion == true
+      always:
+        - name: Remove temporary local-path install files
+          ansible.builtin.file:
+            path: "{{ local_path_dir.path }}"
+            state: absent
+          when: local_path_dir.path is defined
+
+    - name: Smoke-test dynamic local provisioning
+      when: local_path_action == 'smoke'
+      block:
+        - name: Create a protected temporary directory
+          ansible.builtin.tempfile:
+            state: directory
+            prefix: local-path-smoke-
+          register: local_path_smoke_dir
+
+        - name: Write the smoke-test rig
+          ansible.builtin.copy:
+            dest: "{{ local_path_smoke_dir.path }}/smoke.yaml"
+            mode: "0600"
+            content: |
+              ---
+              apiVersion: storage.k8s.io/v1
+              kind: StorageClass
+              metadata:
+                name: local-path-smoke
+              provisioner: rancher.io/local-path
+              reclaimPolicy: Delete
+              volumeBindingMode: WaitForFirstConsumer
+              ---
+              apiVersion: v1
+              kind: Namespace
+              metadata:
+                name: local-path-smoke
+                labels:
+                  pod-security.kubernetes.io/enforce: baseline
+                  pod-security.kubernetes.io/audit: baseline
+                  pod-security.kubernetes.io/warn: baseline
+              ---
+              apiVersion: v1
+              kind: PersistentVolumeClaim
+              metadata:
+                name: smoke-data
+                namespace: local-path-smoke
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                storageClassName: local-path-smoke
+                resources:
+                  requests:
+                    storage: 64Mi
+              ---
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                name: writer
+                namespace: local-path-smoke
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: writer
+                    image: docker.io/library/busybox:1.37@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e
+                    command: ["/bin/sh", "-c", "echo local-path-smoke-ok > /data/marker.txt && cat /data/marker.txt"]
+                    volumeMounts:
+                      - name: data
+                        mountPath: /data
+                volumes:
+                  - name: data
+                    persistentVolumeClaim:
+                      claimName: smoke-data
+
+        # The reader pod lives in its own manifest, applied only
+        # after the writer has finished. In the first build both pods
+        # were created by the same apply with nothing ordering them:
+        # the reader started before the marker existed, cat failed,
+        # and the pod was already Failed before the playbook waited
+        # on it (smoke run 2, 2026-10-22). Sequenced, the reader also
+        # proves the stronger property: a brand-new pod can read what
+        # an exited pod wrote.
+        - name: Write the reader pod manifest
+          ansible.builtin.copy:
+            dest: "{{ local_path_smoke_dir.path }}/reader.yaml"
+            mode: "0600"
+            content: |
+              ---
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                name: reader
+                namespace: local-path-smoke
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: reader
+                    image: docker.io/library/busybox:1.37@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e
+                    command: ["cat", "/data/marker.txt"]
+                    volumeMounts:
+                      - name: data
+                        mountPath: /data
+                volumes:
+                  - name: data
+                    persistentVolumeClaim:
+                      claimName: smoke-data
+
+        - name: Apply the smoke-test rig
+          ansible.builtin.command:
+            argv: [kubectl, apply, -f, "{{ local_path_smoke_dir.path }}/smoke.yaml"]
+          changed_when: true
+
+        - name: Wait for the writer pod to finish
+          ansible.builtin.command:
+            argv: [kubectl, -n, local-path-smoke, wait, "--for=jsonpath={.status.phase}=Succeeded", pod/writer, --timeout=300s]
+          changed_when: false
+
+        - name: Read the provisioned volume name
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - local-path-smoke
+              - get
+              - pvc/smoke-data
+              - -o
+              - jsonpath={.spec.volumeName}
+          register: local_path_smoke_pv
+          changed_when: false
+
+        - name: Require a provisioned volume
+          ansible.builtin.assert:
+            that:
+              - local_path_smoke_pv.stdout | trim | length > 0
+
+        - name: Apply the reader pod now that the writer has finished
+          ansible.builtin.command:
+            argv: [kubectl, apply, -f, "{{ local_path_smoke_dir.path }}/reader.yaml"]
+          changed_when: true
+
+        - name: Wait for the reader pod to finish
+          ansible.builtin.command:
+            argv: [kubectl, -n, local-path-smoke, wait, "--for=jsonpath={.status.phase}=Succeeded", pod/reader, --timeout=300s]
+          changed_when: false
+
+        - name: Read the reader pod output
+          ansible.builtin.command:
+            argv: [kubectl, -n, local-path-smoke, logs, pod/reader]
+          register: local_path_smoke_read
+          changed_when: false
+
+        - name: Require the marker to survive across pods
+          ansible.builtin.assert:
+            that:
+              - "'local-path-smoke-ok' in local_path_smoke_read.stdout"
+            fail_msg: "The reader pod did not see the writer's marker: {{ local_path_smoke_read.stdout }}"
+
+        - name: Delete the smoke namespace (removes pods and the claim)
+          ansible.builtin.command:
+            argv: [kubectl, delete, namespace, local-path-smoke]
+          changed_when: true
+
+        - name: Require the Delete policy to remove the volume
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - wait
+              - --for=delete
+              - "pv/{{ local_path_smoke_pv.stdout | trim }}"
+              - --timeout=300s
+          changed_when: false
+
+        - name: Report the smoke-test result
+          ansible.builtin.debug:
+            msg: "Provisioned {{ local_path_smoke_pv.stdout | trim }} on demand, marker persisted across pods, Delete-policy teardown removed the volume."
+      always:
+        - name: Remove the smoke StorageClass
+          ansible.builtin.command:
+            argv: [kubectl, delete, storageclass, local-path-smoke, --ignore-not-found=true]
+          changed_when: false
+          failed_when: false
+
+        - name: Remove the smoke namespace if anything remains
+          ansible.builtin.command:
+            argv: [kubectl, delete, namespace, local-path-smoke, --ignore-not-found=true]
+          changed_when: false
+          failed_when: false
+
+        - name: Remove temporary smoke-test files
+          ansible.builtin.file:
+            path: "{{ local_path_smoke_dir.path }}"
+            state: absent
+          when: local_path_smoke_dir.path is defined

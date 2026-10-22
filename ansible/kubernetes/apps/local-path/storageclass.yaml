@@ -1,0 +1,19 @@
+---
+# Our StorageClass for the provisioner. Upstream's manifest creates
+# one named local-path with reclaimPolicy Delete; the playbook deletes
+# that object and applies this one instead (reclaimPolicy is immutable
+# on an existing StorageClass). Retain is deliberate: deleting a PVC
+# must never silently delete data — the PV goes Released, its
+# directory stays on the node, and removing data is a separate,
+# explicit act (see README).
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-path
+provisioner: rancher.io/local-path
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+# Sizes are not enforced (a volume is a directory; the disk is the
+# only ceiling), but allow PVC request edits so the recorded capacity
+# can stay honest.
+allowVolumeExpansion: true

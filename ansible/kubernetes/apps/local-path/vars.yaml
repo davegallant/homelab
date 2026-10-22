@@ -1,0 +1,22 @@
+---
+# Rancher's local-path-provisioner: dynamic node-local volumes, so a
+# new stateful app no longer needs a machine-config .keep entry and a
+# node reboot for its directory. Upstream ships it as a single install
+# manifest (that IS its distribution mechanism — k3s bundles the same
+# manifest); we pin the release tag and record the manifest checksum
+# after the first fetch.
+#
+# Verify the pin still exists before installing. If it is gone, take
+# the nearest current release, update the pin AND the checksum in the
+# same change — never float on latest.
+local_path_provisioner_version: "0.0.31"
+local_path_manifest_url: "https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.31/deploy/local-path-storage.yaml"
+# sha256 of the manifest above; filled in on first install
+# (get_url checksum format: "sha256:<hex>"). Empty = fetch unverified
+# once, then record it here.
+local_path_manifest_sha256: "bed8d03e3e07e03d3dd3e4e2150ea6eb03f8753bd317bfeb1bfa49e9b432f78d"
+# Base directory on each node under which per-volume directories are
+# created. /var is Talos's persistent EPHEMERAL partition — the same
+# filesystem that hosts the hand-written /var/mnt/<app> static PVs.
+local_path_base_path: "/var/mnt/local-path"
+local_path_storage_class: "local-path"
