@@ -53,6 +53,11 @@
     - name: Install local-path-provisioner
       when: local_path_action == 'install'
       block:
+        - name: Require the upstream manifest checksum
+          ansible.builtin.assert:
+            that:
+              - local_path_manifest_sha256 is match('^[a-f0-9]{64}$')
+
         - name: Create a protected temporary directory
           ansible.builtin.tempfile:
             state: directory
@@ -64,7 +69,7 @@
             url: "{{ local_path_manifest_url }}"
             dest: "{{ local_path_dir.path }}/local-path-storage.yaml"
             mode: "0600"
-            checksum: "{{ 'sha256:' + local_path_manifest_sha256 if local_path_manifest_sha256 | length > 0 else omit }}"
+            checksum: "sha256:{{ local_path_manifest_sha256 }}"
 
         - name: Read the fetched manifest checksum
           ansible.builtin.stat:
@@ -76,12 +81,22 @@
           ansible.builtin.debug:
             msg: >-
               Manifest sha256: {{ local_path_manifest_stat.stat.checksum }}
-              {{ '(matches the recorded pin)' if local_path_manifest_sha256 | length > 0
-              else '(NOT pinned yet — record this value as local_path_manifest_sha256 in apps/local-path/vars.yaml)' }}
+              (matches the recorded pin)
 
         - name: Read upstream manifest documents
           ansible.builtin.set_fact:
-            local_path_upstream_docs: "{{ lookup('file', local_path_dir.path + '/local-path-storage.yaml') | from_yaml_all | list }}"
+            local_path_upstream_docs: >-
+              {{ lookup('file', local_path_dir.path + '/local-path-storage.yaml')
+              | replace('image: rancher/local-path-provisioner:v' + local_path_provisioner_version,
+                        'image: ' + local_path_provisioner_image)
+              | replace('image: busybox\n', 'image: ' + local_path_helper_image + '\n')
+              | from_yaml_all | list }}
+
+        - name: Require both image overrides to match the upstream manifest
+          ansible.builtin.assert:
+            that:
+              - local_path_provisioner_image in (local_path_upstream_docs | to_json)
+              - local_path_helper_image in (local_path_upstream_docs | to_json)
 
         - name: Write the upstream manifest without its immutable StorageClass
           ansible.builtin.copy:
@@ -181,10 +196,22 @@
               - ((local_path_cm_after.stdout | from_json).data['config.json'] | from_json).nodePathMap[0].paths == [local_path_base_path]
             fail_msg: "The ConfigMap patch must change only the nodePathMap paths and preserve setup, teardown, and helperPod.yaml."
 
-        - name: Remove the upstream StorageClass (reclaimPolicy is immutable)
+        - name: Read the existing StorageClass before replacing immutable fields
+          ansible.builtin.command:
+            argv: [kubectl, get, storageclass, "{{ local_path_storage_class }}", --ignore-not-found=true, -o, json]
+          register: local_path_existing_sc
+          changed_when: false
+
+        - name: Remove the StorageClass only when immutable fields differ
           ansible.builtin.command:
             argv: [kubectl, delete, storageclass, "{{ local_path_storage_class }}", --ignore-not-found=true]
           changed_when: true
+          when:
+            - local_path_existing_sc.stdout | trim | length > 0
+            - >-
+              (local_path_existing_sc.stdout | from_json).reclaimPolicy != 'Retain' or
+              (local_path_existing_sc.stdout | from_json).provisioner != 'rancher.io/local-path' or
+              (local_path_existing_sc.stdout | from_json).volumeBindingMode != 'WaitForFirstConsumer'
 
         - name: Apply our Retain StorageClass
           ansible.builtin.command:

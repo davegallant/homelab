@@ -5,6 +5,9 @@
 # placement, and sizing only.
 nameOverride: node-exporter
 fullnameOverride: node-exporter
+image:
+  tag: v1.12.1
+  digest: sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0
 # Alloy scrapes node-exporter pods directly, rewriting instance to the
 # node name. Keep the chart's Service out of the annotation-driven path
 # to avoid scraping the same exporter a second time.

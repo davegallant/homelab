@@ -14,6 +14,6 @@ provisioner: rancher.io/local-path
 reclaimPolicy: Retain
 volumeBindingMode: WaitForFirstConsumer
 # Sizes are not enforced (a volume is a directory; the disk is the
-# only ceiling), but allow PVC request edits so the recorded capacity
-# can stay honest.
+# only ceiling). Match upstream's allowance for PVC request edits;
+# this does not resize a filesystem or update PV/PVC status capacity.
 allowVolumeExpansion: true

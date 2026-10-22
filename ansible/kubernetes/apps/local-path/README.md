@@ -15,7 +15,9 @@ reboot is involved — for any future app, planned or not.
 - **Upstream install, pinned.** The provisioner ships as a single
   manifest (its actual distribution mechanism — k3s bundles the
   same). The playbook fetches the pinned tag's manifest, verifies
-  its sha256 once recorded in `vars.yaml`, and applies it.
+  its mandatory sha256 in `vars.yaml`, overrides the provisioner and
+  helper images with version-and-digest pins, and applies it. Upstream
+  also ships a Helm chart; the current install retains manifest ownership.
 - **Base path `/var/mnt/local-path`** (patched into the
   provisioner's ConfigMap in place — only the `config.json` key's
   nodePathMap, so upstream's setup/teardown scripts and helper-pod
@@ -35,8 +37,10 @@ reboot is involved — for any future app, planned or not.
 - **reclaimPolicy Retain.** Upstream defaults to Delete. Here,
   deleting a PVC releases the PV and leaves the directory on the
   node; data removal is a separate, explicit, human act. The
-  StorageClass object itself is replaced at install time because
-  reclaimPolicy is immutable.
+  StorageClass object is replaced only when its immutable settings differ.
+  Matching installs apply it without deleting it. PVC request increases
+  follow upstream's allowance but do not resize a filesystem or update
+  reported PV/PVC capacity; directory sizes are not enforced.
 - **Privileged Pod Security is scoped to `local-path-storage`**
   (the helper pods run privileged with host paths by design). No
   other namespace changes.

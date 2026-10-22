@@ -48,8 +48,8 @@ kubelet /metrics/cadvisor --/        |
 ## Files
 
 - `namespace.yaml` — monitoring namespace with Pod Security labels.
-- `vars.yaml` — chart repos + pinned versions (the only pins; the
-  charts pin their own image digests).
+- `vars.yaml` — chart repos and pinned chart versions. Image versions
+  and registry-resolved digests are pinned in the per-chart values files.
 - `values-node-exporter.yaml`, `values-kube-state-metrics.yaml`,
   `values-metrics-server.yaml` — per-chart overrides (naming,
   placement, sizing, the curated KSM collector set: no secrets, no

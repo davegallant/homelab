@@ -3,6 +3,8 @@
 # Talos kubelets serve certificates that metrics-server cannot validate
 # against node IPs, so --kubelet-insecure-tls is the standard Talos
 # recipe; without it kubectl top stays empty.
+image:
+  tag: v0.7.2@sha256:ffcb2bf004d6aa0a17d90e0247cf94f2865c8901dcab4427034c341951c239f9
 defaultArgs:
   - --cert-dir=/tmp
   - --kubelet-preferred-address-types=InternalIP,Hostname
