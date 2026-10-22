@@ -242,7 +242,7 @@ persistence:
             readOnly: true
   proxy-agent:
     type: configMap
-    name: seerr-proxy-agent
+    name: seerr-proxyagent
     advancedMounts:
       seerr:
         app:
