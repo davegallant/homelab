@@ -1,5 +1,5 @@
 apiVersion: v2
 name: miniflux
-version: 0.1.1
+version: 0.1.2
 appVersion: "2.3.4"
 description: Miniflux RSS reader with its Postgres database (first stateful/database workload on the cluster) and a gated Newt sidecar for Pangolin exposure.

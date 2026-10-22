@@ -40,6 +40,8 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: POSTGRES_USER
+              # Clear the legacy literal during server-side apply adoption.
+              value: ""
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.existingSecret | default "miniflux" | quote }}
