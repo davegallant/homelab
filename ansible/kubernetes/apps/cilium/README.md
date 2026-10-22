@@ -45,9 +45,10 @@ The `cilium-system` namespace has the privileged Pod Security enforcement
 exception needed by Cilium's DaemonSet, matching the platform exception shape
 used for Velero. Its audit and warn levels remain baseline. Cilium requests
 192 MiB per agent and caps each at 256 MiB. The single operator and Hubble
-Relay are pinned to the 4 GiB w-1; Relay requests 64 MiB. Before installation,
-compare w-2's measured workload use and the `pve-g3-2` host memory gate in
-`provision-vms.yml`.
+Relay are pinned to the 4 GiB control-plane node; Relay requests 64 MiB. The
+4 GiB w-1 is at 98% of requested memory at baseline, so neither component is
+scheduled there. Before installation, compare w-2's measured workload use
+and the `pve-g3-2` host memory gate in `provision-vms.yml`.
 
 NetworkPolicies are deliberately disabled during dual-overlay migration.
 After Flannel is removed, policies will be introduced one namespace at a
