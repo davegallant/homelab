@@ -1,0 +1,420 @@
+---
+- name: Install and verify Velero on Talos Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../group_vars/all/secrets.yaml
+  vars_prompt:
+    - name: talos_kube_context
+      prompt: Enter the expected kubectl context for the Talos cluster
+      private: false
+  tasks:
+    - name: Require the Vault-held Garage S3 endpoint
+      ansible.builtin.assert:
+        that:
+          - velero_garage_s3_url is defined
+          - velero_garage_s3_url | length > 0
+
+    - name: Require the existing Garage credential variables
+      ansible.builtin.assert:
+        that:
+          - garage_velero_access_key_id is defined
+          - garage_velero_secret_access_key is defined
+
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: velero_kube_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - velero_kube_context.stdout == talos_kube_context
+
+    - name: Verify all three Talos nodes are Ready
+      ansible.builtin.command:
+        argv: [kubectl, wait, --for=condition=Ready, --timeout=120s, node/k8s-cp-1, node/k8s-w-1, node/k8s-w-2]
+      changed_when: false
+
+    - name: Read the live Homepage Deployment
+      ansible.builtin.command:
+        argv: [kubectl, -n, homepage, get, deployment, homepage, -o, json]
+      register: velero_homepage_deployment
+      changed_when: false
+
+    - name: Require the expected Homepage filesystem volumes
+      ansible.builtin.assert:
+        that:
+          - "'homepage-config' in (velero_homepage_deployment.stdout | from_json).spec.template.spec.volumes | map(attribute='name') | list"
+          - "'tailscale-state' in (velero_homepage_deployment.stdout | from_json).spec.template.spec.volumes | map(attribute='name') | list"
+          - "'caddy-state' in (velero_homepage_deployment.stdout | from_json).spec.template.spec.volumes | map(attribute='name') | list"
+
+    - name: Read any existing Velero namespace
+      ansible.builtin.command:
+        argv: [kubectl, get, namespace, velero, -o, json]
+      register: velero_existing_namespace
+      changed_when: false
+      failed_when: false
+
+    - name: Require an existing Velero namespace to have the scoped policy
+      ansible.builtin.assert:
+        that:
+          - velero_existing_namespace.rc != 0 or (velero_existing_namespace.stdout | from_json).metadata.labels['pod-security.kubernetes.io/enforce'] == 'privileged'
+          - velero_existing_namespace.rc != 0 or (velero_existing_namespace.stdout | from_json).metadata.labels['pod-security.kubernetes.io/audit'] == 'baseline'
+          - velero_existing_namespace.rc != 0 or (velero_existing_namespace.stdout | from_json).metadata.labels['pod-security.kubernetes.io/warn'] == 'baseline'
+
+    - name: Create a protected temporary render directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: velero-k8s-
+      register: velero_render_dir
+
+    - name: Render, install, and verify Velero
+      block:
+        - name: Restrict the render directory
+          ansible.builtin.file:
+            path: "{{ velero_render_dir.path }}"
+            state: directory
+            mode: "0700"
+
+        - name: Copy Velero namespace manifest
+          ansible.builtin.copy:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/velero/namespace.yaml"
+            dest: "{{ velero_render_dir.path }}/namespace.yaml"
+            mode: "0600"
+
+        - name: Render Garage credentials
+          ansible.builtin.template:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/velero/credentials.yaml.j2"
+            dest: "{{ velero_render_dir.path }}/credentials.yaml"
+            mode: "0600"
+          no_log: true
+
+        - name: Render Velero Helm values
+          ansible.builtin.template:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/velero/values.yaml.j2"
+            dest: "{{ velero_render_dir.path }}/values.yaml"
+            mode: "0600"
+
+        - name: Render Garage object listing Job
+          ansible.builtin.template:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/velero/garage-list-job.yaml.j2"
+            dest: "{{ velero_render_dir.path }}/garage-list-job.yaml"
+            mode: "0600"
+
+        - name: Copy Homepage backup Schedule manifest
+          ansible.builtin.copy:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/velero/schedule.yaml"
+            dest: "{{ velero_render_dir.path }}/schedule.yaml"
+            mode: "0600"
+
+        - name: Copy Homepage filesystem backup patch
+          ansible.builtin.copy:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/velero/homepage-fsb-patch.yaml"
+            dest: "{{ velero_render_dir.path }}/homepage-fsb-patch.yaml"
+            mode: "0600"
+
+        - name: Validate the pinned Velero Helm chart and values
+          ansible.builtin.command:
+            argv:
+              - helm
+              - template
+              - velero
+              - oci://ghcr.io/vmware-tanzu/charts/velero
+              - --version
+              - 12.2.1
+              - --namespace
+              - velero
+              - --values
+              - "{{ velero_render_dir.path }}/values.yaml"
+          changed_when: false
+
+        - name: Apply the Velero namespace policy
+          ansible.builtin.command:
+            argv: [kubectl, apply, -f, "{{ velero_render_dir.path }}/namespace.yaml"]
+          register: velero_apply_namespace
+          changed_when: "'created' in velero_apply_namespace.stdout or 'configured' in velero_apply_namespace.stdout"
+
+        - name: Apply the Garage credentials Secret
+          ansible.builtin.command:
+            argv: [kubectl, apply, -f, "{{ velero_render_dir.path }}/credentials.yaml"]
+          register: velero_apply_credentials
+          changed_when: "'created' in velero_apply_credentials.stdout or 'configured' in velero_apply_credentials.stdout"
+          no_log: true
+
+        - name: Apply Homepage filesystem backup exclusion
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - homepage
+              - patch
+              - deployment
+              - homepage
+              - --type=merge
+              - --patch-file
+              - "{{ velero_render_dir.path }}/homepage-fsb-patch.yaml"
+          register: velero_apply_homepage_patch
+          changed_when: "'patched' in velero_apply_homepage_patch.stdout"
+
+        - name: Install Velero from the pinned Helm chart
+          ansible.builtin.command:
+            argv:
+              - helm
+              - upgrade
+              - --install
+              - velero
+              - oci://ghcr.io/vmware-tanzu/charts/velero
+              - --version
+              - 12.2.1
+              - --namespace
+              - velero
+              - --values
+              - "{{ velero_render_dir.path }}/values.yaml"
+          register: velero_helm_install
+          changed_when: "'Release' in velero_helm_install.stdout or 'Pulled:' in velero_helm_install.stdout"
+
+        - name: Apply the homepage-daily Schedule with its exact requested name
+          ansible.builtin.command:
+            argv: [kubectl, apply, -f, "{{ velero_render_dir.path }}/schedule.yaml"]
+          register: velero_apply_schedule
+          changed_when: "'created' in velero_apply_schedule.stdout or 'configured' in velero_apply_schedule.stdout"
+
+        - name: Wait for the Velero server rollout
+          ansible.builtin.command:
+            argv: [kubectl, -n, velero, rollout, status, deployment/velero, --timeout=300s]
+          changed_when: false
+
+        - name: Wait for the node-agent DaemonSet rollout
+          ansible.builtin.command:
+            argv: [kubectl, -n, velero, rollout, status, daemonset/node-agent, --timeout=300s]
+          changed_when: false
+
+        - name: Verify the namespace policy exception and baseline audit labels
+          ansible.builtin.command:
+            argv: [kubectl, get, namespace, velero, -o, json]
+          register: velero_namespace_status
+          changed_when: false
+
+        - name: Require policy enforcement to be scoped as approved
+          ansible.builtin.assert:
+            that:
+              - (velero_namespace_status.stdout | from_json).metadata.labels['pod-security.kubernetes.io/enforce'] == 'privileged'
+              - (velero_namespace_status.stdout | from_json).metadata.labels['pod-security.kubernetes.io/audit'] == 'baseline'
+              - (velero_namespace_status.stdout | from_json).metadata.labels['pod-security.kubernetes.io/warn'] == 'baseline'
+
+        - name: Verify the Garage BackupStorageLocation is available
+          ansible.builtin.command:
+            argv: [kubectl, -n, velero, wait, "--for=jsonpath={.status.phase}=Available", backupstoragelocation/default, --timeout=180s]
+          changed_when: false
+
+        - name: Read the Garage BackupStorageLocation phase and message
+          ansible.builtin.command:
+            argv: [kubectl, -n, velero, get, backupstoragelocation, default, -o, json]
+          register: velero_bsl_status
+          changed_when: false
+
+        - name: Require the Garage BackupStorageLocation to be Available
+          ansible.builtin.assert:
+            that:
+              - (velero_bsl_status.stdout | from_json).status.phase == 'Available'
+
+        - name: Report the Garage BackupStorageLocation phase and message
+          ansible.builtin.debug:
+            msg:
+              - "phase={{ (velero_bsl_status.stdout | from_json).status.phase }}"
+              - "message={{ (velero_bsl_status.stdout | from_json).status.message | default('') }}"
+
+        - name: Verify the Homepage exclusion annotation reached its pod template
+          ansible.builtin.command:
+            argv: [kubectl, -n, homepage, get, deployment, homepage, -o, 'jsonpath={.spec.template.metadata.annotations.backup\.velero\.io/backup-volumes-excludes}']
+          register: velero_homepage_exclusion
+          changed_when: false
+
+        - name: Require the Tailscale state volume exclusion
+          ansible.builtin.assert:
+            that:
+              - velero_homepage_exclusion.stdout == "tailscale-state"
+
+        - name: Trigger a backup from homepage-daily
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - velero
+              - exec
+              - deployment/velero
+              - --
+              - /velero
+              - backup
+              - create
+              - --from-schedule
+              - homepage-daily
+          register: velero_backup_create
+          changed_when: "'Backup request' in velero_backup_create.stdout or 'backup' in velero_backup_create.stdout"
+
+        - name: Read the newly created Homepage backup name
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - velero
+              - get
+              - backups.velero.io
+              - -l
+              - velero.io/schedule-name=homepage-daily
+              - -o
+              - json
+          register: velero_backup_name
+          changed_when: false
+
+        - name: Select the newest Homepage backup name
+          ansible.builtin.set_fact:
+            velero_backup_name_value: "{{ ((velero_backup_name.stdout | from_json)['items'] | sort(attribute='metadata.creationTimestamp') | last).metadata.name }}"
+
+        - name: Require a backup name from the schedule
+          ansible.builtin.assert:
+            that:
+              - velero_backup_name_value | length > 0
+
+        - name: Wait for the scheduled Homepage backup to complete
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - velero
+              - wait
+              - "--for=jsonpath={.status.phase}=Completed"
+              - "backup/{{ velero_backup_name_value }}"
+              - --timeout=1800s
+          changed_when: false
+
+        - name: Read the completed Homepage backup status
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - velero
+              - get
+              - backup
+              - "{{ velero_backup_name_value }}"
+              - -o
+              - json
+          register: velero_backup_status
+          changed_when: false
+
+        - name: Require the scheduled Homepage backup phase to be Completed
+          ansible.builtin.assert:
+            that:
+              - (velero_backup_status.stdout | from_json).status.phase == 'Completed'
+
+        - name: Describe the completed Homepage backup with details
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - velero
+              - exec
+              - deployment/velero
+              - --
+              - /velero
+              - backup
+              - describe
+              - "{{ velero_backup_name_value }}"
+              - --details
+          register: velero_backup_details
+          changed_when: false
+
+        - name: Read PodVolumeBackup results for the Homepage backup
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - velero
+              - get
+              - podvolumebackups.velero.io
+              - -l
+              - "velero.io/backup-name={{ velero_backup_name_value }}"
+              - -o
+              - json
+          register: velero_pvb_results
+          changed_when: false
+
+        - name: Require completed config and caddy backups with no Tailscale state
+          ansible.builtin.assert:
+            that:
+              - (velero_pvb_results.stdout | from_json)['items'] | length >= 2
+              - "(velero_pvb_results.stdout | from_json)['items'] | selectattr('spec.volume', 'equalto', 'homepage-config') | selectattr('status.phase', 'equalto', 'Completed') | list | length == 1"
+              - "(velero_pvb_results.stdout | from_json)['items'] | selectattr('spec.volume', 'equalto', 'caddy-state') | selectattr('status.phase', 'equalto', 'Completed') | list | length == 1"
+              - "(velero_pvb_results.stdout | from_json)['items'] | selectattr('status.phase', 'equalto', 'Failed') | list | length == 0"
+              - "(velero_pvb_results.stdout | from_json)['items'] | selectattr('spec.volume', 'equalto', 'tailscale-state') | list | length == 0"
+            fail_msg: "The completed backup did not include completed Homepage config and Caddy volume backups with no failed or Tailscale volume backups."
+
+        - name: Report the verified backup name and detailed output
+          ansible.builtin.debug:
+            msg:
+              - "Verified backup: {{ velero_backup_name_value }}"
+              - "{{ velero_backup_details.stdout }}"
+
+        - name: Create a temporary Garage object listing Job
+          ansible.builtin.command:
+            argv: [kubectl, create, -f, "{{ velero_render_dir.path }}/garage-list-job.yaml", -o, name]
+          register: velero_garage_job_create
+          changed_when: true
+          no_log: true
+
+        - name: Record the temporary Garage object listing Job name
+          ansible.builtin.set_fact:
+            velero_garage_job_name: "{{ velero_garage_job_create.stdout | regex_replace('^job\\.batch/', '') }}"
+          no_log: true
+
+        - name: Wait for the Garage object listing Job
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - velero
+              - wait
+              - --for=condition=Complete
+              - "job/{{ velero_garage_job_name }}"
+              - --timeout=300s
+          changed_when: false
+
+        - name: Read Garage bucket objects and total size
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - velero
+              - logs
+              - "job/{{ velero_garage_job_name }}"
+          register: velero_garage_objects
+          changed_when: false
+
+        - name: Report Garage bucket objects and total size
+          ansible.builtin.debug:
+            msg: "{{ velero_garage_objects.stdout_lines }}"
+      always:
+        - name: Remove the temporary Garage object listing Job
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - velero
+              - delete
+              - job
+              - "{{ velero_garage_job_name }}"
+              - --ignore-not-found=true
+          when: velero_garage_job_name is defined
+          changed_when: "'deleted' in velero_garage_job_cleanup.stdout"
+          register: velero_garage_job_cleanup
+          no_log: true
+
+        - name: Remove temporary rendered Velero manifests
+          ansible.builtin.file:
+            path: "{{ velero_render_dir.path }}"
+            state: absent
+          when: velero_render_dir.path is defined

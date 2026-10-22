@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: garage-velero-list-
+  namespace: velero
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: aws
+          image: docker.io/amazon/aws-cli:2.34.0@sha256:97cc5f847898f54432492c128408c62e0df2153d9ad36573be8e5a03826123b0
+          imagePullPolicy: IfNotPresent
+          command:
+            - aws
+          args:
+            - s3
+            - ls
+            - s3://velero
+            - --recursive
+            - --summarize
+            - --human-readable
+            - --endpoint-url
+            - "{{ velero_garage_s3_url }}"
+            - --region
+            - garage
+          env:
+            - name: AWS_SHARED_CREDENTIALS_FILE
+              value: /var/run/garage/credentials
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: garage-credentials
+              mountPath: /var/run/garage
+              readOnly: true
+      volumes:
+        - name: garage-credentials
+          secret:
+            secretName: velero-garage-credentials
+            items:
+              - key: cloud
+                path: credentials

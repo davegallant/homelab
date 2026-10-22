@@ -1,0 +1,178 @@
+---
+- name: Verify a Velero backup and list Garage objects
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../group_vars/all/secrets.yaml
+  vars_prompt:
+    - name: talos_kube_context
+      prompt: Enter the expected kubectl context for the Talos cluster
+      private: false
+  tasks:
+    - name: Require the Vault-held Garage S3 endpoint
+      ansible.builtin.assert:
+        that:
+          - velero_garage_s3_url is defined
+          - velero_garage_s3_url | length > 0
+
+    - name: Require a Velero backup name
+      ansible.builtin.assert:
+        that:
+          - velero_backup_name is defined
+          - velero_backup_name | length > 0
+
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: velero_verify_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - velero_verify_context.stdout == talos_kube_context
+
+    - name: Read the Garage BackupStorageLocation
+      ansible.builtin.command:
+        argv: [kubectl, -n, velero, get, backupstoragelocation, default, -o, json]
+      register: velero_verify_bsl
+      changed_when: false
+
+    - name: Require the Garage BackupStorageLocation to be Available
+      ansible.builtin.assert:
+        that:
+          - (velero_verify_bsl.stdout | from_json).status.phase == 'Available'
+
+    - name: Read the Velero backup status
+      ansible.builtin.command:
+        argv: [kubectl, -n, velero, get, backup, "{{ velero_backup_name }}", -o, json]
+      register: velero_verify_backup
+      changed_when: false
+
+    - name: Require the Velero backup phase to be Completed
+      ansible.builtin.assert:
+        that:
+          - (velero_verify_backup.stdout | from_json).status.phase == 'Completed'
+
+    - name: Read PodVolumeBackup results for the Velero backup
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - -n
+          - velero
+          - get
+          - podvolumebackups.velero.io
+          - -l
+          - "velero.io/backup-name={{ velero_backup_name }}"
+          - -o
+          - json
+      register: velero_verify_pvbs
+      changed_when: false
+
+    - name: Require completed config and Caddy backups with no failures or Tailscale state
+      ansible.builtin.assert:
+        that:
+          - (velero_verify_pvbs.stdout | from_json)['items'] | length >= 2
+          - "(velero_verify_pvbs.stdout | from_json)['items'] | selectattr('spec.volume', 'equalto', 'homepage-config') | selectattr('status.phase', 'equalto', 'Completed') | list | length == 1"
+          - "(velero_verify_pvbs.stdout | from_json)['items'] | selectattr('spec.volume', 'equalto', 'caddy-state') | selectattr('status.phase', 'equalto', 'Completed') | list | length == 1"
+          - "(velero_verify_pvbs.stdout | from_json)['items'] | selectattr('status.phase', 'equalto', 'Failed') | list | length == 0"
+          - "(velero_verify_pvbs.stdout | from_json)['items'] | selectattr('spec.volume', 'equalto', 'tailscale-state') | list | length == 0"
+
+    - name: Describe the Velero backup with details
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - -n
+          - velero
+          - exec
+          - deployment/velero
+          - --
+          - /velero
+          - backup
+          - describe
+          - "{{ velero_backup_name }}"
+          - --details
+      register: velero_verify_backup_details
+      changed_when: false
+
+    - name: Report the BSL and backup describe output
+      ansible.builtin.debug:
+        msg:
+          - "BackupStorageLocation phase={{ (velero_verify_bsl.stdout | from_json).status.phase }}"
+          - "BackupStorageLocation message={{ (velero_verify_bsl.stdout | from_json).status.message | default('') }}"
+          - "{{ velero_verify_backup_details.stdout }}"
+
+    - name: Create a protected temporary render directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: velero-verify-
+      register: velero_verify_render_dir
+
+    - name: List Garage bucket objects using the Velero credential Secret
+      block:
+        - name: Restrict the render directory
+          ansible.builtin.file:
+            path: "{{ velero_verify_render_dir.path }}"
+            state: directory
+            mode: "0700"
+
+        - name: Render the Garage object listing Job
+          ansible.builtin.template:
+            src: "{{ playbook_dir }}/../../kubernetes/apps/velero/garage-list-job.yaml.j2"
+            dest: "{{ velero_verify_render_dir.path }}/garage-list-job.yaml"
+            mode: "0600"
+
+        - name: Create a temporary Garage object listing Job
+          ansible.builtin.command:
+            argv: [kubectl, create, -f, "{{ velero_verify_render_dir.path }}/garage-list-job.yaml", -o, name]
+          register: velero_verify_garage_job_create
+          changed_when: true
+
+        - name: Record the temporary Garage object listing Job name
+          ansible.builtin.set_fact:
+            velero_verify_garage_job_name: "{{ velero_verify_garage_job_create.stdout | regex_replace('^job\\.batch/', '') }}"
+
+        - name: Wait for the Garage object listing Job
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - velero
+              - wait
+              - --for=condition=Complete
+              - "job/{{ velero_verify_garage_job_name }}"
+              - --timeout=300s
+          changed_when: false
+
+        - name: Read Garage bucket objects and total size
+          ansible.builtin.command:
+            argv: [kubectl, -n, velero, logs, "job/{{ velero_verify_garage_job_name }}"]
+          register: velero_verify_garage_objects
+          changed_when: false
+
+        - name: Report Garage bucket objects and total size
+          ansible.builtin.debug:
+            msg: "{{ velero_verify_garage_objects.stdout_lines }}"
+      always:
+        - name: Remove the temporary Garage object listing Job
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - velero
+              - delete
+              - job
+              - "{{ velero_verify_garage_job_name }}"
+              - --ignore-not-found=true
+          when: velero_verify_garage_job_name is defined
+          changed_when: "'deleted' in velero_verify_garage_job_cleanup.stdout"
+          register: velero_verify_garage_job_cleanup
+          no_log: true
+
+        - name: Remove temporary rendered Garage manifests
+          ansible.builtin.file:
+            path: "{{ velero_verify_render_dir.path }}"
+            state: absent
+          when: velero_verify_render_dir.path is defined
