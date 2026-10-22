@@ -1,0 +1,683 @@
+---
+# One playbook for the whole Miniflux lifecycle on Talos. The Helm
+# chart (ansible/kubernetes/apps/miniflux/chart) owns the in-cluster
+# packaging — app, Postgres StatefulSet, Newt sidecar, Velero
+# schedule; this playbook owns what Helm cannot do: Vault-rendered
+# values, storage, functional verification, the pg_dump data
+# transfer, and the LXC <-> cluster cutover of the Pangolin identity.
+#
+# Actions (pass with -e miniflux_action=<action>):
+#   stage    (default) apply storage, install/upgrade the release
+#            with Newt disabled against an EMPTY cluster database,
+#            verify in-cluster, and take a first Velero backup
+#            (asserts the pg_dump hook fired and exactly one
+#            PodVolumeBackup completed — the database volume).
+#   verify   re-run the in-cluster verification only.
+#   cutover  stage + verify, then move the data: stop the LXC app and
+#            Newt, pg_dump the LXC database, stop the whole LXC
+#            stack, drop/recreate the cluster database, load the
+#            dump, prove the core row counts match, enable Newt in
+#            the cluster, and gate on the public URL.
+#   rollback re-assert the release with Newt disabled and restart
+#            the LXC stack. The LXC database is the pre-cutover one;
+#            anything recorded in the cluster after cutover does not
+#            flow back.
+- name: Manage Miniflux on Talos Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../group_vars/all/vars.yaml
+    - ../../group_vars/all/secrets.yaml
+  vars:
+    miniflux_action: stage
+    talos_kube_context: ""
+    miniflux_namespace: miniflux
+    miniflux_apps_dir: "{{ playbook_dir }}/../../kubernetes/apps/miniflux"
+    miniflux_chart_dir: "{{ playbook_dir }}/../../kubernetes/apps/miniflux/chart"
+    miniflux_counts_sql: >-
+      SELECT 'users|' || count(*) FROM users
+      UNION ALL SELECT 'feeds|' || count(*) FROM feeds
+      UNION ALL SELECT 'entries|' || count(*) FROM entries
+      ORDER BY 1
+  tasks:
+    - name: Require a known action
+      ansible.builtin.assert:
+        that:
+          - miniflux_action in ['stage', 'verify', 'cutover', 'rollback']
+        fail_msg: "miniflux_action must be one of stage, verify, cutover, rollback."
+
+    - name: Require the Miniflux variables
+      ansible.builtin.assert:
+        that:
+          - miniflux_db_user is defined
+          - miniflux_db_user | length > 0
+          - miniflux_db_password is defined
+          - miniflux_db_password | length > 0
+          - miniflux_admin_username is defined
+          - miniflux_admin_password is defined
+          - miniflux_base_url is defined
+          - miniflux_base_url | length > 0
+          - pangolin_endpoint is defined
+          - miniflux_newt_id is defined
+          - miniflux_newt_secret is defined
+        fail_msg: "Missing Miniflux variables in group_vars (all pre-date this migration; see ansible/playbooks/miniflux/docker-compose.yml)."
+      when: miniflux_action != 'verify'
+
+    - name: Read the active kubectl context
+      ansible.builtin.command:
+        argv: [kubectl, config, current-context]
+      register: miniflux_kube_context
+      changed_when: false
+
+    - name: Confirm kubectl is pointed at the expected Talos cluster
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - miniflux_kube_context.stdout == talos_kube_context
+        fail_msg: "Pass -e talos_kube_context=<the Talos context> matching the active kubectl context."
+
+    - name: Verify all three Talos nodes are Ready
+      ansible.builtin.command:
+        argv: [kubectl, wait, --for=condition=Ready, --timeout=120s, node/k8s-cp-1, node/k8s-w-1, node/k8s-w-2]
+      changed_when: false
+
+    - name: Create a protected temporary directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: miniflux-migration-
+      register: miniflux_render_dir
+      when: miniflux_action != 'verify'
+
+    - name: Run the requested Miniflux action
+      when: miniflux_render_dir.path is defined or miniflux_action == 'verify'
+      block:
+        - name: Render the Ansible-to-Helm values bridge
+          ansible.builtin.template:
+            src: "{{ miniflux_apps_dir }}/values.ansible.yaml.j2"
+            dest: "{{ miniflux_render_dir.path }}/values.ansible.yaml"
+            mode: "0600"
+          no_log: true
+          when: miniflux_action != 'verify'
+
+        - name: Apply Miniflux storage
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - apply
+              - --server-side=true
+              - --force-conflicts
+              - -f
+              - "{{ miniflux_apps_dir }}/storage.yaml"
+          register: miniflux_storage_apply
+          changed_when: "'created' in miniflux_storage_apply.stdout or 'configured' in miniflux_storage_apply.stdout"
+          when: miniflux_action in ['stage', 'cutover', 'rollback']
+
+        - name: Validate the chart and rendered values
+          ansible.builtin.command:
+            argv:
+              - helm
+              - template
+              - miniflux
+              - "{{ miniflux_chart_dir }}"
+              - --namespace
+              - "{{ miniflux_namespace }}"
+              - --values
+              - "{{ miniflux_render_dir.path }}/values.ansible.yaml"
+              - --set
+              - newt.enabled=false
+          changed_when: false
+          no_log: true
+          when: miniflux_action in ['stage', 'cutover', 'rollback']
+
+        - name: Install or upgrade the release with Newt disabled
+          ansible.builtin.command:
+            argv:
+              - helm
+              - upgrade
+              - --install
+              - miniflux
+              - "{{ miniflux_chart_dir }}"
+              - --namespace
+              - "{{ miniflux_namespace }}"
+              - --create-namespace
+              - --values
+              - "{{ miniflux_render_dir.path }}/values.ansible.yaml"
+              - --set
+              - newt.enabled=false
+              - --server-side=true
+              - --force-conflicts
+              - --take-ownership
+          register: miniflux_helm_base
+          changed_when: "'STATUS: deployed' in miniflux_helm_base.stdout"
+          no_log: true
+          when: miniflux_action in ['stage', 'cutover', 'rollback']
+
+        - name: Remove a stale Newt container after disabling it
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - miniflux
+              - patch
+              - deployment/miniflux
+              - --type=strategic
+              - --patch
+              - '{"spec":{"template":{"spec":{"containers":[{"name":"newt","$patch":"delete"}]}}}}'
+          register: miniflux_newt_prune
+          changed_when: "'(no change)' not in miniflux_newt_prune.stdout"
+          when: miniflux_action in ['stage', 'rollback']
+
+        - name: Wait for the database rollout
+          ansible.builtin.command:
+            argv: [kubectl, -n, miniflux, rollout, status, statefulset/miniflux-db, --timeout=300s]
+          changed_when: false
+          when: miniflux_action in ['stage', 'cutover', 'rollback']
+
+        - name: Wait for the application rollout
+          ansible.builtin.command:
+            argv: [kubectl, -n, miniflux, rollout, status, deployment/miniflux, --timeout=300s]
+          changed_when: false
+          when: miniflux_action in ['stage', 'cutover', 'rollback']
+
+        - name: Verify the in-cluster application
+          when: miniflux_action in ['stage', 'verify', 'cutover']
+          block:
+            - name: Require the database to accept connections
+              ansible.builtin.command:
+                argv: [kubectl, -n, miniflux, exec, pod/miniflux-db-0, --, pg_isready, -U, "{{ miniflux_db_user }}"]
+              changed_when: false
+
+            - name: Check the application over a port-forward
+              block:
+                - name: Start a temporary port-forward to the Miniflux service
+                  ansible.builtin.shell: >-
+                    nohup kubectl --context {{ talos_kube_context }} -n miniflux
+                    port-forward service/miniflux 18098:8080
+                    >/tmp/miniflux-port-forward.log 2>&1 &
+                  changed_when: true
+
+                - name: Wait for the temporary port-forward to listen
+                  ansible.builtin.wait_for:
+                    host: 127.0.0.1
+                    port: 18098
+                    timeout: 60
+
+                - name: Fetch the Miniflux health endpoint
+                  ansible.builtin.uri:
+                    url: http://127.0.0.1:18098/healthcheck
+                    return_content: true
+                    status_code: 200
+                  register: miniflux_health_page
+                  until: miniflux_health_page.status == 200
+                  retries: 12
+                  delay: 5
+
+                - name: Fetch the Miniflux front page
+                  ansible.builtin.uri:
+                    url: http://127.0.0.1:18098/
+                    return_content: true
+                    status_code: 200
+                  register: miniflux_front_page
+                  until: miniflux_front_page.status == 200
+                  retries: 12
+                  delay: 5
+
+                - name: Require Miniflux content from the application
+                  ansible.builtin.assert:
+                    that:
+                      - "'Miniflux' in miniflux_front_page.content"
+              always:
+                - name: Stop the temporary Miniflux port-forward
+                  ansible.builtin.command:
+                    argv: [pkill, -f, "port-forward service/miniflux 18098:8080"]
+                  changed_when: false
+                  failed_when: false
+
+        - name: Cut over from the LXC to the cluster
+          when: miniflux_action == 'cutover'
+          block:
+            - name: Read the LXC database row counts
+              ansible.builtin.command:
+                argv:
+                  - docker
+                  - exec
+                  - -e
+                  - PGPASSWORD
+                  - miniflux-db
+                  - psql
+                  - -h
+                  - 127.0.0.1
+                  - -U
+                  - "{{ miniflux_db_user }}"
+                  - -d
+                  - miniflux
+                  - -At
+                  - -v
+                  - ON_ERROR_STOP=1
+                  - -c
+                  - "{{ miniflux_counts_sql }}"
+              environment:
+                PGPASSWORD: "{{ miniflux_db_password }}"
+              delegate_to: miniflux
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              register: miniflux_source_counts
+              changed_when: false
+              no_log: true
+
+            - name: Stop the LXC application and Newt, leaving its database up for the dump
+              ansible.builtin.command:
+                argv: [docker, compose, stop, miniflux, newt]
+                chdir: /root
+              delegate_to: miniflux
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              register: miniflux_lxc_app_stop
+              changed_when: true
+
+            - name: Dump the LXC database inside its container
+              ansible.builtin.command:
+                argv:
+                  - docker
+                  - exec
+                  - -e
+                  - PGPASSWORD
+                  - miniflux-db
+                  - pg_dump
+                  - -h
+                  - 127.0.0.1
+                  - -U
+                  - "{{ miniflux_db_user }}"
+                  - -d
+                  - miniflux
+                  - -f
+                  - /tmp/miniflux-cluster-transfer.sql
+              environment:
+                PGPASSWORD: "{{ miniflux_db_password }}"
+              delegate_to: miniflux
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              changed_when: true
+              no_log: true
+
+            - name: Copy the dump out of the LXC database container
+              ansible.builtin.command:
+                argv: [docker, cp, "miniflux-db:/tmp/miniflux-cluster-transfer.sql", "/root/miniflux-cluster-transfer.sql"]
+              delegate_to: miniflux
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              changed_when: true
+
+            - name: Require a non-empty dump on the LXC host
+              ansible.builtin.stat:
+                path: /root/miniflux-cluster-transfer.sql
+              delegate_to: miniflux
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              register: miniflux_dump_stat
+
+            - name: Assert the dump exists and is non-empty
+              ansible.builtin.assert:
+                that:
+                  - miniflux_dump_stat.stat.exists
+                  - miniflux_dump_stat.stat.size > 0
+
+            - name: Fetch the dump to the protected temporary directory
+              ansible.builtin.fetch:
+                src: /root/miniflux-cluster-transfer.sql
+                dest: "{{ miniflux_render_dir.path }}/miniflux.sql"
+                flat: true
+              delegate_to: miniflux
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              no_log: true
+
+            - name: Stop the whole LXC stack before enabling the cluster identity
+              ansible.builtin.command:
+                argv: [docker, compose, stop]
+                chdir: /root
+              delegate_to: miniflux
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              register: miniflux_lxc_stop
+              changed_when: true
+
+            - name: Confirm no LXC containers remain running
+              ansible.builtin.command:
+                argv: [docker, compose, ps, --services, --filter, status=running]
+                chdir: /root
+              delegate_to: miniflux
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              register: miniflux_lxc_running
+              changed_when: false
+
+            - name: Require an empty LXC running-services list
+              ansible.builtin.assert:
+                that:
+                  - miniflux_lxc_running.stdout | trim | length == 0
+                fail_msg: "Miniflux LXC services are still running: {{ miniflux_lxc_running.stdout }}"
+
+            - name: Scale the cluster application to zero for the database reset
+              ansible.builtin.command:
+                argv: [kubectl, -n, miniflux, scale, deployment/miniflux, --replicas=0]
+              changed_when: true
+
+            - name: Wait for the application pods to drain
+              ansible.builtin.command:
+                argv: [kubectl, -n, miniflux, wait, --for=delete, pod, -l, app.kubernetes.io/name=miniflux, --timeout=120s]
+              changed_when: false
+
+            - name: Drop and recreate the cluster database
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - miniflux
+                  - exec
+                  - pod/miniflux-db-0
+                  - --
+                  - /bin/sh
+                  - -c
+                  - >-
+                    PGPASSWORD=$POSTGRES_PASSWORD dropdb -h 127.0.0.1 -U
+                    $POSTGRES_USER --if-exists --force miniflux &&
+                    PGPASSWORD=$POSTGRES_PASSWORD createdb -h 127.0.0.1 -U
+                    $POSTGRES_USER -O $POSTGRES_USER miniflux
+              changed_when: true
+              no_log: true
+
+            - name: Load the LXC dump into the cluster database
+              ansible.builtin.shell: >-
+                kubectl --context {{ talos_kube_context }} -n miniflux exec -i
+                pod/miniflux-db-0 -- /bin/sh -c
+                'PGPASSWORD=$POSTGRES_PASSWORD psql -h 127.0.0.1 -U $POSTGRES_USER -d miniflux -v ON_ERROR_STOP=1'
+                < {{ miniflux_render_dir.path }}/miniflux.sql
+              changed_when: true
+              no_log: true
+
+            - name: Read the cluster database row counts
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - miniflux
+                  - exec
+                  - pod/miniflux-db-0
+                  - --
+                  - /bin/sh
+                  - -c
+                  - "PGPASSWORD=$POSTGRES_PASSWORD psql -h 127.0.0.1 -U $POSTGRES_USER -d miniflux -At -v ON_ERROR_STOP=1 -c \"{{ miniflux_counts_sql }}\""
+              register: miniflux_cluster_counts
+              changed_when: false
+              no_log: true
+
+            - name: Require the cluster row counts to match the LXC source
+              ansible.builtin.assert:
+                that:
+                  - miniflux_cluster_counts.stdout | trim == miniflux_source_counts.stdout | trim
+                fail_msg: >-
+                  Row counts differ. LXC: {{ miniflux_source_counts.stdout | trim }}
+                  Cluster: {{ miniflux_cluster_counts.stdout | trim }}
+
+            - name: Remove the dump copies from the LXC
+              ansible.builtin.command:
+                argv: [rm, -f, /root/miniflux-cluster-transfer.sql]
+              delegate_to: miniflux
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              changed_when: true
+
+            - name: Scale the cluster application back to one
+              ansible.builtin.command:
+                argv: [kubectl, -n, miniflux, scale, deployment/miniflux, --replicas=1]
+              changed_when: true
+
+            - name: Wait for the application rollout after the data load
+              ansible.builtin.command:
+                argv: [kubectl, -n, miniflux, rollout, status, deployment/miniflux, --timeout=300s]
+              changed_when: false
+
+            - name: Validate the chart with Newt enabled
+              ansible.builtin.command:
+                argv:
+                  - helm
+                  - template
+                  - miniflux
+                  - "{{ miniflux_chart_dir }}"
+                  - --namespace
+                  - "{{ miniflux_namespace }}"
+                  - --values
+                  - "{{ miniflux_render_dir.path }}/values.ansible.yaml"
+                  - --set
+                  - newt.enabled=true
+              changed_when: false
+              no_log: true
+
+            - name: Enable Newt in the cluster release
+              ansible.builtin.command:
+                argv:
+                  - helm
+                  - upgrade
+                  - --install
+                  - miniflux
+                  - "{{ miniflux_chart_dir }}"
+                  - --namespace
+                  - "{{ miniflux_namespace }}"
+                  - --create-namespace
+                  - --values
+                  - "{{ miniflux_render_dir.path }}/values.ansible.yaml"
+                  - --set
+                  - newt.enabled=true
+                  - --server-side=true
+                  - --force-conflicts
+                  - --take-ownership
+              register: miniflux_helm_cutover
+              changed_when: "'STATUS: deployed' in miniflux_helm_cutover.stdout"
+              no_log: true
+
+            - name: Wait for the application rollout with Newt
+              ansible.builtin.command:
+                argv: [kubectl, -n, miniflux, rollout, status, deployment/miniflux, --timeout=300s]
+              changed_when: false
+
+            - name: Wait for the public health endpoint to serve the cluster instance
+              ansible.builtin.command:
+                argv:
+                  - curl
+                  - --silent
+                  - --show-error
+                  - --noproxy
+                  - "*"
+                  - --max-time
+                  - "15"
+                  - --output
+                  - /dev/null
+                  - --write-out
+                  - "%{http_code}"
+                  - "{{ miniflux_base_url }}/healthcheck"
+              register: miniflux_public_health
+              until: miniflux_public_health.rc == 0 and miniflux_public_health.stdout == '200'
+              retries: 24
+              delay: 5
+              changed_when: false
+
+            - name: Fetch the public front page
+              ansible.builtin.uri:
+                url: "{{ miniflux_base_url }}/"
+                return_content: true
+                status_code: 200
+              register: miniflux_public_front_page
+              until: miniflux_public_front_page.status == 200
+              retries: 12
+              delay: 5
+
+            - name: Require Miniflux content from the public endpoint
+              ansible.builtin.assert:
+                that:
+                  - "'Miniflux' in miniflux_public_front_page.content"
+
+            - name: Report cutover complete
+              ansible.builtin.debug:
+                msg: >-
+                  Cutover complete: row counts match
+                  ({{ miniflux_cluster_counts.stdout | trim | replace('\n', ', ') }}),
+                  the LXC stack is stopped, and the public URL answers
+                  from the cluster. The stopped LXC stack remains the
+                  rollback target.
+
+        - name: Roll back to the LXC
+          when: miniflux_action == 'rollback'
+          block:
+            - name: Start the Miniflux Compose stack on the LXC
+              ansible.builtin.command:
+                argv: [docker, compose, up, -d]
+                chdir: /root
+              delegate_to: miniflux
+              vars:
+                ansible_connection: ssh
+                ansible_user: root
+              register: miniflux_lxc_start
+              changed_when: true
+
+            - name: Wait for the public health endpoint to serve the LXC instance again
+              ansible.builtin.command:
+                argv:
+                  - curl
+                  - --silent
+                  - --show-error
+                  - --noproxy
+                  - "*"
+                  - --max-time
+                  - "15"
+                  - --output
+                  - /dev/null
+                  - --write-out
+                  - "%{http_code}"
+                  - "{{ miniflux_base_url }}/healthcheck"
+              register: miniflux_rollback_health
+              until: miniflux_rollback_health.rc == 0 and miniflux_rollback_health.stdout == '200'
+              retries: 24
+              delay: 5
+              changed_when: false
+
+            - name: Report rollback complete
+              ansible.builtin.debug:
+                msg: >-
+                  Rollback complete: the cluster Newt sidecar is disabled
+                  and the LXC stack serves the public endpoint again, on
+                  its pre-cutover database.
+
+        - name: Take and verify a Velero backup of the namespace
+          when: miniflux_action in ['stage', 'cutover']
+          block:
+            - name: Trigger a backup from miniflux-daily
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - velero
+                  - exec
+                  - deployment/velero
+                  - --
+                  - /velero
+                  - backup
+                  - create
+                  - --from-schedule
+                  - miniflux-daily
+              register: miniflux_backup_create
+              changed_when: "'Backup request' in miniflux_backup_create.stdout or 'backup' in miniflux_backup_create.stdout"
+
+            - name: Read Miniflux backups from the schedule
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - velero
+                  - get
+                  - backups.velero.io
+                  - -l
+                  - velero.io/schedule-name=miniflux-daily
+                  - -o
+                  - json
+              register: miniflux_backup_list
+              changed_when: false
+
+            - name: Select the newest Miniflux backup name
+              ansible.builtin.set_fact:
+                miniflux_backup_name_value: >-
+                  {{ ((miniflux_backup_list.stdout | from_json)['items']
+                  | sort(attribute='metadata.creationTimestamp') | last).metadata.name }}
+
+            - name: Require a backup name from the schedule
+              ansible.builtin.assert:
+                that:
+                  - miniflux_backup_name_value | length > 0
+
+            - name: Wait for the Miniflux backup to complete
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - velero
+                  - wait
+                  - "--for=jsonpath={.status.phase}=Completed"
+                  - "backup/{{ miniflux_backup_name_value }}"
+                  - --timeout=600s
+              changed_when: false
+
+            - name: Read PodVolumeBackup results for the Miniflux backup
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - -n
+                  - velero
+                  - get
+                  - podvolumebackups.velero.io
+                  - -l
+                  - "velero.io/backup-name={{ miniflux_backup_name_value }}"
+                  - -o
+                  - json
+              register: miniflux_pvb_results
+              changed_when: false
+
+            - name: Require exactly one completed PodVolumeBackup (the database volume)
+              ansible.builtin.assert:
+                that:
+                  - (miniflux_pvb_results.stdout | from_json)['items'] | length == 1
+                  - ((miniflux_pvb_results.stdout | from_json)['items'] | selectattr('status.phase', 'equalto', 'Completed') | list | length) == 1
+                fail_msg: >-
+                  Expected exactly one completed PodVolumeBackup for the
+                  miniflux namespace (the database volume, opted in by
+                  annotation). If the workload's volumes changed
+                  deliberately, update this check and the app README
+                  together.
+
+            - name: Require the pg_dump hook output inside the database volume
+              ansible.builtin.command:
+                argv: [kubectl, -n, miniflux, exec, pod/miniflux-db-0, --, test, -s, /var/lib/postgresql/dump.sql]
+              changed_when: false
+
+            - name: Report the verified backup name
+              ansible.builtin.debug:
+                msg: "Verified backup: {{ miniflux_backup_name_value }} (Completed, database volume backed up with pg_dump hook output)"
+      always:
+        - name: Remove temporary Miniflux migration files
+          ansible.builtin.file:
+            path: "{{ miniflux_render_dir.path }}"
+            state: absent
+          when: miniflux_render_dir.path is defined
+
+    - name: Report the completed Miniflux action
+      ansible.builtin.debug:
+        msg: "Miniflux action '{{ miniflux_action }}' completed."

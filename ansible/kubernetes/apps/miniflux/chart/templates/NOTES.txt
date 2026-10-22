@@ -1,0 +1,15 @@
+Miniflux is deployed in namespace {{ .Release.Namespace }}.
+
+Database: StatefulSet miniflux-db (Postgres) on the static local PVC
+miniflux-postgres from ../storage.yaml. The app reaches it at
+miniflux-db:5432. Every Velero backup of this namespace runs a
+pre-backup pg_dump hook in the database pod and filesystem-backs-up
+its data volume — restore from the volume, or from the dump.sql the
+hook leaves at the volume root.
+
+{{- if .Values.newt.enabled }}
+Public: {{ .Values.baseUrl }} via the Newt sidecar (Pangolin).
+{{- else }}
+Newt is DISABLED (staging): the app answers on the ClusterIP Service
+only, and the miniflux LXC still owns the public identity.
+{{- end }}

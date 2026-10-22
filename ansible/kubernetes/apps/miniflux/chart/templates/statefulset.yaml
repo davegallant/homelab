@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: miniflux-db
+  namespace: {{ .Release.Namespace }}
+spec:
+  serviceName: miniflux-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: miniflux-db
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: miniflux-db
+      annotations:
+        # Opt this pod's data volume into Velero filesystem backup
+        # (the Schedule keeps defaultVolumesToFsBackup off), and take
+        # a logical dump first: every volume backup then contains
+        # /var/lib/postgresql/dump.sql, a restore path that does not
+        # depend on the raw data directory being consistent.
+        backup.velero.io/backup-volumes: data
+        pre.hook.backup.velero.io/container: miniflux-db
+        pre.hook.backup.velero.io/command: '["/bin/sh", "-c", "PGPASSWORD=$POSTGRES_PASSWORD pg_dump -h 127.0.0.1 -U $POSTGRES_USER -d {{ .Values.db.name }} > /var/lib/postgresql/dump.sql"]'
+        pre.hook.backup.velero.io/timeout: 180s
+    spec:
+      automountServiceAccountToken: false
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - {{ .Values.nodeHostname }}
+      containers:
+        - name: miniflux-db
+          image: {{ .Values.db.image }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_USER
+              value: {{ required "dbUser must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.dbUser | quote }}
+            - name: POSTGRES_DB
+              value: {{ .Values.db.name | quote }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: miniflux
+                  key: db-password
+          ports:
+            - name: pg
+              containerPort: 5432
+              protocol: TCP
+          startupProbe:
+            exec:
+              command: ["pg_isready", "-U", {{ required "dbUser must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.dbUser | quote }}]
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 18
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", {{ required "dbUser must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.dbUser | quote }}]
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.db.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: miniflux-postgres

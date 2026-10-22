@@ -1,0 +1,15 @@
+# Ansible-to-Helm values bridge for the miniflux chart.
+#
+# Rendered by playbooks/talos-cluster/miniflux.yml into a protected
+# temporary file (0600, deleted after the run) and passed to Helm with
+# -f. This is the ONLY channel through which Vault/group_vars values
+# reach the chart. Never commit a rendered copy. All of these
+# variables already exist for the LXC stack — no new Vault vars.
+dbUser: {{ miniflux_db_user | to_json }}
+baseUrl: {{ miniflux_base_url | to_json }}
+pangolinEndpoint: {{ pangolin_endpoint | to_json }}
+dbPassword: {{ miniflux_db_password | to_json }}
+adminUsername: {{ miniflux_admin_username | to_json }}
+adminPassword: {{ miniflux_admin_password | to_json }}
+newtId: {{ miniflux_newt_id | to_json }}
+newtSecret: {{ miniflux_newt_secret | to_json }}

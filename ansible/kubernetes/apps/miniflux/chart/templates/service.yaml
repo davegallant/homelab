@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: miniflux
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: miniflux
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: miniflux
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: miniflux-db
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: miniflux-db
+spec:
+  # Headless: governs the StatefulSet and gives the app a stable DNS
+  # name for the single database pod.
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: miniflux-db
+  ports:
+    - name: pg
+      port: 5432
+      targetPort: pg
+      protocol: TCP

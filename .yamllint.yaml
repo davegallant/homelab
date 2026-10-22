@@ -10,6 +10,7 @@ ignore:
   - ansible/kubernetes/apps/bentopdf/chart/templates/
   - ansible/kubernetes/apps/homepage/chart/templates/
   - ansible/kubernetes/apps/kiwix/chart/templates/
+  - ansible/kubernetes/apps/miniflux/chart/templates/
 
 rules:
   # Playbook main.yml files start with ---; shared task files and

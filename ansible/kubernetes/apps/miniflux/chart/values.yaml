@@ -1,0 +1,77 @@
+# Default values for the miniflux chart.
+#
+# Values that originate in Ansible (Vault secrets, group_vars) ship
+# empty here and are supplied at deploy time through
+# ../values.ansible.yaml.j2, rendered by
+# playbooks/talos-cluster/miniflux.yml into a protected temp file.
+# Templates fail to render (required) when the critical ones are
+# missing.
+
+miniflux:
+  # Source of truth: playbooks/miniflux/docker-compose.yml on the LXC.
+  image: docker.io/miniflux/miniflux:2.3.4@sha256:72e49f513a63104506aab98ba8cfc3a409d4fde23550a583dec07ec941f1e94e
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+db:
+  image: docker.io/postgres:18.6@sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29d6761ddb6
+  name: miniflux # database name (also the DATABASE_URL path)
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Public exposure via Pangolin, same sidecar pattern as SearXNG and
+# BentoPDF. Disabled while staging; cutover flips it on as the LXC's
+# Newt stops (one owner for the Pangolin identity).
+newt:
+  enabled: false
+  image: docker.io/fosrl/newt:1.19.0@sha256:0189c8287058b800cca825590e4c39946b3815344ca48678dd0b96616d639319
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# Everything pins to the worker hosting the static local PV
+# (../storage.yaml -- deliberately NOT managed by this chart; the
+# chart adopts the existing PVC and never recreates it).
+nodeHostname: k8s-w-1
+
+# --- Supplied by the Ansible bridge (values.ansible.yaml.j2) ---
+
+# Database user (Vault) and the app's public base URL (group_vars) —
+# not sensitive; the passwords and Newt credentials are.
+dbUser: ""
+baseUrl: ""
+pangolinEndpoint: ""
+
+# Secrets, carried through the protected bridge render only.
+dbPassword: ""
+adminUsername: ""
+adminPassword: ""
+newtId: ""
+newtSecret: ""
+
+# Velero Schedule for this namespace (applied into the velero
+# namespace). First REAL volume backup on the cluster: the schedule
+# itself is opt-in-only (defaultVolumesToFsBackup false) and the
+# StatefulSet pod opts its data volume in by annotation, with a
+# pre-backup hook that writes a logical pg_dump into the volume so
+# every filesystem backup also carries a restore-from-sql path.
+# Secrets are excluded (re-creatable from Vault — the DB password in
+# the restored data matches the Vault value by construction).
+backup:
+  enabled: true
+  schedule: "0 3 * * *"
+  ttl: 336h

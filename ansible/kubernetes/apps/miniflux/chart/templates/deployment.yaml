@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: miniflux
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: miniflux
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: miniflux
+    spec:
+      automountServiceAccountToken: false
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - {{ .Values.nodeHostname }}
+      containers:
+        - name: miniflux
+          image: {{ .Values.miniflux.image }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: miniflux
+                  key: db-user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: miniflux
+                  key: db-password
+            - name: DATABASE_URL
+              value: "postgres://$(DB_USER):$(DB_PASSWORD)@miniflux-db:5432/{{ .Values.db.name }}?sslmode=disable"
+            - name: RUN_MIGRATIONS
+              value: "1"
+            - name: CREATE_ADMIN
+              value: "1"
+            - name: ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: miniflux
+                  key: admin-username
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: miniflux
+                  key: admin-password
+            - name: BASE_URL
+              value: {{ required "baseUrl must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.baseUrl | quote }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 24
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.miniflux.resources | nindent 12 }}
+{{- if .Values.newt.enabled }}
+        - name: newt
+          image: {{ .Values.newt.image }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PANGOLIN_ENDPOINT
+              value: {{ required "pangolinEndpoint must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.pangolinEndpoint | quote }}
+            - name: NEWT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: miniflux
+                  key: newt-id
+            - name: NEWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: miniflux
+                  key: newt-secret
+          resources:
+            {{- toYaml .Values.newt.resources | nindent 12 }}
+{{- end }}

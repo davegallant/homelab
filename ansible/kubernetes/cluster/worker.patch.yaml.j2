@@ -29,6 +29,10 @@ machine:
       permissions: 0644
       path: /var/mnt/kiwix/caddy/.keep
       op: create
+    - content: Talos local Miniflux storage root
+      permissions: 0644
+      path: /var/mnt/miniflux/postgres/.keep
+      op: create
 ---
 apiVersion: v1alpha1
 kind: ResolverConfig
