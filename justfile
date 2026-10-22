@@ -13,6 +13,10 @@ lint:
     cd ansible && ansible-lint
     shellcheck generate-containers-table.sh scripts/*.sh
 
+# Install the repository's pre-commit checks
+install-hooks:
+    git config core.hooksPath .githooks
+
 # Validate the deployed Headscale policy and managed node tags
 check-headscale-policy:
     python3 scripts/check-headscale-policy.py

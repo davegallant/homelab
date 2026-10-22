@@ -1,0 +1,6 @@
+---
+# Staging default: the Newt sidecar stays out of the pod until
+# cutover-searxng.yml stops the LXC stack and enables it, so the Pangolin
+# site identity never has two owners. Do not flip this by hand outside the
+# cutover/rollback playbooks.
+searxng_newt_enabled: false
