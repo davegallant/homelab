@@ -1,4 +1,25 @@
 ---
+- name: Check Cilium memory headroom on pve-g3-2
+  hosts: pve-g3-2
+  gather_facts: false
+  vars:
+    cilium_agent_memory_request_mib: 192
+    pve_memory_reserve_mib: 2048
+  tasks:
+    - name: Read pve-g3-2 memory availability
+      ansible.builtin.command:
+        argv: [cat, /proc/meminfo]
+      register: cilium_pve_meminfo
+      changed_when: false
+
+    - name: Require the agent request plus the 2 GiB host reserve
+      ansible.builtin.assert:
+        that:
+          - >-
+            (((cilium_pve_meminfo.stdout_lines | select('match', '^MemAvailable:') | first).split()[1] | int) / 1024)
+            >= (cilium_agent_memory_request_mib + pve_memory_reserve_mib)
+        fail_msg: "Cilium needs its 192 MiB request in addition to pve-g3-2's 2 GiB free-memory reserve."
+
 - name: Install Cilium in secondary migration mode on Talos Kubernetes
   hosts: localhost
   connection: local
@@ -204,3 +225,23 @@
           - deployment/hubble-relay
           - --timeout=300s
       changed_when: false
+
+- name: Verify Cilium memory headroom remains on pve-g3-2
+  hosts: pve-g3-2
+  gather_facts: false
+  vars:
+    pve_memory_reserve_mib: 2048
+  tasks:
+    - name: Read pve-g3-2 memory availability after agent rollout
+      ansible.builtin.command:
+        argv: [cat, /proc/meminfo]
+      register: cilium_pve_meminfo_after
+      changed_when: false
+
+    - name: Require pve-g3-2 to retain the 2 GiB free-memory reserve
+      ansible.builtin.assert:
+        that:
+          - >-
+            (((cilium_pve_meminfo_after.stdout_lines | select('match', '^MemAvailable:') | first).split()[1] | int) / 1024)
+            >= pve_memory_reserve_mib
+        fail_msg: "Cilium must leave pve-g3-2 with at least 2 GiB available memory."
