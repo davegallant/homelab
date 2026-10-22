@@ -29,7 +29,22 @@ jobs:
 
       - name: Run ansible-lint
         working-directory: ansible
-        run: ansible-lint
+        env:
+          ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+        run: |
+          if [ -z "${ANSIBLE_VAULT_PASSWORD:-}" ]; then
+            echo "::error::ANSIBLE_VAULT_PASSWORD is required to lint Talos playbooks"
+            exit 1
+          fi
+
+          vault_pass_file="$(mktemp)"
+          trap 'rm -f "$vault_pass_file"' EXIT
+          cat > "$vault_pass_file" <<'EOF'
+          #!/usr/bin/env bash
+          printf '%s' "$ANSIBLE_VAULT_PASSWORD"
+          EOF
+          chmod 0700 "$vault_pass_file"
+          ANSIBLE_VAULT_PASSWORD_FILE="$vault_pass_file" ansible-lint
 
       - name: Run shellcheck
         run: shellcheck generate-containers-table.sh scripts/*.sh
