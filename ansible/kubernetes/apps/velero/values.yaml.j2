@@ -1,0 +1,52 @@
+image:
+  repository: docker.io/velero/velero:v1.18.2
+  tag: ""
+  digest: sha256:37396519f399536e5f01427d723565ae69294ec3fb5625cf1c87c09eaa9de16b
+
+namespace:
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/enforce-version: v1.37
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/audit-version: v1.37
+    pod-security.kubernetes.io/warn: baseline
+    pod-security.kubernetes.io/warn-version: v1.37
+
+initContainers:
+  - name: velero-plugin-for-aws
+    image: docker.io/velero/velero-plugin-for-aws:v1.14.4@sha256:c85a7fa803569e3128c33e4f5766f84ab156c8d171c9f1dd2715581d45ce98fa
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+kubectl:
+  image:
+    repository: registry.k8s.io/kubectl:v1.37.0
+    tag: ""
+    digest: sha256:5ed410ebac5dc976cc717098994dcdb29bbbd38f6bd65f582311f5be4ba719cf
+
+configuration:
+  backupStorageLocation:
+    - name: default
+      provider: aws
+      bucket: velero
+      default: true
+      credential:
+        name: velero-garage-credentials
+        key: cloud
+      config:
+        region: garage
+        s3ForcePathStyle: "true"
+        s3Url: "{{ velero_garage_s3_url }}"
+  uploaderType: kopia
+  defaultVolumesToFsBackup: true
+
+credentials:
+  useSecret: true
+  existingSecret: velero-garage-credentials
+
+snapshotsEnabled: false
+deployNodeAgent: true
+nodeAgent:
+  disableHostPath: false
