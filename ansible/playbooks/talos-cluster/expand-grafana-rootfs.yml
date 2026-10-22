@@ -15,7 +15,7 @@
       ansible.builtin.assert:
         that:
           - "'hostname: grafana' in grafana_container_config.stdout"
-          - "'rootfs: local-lvm:vm-115-disk-1,size=12G' in grafana_container_config.stdout or 'rootfs: local-lvm:vm-115-disk-1,size=24G' in grafana_container_config.stdout"
+          - "grafana_container_config.stdout is search('rootfs: local-lvm:vm-115-disk-1,size=(12|24)G')"
 
     - name: Read local-lvm capacity
       ansible.builtin.command:

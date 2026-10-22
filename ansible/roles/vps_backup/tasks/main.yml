@@ -7,8 +7,8 @@
       - sqlite3
     state: present
     update_cache: true
-  # Deliberately from Ubuntu repos, not version-pinned: unattended-upgrades
-  # keeps them current, and restic repos are stable across versions.
+    # Deliberately from Ubuntu repos, not version-pinned: unattended-upgrades
+    # keeps them current, and restic repos are stable across versions.
 
 - name: Set restic environment fact
   ansible.builtin.set_fact:
