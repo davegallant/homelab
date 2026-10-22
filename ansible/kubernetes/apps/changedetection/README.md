@@ -21,7 +21,7 @@ Secrets stay in Vault and outside Argo's ownership:
 `changedetection-caddy-external` (from `gitops-secrets.yml`) and the
 bootstrap-only one-use `changedetection-tailscale-auth`.
 
-Backups: Velero Schedule `changedetection-daily` (in the values,
+Backups: Velero Schedule `changedetection` (in the values,
 opt-in mode) with pod annotation
 `backup.velero.io/backup-volumes: datastore`.
 
@@ -99,9 +99,9 @@ kubectl --context admin@homelab apply -f ansible/kubernetes/apps/argocd/applicat
    ```sh
    set -euo pipefail
    kubectl --context admin@homelab -n velero exec deployment/velero -- \
-     /velero backup create --from-schedule changedetection-daily --wait
+     /velero backup create --from-schedule changedetection --wait
    BACKUP="$(kubectl --context admin@homelab -n velero get backups.velero.io \
-     -l velero.io/schedule-name=changedetection-daily -o json \
+     -l velero.io/schedule-name=changedetection -o json \
      | jq -r '.items | sort_by(.metadata.creationTimestamp) | last | .metadata.name')"
    kubectl --context admin@homelab -n velero wait \
      --for=jsonpath='{.status.phase}'=Completed "backup/$BACKUP" --timeout=600s
