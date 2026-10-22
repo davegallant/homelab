@@ -1,0 +1,29 @@
+---
+# This cutover-specific static local PV points at the directory provisioned
+# by the initial lubelogger-data local-path claim. Velero can back up local
+# PVs, while its filesystem backup does not support the original hostPath PV.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: lubelogger-data-local
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  local:
+    path: /var/mnt/local-path/pvc-30e4ec28-b09e-4dc8-8d94-3ade40ef37ce_lubelogger_lubelogger-data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w-2
+  claimRef:
+    namespace: lubelogger
+    name: lubelogger-data-local

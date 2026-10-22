@@ -25,7 +25,7 @@ controllers:
         # the sidecar volumes are excluded by omission (the Schedule
         # is opt-in), and the tailscale identity must never be
         # captured for restore.
-        backup.velero.io/backup-volumes: data
+        backup.velero.io/backup-volumes: data-local
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
@@ -177,6 +177,42 @@ persistence:
         app:
           - path: /App/config
             subPath: config
+            readOnly: true
+          - path: /App/data
+            subPath: data
+            readOnly: true
+          - path: /App/wwwroot/translations
+            subPath: translations
+            readOnly: true
+          - path: /App/wwwroot/documents
+            subPath: documents
+            readOnly: true
+          - path: /App/wwwroot/images
+            subPath: images
+            readOnly: true
+          - path: /App/wwwroot/temp
+            subPath: temp
+            readOnly: true
+          - path: /App/log
+            subPath: log
+            readOnly: true
+          # DataProtection keys: losing them invalidates protected
+          # data (auth cookies), so they ride the same PVC.
+          - path: /root/.aspnet/DataProtection-Keys
+            subPath: keys
+            readOnly: true
+  data-local:
+    type: persistentVolumeClaim
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
+    storageClass: pve-g3-1-local
+    accessMode: ReadWriteOnce
+    size: 2Gi
+    advancedMounts:
+      lubelogger:
+        app:
+          - path: /App/config
+            subPath: config
           - path: /App/data
             subPath: data
           - path: /App/wwwroot/translations
@@ -189,8 +225,6 @@ persistence:
             subPath: temp
           - path: /App/log
             subPath: log
-          # DataProtection keys: losing them invalidates protected
-          # data (auth cookies), so they ride the same PVC.
           - path: /root/.aspnet/DataProtection-Keys
             subPath: keys
   tailscale-state:
