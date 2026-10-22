@@ -31,7 +31,7 @@
         that:
           - "('name: ' ~ talos_worker_vm.name) in talos_worker_config.stdout"
           - >-
-            (talos_worker_config.stdout | regex_findall('(?m)^memory: (\\d+)$')
+            (talos_worker_config.stdout | regex_findall('(?m)^memory: ([0-9]+)$')
             | first | int) in talos_worker_vm.allowed_memory_mib
         fail_msg: >-
           Refusing to resize an unexpected VM or memory size on
@@ -43,7 +43,7 @@
           - >-
             (((talos_host_meminfo.stdout_lines | select('match', '^MemAvailable:') | first).split()[1] | int) / 1024)
             >= (talos_worker_vm.memory_mib -
-            (talos_worker_config.stdout | regex_findall('(?m)^memory: (\\d+)$')
+            (talos_worker_config.stdout | regex_findall('(?m)^memory: ([0-9]+)$')
             | first | int) + 2048)
         fail_msg: >-
           Insufficient available host RAM on {{ inventory_hostname }} for
@@ -58,7 +58,7 @@
           - --timeout
           - "120"
       when: >-
-        (talos_worker_config.stdout | regex_findall('(?m)^memory: (\\d+)$')
+        (talos_worker_config.stdout | regex_findall('(?m)^memory: ([0-9]+)$')
         | first | int) != talos_worker_vm.memory_mib
       changed_when: true
 
@@ -73,7 +73,7 @@
       retries: 24
       delay: 5
       when: >-
-        (talos_worker_config.stdout | regex_findall('(?m)^memory: (\\d+)$')
+        (talos_worker_config.stdout | regex_findall('(?m)^memory: ([0-9]+)$')
         | first | int) != talos_worker_vm.memory_mib
       changed_when: false
 
@@ -86,7 +86,7 @@
           - --memory
           - "{{ talos_worker_vm.memory_mib }}"
       when: >-
-        (talos_worker_config.stdout | regex_findall('(?m)^memory: (\\d+)$')
+        (talos_worker_config.stdout | regex_findall('(?m)^memory: ([0-9]+)$')
         | first | int) != talos_worker_vm.memory_mib
       changed_when: true
 
@@ -97,7 +97,7 @@
           - start
           - "{{ talos_worker_vm.vmid }}"
       when: >-
-        (talos_worker_config.stdout | regex_findall('(?m)^memory: (\\d+)$')
+        (talos_worker_config.stdout | regex_findall('(?m)^memory: ([0-9]+)$')
         | first | int) != talos_worker_vm.memory_mib
       changed_when: true
 
