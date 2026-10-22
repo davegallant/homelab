@@ -87,10 +87,29 @@ kubectl --context admin@homelab apply -f ansible/kubernetes/apps/argocd/applicat
        | kubectl --context admin@homelab -n lubelogger exec -i datacopy -- tar -C /data/${v} -xf -
    done
    kubectl --context admin@homelab -n lubelogger exec datacopy -- chown -R 1000:1000 /data
-   kubectl --context admin@homelab -n lubelogger exec datacopy -- sh -c 'find /data -type f | wc -l; du -sb /data'
-   ssh root@lubelogger 'du -sb /var/lib/docker/volumes/root_*/_data'
+   kubectl --context admin@homelab -n lubelogger exec datacopy -- sh -c '
+   for v in config data translations documents images temp log keys; do
+     dir="/data/$v"
+     printf "%s PVC files: " "$v"
+     find "$dir" -type f | wc -l
+     printf "%s PVC bytes: " "$v"
+     find "$dir" -type f -exec stat -c %s {} \; | awk "{total += \$1} END {print total+0}"
+   done'
+   ssh root@lubelogger '
+   for v in config data translations documents images temp log keys; do
+     dir="/var/lib/docker/volumes/root_${v}/_data"
+     printf "%s LXC files: " "$v"
+     find "$dir" -type f | wc -l
+     printf "%s LXC bytes: " "$v"
+     find "$dir" -type f -exec stat -c %s {} \; | awk "{total += \$1} END {print total+0}"
+   done'
    kubectl --context admin@homelab -n lubelogger delete pod datacopy
    ```
+
+   Compare file count and the sum of regular-file byte sizes for each
+   corresponding PVC subdirectory and LXC volume before continuing.
+   Directory metadata is excluded because the LXC and PVC filesystems
+   can report different directory sizes.
 
 3. Retire the LXC's tailnet node on the Headscale host
    (`headscale nodes delete --identifier <old-lubelogger-id>`).
