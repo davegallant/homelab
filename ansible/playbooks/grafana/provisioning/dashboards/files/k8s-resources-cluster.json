@@ -42,7 +42,7 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "cluster:node_cpu:ratio_rate5m{cluster=\"$cluster\"}",
+          "expr": "1 - avg(rate(node_cpu_seconds_total{job=\"node-exporter\", mode=\"idle\", cluster=\"$cluster\"}[5m]))",
           "instant": true
         }
       ],
@@ -77,7 +77,7 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "sum(namespace_cpu:kube_pod_container_resource_requests:sum{cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"prometheus.scrape.annotated_services\", exported_namespace=\"\",resource=\"cpu\",cluster=\"$cluster\"})",
+          "expr": "sum(kube_pod_container_resource_requests{job=\"prometheus.scrape.annotated_services\", exported_namespace=\"\", resource=\"cpu\", cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"prometheus.scrape.annotated_services\", exported_namespace=\"\", resource=\"cpu\", cluster=\"$cluster\"})",
           "instant": true
         }
       ],
@@ -112,7 +112,7 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "sum(namespace_cpu:kube_pod_container_resource_limits:sum{cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"prometheus.scrape.annotated_services\", exported_namespace=\"\",resource=\"cpu\",cluster=\"$cluster\"})",
+          "expr": "sum(kube_pod_container_resource_limits{job=\"prometheus.scrape.annotated_services\", exported_namespace=\"\", resource=\"cpu\", cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"prometheus.scrape.annotated_services\", exported_namespace=\"\", resource=\"cpu\", cluster=\"$cluster\"})",
           "instant": true
         }
       ],
@@ -147,7 +147,7 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "1 - sum(:node_memory_MemAvailable_bytes:sum{cluster=\"$cluster\"}) / sum(node_memory_MemTotal_bytes{job=\"node-exporter\",cluster=\"$cluster\"})",
+          "expr": "1 - sum(node_memory_MemAvailable_bytes{job=\"node-exporter\", cluster=\"$cluster\"}) / sum(node_memory_MemTotal_bytes{job=\"node-exporter\", cluster=\"$cluster\"})",
           "instant": true
         }
       ],
@@ -182,7 +182,7 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "sum(namespace_memory:kube_pod_container_resource_requests:sum{cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"prometheus.scrape.annotated_services\", exported_namespace=\"\",resource=\"memory\",cluster=\"$cluster\"})",
+          "expr": "sum(kube_pod_container_resource_requests{job=\"prometheus.scrape.annotated_services\", exported_namespace=\"\", resource=\"memory\", cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"prometheus.scrape.annotated_services\", exported_namespace=\"\", resource=\"memory\", cluster=\"$cluster\"})",
           "instant": true
         }
       ],
@@ -217,7 +217,7 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "sum(namespace_memory:kube_pod_container_resource_limits:sum{cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"prometheus.scrape.annotated_services\", exported_namespace=\"\",resource=\"memory\",cluster=\"$cluster\"})",
+          "expr": "sum(kube_pod_container_resource_limits{job=\"prometheus.scrape.annotated_services\", exported_namespace=\"\", resource=\"memory\", cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"prometheus.scrape.annotated_services\", exported_namespace=\"\", resource=\"memory\", cluster=\"$cluster\"})",
           "instant": true
         }
       ],
@@ -267,7 +267,7 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "sum(max by (cluster, namespace, pod, container)(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\"})) by (namespace)",
+          "expr": "sum by (namespace) (rate(container_cpu_usage_seconds_total{job=\"cadvisor\", cluster=\"$cluster\", container!=\"\"}[5m]))",
           "legendFormat": "__auto"
         }
       ],
