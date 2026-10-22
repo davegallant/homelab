@@ -93,8 +93,30 @@ kubectl --context admin@homelab apply -f ansible/kubernetes/apps/argocd/applicat
 6. Verify: pod `3/3` Ready;
    `https://changedetection.tail.davegallant.ca` shows the existing
    watches; trigger one watch check to confirm fetching works; Argo
-   Synced/Healthy; one manual Velero backup completes; delete the
-   spent `changedetection-tailscale-auth` Secret.
+   Synced/Healthy. Create and verify a Velero backup with its datastore
+   PodVolumeBackup:
+
+   ```sh
+   set -euo pipefail
+   kubectl --context admin@homelab -n velero exec deployment/velero -- \
+     /velero backup create --from-schedule changedetection-daily --wait
+   BACKUP="$(kubectl --context admin@homelab -n velero get backups.velero.io \
+     -l velero.io/schedule-name=changedetection-daily -o json \
+     | jq -r '.items | sort_by(.metadata.creationTimestamp) | last | .metadata.name')"
+   kubectl --context admin@homelab -n velero wait \
+     --for=jsonpath='{.status.phase}'=Completed "backup/$BACKUP" --timeout=600s
+   PVBS="$(kubectl --context admin@homelab -n velero \
+     get podvolumebackups.velero.io -l "velero.io/backup-name=$BACKUP" -o json)"
+   PVB="$(jq -er --arg volume datastore '
+     .items as $items
+     | if ($items | length) == 1 and $items[0].spec.volume == $volume
+        and $items[0].status.phase == "Completed"
+       then $items[0].metadata.name
+       else error("expected one Completed datastore PodVolumeBackup") end' <<<"$PVBS")"
+   printf 'Verified backup %s; PodVolumeBackup %s: Completed\n' "$BACKUP" "$PVB"
+   ```
+
+   Delete the spent `changedetection-tailscale-auth` Secret.
 7. Leave the stopped LXC as rollback target until soak completes.
 
 Rollback: `docker compose up -d` on the LXC (re-register its

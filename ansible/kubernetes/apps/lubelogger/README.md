@@ -118,9 +118,30 @@ kubectl --context admin@homelab apply -f ansible/kubernetes/apps/argocd/applicat
    README.
 5. Remove `replicas: 0` from the values, commit, push, approve Sync.
 6. Verify: pod `3/3` Ready; `https://lubelogger.tail.davegallant.ca`
-   shows the existing vehicles/records; Argo Synced/Healthy; one
-   manual Velero backup completes; delete the spent
-   `lubelogger-tailscale-auth` Secret.
+   shows the existing vehicles/records; Argo Synced/Healthy. Create
+   and verify a Velero backup with its data PodVolumeBackup:
+
+   ```sh
+   set -euo pipefail
+   kubectl --context admin@homelab -n velero exec deployment/velero -- \
+     /velero backup create --from-schedule lubelogger-daily --wait
+   BACKUP="$(kubectl --context admin@homelab -n velero get backups.velero.io \
+     -l velero.io/schedule-name=lubelogger-daily -o json \
+     | jq -r '.items | sort_by(.metadata.creationTimestamp) | last | .metadata.name')"
+   kubectl --context admin@homelab -n velero wait \
+     --for=jsonpath='{.status.phase}'=Completed "backup/$BACKUP" --timeout=600s
+   PVBS="$(kubectl --context admin@homelab -n velero \
+     get podvolumebackups.velero.io -l "velero.io/backup-name=$BACKUP" -o json)"
+   PVB="$(jq -er --arg volume data '
+     .items as $items
+     | if ($items | length) == 1 and $items[0].spec.volume == $volume
+        and $items[0].status.phase == "Completed"
+       then $items[0].metadata.name
+       else error("expected one Completed data PodVolumeBackup") end' <<<"$PVBS")"
+   printf 'Verified backup %s; PodVolumeBackup %s: Completed\n' "$BACKUP" "$PVB"
+   ```
+
+   Delete the spent `lubelogger-tailscale-auth` Secret.
 7. Leave the stopped LXC as rollback target until soak completes.
 
 Rollback: `docker compose up -d` on the LXC (re-register its

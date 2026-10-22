@@ -117,8 +117,28 @@ No pod starts; the LXC keeps serving.
    - `https://seerr.tail.davegallant.ca` loads with the existing
      requests/settings present (proof the copied config is live).
    - Argo CD shows the Application Synced / Healthy.
-   - Trigger one backup (`playbooks/talos-cluster/backup-now.yml`
-     pattern) and confirm it completes with the config volume.
+   - Create and verify a Velero backup, including its config
+     PodVolumeBackup:
+
+     ```sh
+     set -euo pipefail
+     kubectl --context admin@homelab -n velero exec deployment/velero -- \
+       /velero backup create --from-schedule seerr-daily --wait
+     BACKUP="$(kubectl --context admin@homelab -n velero get backups.velero.io \
+       -l velero.io/schedule-name=seerr-daily -o json \
+       | jq -r '.items | sort_by(.metadata.creationTimestamp) | last | .metadata.name')"
+     kubectl --context admin@homelab -n velero wait \
+       --for=jsonpath='{.status.phase}'=Completed "backup/$BACKUP" --timeout=600s
+     PVBS="$(kubectl --context admin@homelab -n velero \
+       get podvolumebackups.velero.io -l "velero.io/backup-name=$BACKUP" -o json)"
+     PVB="$(jq -er --arg volume config '
+       .items as $items
+       | if ($items | length) == 1 and $items[0].spec.volume == $volume
+          and $items[0].status.phase == "Completed"
+         then $items[0].metadata.name
+         else error("expected one Completed config PodVolumeBackup") end' <<<"$PVBS")"
+     printf 'Verified backup %s; PodVolumeBackup %s: Completed\n' "$BACKUP" "$PVB"
+     ```
    - Delete the spent key Secret:
      `kubectl --context admin@homelab -n seerr delete secret seerr-tailscale-auth`
 

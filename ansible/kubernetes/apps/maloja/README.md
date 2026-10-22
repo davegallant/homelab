@@ -90,10 +90,31 @@ kubectl --context admin@homelab apply -f ansible/kubernetes/apps/argocd/applicat
    `TS_AUTHKEY`) as in the Seerr README.
 5. Remove `replicas: 0` from the values, commit, push, approve Sync.
 6. Verify: pod `3/3` Ready; `https://maloja.tail.davegallant.ca`
-   shows the existing scrobble history; Argo Synced/Healthy; one
-   manual Velero backup completes; delete the spent
-   `maloja-tailscale-auth` Secret. Send a test scrobble from a client
-   to confirm ingestion works.
+   shows the existing scrobble history; Argo Synced/Healthy. Create
+   and verify a Velero backup with its data PodVolumeBackup:
+
+   ```sh
+   set -euo pipefail
+   kubectl --context admin@homelab -n velero exec deployment/velero -- \
+     /velero backup create --from-schedule maloja-daily --wait
+   BACKUP="$(kubectl --context admin@homelab -n velero get backups.velero.io \
+     -l velero.io/schedule-name=maloja-daily -o json \
+     | jq -r '.items | sort_by(.metadata.creationTimestamp) | last | .metadata.name')"
+   kubectl --context admin@homelab -n velero wait \
+     --for=jsonpath='{.status.phase}'=Completed "backup/$BACKUP" --timeout=600s
+   PVBS="$(kubectl --context admin@homelab -n velero \
+     get podvolumebackups.velero.io -l "velero.io/backup-name=$BACKUP" -o json)"
+   PVB="$(jq -er --arg volume data '
+     .items as $items
+     | if ($items | length) == 1 and $items[0].spec.volume == $volume
+        and $items[0].status.phase == "Completed"
+       then $items[0].metadata.name
+       else error("expected one Completed data PodVolumeBackup") end' <<<"$PVBS")"
+   printf 'Verified backup %s; PodVolumeBackup %s: Completed\n' "$BACKUP" "$PVB"
+   ```
+
+   Delete the spent `maloja-tailscale-auth` Secret. Send a test
+   scrobble from a client to confirm ingestion works.
 7. Leave the stopped LXC as rollback target until soak completes.
 
 Rollback: `docker compose up -d` on the LXC (re-register its
