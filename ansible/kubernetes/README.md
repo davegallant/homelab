@@ -124,7 +124,7 @@ KUBECONFIG="$HOME/.local/share/homelab-talos/kubeconfig" \
 
 The pilot's VM layout is recorded in `cluster/README.md`. Keep the `pve-g3-2`
 memory gate: inspect host availability and worker health before adding
-workloads. `k8s-w-1` has 4 GiB and `k8s-w-2` has 2.5 GiB after the Batch A
+workloads. `k8s-w-1` has 4 GiB and `k8s-w-2` has 2.34 GiB after the Batch A
 workload capacity resize. Homepage's local data resides on `k8s-w-1`;
 loss of that worker
 means the dashboard is down until the worker returns or its data is restored
