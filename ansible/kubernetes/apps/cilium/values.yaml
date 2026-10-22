@@ -12,7 +12,7 @@ policyEnforcementMode: default
 operator:
   replicas: 1
   nodeSelector:
-    kubernetes.io/hostname: k8s-w-1
+    kubernetes.io/hostname: k8s-cp-1
   resources:
     requests:
       cpu: 50m
@@ -71,7 +71,10 @@ hubble:
       limits:
         memory: 128Mi
     nodeSelector:
-      kubernetes.io/hostname: k8s-w-1
+      kubernetes.io/hostname: k8s-cp-1
+    tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
   ui:
     enabled: false
   metrics:
