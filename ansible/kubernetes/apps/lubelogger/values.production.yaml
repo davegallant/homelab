@@ -34,10 +34,7 @@ controllers:
         image:
           repository: ghcr.io/hargata/lubelogger
           tag: v1.4.5
-          # TODO pre-cutover: pin the digest (Sol's review rule).
-          # GHCR was unreachable from the build sandbox; resolve with
-          #   crane digest ghcr.io/hargata/lubelogger:v1.4.5
-          # and add `digest: sha256:...` here before the cutover sync.
+          digest: sha256:e915b53eba78349348c8a1937122d8dccc7eba6f71898eecb2af208bc213fe2e
         probes:
           startup:
             enabled: true
