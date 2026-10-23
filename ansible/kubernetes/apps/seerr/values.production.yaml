@@ -39,13 +39,12 @@ controllers:
         probes:
           startup:
             enabled: true
-            type: HTTP
-            path: /api/v1/status
+            type: TCP
             port: 5055
             spec:
               periodSeconds: 5
-              timeoutSeconds: 3
-              failureThreshold: 24
+              timeoutSeconds: 5
+              failureThreshold: 60
           readiness:
             enabled: true
             type: HTTP
