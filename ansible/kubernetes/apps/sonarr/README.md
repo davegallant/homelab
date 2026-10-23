@@ -186,3 +186,12 @@ source did not exist; the observed source was `/root/sonarr/config`. The LXC
 Compose stack was restarted and is serving again. The media source was
 corrected to `192.168.1.83:/mnt/pool`, and both qBittorrent policy entries
 use `192.168.1.152/32`. No Headscale key or node changes were made.
+
+## Batch D continuation status (2026-10-23)
+
+Fresh API baseline: 67 series and 4,215 episode files. The refreshed config
+copy's per-file path+size manifest diff was empty. The first and replacement
+bootstrap keys each decoded to 88 characters, failing the required 64-character
+assertion; neither was used to activate the pod. Sonarr remains parked at
+`replicas: 0`, its LXC Compose stack is running, and the two unused one-hour
+Headscale keys will expire. No Headscale node was created or deleted.

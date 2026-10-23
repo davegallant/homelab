@@ -191,3 +191,13 @@ restarted and is serving again. The `/mnt` source was corrected to
 `192.168.1.83:/mnt/pool`; `/music` remains `192.168.1.16:/mnt/tank/media/Music`.
 Both qBittorrent policy entries use `192.168.1.152/32`. No Headscale key or
 node changes were made.
+
+## Batch D continuation status (2026-10-23)
+
+Fresh API baseline: 74 artists and 2,528 track files. The refreshed config
+copy's per-file path+size manifest diff was not empty: the existing claim
+retains
+`Sentry/0AC9C6B669F4A6E3E52AD6E77803E19F4810ADA7/__processing/1792783588_18__22860363.envelope`
+(282 bytes), absent from the frozen source. It was preserved. Lidarr remains
+parked at `replicas: 0` and its LXC Compose stack is running. No Headscale key
+was created, and no Headscale node was created or deleted.
