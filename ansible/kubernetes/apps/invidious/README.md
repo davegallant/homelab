@@ -120,3 +120,30 @@ Rollback: `docker compose up -d` on the LXC (its Newt sidecar
 re-registers the public route); bring the cluster pod down via a
 `replicas: 0` commit + Sync so the Newt identity is not claimed
 twice.
+
+## Batch C execution status (2026-10-23)
+
+Invidious is live on Talos; the LXC Compose stack is stopped and its
+playbook is excluded from daily CI with `.no-ci`. Cutover counts were
+1 user and 0 videos. The dump was 16,802,200 bytes
+(SHA-256 `7a1fc10e557488d604b0f3d549190c7f0189c0ba98d7e2ff02cd8f2e2cadd278`),
+and the restored database matched those counts before playback verification.
+The playback check populated one cached video row (`dQw4w9WgXcQ`); the
+live database now has 1 user and 1 video row.
+
+The request fix used the LXC's `docker stats --no-stream` sample:
+Invidious 0.18% CPU / 94.57 MiB, companion 7.47% / 179.8 MiB, and
+Postgres 0.00% / 69.14 MiB. Requests are app 5m/150Mi,
+companion 100m/256Mi (capped at its existing values), database
+5m/105Mi, and Newt 25m/64Mi. The pod requests 135m CPU and 575Mi
+memory and runs on `k8s-w-1`. Both the live static DB PV and the
+read-only rollback snapshot are on that worker; the original w-2 data
+was retained.
+
+The pod is 4/4 Ready, Argo is Synced/Healthy, the Cilium policy is
+Valid, and Newt reports its target healthy. The video API returned
+metadata and 27 formats; a ranged request for a real video returned
+HTTP 206 `video/mp4` bytes from the companion. The public hostname
+still returns HTTP 401 from the external route. Velero backup
+`invidious-daily-20261023151510` is Completed, with its
+`db-data-local` PodVolumeBackup also Completed.

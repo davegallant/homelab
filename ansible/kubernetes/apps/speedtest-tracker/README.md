@@ -134,3 +134,14 @@ tailnet node; bring the cluster pod down via a `replicas: 0` commit
 + Sync so the `speedtest-tracker` tailnet name is not claimed
 twice. Speedtests recorded by the cluster pod after cutover live
 only in its database — restore them back first, or accept the gap.
+
+## Batch C execution status (2026-10-23)
+
+Speedtest Tracker remains on the LXC. The cutover database copy
+verified at 14,391 results, and the config copy matched at 46 files
+and 4,417,588 bytes. Activation was parked because the local volumes
+are pinned to `k8s-w-2`, where the pod could not fit its memory
+request. The LXC stack was restarted; it now has 14,392 results after
+a scheduled run. Headscale still has only the LXC's
+`speedtest-tracker` node; the unused one-time auth key was revoked.
+No Kubernetes backup or test run was recorded.

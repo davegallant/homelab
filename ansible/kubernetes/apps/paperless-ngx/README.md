@@ -7,9 +7,11 @@ definition is `../argocd/applications/paperless-ngx.yaml`. Syncs are
 manual, pruning is off, and deleting the Application preserves the
 workload.
 
-Workload source of truth: `playbooks/paperless-ngx/docker-compose.yml`
-(app `docker.io/paperlessngx/paperless-ngx:3.3.3`, port 8000; broker
-`docker.io/library/redis:8` in the same pod).
+The active workload source of truth is this directory's
+`values.production.yaml` (app `docker.io/paperlessngx/paperless-ngx:3.3.3`,
+port 8000; broker `docker.io/library/redis:8` in the same pod). The
+retired LXC playbook was removed after cutover; its Proxmox container
+is stopped.
 
 Exposure is **public via Pangolin** — the compose pairs the app with
 a Newt sidecar, reproduced in-pod with the *same* Newt identity, so
@@ -117,3 +119,12 @@ re-registers the public route); bring the cluster pod down via a
 twice. Any documents consumed by the cluster pod after cutover exist
 only in the cluster volumes — copy `media`, `data` and `export`
 back before rolling back, or accept losing them.
+
+## Batch C execution status (2026-10-23)
+
+Paperless-ngx is live on Talos; its pod is `3/3` Ready and the public
+URL redirects to `/accounts/login/`. At cutover, all 3 documents had
+OCR text; the `media` volume matched at 10 files and 5,456,971 bytes.
+The `paperless-ngx-daily-20261023145917` backup Completed with
+Completed PodVolumeBackups for `data-local`, `media-local`,
+`consume-local`, and `export-local`.

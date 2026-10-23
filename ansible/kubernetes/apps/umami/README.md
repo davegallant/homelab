@@ -110,3 +110,10 @@ Rollback: `docker compose up -d` on the LXC (its Newt sidecar
 re-registers the public route); bring the cluster pod down via a
 `replicas: 0` commit + Sync so the Newt identity is not claimed
 twice.
+
+## Batch C execution status (2026-10-23)
+
+Umami is live on Talos. Cutover counts matched at 2 websites and
+136,495 website events; the live database now has 136,525 events.
+The `umami-daily-20261023142444` backup Completed with a Completed
+PodVolumeBackup for `db-data-local`. The LXC Compose stack is stopped.
