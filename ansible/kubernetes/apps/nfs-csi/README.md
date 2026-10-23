@@ -26,6 +26,11 @@ standard answer on Talos.
   points at an existing export, exactly like the Homepage local PVs
   but network-backed. Dynamic provisioning is a later decision for the
   first consumer that needs per-PVC directories.
+- `network-policy.yaml` applies a default-deny Cilium policy to the
+  controller pods only. The chart shares `kube-system` with DNS and
+  other cluster services, so a namespace-wide deny there would be unsafe.
+  The privileged node-plugin pods use host networking; their NFS mounts
+  are node traffic and are verified with the fresh PVC smoke test below.
 
 ## Static PV shape (per consumer)
 
