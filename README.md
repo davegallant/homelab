@@ -231,7 +231,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/headscale/headscale | v0.29.5 |
 | docker.io/henrygd/beszel | 0.21.1 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.10.1 |
-| docker.io/jellyfin/jellyfin | 12.2 |
+| docker.io/jellyfin/jellyfin | 12.3 |
 | docker.io/linuxserver/qbittorrent | 5.3.0 |
 | docker.io/traefik | v3.7 |
 | docker.io/twinproduction/gatus | v5.37.0 |
