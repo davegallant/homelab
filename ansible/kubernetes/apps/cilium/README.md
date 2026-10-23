@@ -104,3 +104,12 @@ their existing worker. Expect that node's apps to be unavailable during
 the reboot. Flannel remains installed throughout these transitions.
 The play does not advance to another node or automatically roll back;
 the operator runs the full canary verification before continuing.
+
+`cilium-connectivity.yml` runs the canary's no-policy routing scenarios and
+health tests with strict Hubble flow validation, pinned test images, and
+a temporary privileged test namespace. Dave approved this split on
+2026-10-22 because policy enforcement remains disabled during dual-overlay
+migration. Run it again with `cilium_connectivity_stage=full` after enabling
+policy enforcement to exercise the complete connectivity and policy suite.
+The test namespaces are diagnostic Pod Security exceptions and must be
+removed with the CLI cleanup path after verification.
