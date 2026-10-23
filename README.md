@@ -222,7 +222,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/aceberg/watchyourlan | v2 |
 | docker.io/adguard/adguardhome | v0.107.79 |
 | docker.io/caronc/apprise | 2.0.1 |
-| docker.io/deluan/navidrome | 0.64.2 |
 | docker.io/docker | 29.9.2-dind |
 | docker.io/fosrl/gerbil | 1.5.2 |
 | docker.io/fosrl/newt | 1.19.0 |
@@ -241,15 +240,12 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/linuxserver/radarr | 6.4.4 |
 | docker.io/linuxserver/sonarr | 4.0.20 |
 | docker.io/linuxserver/speedtest-tracker | 1.15.1 |
-| docker.io/mariadb | 13.0.2 |
 | docker.io/paperlessngx/paperless-ngx | 3.3.3 |
 | docker.io/postgres | 18.6 |
-| docker.io/rommapp/romm | 5.4.0 |
 | docker.io/traefik | v3.7 |
 | docker.io/twinproduction/gatus | v5.37.0 |
 | docker.io/valkey/valkey | 9 |
 | docker.io/victoriametrics/victoria-metrics | v1.154.1 |
-| ghcr.io/advplyr/audiobookshelf | 2.37.1 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.6.0.1 |
 | ghcr.io/dispatcharr/dispatcharr | 0.32.0 |
 | ghcr.io/flaresolverr/flaresolverr | v3.5.2 |
