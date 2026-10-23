@@ -7,10 +7,9 @@ definition is `../argocd/applications/speedtest-tracker.yaml`. Syncs
 are manual, pruning is off, and deleting the Application preserves
 the workload.
 
-Workload source of truth: `playbooks/speedtest-tracker/docker-compose.yml`
-(app `docker.io/linuxserver/speedtest-tracker:1.15.1`, port 80;
-database `docker.io/postgres:18.6`; notification service
-`docker.io/caronc/apprise:2.0.1` — all in one pod here).
+The Kubernetes workload is defined by `values.production.yaml`. The former
+LXC Compose stack used Speedtest Tracker 1.15.1, PostgreSQL 18.6, and
+Apprise 2.0.1; its playbook was retired after cutover.
 
 Exposure is **tailnet-only**, mirroring the RomM pod: a userspace
 Tailscale sidecar TCP-forwards 443 to an in-pod Caddy (8443), which
@@ -211,3 +210,28 @@ the failed bootstrap Secret was deleted, and Headscale key ID 59 was expired.
 The LXC Compose stack remains running (`speedtest-tracker`, `speedtest-db`,
 `apprise`). No tailnet URL, manual test, or Velero backup gate was passed.
 Data and the static `k8s-w-1` PV bindings were not changed.
+
+## Retry 4 completion (2026-10-23)
+
+The bootstrap key was created with the repository-documented pipeline:
+extract the JSON `key` using `jq -sr` and strip `\r\n` before piping it
+into `kubectl --from-file`. The resulting Secret value was 88 bytes; the
+sidecar accepted it, and one-use key ID 60 registered the pod as Headscale
+node ID 61. The prior malformed key ID 59 was expired.
+
+The pod is `5/5` Ready on `k8s-w-1` with zero restarts. The old LXC Headscale
+node ID 1 was deleted after both nodes were online; the pod node was renamed
+from `speedtest-tracker-1` to `speedtest-tracker` so the existing tailnet
+hostname and DNS resolve to `100.100.0.58`. No other nodes or ACLs changed.
+The HTTPS dashboard answered at the established tailnet URL. A manual UI
+speedtest completed as result 14425 (346.05 Mbps down, 521.78 Mbps up,
+13 ms ping). The cluster and LXC each had 14,394 results immediately before
+the LXC stack was stopped. The config copy remains verified at 46 files and
+4,446,440 bytes; the three Apprise directories were empty on both sides.
+
+Argo CD is Synced/Healthy and the CiliumNetworkPolicy is Valid. Velero backup
+`speedtest-tracker-daily-20261023171535` completed, with Completed
+PodVolumeBackups for `apprise-local`, `config-local`, and `db-data-local`.
+The LXC Compose stack was stopped on Proxmox CT 103 (`pve-g3-2`); its data
+remains on disk. Its Ansible playbook and import from `playbooks/main.yml`
+were removed so daily CI no longer starts the retired stack.
