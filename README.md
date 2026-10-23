@@ -233,14 +233,12 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/henrygd/beszel | 0.21.1 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.10.1 |
 | docker.io/jellyfin/jellyfin | 12.2 |
-| docker.io/library/redis | 8 |
 | docker.io/linuxserver/lidarr | 3.1.0 |
 | docker.io/linuxserver/prowlarr | 2.6.5 |
 | docker.io/linuxserver/qbittorrent | 5.3.0 |
 | docker.io/linuxserver/radarr | 6.4.4 |
 | docker.io/linuxserver/sonarr | 4.0.20 |
 | docker.io/linuxserver/speedtest-tracker | 1.15.1 |
-| docker.io/paperlessngx/paperless-ngx | 3.3.3 |
 | docker.io/postgres | 18.6 |
 | docker.io/traefik | v3.7 |
 | docker.io/twinproduction/gatus | v5.37.0 |
