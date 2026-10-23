@@ -29,8 +29,7 @@ controllers:
   speedtest-tracker:
     type: deployment
     strategy: Recreate
-    # Parked: Tailscale requested the Kubernetes API client without a service-account token.
-    replicas: 0
+    replicas: 1
     pod:
       annotations:
         # Opt-in filesystem backup of the state volumes, with a
