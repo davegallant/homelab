@@ -1,0 +1,75 @@
+---
+- name: Apply one committed Cilium policy from its workload's repository home
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    talos_kube_context: ""
+    cilium_policy_namespace: ""
+    cilium_policy_source: values
+    cilium_policy_path: ""
+    cilium_policy_values_path: ""
+    cilium_policy_values_key: defaultDenyNetworkPolicy
+  tasks:
+    - name: Require an explicit cluster and workload namespace
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - cilium_policy_namespace is match('^[a-z0-9][a-z0-9-]*$')
+          - cilium_policy_source in ['values', 'manifest']
+          - >-
+            (cilium_policy_values_path | length > 0)
+            if cilium_policy_source == 'values'
+            else (cilium_policy_path | length > 0)
+
+    - name: Read the app-template policy from its production values
+      ansible.builtin.set_fact:
+        cilium_policy_manifest: >-
+          {{ (lookup('ansible.builtin.file', playbook_dir + '/../../kubernetes/'
+          + cilium_policy_values_path) | from_yaml).rawResources
+          [cilium_policy_values_key].manifest }}
+      when: cilium_policy_source == 'values'
+
+    - name: Read a bespoke policy manifest from its workload directory
+      ansible.builtin.set_fact:
+        cilium_policy_manifest: "{{ lookup('ansible.builtin.file', playbook_dir + '/../../kubernetes/' + cilium_policy_path) | from_yaml }}"
+      when: cilium_policy_source == 'manifest'
+
+    - name: Require a default-deny Cilium policy for this namespace
+      ansible.builtin.assert:
+        that:
+          - cilium_policy_manifest.apiVersion == 'cilium.io/v2'
+          - cilium_policy_manifest.kind == 'CiliumNetworkPolicy'
+          - cilium_policy_manifest.metadata.namespace == cilium_policy_namespace
+          - cilium_policy_manifest.spec.endpointSelector is defined
+          - cilium_policy_manifest.spec.ingress is defined
+          - cilium_policy_manifest.spec.egress is defined
+
+    - name: Apply the policy with the repository Ansible flow
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", apply, -f, -]
+        stdin: "{{ cilium_policy_manifest | to_nice_yaml }}"
+      changed_when: true
+
+    - name: Read the Cilium policy status from every node
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - "{{ cilium_policy_namespace }}"
+          - get
+          - "ciliumnetworkpolicy/{{ cilium_policy_manifest.metadata.name }}"
+          - -o
+          - json
+      register: cilium_policy_status
+      until: >-
+        (cilium_policy_status.stdout | from_json).status.conditions | default([])
+        | selectattr('type', 'equalto', 'Valid') | selectattr('status', 'equalto', 'True') | list | length > 0
+        and (cilium_policy_status.stdout | from_json).status.derivativePolicies | default({}) | length > 0
+        and (cilium_policy_status.stdout | from_json).status.derivativePolicies.values()
+        | rejectattr('ok', 'equalto', true) | list | length == 0
+      retries: 60
+      delay: 5
+      changed_when: false
