@@ -175,8 +175,6 @@ manifest diff was empty. Prowlarr application tests for Sonarr, Radarr, and
 Lidarr pass. Velero backup `prowlarr-daily-20261023203342` is Completed, with
 the `config-local` PodVolumeBackup Completed.
 
-The media apps' qBittorrent test is the remaining batch gate. The saved host
-still resolves to `qbittorrent.tail.davegallant.ca:443` from their pods. The
-qBittorrent Compose file publishes its WebUI only on `127.0.0.1:8080`, so the
-required LAN endpoint cannot answer without a qBittorrent LXC bind/firewall
-change. qBittorrent was not modified.
+Prowlarr does not use qBittorrent. All three media apps' qBittorrent tests
+pass through their Tailscale sidecar's outbound HTTP proxy; qBittorrent stays
+on its LXC unchanged.

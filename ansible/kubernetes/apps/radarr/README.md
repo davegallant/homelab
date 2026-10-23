@@ -190,11 +190,9 @@ diff was empty. Hardlink proof returned link count 2. Velero backup
 `radarr-daily-20261023203811` is Completed, with the `config-local`
 PodVolumeBackup Completed. Argo is Synced and Healthy.
 
-The qBittorrent download-client test currently fails: the saved host
-`qbittorrent.tail.davegallant.ca:443` does not resolve from the pod. The qBittorrent
-Compose file binds its WebUI to `127.0.0.1:8080`, so the required LAN endpoint
-cannot answer without a qBittorrent LXC bind/firewall change. qBittorrent was
-not modified.
+The qBittorrent download-client test passes (`isValid: true`, HTTP 200). The
+app uses its Tailscale sidecar's outbound HTTP proxy for tailnet HTTP(S); cluster
+services bypass it via `NO_PROXY`. qBittorrent remains on its LXC unchanged.
 
 Substitutions: qBittorrent policy `192.168.1.152/32`; media export
 `192.168.1.83:/mnt/pool`.

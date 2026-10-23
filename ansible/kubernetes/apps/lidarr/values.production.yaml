@@ -10,11 +10,12 @@
 # Lidarr on 127.0.0.1:8686, replacing the LXC's host Caddy role.
 # The tailnet URL is unchanged.
 #
-# Batch D design note: qBittorrent does NOT move with the *arr
-# suite. It keeps its LXC, its static LAN IP, and its OPNsense →
-# Mullvad policy route. This pod reaches it over the LAN exactly
-# as the LXC does today; the CiliumNetworkPolicy below carries the
-# one new rule that split requires (egress to qBittorrent's API).
+# Batch D design note: qBittorrent stays on its LXC, with its static
+# LAN IP and OPNsense → Mullvad policy route. The saved client endpoint
+# remains qbittorrent.tail.davegallant.ca:443. This app uses its own
+# userspace Tailscale sidecar's HTTP proxy for tailnet HTTP(S); cluster
+# service traffic bypasses that proxy. The policy below retains the
+# narrow LAN exception recorded during cutover.
 #
 # The media tree stays on TrueNAS (static NFS claim lidarr-media,
 # see storage.yaml), mounted at /mnt — the identical path the LXC
@@ -30,10 +31,8 @@
 # credentials live in its config.xml, which arrives with the copied
 # /config.
 #
-# CUTOVER SUBSTITUTION (README step 0): the qBittorrent egress rule
-# below uses 192.168.1.152/32 (TEST-NET-3, unroutable — fails safe).
-# Replace BOTH occurrences with qBittorrent's real static LAN IP
-# before the staging commit.
+# CUTOVER SUBSTITUTION (README step 0): both qBittorrent policy
+# entries use its static LAN IP, 192.168.1.152/32.
 controllers:
   lidarr:
     type: deployment
@@ -294,7 +293,7 @@ rawResources:
         name: default-deny
         namespace: lidarr
       spec:
-        description: Default deny with metadata-fetch egress, cluster DNS, Prowlarr access, and a single LAN exception for the qBittorrent API on its LXC.
+        description: Default deny with metadata-fetch egress, cluster DNS, Prowlarr access, the Tailscale HTTP proxy, and one narrow qBittorrent LAN exception.
         endpointSelector: {}
         ingress:
           - fromEndpoints:
@@ -331,11 +330,8 @@ rawResources:
               - ports:
                   - port: "9696"
                     protocol: TCP
-          # qBittorrent stays on its LXC: the download-client API is
-          # the one LAN destination this pod may reach. SUBSTITUTE
-          # the real static IP for 192.168.1.152/32 at cutover (README
-          # step 0) — TEST-NET-3 is unroutable, so an unsubstituted
-          # policy fails safe (test fails, nothing leaks).
+          # Narrow LAN exception retained from cutover. The saved
+          # download-client endpoint uses the Tailscale sidecar proxy.
           - toCIDRSet:
               - cidr: 192.168.1.152/32
             toPorts:
