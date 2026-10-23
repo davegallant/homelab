@@ -124,11 +124,7 @@ persistence:
             readOnly: true
   data-local:
     type: persistentVolumeClaim
-    annotations:
-      argocd.argoproj.io/ignore-healthcheck: "true"
-    storageClass: pve-g3-1-local
-    accessMode: ReadWriteOnce
-    size: 5Gi
+    existingClaim: navidrome-data-local
     advancedMounts:
       navidrome:
         app:

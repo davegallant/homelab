@@ -116,13 +116,14 @@ from a debug pod before scheduling the cutover.
    excluded. Mismatch → debug and re-copy; if it will not verify,
    restart the LXC stack, leave Navidrome serving there, and report.
 
-   Then bind the copied directory through the repo-managed static local PV in
-   `data-local-pv.yaml`, which uses the dynamic claim's provisioned path and
-   node. Add the `data-local` claim to the values and keep the original
-   `navidrome` claim mounted read-only at `/mnt/navidrome-rollback-data` —
-   the Batch A post-cutover shape. Commit and push the values and PV, apply
-   the PV, and manually Sync while `replicas: 0` remains set. Confirm
-   `navidrome-data-local` is Bound before continuing.
+   Then bind the copied directory through the repo-managed static local PV and
+   claim in `data-local-pv.yaml`, which use the dynamic claim's provisioned
+   path and node. The values use `navidrome-data-local` for the app and keep
+   the original `navidrome` claim mounted read-only at
+   `/mnt/navidrome-rollback-data` — the Batch A post-cutover shape. Commit
+   and push the values and PV/PVC, apply the manifest, and manually Sync while
+   `replicas: 0` remains set. Confirm `navidrome-data-local` is Bound before
+   continuing.
 
 3. There is no Headscale gate for this app (it is public); the gate
    is the cutover approval itself.

@@ -27,3 +27,18 @@ spec:
   claimRef:
     namespace: navidrome
     name: navidrome-data-local
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: navidrome-data-local
+  namespace: navidrome
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  volumeName: navidrome-data-local
