@@ -40,6 +40,15 @@ spec:
       namespace: audiobookshelf
     - server: https://kubernetes.default.svc
       namespace: romm
+    # Batch C: the Postgres-pattern batch (authored 2026-10-23).
+    - server: https://kubernetes.default.svc
+      namespace: umami
+    - server: https://kubernetes.default.svc
+      namespace: paperless-ngx
+    - server: https://kubernetes.default.svc
+      namespace: invidious
+    - server: https://kubernetes.default.svc
+      namespace: speedtest-tracker
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
     - group: apps

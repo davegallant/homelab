@@ -1,0 +1,18 @@
+---
+# Storage for umami, applied once by hand (see README.md) and
+# deliberately NOT managed by Argo CD: the homelab AppProject allows
+# namespace-scoped resources only, so namespaces and static volumes
+# stay an Ansible / kubectl concern.
+#
+# Umami has no static volumes at staging: its only state is the
+# Postgres data directory, a chart-managed local-path PVC declared
+# in values.production.yaml (volume db-data). This file creates just
+# the namespace; the static local-PV bind happens at cutover (README).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: umami
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
