@@ -9,8 +9,8 @@ backups. The Talos credentials and kubeconfig live outside Git under
 | VM | Proxmox host | Role | vCPU | RAM | Disk | Storage |
 |---|---|---|---:|---:|---:|---|
 | `k8s-cp-1` | `pve-g3-1` | control plane | 2 | 4 GiB | 25 GiB | `moredata` |
-| `k8s-w-1` | `pve-g3-1` | worker | 2 | 4 GiB | 25 GiB | `moredata` |
-| `k8s-w-2` | `pve-g3-2` | worker | 2 | 3.5 GiB | 25 GiB | `local-lvm` |
+| `k8s-w-1` | `pve-g3-1` | worker | 2 | 8 GiB | 25 GiB | `moredata` |
+| `k8s-w-2` | `pve-g3-2` | worker | 2 | 4.5 GiB | 25 GiB | `local-lvm` |
 
 `k8s-w-2` was initially provisioned at 1.5 GiB, increased to 2 GiB, and later
 to 2.23 GiB after workload scheduling showed the smaller size left too little
@@ -20,9 +20,23 @@ w-2 was increased to 3 GiB after freeing Proxmox host memory and rechecking the
 same 2 GiB reserve. On the same day, w-2 was increased to 3.5 GiB to make room
 for the RomM pod while retaining that host reserve. `k8s-w-1` was increased
 from 3 GiB to 4 GiB at the same time so both workers retain room for
-application and backup workloads. The control plane keeps the
+application and backup workloads. Later on 2026-10-23, w-1 was increased
+to 8 GiB for the relocated workloads. A live audit found sustained memory
+reclaim stalls on w-2 after RomM moved away, so w-2 was increased from
+3.5 GiB to 4.5 GiB through `resize-worker.yml`, after rechecking the
+2 GiB Proxmox host reserve. The control plane keeps the
 generated `node-role.kubernetes.io/control-plane:NoSchedule` taint; this is a
 two-host pilot, not an HA control plane.
+
+The post-resize observation on 2026-10-23 ran from 18:19 to 18:24 UTC.
+All deployments recovered, all 35 Cilium endpoints were ready, and no
+container restart counts increased after workload recovery. w-2's full
+memory PSI `avg60` fell from 4.84% before the resize to 0.00%; its final
+available memory was about 1.75 GiB. `pve-g3-2` retained about 2.48 GiB
+available. This short observation does not replace validation during the
+next OCR, scan, and backup peaks. A protected, checksum-verified off-host
+etcd snapshot was taken before the resize:
+`etcd-homelab-20261023T181653Z.snap`.
 
 The node addresses are `.210`, `.211`, and `.212` on `192.168.1.0/24`, outside
 OPNsense's active `.2-.99` DHCP pool. The gateway is `.1`, and Talos resolves

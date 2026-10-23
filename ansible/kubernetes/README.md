@@ -147,8 +147,9 @@ credentials rather than reusing them.
 
 The pilot's VM layout is recorded in `cluster/README.md`. Keep the `pve-g3-2`
 memory gate: inspect host availability and worker health before adding
-workloads. `k8s-w-1` has 4 GiB; `k8s-w-2` was raised from 2.23 GiB after
-Batch A to 3.5 GiB for RomM.
+workloads. `k8s-w-1` has 8 GiB for the relocated workloads. After RomM
+moved to w-1, `k8s-w-2` was raised from 3.5 GiB to 4.5 GiB to address
+sustained memory reclaim stalls while retaining the 2 GiB host reserve.
 Homepage's local data resides on `k8s-w-1`;
 loss of that worker
 means the dashboard is down until the worker returns or its data is restored
