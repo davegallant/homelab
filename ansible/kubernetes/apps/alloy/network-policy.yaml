@@ -1,0 +1,43 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: default-deny
+  namespace: alloy
+spec:
+  description: Default deny with Kubernetes discovery, kubelet metrics, Loki, and VictoriaMetrics.
+  endpointSelector: {}
+  ingress:
+    - fromEntities:
+        - host
+      toPorts:
+        - ports:
+            - port: "12345"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+    - toEntities:
+        - cluster
+    - toEntities:
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "10250"
+              protocol: TCP
+    - toCIDR:
+        - 192.168.1.56/32
+      toPorts:
+        - ports:
+            - port: "3100"
+              protocol: TCP
+            - port: "8428"
+              protocol: TCP
