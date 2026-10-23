@@ -1,0 +1,429 @@
+---
+# Speedtest Tracker — Argo CD production values (bjw-s app-template 5.3.0).
+# Source of truth for the workload: playbooks/speedtest-tracker/docker-compose.yml
+# (app docker.io/linuxserver/speedtest-tracker 1.15.1, port 80;
+# database docker.io/postgres 18.6 and a caronc/apprise 2.0.1
+# notification service as further containers in the same pod).
+# Tailnet-only: exposure mirrors the RomM pod — userspace Tailscale
+# sidecar TCP-forwarding 443 to an in-pod Caddy (8443), which
+# terminates a real certificate (Cloudflare DNS-01) and proxies to
+# the app on 127.0.0.1:80, replacing the LXC's tailnet_caddy role.
+# The tailnet URL is unchanged.
+#
+# The compose reaches the database by service name; in-pod
+# DB_HOST is 127.0.0.1. Apprise stays a separate container on
+# 127.0.0.1:8000, as the app expects a notification service URL.
+#
+# Secrets stay outside Git and outside Argo's ownership:
+#   speedtest-tracker-caddy-external  (key cloudflare_api_token)
+#                                     — gitops-secrets.yml
+#   speedtest-tracker-external        (DB_USERNAME, DB_PASSWORD,
+#                                      APP_KEY, POSTGRES_USER,
+#                                      POSTGRES_PASSWORD)
+#                        — playbooks/talos-cluster/speedtest-secret.yml
+#   speedtest-tracker-tailscale-auth  (key TS_AUTHKEY, one-use)
+#                                     — bootstrap only
+# The app and db containers both envFrom-import the one app Secret
+# (each ignores the other's keys): one Secret, no renames.
+controllers:
+  speedtest-tracker:
+    type: deployment
+    strategy: Recreate
+    # Staging: the pod starts at cutover, once the database has been
+    # restored and the config copied (README).
+    replicas: 0
+    pod:
+      annotations:
+        # Opt-in filesystem backup of the state volumes, with a
+        # consistent logical dump written into the database volume
+        # first so the filesystem backup carries a restorable copy.
+        backup.velero.io/backup-volumes: config,db-data,apprise,web-certs
+        pre.hook.backup.velero.io/container: db
+        pre.hook.backup.velero.io/command: '["/bin/sh","-c","PGPASSWORD=$POSTGRES_PASSWORD pg_dump -U $POSTGRES_USER
+          -d $POSTGRES_DB > /var/lib/postgresql/speedtest-backup.sql"]'
+    containers:
+      app:
+        image:
+          repository: docker.io/linuxserver/speedtest-tracker
+          tag: 1.15.1
+          digest: sha256:14b7850d1a0c06cc49e14546717f93996ad44e90127bb01418af293ae2d98fc7
+        envFrom:
+          - secretRef:
+              name: speedtest-tracker-external
+        env:
+          PUID: "1000"
+          PGID: "1000"
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: "5432"
+          DB_DATABASE: speedtest_tracker
+          SPEEDTEST_SCHEDULE: "*/60 * * * *"
+        probes:
+          startup:
+            enabled: true
+            type: HTTP
+            path: /admin/login
+            port: 80
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /admin/login
+            port: 80
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: TCP
+            port: 80
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            # A running speedtest saturates CPU briefly by design.
+            cpu: 2000m
+            memory: 1Gi
+      db:
+        image:
+          repository: docker.io/library/postgres
+          tag: "18.6"
+          digest: sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29d6761ddb6
+        envFrom:
+          - secretRef:
+              name: speedtest-tracker-external
+        env:
+          POSTGRES_DB: speedtest_tracker
+        probes:
+          startup:
+            enabled: true
+            type: TCP
+            port: 5432
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: TCP
+            port: 5432
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: TCP
+            port: 5432
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+      apprise:
+        image:
+          repository: docker.io/caronc/apprise
+          tag: 2.0.1
+          digest: sha256:0b2913b15c8eb47c25345722985ffbfae701326edde21909c205d296d62dd52c
+        env:
+          APPRISE_STATEFUL_MODE: simple
+          APPRISE_WORKER_COUNT: "1"
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+        probes:
+          startup:
+            enabled: true
+            type: TCP
+            port: 8000
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: TCP
+            port: 8000
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: TCP
+            port: 8000
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 25m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      tailscale:
+        image:
+          repository: ghcr.io/tailscale/tailscale
+          tag: v1.104.1
+          digest: sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
+        envFrom:
+          # The bootstrap-created Secret holds exactly one key
+          # (TS_AUTHKEY), imported here as the env var of that name.
+          # Optional: once the identity persists in tailscale-state,
+          # the Secret is deleted and the sidecar runs without it.
+          - secretRef:
+              name: speedtest-tracker-tailscale-auth
+              optional: true
+        env:
+          TS_AUTH_ONCE: "true"
+          TS_HOSTNAME: speedtest-tracker
+          TS_STATE_DIR: /var/lib/tailscale
+          # State lives on the local PVC, so disable Kubernetes Secret storage.
+          TS_KUBE_SECRET: "false"
+          TS_USERSPACE: "true"
+          TS_EXTRA_ARGS: --login-server=https://hs.davegallant.ca --accept-dns=false
+          TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 192Mi
+      caddy:
+        image:
+          repository: ghcr.io/davegallant/homelab-caddy-cloudflare
+          tag: 2.11.6-a8737d0
+          digest: sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
+        command:
+          - caddy
+        args:
+          - run
+          - --config
+          - /etc/caddy/Caddyfile
+          - --adapter
+          - caddyfile
+        resources:
+          requests:
+            cpu: 25m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+
+service:
+  speedtest-tracker:
+    controller: speedtest-tracker
+    ports:
+      http:
+        port: 80
+
+configMaps:
+  # Keys are short on purpose: bjw-s names the rendered ConfigMaps
+  # <release>-<key>, and the persistence entries below reference the
+  # resulting speedtest-tracker-tailscale / speedtest-tracker-caddy
+  # names.
+  tailscale:
+    data:
+      serve-config.json: |
+        {
+          "TCP": {
+            "443": {
+              "TCPForward": "127.0.0.1:8443"
+            }
+          }
+        }
+  caddy:
+    data:
+      Caddyfile: |
+        {
+          auto_https disable_redirects
+          https_port 8443
+          tls_resolvers 1.1.1.1
+          servers {
+            protocols h1 h2
+          }
+        }
+
+        speedtest-tracker.tail.davegallant.ca {
+          bind 127.0.0.1
+
+          tls {
+            dns cloudflare {file./run/secrets/cloudflare_api_token}
+            propagation_delay 30s
+            propagation_timeout -1
+          }
+
+          reverse_proxy 127.0.0.1:80
+        }
+
+persistence:
+  config:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    advancedMounts:
+      speedtest-tracker:
+        app:
+          - path: /config
+  web-certs:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 256Mi
+    advancedMounts:
+      speedtest-tracker:
+        app:
+          - path: /etc/ssl/web
+  db-data:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 2Gi
+    advancedMounts:
+      speedtest-tracker:
+        db:
+          - path: /var/lib/postgresql
+  apprise:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    advancedMounts:
+      speedtest-tracker:
+        apprise:
+          - path: /config
+            subPath: config
+          - path: /plugin
+            subPath: plugin
+          - path: /attach
+            subPath: attach
+  tailscale-state:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 64Mi
+    advancedMounts:
+      speedtest-tracker:
+        tailscale:
+          - path: /var/lib/tailscale
+  tailscale-config:
+    type: configMap
+    name: speedtest-tracker-tailscale
+    advancedMounts:
+      speedtest-tracker:
+        tailscale:
+          - path: /etc/tailscale/serve-config.json
+            subPath: serve-config.json
+            readOnly: true
+  caddy-config:
+    type: configMap
+    name: speedtest-tracker-caddy
+    advancedMounts:
+      speedtest-tracker:
+        caddy:
+          - path: /etc/caddy/Caddyfile
+            subPath: Caddyfile
+            readOnly: true
+  caddy-state:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 256Mi
+    advancedMounts:
+      speedtest-tracker:
+        caddy:
+          - path: /data
+  caddy-runtime:
+    type: emptyDir
+    advancedMounts:
+      speedtest-tracker:
+        caddy:
+          - path: /config
+  caddy-secret:
+    type: secret
+    name: speedtest-tracker-caddy-external
+    advancedMounts:
+      speedtest-tracker:
+        caddy:
+          - path: /run/secrets/cloudflare_api_token
+            subPath: cloudflare_api_token
+            readOnly: true
+
+rawResources:
+  daily:
+    enabled: true
+    manifest:
+      apiVersion: velero.io/v1
+      kind: Schedule
+      metadata:
+        name: speedtest-tracker-daily
+        namespace: velero
+      spec:
+        schedule: "0 3 * * *"
+        template:
+          ttl: 336h
+          includedNamespaces:
+            - speedtest-tracker
+          excludedResources:
+            - secrets
+          defaultVolumesToFsBackup: false
+          snapshotVolumes: false
+          storageLocation: default
+
+  defaultDenyNetworkPolicy:
+    enabled: true
+    manifest:
+      apiVersion: cilium.io/v2
+      kind: CiliumNetworkPolicy
+      metadata:
+        name: default-deny
+        namespace: speedtest-tracker
+      spec:
+        description: Default deny with internet fetch access, cluster DNS, and explicit internal-range denies.
+        endpointSelector: {}
+        ingress:
+          - fromEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: speedtest-tracker
+        egress:
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: kube-system
+                  k8s:k8s-app: kube-dns
+            toPorts:
+              - ports:
+                  - port: "53"
+                    protocol: UDP
+                  - port: "53"
+                    protocol: TCP
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: speedtest-tracker
+          - toEntities:
+              - cluster
+          - toEntities:
+              - world
+        egressDeny:
+          - toCIDR:
+              - 192.168.1.0/24
+              - 10.96.0.0/12
+              - 10.245.0.0/16
