@@ -18,9 +18,6 @@ controllers:
   navidrome:
     type: deployment
     strategy: Recreate
-    # STAGING: 0 until the LXC data dir has been copied into the PVC
-    # (see README.md). The cutover commit removes this line.
-    replicas: 0
     pod:
       annotations:
         # Opt-in filesystem backup of the app data volume only; the
