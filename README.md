@@ -227,12 +227,12 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/docker | 29.9.2-dind |
 | docker.io/fosrl/gerbil | 1.5.2 |
 | docker.io/fosrl/newt | 1.19.0 |
-| docker.io/fosrl/pangolin | 1.25.1 |
+| docker.io/fosrl/pangolin | 1.25.2 |
 | docker.io/gotify/server | 3.1.1 |
 | docker.io/grafana/grafana | 13.2.4 |
 | docker.io/grafana/loki | 3.7.9 |
 | docker.io/headscale/headscale | v0.29.5 |
-| docker.io/henrygd/beszel | 0.21.0 |
+| docker.io/henrygd/beszel | 0.21.1 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.10.1 |
 | docker.io/jellyfin/jellyfin | 12.2 |
 | docker.io/krateng/maloja | 3.2.9 |
@@ -264,6 +264,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | ghcr.io/seerr-team/seerr | v3.5.1 |
 | ghcr.io/seriousm4x/upsnap | 5.7.2 |
 | ghcr.io/umami-software/umami | 3.4.0 |
-| quay.io/invidious/invidious | 2026.10.19-efcfb1e |
+| quay.io/invidious/invidious | 2026.10.23-4a271da |
 | quay.io/invidious/invidious-companion | 2026.10.18-fcb0456 |
 <!-- DOCKER_SERVICES_END -->
