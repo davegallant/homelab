@@ -118,7 +118,10 @@ from a debug pod before scheduling the cutover.
 
    Then bind the copied directories through repo-managed static
    local PVs (the Batch A post-cutover shape, following
-   `seerr/config-local-pv.yaml`) in a follow-up commit.
+   `seerr/config-local-pv.yaml`) in a follow-up commit. The
+   `state-local-pv.yaml` manifest binds the `*-local` claims; the
+   original local-path claims remain declared on read-only paths for
+   Argo ownership.
 
 4. **Dave gate — the only one.** Retire the LXC's tailnet node on
    the Headscale host (`headscale nodes delete --identifier
@@ -151,9 +154,10 @@ from a debug pod before scheduling the cutover.
    against IGDB succeeds (world egress); Argo Synced/Healthy.
    Delete the spent `romm-tailscale-auth` Secret. Create and verify
    a Velero backup from schedule `romm-daily` whose PodVolumeBackups
-   cover `mysql-data`, `config`, `resources`, and `redis-data`,
-   all Completed (adapt the script in the Navidrome README:
-   schedule label `romm-daily`, expect four PodVolumeBackups).
+   cover `mysql-data-local`, `config-local`, `resources-local`, and
+   `redis-data-local`, all Completed (adapt the script in the
+   Navidrome README: schedule label `romm-daily`, expect four
+   PodVolumeBackups).
 7. Leave the stopped LXC as rollback target until soak completes.
 
 Rollback: the LXC's database was only ever read (dump), never

@@ -1,0 +1,166 @@
+---
+# These static local PVs bind the copied state directories on k8s-w-2 so
+# Velero can create PodVolumeBackups for RomM's mutable data.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: romm-config-local
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  local:
+    path: /var/mnt/local-path/pvc-c439162a-2849-496d-865a-95a7574aa0ca_romm_romm-config
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w-2
+  claimRef:
+    namespace: romm
+    name: romm-config-local
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: romm-config-local
+  namespace: romm
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  volumeName: romm-config-local
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: romm-resources-local
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  local:
+    path: /var/mnt/local-path/pvc-cc33ac90-d197-430e-9ac1-4773eb5cd41a_romm_romm-resources
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w-2
+  claimRef:
+    namespace: romm
+    name: romm-resources-local
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: romm-resources-local
+  namespace: romm
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  volumeName: romm-resources-local
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: romm-redis-data-local
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  local:
+    path: /var/mnt/local-path/pvc-4f059871-1504-4d11-9210-e3996e74a4b1_romm_romm-redis-data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w-2
+  claimRef:
+    namespace: romm
+    name: romm-redis-data-local
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: romm-redis-data-local
+  namespace: romm
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  volumeName: romm-redis-data-local
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: romm-mysql-data-local
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  local:
+    path: /var/mnt/local-path/pvc-d79645c1-bb6e-475a-a746-7c2f6c1def3a_romm_romm-mysql-data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w-2
+  claimRef:
+    namespace: romm
+    name: romm-mysql-data-local
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: romm-mysql-data-local
+  namespace: romm
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  volumeName: romm-mysql-data-local
