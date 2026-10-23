@@ -1,0 +1,2 @@
+# Umami has migrated to Talos; exclude its stopped LXC playbook from
+# the all-host CI matrix and daily cron.
