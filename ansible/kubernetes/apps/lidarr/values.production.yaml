@@ -192,6 +192,11 @@ persistence:
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 5Gi
+    advancedMounts:
+      lidarr:
+        app:
+          - path: /mnt/rollback-config
+            readOnly: true
   config-local:
     type: persistentVolumeClaim
     existingClaim: lidarr-config-local
