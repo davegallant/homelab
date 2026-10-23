@@ -10,12 +10,14 @@ backups. The Talos credentials and kubeconfig live outside Git under
 |---|---|---|---:|---:|---:|---|
 | `k8s-cp-1` | `pve-g3-1` | control plane | 2 | 4 GiB | 25 GiB | `moredata` |
 | `k8s-w-1` | `pve-g3-1` | worker | 2 | 4 GiB | 25 GiB | `moredata` |
-| `k8s-w-2` | `pve-g3-2` | worker | 2 | 2.5 GiB | 25 GiB | `local-lvm` |
+| `k8s-w-2` | `pve-g3-2` | worker | 2 | 3 GiB | 25 GiB | `local-lvm` |
 
 `k8s-w-2` was initially provisioned at 1.5 GiB, increased to 2 GiB, and later
 to 2.23 GiB after workload scheduling showed the smaller size left too little
-allocatable memory. The Cilium migration increases w-2 to 2.5 GiB through
-`resize-worker.yml`, retaining the 2 GiB Proxmox host buffer. `k8s-w-1` was increased from 3 GiB to 4 GiB at the same
+allocatable memory. The Cilium migration increased w-2 to 2.5 GiB through
+`resize-worker.yml`, retaining the 2 GiB Proxmox host buffer. On 2026-10-23,
+w-2 was increased to 3 GiB after freeing Proxmox host memory and rechecking the
+same 2 GiB reserve. `k8s-w-1` was increased from 3 GiB to 4 GiB at the same
 time so both workers retain room for application and backup workloads. The
 control plane keeps the
 generated `node-role.kubernetes.io/control-plane:NoSchedule` taint; this is a
