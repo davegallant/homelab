@@ -44,10 +44,13 @@ two-way API access between Prowlarr and the three app namespaces.
 
 **Baseline counts.** From the running LXC app (UI or API with the
 key from `config.xml`): indexer count (total and enabled) and the
-configured application count. Also record the `/config` file
-count and byte total: `find ~/config -type f | wc -l` and
-`du -sb ~/config`. (Prowlarr's compose mounts `~/config` — not
-`~/prowlarr/config`.)
+configured application count. Those API counts are the only
+baseline gate. Do NOT gate on file counts or byte totals of the
+live tree: `du -sb` counts directory entries and the tree keeps
+changing until the stop, so it cannot match a later copy — the
+2026-10-23 run parked all four apps on exactly that mismatch
+while every copy was in fact exact. (Prowlarr's compose mounts
+`~/config` — not `~/prowlarr/config`.)
 
 ## Prerequisites (once)
 
@@ -86,10 +89,12 @@ failure mode and stops this app here.
 2. Copy the config with a datacopy helper pod mounting the
    `prowlarr-config` claim (busybox image as in the LubeLogger
    README): tar-stream `~/config` from the LXC into the claim,
-   preserving ownership (the app runs as PUID 1000). Verify file
-   count AND total bytes against the step-0 baseline. Mismatch →
-   debug and re-copy; if a copy will not verify, park this app
-   (below) and report.
+   preserving ownership (the app runs as PUID 1000). Verify the
+   copy against the FROZEN source, measured identically on both
+   sides: per-file path+size lists
+   (`find . -type f -printf '%P %s\n' | sort`) must diff empty.
+   Mismatch → debug and re-copy; if a copy will not verify, park
+   this app (below) and report.
 
 3. Create the bootstrap Tailscale auth Secret from a one-use
    Headscale pre-auth key — the RomM pipeline verbatim, only the
@@ -133,7 +138,7 @@ failure mode and stops this app here.
      flaresolverr), 0 unexpected restarts.
    - `https://prowlarr.tail.davegallant.ca` answers (302 to the
      login page is correct).
-   - Indexer count matches the step-0 baseline, and a search or
+   - Indexer count (API) matches the step-0 baseline, and a search or
      Test against at least one Flaresolverr-backed indexer and
      one plain indexer returns results.
    - A Velero backup from the `prowlarr-daily` Schedule completes

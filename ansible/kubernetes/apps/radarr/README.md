@@ -58,9 +58,12 @@ exception described there.
    unroutable — so an unsubstituted policy fails safe.)
 3. **Baseline counts.** From the running LXC app (UI or API with
    the key from `config.xml`): movie count and movie-file
-   count. Also record the `/config` file count and byte total:
-   `find ~/radarr/config -type f | wc -l` and
-   `du -sb ~/radarr/config`.
+   count. Those API counts are the only baseline gate. Do NOT
+   gate on file counts or byte totals of the live tree: `du -sb`
+   counts directory entries and the tree keeps changing until
+   the stop, so it cannot match a later copy — the 2026-10-23
+   run parked all four apps on exactly that mismatch while
+   every copy was in fact exact.
 
 ## Prerequisites (once)
 
@@ -100,7 +103,9 @@ failure mode and stops this app here.
    `radarr-config` claim (busybox image as in the LubeLogger
    README): tar-stream `~/radarr/config` from the LXC into the
    claim, preserving ownership (the app runs as PUID 1000). Verify
-   file count AND total bytes against the step-0 baseline.
+   the copy against the FROZEN source, measured identically on
+   both sides: per-file path+size lists
+   (`find . -type f -printf '%P %s\n' | sort`) must diff empty.
    Mismatch → debug and re-copy; if a copy will not verify, park
    this app (below) and report.
 
@@ -145,7 +150,7 @@ failure mode and stops this app here.
      restarts.
    - `https://radarr.tail.davegallant.ca` answers (302 to the
      login page is correct).
-   - Movie and movie-file counts match the step-0 baseline.
+   - Movie and movie-file counts (API) match the step-0 baseline.
    - Download-client test in Radarr passes against the qBittorrent
      LXC.
    - Hardlink proof: pick an already-imported movie file under
