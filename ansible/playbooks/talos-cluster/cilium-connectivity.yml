@@ -1,0 +1,69 @@
+---
+- name: Verify Cilium connectivity on Talos Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    talos_kube_context: ""
+    cilium_cli_binary: cilium
+    cilium_connectivity_stage: canary
+    cilium_connectivity_node: k8s-w-2
+    cilium_echo_image: >-
+      gcr.io/k8s-staging-gateway-api/echo-advanced:v20251204-v1.4.1@sha256:96c3b75534386ca36c0c76ac8fdbe695f63f35bb3e0632537ffba9732c1f58c9
+  tasks:
+    - name: Require an explicit cluster and supported verification stage
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - cilium_connectivity_stage in ['canary', 'full']
+
+    - name: Run the canary connectivity suite with Hubble flow validation
+      ansible.builtin.command:
+        argv:
+          - "{{ cilium_cli_binary }}"
+          - --context
+          - "{{ talos_kube_context }}"
+          - --namespace
+          - cilium-system
+          - connectivity
+          - test
+          - --single-node
+          - --node-selector
+          - "kubernetes.io/hostname={{ cilium_connectivity_node }}"
+          - --test-namespace
+          - cilium-canary
+          - --namespace-labels
+          - pod-security.kubernetes.io/enforce=privileged
+          - --echo-image
+          - "{{ cilium_echo_image }}"
+          - --test
+          - '^(no-policies.*|health)$'
+          - --flow-validation
+          - strict
+          - --timeout
+          - 20m
+      when: cilium_connectivity_stage == 'canary'
+      changed_when: true
+
+    - name: Run the full connectivity and policy suite after migration
+      ansible.builtin.command:
+        argv:
+          - "{{ cilium_cli_binary }}"
+          - --context
+          - "{{ talos_kube_context }}"
+          - --namespace
+          - cilium-system
+          - connectivity
+          - test
+          - --test-namespace
+          - cilium-test
+          - --namespace-labels
+          - pod-security.kubernetes.io/enforce=privileged
+          - --echo-image
+          - "{{ cilium_echo_image }}"
+          - --flow-validation
+          - strict
+          - --timeout
+          - 40m
+      when: cilium_connectivity_stage == 'full'
+      changed_when: true
