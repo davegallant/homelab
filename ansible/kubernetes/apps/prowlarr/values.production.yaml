@@ -218,16 +218,6 @@ configMaps:
         }
 
 persistence:
-  config:
-    type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 5Gi
-    advancedMounts:
-      prowlarr:
-        app:
-          - path: /mnt/rollback-config
-            readOnly: true
   config-local:
     type: persistentVolumeClaim
     existingClaim: prowlarr-config-local

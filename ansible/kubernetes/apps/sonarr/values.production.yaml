@@ -186,16 +186,6 @@ configMaps:
         }
 
 persistence:
-  config:
-    type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 5Gi
-    advancedMounts:
-      sonarr:
-        app:
-          - path: /mnt/rollback-config
-            readOnly: true
   config-local:
     type: persistentVolumeClaim
     existingClaim: sonarr-config-local
