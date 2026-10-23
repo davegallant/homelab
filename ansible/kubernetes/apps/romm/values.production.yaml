@@ -28,9 +28,6 @@ controllers:
   romm:
     type: deployment
     strategy: Recreate
-    # STAGING: 0 until the LXC state has been copied and the database
-    # dumped (see README.md). The cutover commit removes this line.
-    replicas: 0
     pod:
       annotations:
         # Opt-in filesystem backup of the state volumes; the NFS
