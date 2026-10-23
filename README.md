@@ -221,7 +221,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | data.forgejo.org/forgejo/runner | 13 |
 | docker.io/aceberg/watchyourlan | v2 |
 | docker.io/adguard/adguardhome | v0.107.79 |
-| docker.io/caronc/apprise | 2.0.1 |
 | docker.io/docker | 29.9.2-dind |
 | docker.io/fosrl/gerbil | 1.5.2 |
 | docker.io/fosrl/newt | 1.19.0 |
@@ -238,8 +237,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/linuxserver/qbittorrent | 5.3.0 |
 | docker.io/linuxserver/radarr | 6.4.4 |
 | docker.io/linuxserver/sonarr | 4.0.20 |
-| docker.io/linuxserver/speedtest-tracker | 1.15.1 |
-| docker.io/postgres | 18.6 |
 | docker.io/traefik | v3.7 |
 | docker.io/twinproduction/gatus | v5.37.0 |
 | docker.io/valkey/valkey | 9 |
