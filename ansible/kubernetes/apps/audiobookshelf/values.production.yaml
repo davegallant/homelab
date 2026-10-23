@@ -23,7 +23,6 @@ controllers:
     # STAGING: 0 until the LXC config and metadata dirs have been
     # copied into the PVCs (see README.md). The cutover commit
     # removes this line.
-    replicas: 0
     pod:
       annotations:
         # Opt-in filesystem backup of the two state volumes; the NFS
