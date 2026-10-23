@@ -167,3 +167,19 @@ agent pod template. Config changes therefore restart agents one at a time
 (`maxUnavailable: 1`). A healthy DaemonSet alone does not prove a changed
 ConfigMap has been consumed: after primary transition, check the running
 agent's PolicyEnforcement value is default rather than never.
+
+## Hubble UI
+
+The steady-state values enable Hubble UI on `k8s-cp-1`, with a ClusterIP
+service. Apply changes with `cilium-adopt.yml`; it requests a manual Argo CD
+sync without pruning. The chart pins both UI images by version and digest.
+
+Access it locally:
+
+```sh
+KUBECONFIG="$HOME/.local/share/homelab-talos/kubeconfig" \
+  kubectl --context admin@homelab -n cilium-system port-forward \
+  --address 127.0.0.1 svc/hubble-ui 12000:80
+```
+
+Open <http://localhost:12000>. The UI uses Hubble Relay for flow data.
