@@ -51,7 +51,7 @@ degrades from the measured starting state.
 The `cilium-system` namespace has the privileged Pod Security enforcement
 exception needed by Cilium's DaemonSet, matching the platform exception shape
 used for Velero. Its audit and warn levels remain baseline. Cilium requests
-192 MiB per agent and caps each at 256 MiB. The single operator and Hubble
+192 MiB per agent and caps each at 512 MiB. The single operator and Hubble
 Relay are pinned to the 4 GiB control-plane node; Relay requests 64 MiB. The
 4 GiB w-1 is at 98% of requested memory at baseline, so neither component is
 scheduled there. Before installation, compare w-2's measured workload use
@@ -82,3 +82,11 @@ memory pressure without an OOM kill. Its main thread was in uninterruptible
 sleep and localhost health/profiler requests timed out. This experiment
 tests memory reclaim as the cause before attributing the stalls to the
 Kubernetes version. The worker placement and limits are unchanged.
+
+At 512 MiB the diagnostic agent became Ready, its status returned `OK`,
+all 12 controllers were healthy, and Hubble reported `Ok`. Relay connected
+to its peer over TLS and became Ready. The 256 MiB cap caused reclaim
+thrashing; the CRD metadata warning alone did not establish Kubernetes
+1.37 incompatibility. The 512 MiB cap is now used in both migration and
+steady-state values; the 192 MiB scheduling request is retained pending
+measurements during the worker canary.
