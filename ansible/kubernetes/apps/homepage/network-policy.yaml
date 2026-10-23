@@ -1,15 +1,16 @@
+---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
   name: default-deny
-  namespace: {{ .Release.Namespace }}
+  namespace: homepage
 spec:
   description: Default deny with tailnet sidecars and Homepage widget destinations.
   endpointSelector: {}
   ingress:
     - fromEndpoints:
         - matchLabels:
-            k8s:io.kubernetes.pod.namespace: {{ .Release.Namespace }}
+            k8s:io.kubernetes.pod.namespace: homepage
   egress:
     - toEndpoints:
         - matchLabels:
@@ -23,7 +24,7 @@ spec:
               protocol: TCP
     - toEndpoints:
         - matchLabels:
-            k8s:io.kubernetes.pod.namespace: {{ .Release.Namespace }}
+            k8s:io.kubernetes.pod.namespace: homepage
     - toEntities:
         - cluster
     - toEntities:
