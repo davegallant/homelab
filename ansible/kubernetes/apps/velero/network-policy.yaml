@@ -1,0 +1,41 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: default-deny
+  namespace: velero
+spec:
+  description: Default deny with cluster DNS, Kubernetes API, and Garage S3 access.
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: velero
+    - fromEntities:
+        - host
+      toPorts:
+        - ports:
+            - port: "8085"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: velero
+    - toEntities:
+        - cluster
+    - toCIDR:
+        - 192.168.1.16/32
+      toPorts:
+        - ports:
+            - port: "3900"
+              protocol: TCP
