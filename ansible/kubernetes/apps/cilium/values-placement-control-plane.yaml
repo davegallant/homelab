@@ -1,0 +1,5 @@
+nodeSelector:
+  kubernetes.io/hostname: k8s-cp-1
+envoy:
+  nodeSelector:
+    kubernetes.io/hostname: k8s-cp-1
