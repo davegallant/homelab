@@ -6,7 +6,7 @@ Application — no local chart. Desired state is
 definition is `../argocd/applications/lidarr.yaml`. Syncs are manual,
 pruning is off, and deleting the Application preserves the workload.
 
-Workload source of truth: `playbooks/lidarr/docker-compose.yml`
+Workload source of truth: `values.production.yaml`
 (app `docker.io/linuxserver/lidarr:3.1.0`, port 8686). All state is
 the `/config` directory (SQLite database, config.xml, logs); there
 is no separate database to dump — the cutover is a verified file
@@ -186,24 +186,21 @@ If a step is genuinely ambiguous, stop and ask rather than guess.
 The stopped LXC stays in place as the fallback until Dave retires
 it.
 
-## Batch D execution status (2026-10-23)
+## Batch D migration status (2026-10-23)
 
-Lidarr is **parked**. The Argo Application, claims, and copied config remain
-in place with `replicas: 0`; the config PVC is Bound to `k8s-w-1`. The copy
-matches the stopped LXC source (1,604 files, 712,562,661 regular-file bytes).
-The saved step-0 baseline was 1,603 files and 715,244,129 bytes from
-`du -sb`, so the baseline gate was not accepted. The LXC Compose stack was
-restarted and is serving again. The `/mnt` source was corrected to
-`192.168.1.83:/mnt/pool`; `/music` remains `192.168.1.16:/mnt/tank/media/Music`.
-Both qBittorrent policy entries use `192.168.1.152/32`. No Headscale key or
-node changes were made.
+Lidarr is **landed on Kubernetes**. Its pod is 3/3 Ready on k8s-w-1 with zero
+restarts; the tailnet URL returns HTTP 302. API counts match the fresh LXC
+baseline: 74 artists and 2,528 track files. The frozen-source path+size manifest
+diff was empty. Hardlink proof returned link count 2. Velero backup
+`lidarr-daily-20261023203905` is Completed, with the `config-local`
+PodVolumeBackup Completed. Argo is Synced and Healthy.
 
-## Batch D continuation status (2026-10-23)
+The qBittorrent download-client test currently fails: the saved host
+`qbittorrent.tail.davegallant.ca:443` does not resolve from the pod. The qBittorrent
+Compose file binds its WebUI to `127.0.0.1:8080`, so the required LAN endpoint
+cannot answer without a qBittorrent LXC bind/firewall change. qBittorrent was
+not modified.
 
-Fresh API baseline: 74 artists and 2,528 track files. The refreshed config
-copy's per-file path+size manifest diff was not empty: the existing claim
-retains
-`Sentry/0AC9C6B669F4A6E3E52AD6E77803E19F4810ADA7/__processing/1792783588_18__22860363.envelope`
-(282 bytes), absent from the frozen source. It was preserved. Lidarr remains
-parked at `replicas: 0` and its LXC Compose stack is running. No Headscale key
-was created, and no Headscale node was created or deleted.
+Substitutions: qBittorrent policy `192.168.1.152/32`; media export
+`192.168.1.83:/mnt/pool`; `/music` export
+`192.168.1.16:/mnt/tank/media/Music`.

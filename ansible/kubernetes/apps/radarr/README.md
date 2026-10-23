@@ -6,7 +6,7 @@ Application — no local chart. Desired state is
 definition is `../argocd/applications/radarr.yaml`. Syncs are manual,
 pruning is off, and deleting the Application preserves the workload.
 
-Workload source of truth: `playbooks/radarr/docker-compose.yml`
+Workload source of truth: `values.production.yaml`
 (app `docker.io/linuxserver/radarr:6.4.4`, port 7878). All state is
 the `/config` directory (SQLite database, config.xml, logs); there
 is no separate database to dump — the cutover is a verified file
@@ -181,22 +181,20 @@ If a step is genuinely ambiguous, stop and ask rather than guess.
 The stopped LXC stays in place as the fallback until Dave retires
 it.
 
-## Batch D execution status (2026-10-23)
+## Batch D migration status (2026-10-23)
 
-Radarr is **parked**. The Argo Application, claims, and copied config remain
-in place with `replicas: 0`; the config PVC is Bound to `k8s-w-1`. The copy
-matches the stopped LXC source (1,701 files, 581,137,638 regular-file bytes).
-The saved step-0 baseline was 1,701 files and 584,095,532 bytes from
-`du -sb`, so the baseline-byte gate was not accepted. The LXC Compose stack
-was restarted and is serving again. The media source was corrected to
-`192.168.1.83:/mnt/pool`, and both qBittorrent policy entries use
-`192.168.1.152/32`. No Headscale key or node changes were made.
+Radarr is **landed on Kubernetes**. Its pod is 3/3 Ready on k8s-w-1 with zero
+restarts; the tailnet URL returns HTTP 302. API counts match the fresh LXC
+baseline: 271 movies and 224 movie files. The frozen-source path+size manifest
+diff was empty. Hardlink proof returned link count 2. Velero backup
+`radarr-daily-20261023203811` is Completed, with the `config-local`
+PodVolumeBackup Completed. Argo is Synced and Healthy.
 
-## Batch D continuation status (2026-10-23)
+The qBittorrent download-client test currently fails: the saved host
+`qbittorrent.tail.davegallant.ca:443` does not resolve from the pod. The qBittorrent
+Compose file binds its WebUI to `127.0.0.1:8080`, so the required LAN endpoint
+cannot answer without a qBittorrent LXC bind/firewall change. qBittorrent was
+not modified.
 
-Fresh API baseline: 271 movies and 224 movie files. The refreshed config
-copy's per-file path+size manifest diff was empty. The first and replacement
-bootstrap keys (IDs 67–68) each decoded to 88 characters, failing the required
-64-character assertion; neither was used to activate the pod, and both were
-explicitly expired. Radarr remains parked at `replicas: 0` and its LXC Compose
-stack is running. No Headscale node was created or deleted.
+Substitutions: qBittorrent policy `192.168.1.152/32`; media export
+`192.168.1.83:/mnt/pool`.

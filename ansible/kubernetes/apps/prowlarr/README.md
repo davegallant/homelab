@@ -7,7 +7,7 @@ definition is `../argocd/applications/prowlarr.yaml`. Syncs are
 manual, pruning is off, and deleting the Application preserves the
 workload.
 
-Workload source of truth: `playbooks/prowlarr/docker-compose.yml`
+Workload source of truth: `values.production.yaml`
 (app `docker.io/linuxserver/prowlarr:2.6.5`, port 9696;
 Flaresolverr `ghcr.io/flaresolverr/flaresolverr:v3.5.2`). All
 state is the `/config` directory (SQLite database, config.xml);
@@ -166,25 +166,17 @@ the moment. If a step is genuinely ambiguous, stop and ask rather
 than guess. The stopped LXC stays in place as the fallback until
 Dave retires it.
 
-## Batch D execution status (2026-10-23)
+## Batch D migration status (2026-10-23)
 
-Prowlarr is **parked**. The Argo Application and all three chart claims
-remain in place with `replicas: 0`; the config PVC is Bound to `k8s-w-1`.
-The copy matches the stopped LXC source file-for-file by path and size
-(908 files, 137,924,700 regular-file bytes). The saved step-0 baseline was
-907 files and 138,023,052 bytes from `du -sb`; the frozen source had grown
-by one file and 25,680 regular-file bytes before copying. That baseline gate
-was not accepted. The LXC Compose stack was restarted and is serving again.
-No Headscale key or node changes were made.
+Prowlarr is **landed on Kubernetes**. Its pod is 4/4 Ready on k8s-w-1 with
+zero restarts; the tailnet URL returns HTTP 302. The fresh API baseline matches:
+8 indexers (8 enabled) and 3 application connections. The frozen-source path+size
+manifest diff was empty. Prowlarr application tests for Sonarr, Radarr, and
+Lidarr pass. Velero backup `prowlarr-daily-20261023203342` is Completed, with
+the `config-local` PodVolumeBackup Completed.
 
-## Batch D continuation status (2026-10-23)
-
-Fresh API baseline: 8 indexers (8 enabled), 3 applications. The stopped-source
-refresh found one extra path in the existing claim, so the corrected manifest
-diff was not empty: the claim retains
-`Sentry/FDD003821460B16D4E0D4235129BD6BFAF29B751/__processing/1792783053_-953__1495009.envelope`
-(344 bytes), absent from the frozen source. It was preserved. Prowlarr remains
-parked at `replicas: 0`, its LXC Compose stack is running, and no pod was
-activated. Two unused Headscale keys (IDs 63–64) failed the required assertion
-at 88 characters and were explicitly expired. No Headscale node was
-created or deleted. Batch-close application connection tests remain pending.
+The media apps' qBittorrent test is the remaining batch gate. The saved host
+still resolves to `qbittorrent.tail.davegallant.ca:443` from their pods. The
+qBittorrent Compose file publishes its WebUI only on `127.0.0.1:8080`, so the
+required LAN endpoint cannot answer without a qBittorrent LXC bind/firewall
+change. qBittorrent was not modified.

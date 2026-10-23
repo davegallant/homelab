@@ -6,7 +6,7 @@ Application — no local chart. Desired state is
 definition is `../argocd/applications/sonarr.yaml`. Syncs are manual,
 pruning is off, and deleting the Application preserves the workload.
 
-Workload source of truth: `playbooks/sonarr/docker-compose.yml`
+Workload source of truth: `values.production.yaml`
 (app `docker.io/linuxserver/sonarr:4.0.20`, port 8989). All state is
 the `/config` directory (SQLite database, config.xml, logs); there
 is no separate database to dump — the cutover is a verified file
@@ -181,23 +181,20 @@ If a step is genuinely ambiguous, stop and ask rather than guess.
 The stopped LXC stays in place as the fallback until Dave retires
 it.
 
-## Batch D execution status (2026-10-23)
+## Batch D migration status (2026-10-23)
 
-Sonarr is **parked**. The Argo Application, claims, and copied config remain
-in place with `replicas: 0`; the config PVC is Bound to `k8s-w-1`. The copy
-matches the stopped LXC source (744 files, 280,464,293 regular-file bytes).
-The saved step-0 baseline was 742 files and 280,764,841 bytes from `du -sb`,
-so the baseline gate was not accepted. The runbook's shorthand `/root/config`
-source did not exist; the observed source was `/root/sonarr/config`. The LXC
-Compose stack was restarted and is serving again. The media source was
-corrected to `192.168.1.83:/mnt/pool`, and both qBittorrent policy entries
-use `192.168.1.152/32`. No Headscale key or node changes were made.
+Sonarr is **landed on Kubernetes**. Its pod is 3/3 Ready on k8s-w-1 with zero
+restarts; the tailnet URL returns HTTP 302. API counts match the fresh LXC
+baseline: 67 series and 4,215 episode files. The frozen-source path+size
+manifest diff was empty. Hardlink proof returned link count 2. Velero backup
+`sonarr-daily-20261023203739` is Completed, with the `config-local`
+PodVolumeBackup Completed. Argo is Synced and Healthy.
 
-## Batch D continuation status (2026-10-23)
+The qBittorrent download-client test currently fails: the saved host
+`qbittorrent.tail.davegallant.ca:443` does not resolve from the pod. The qBittorrent
+Compose file binds its WebUI to `127.0.0.1:8080`, so the required LAN endpoint
+cannot answer without a qBittorrent LXC bind/firewall change. qBittorrent was
+not modified.
 
-Fresh API baseline: 67 series and 4,215 episode files. The refreshed config
-copy's per-file path+size manifest diff was empty. The first and replacement
-bootstrap keys (IDs 65–66) each decoded to 88 characters, failing the required
-64-character assertion; neither was used to activate the pod, and both were
-explicitly expired. Sonarr remains parked at `replicas: 0` and its LXC Compose
-stack is running. No Headscale node was created or deleted.
+Substitutions: qBittorrent policy `192.168.1.152/32`; media export
+`192.168.1.83:/mnt/pool`.

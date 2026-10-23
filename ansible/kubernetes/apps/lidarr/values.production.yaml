@@ -1,6 +1,6 @@
 ---
 # Lidarr — Argo CD production values (bjw-s app-template 5.3.0).
-# Source of truth for the workload: playbooks/lidarr/docker-compose.yml
+# Workload definition: this file, rendered by the bjw-s app-template chart.
 # (app docker.io/linuxserver/lidarr 3.1.0, port 8686; config on a
 # local volume, the shared media tree at /mnt, plus the LXC's
 # separate /music mount as a second static claim — storage.yaml).

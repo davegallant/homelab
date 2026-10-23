@@ -1,6 +1,6 @@
 ---
 # Prowlarr — Argo CD production values (bjw-s app-template 5.3.0).
-# Source of truth for the workload: playbooks/prowlarr/docker-compose.yml
+# Workload definition: this file, rendered by the bjw-s app-template chart.
 # (app docker.io/linuxserver/prowlarr 2.6.5, port 9696, config on a
 # local volume; Flaresolverr ghcr.io/flaresolverr/flaresolverr v3.5.2
 # as a second service in the same compose).
