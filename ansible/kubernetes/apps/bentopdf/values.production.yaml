@@ -2,3 +2,13 @@
 newt:
   enabled: true
   existingSecret: bentopdf-newt-external
+  resources:
+    requests:
+      cpu: 5m
+      memory: 24Mi
+
+bentopdf:
+  resources:
+    requests:
+      cpu: 5m
+      memory: 16Mi
