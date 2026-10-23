@@ -29,7 +29,7 @@ controllers:
         # Opt-in filesystem backup of the database volume, with a
         # consistent logical dump written into the volume first so
         # the filesystem backup carries a restorable copy.
-        backup.velero.io/backup-volumes: db-data
+        backup.velero.io/backup-volumes: db-data-local
         pre.hook.backup.velero.io/container: db
         pre.hook.backup.velero.io/command: '["/bin/sh","-c","PGPASSWORD=$POSTGRES_PASSWORD pg_dump -U $POSTGRES_USER
           -d $POSTGRES_DB > /var/lib/postgresql/umami-backup.sql"]'
@@ -146,15 +146,17 @@ service:
 
 persistence:
   # Keep the original local-path claim mounted read-only for rollback.
-  rollback-db-data:
+  db-data:
     type: persistentVolumeClaim
-    existingClaim: umami
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 2Gi
     advancedMounts:
       umami:
         db:
           - path: /mnt/umami-rollback-db-data
             readOnly: true
-  db-data:
+  db-data-local:
     type: persistentVolumeClaim
     existingClaim: umami-db-data-local
     advancedMounts:
