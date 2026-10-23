@@ -29,15 +29,12 @@ controllers:
   speedtest-tracker:
     type: deployment
     strategy: Recreate
-    # Staging: the pod starts at cutover, once the database has been
-    # restored and the config copied (README).
-    replicas: 0
     pod:
       annotations:
         # Opt-in filesystem backup of the state volumes, with a
         # consistent logical dump written into the database volume
         # first so the filesystem backup carries a restorable copy.
-        backup.velero.io/backup-volumes: config,db-data,apprise,web-certs
+        backup.velero.io/backup-volumes: config-local,db-data-local,apprise-local
         pre.hook.backup.velero.io/container: db
         pre.hook.backup.velero.io/command: '["/bin/sh","-c","PGPASSWORD=$POSTGRES_PASSWORD pg_dump -U $POSTGRES_USER
           -d $POSTGRES_DB > /var/lib/postgresql/speedtest-backup.sql"]'
@@ -283,21 +280,28 @@ persistence:
     advancedMounts:
       speedtest-tracker:
         app:
-          - path: /config
-  web-certs:
+          - path: /mnt/speedtest-rollback-config
+            readOnly: true
+  config-local:
     type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 256Mi
+    existingClaim: speedtest-tracker-config-local
     advancedMounts:
       speedtest-tracker:
         app:
-          - path: /etc/ssl/web
+          - path: /config
   db-data:
     type: persistentVolumeClaim
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 2Gi
+    advancedMounts:
+      speedtest-tracker:
+        db:
+          - path: /mnt/speedtest-rollback-db-data
+            readOnly: true
+  db-data-local:
+    type: persistentVolumeClaim
+    existingClaim: speedtest-tracker-db-data-local
     advancedMounts:
       speedtest-tracker:
         db:
@@ -307,6 +311,14 @@ persistence:
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 1Gi
+    advancedMounts:
+      speedtest-tracker:
+        apprise:
+          - path: /mnt/speedtest-rollback-apprise
+            readOnly: true
+  apprise-local:
+    type: persistentVolumeClaim
+    existingClaim: speedtest-tracker-apprise-local
     advancedMounts:
       speedtest-tracker:
         apprise:

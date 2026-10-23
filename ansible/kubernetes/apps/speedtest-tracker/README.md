@@ -25,21 +25,18 @@ the app) moves by logical dump/restore at cutover (the Miniflux
 pattern); the app `/config` and the Apprise directories move by file
 copy. Volumes at staging are chart-managed local-path PVCs:
 `config` (1Gi), `db-data` (2Gi), `apprise` (1Gi, subPaths for
-`/config`, `/plugin`, `/attach`), `web-certs` (256Mi), plus the
-sidecar state volumes. After cutover, bind the copied volumes
-through repo-managed static local PVs and claims (`*-local-pv.yaml`
-files beside this README, using each dynamic claim's provisioned
-path and node), switch the values to the `*-local` claims for the
-live mounts, and keep the original claims mounted read-only under
+`/config`, `/plugin`, `/attach`), plus the sidecar state volumes.
+After cutover, bind the copied volumes through repo-managed static
+local PVs and claims (`*-local-pv.yaml` files beside this README,
+using each dynamic claim's provisioned path and node), switch the
+values to the `*-local` claims for the live mounts, and keep the
+original claims mounted read-only under
 `/mnt/speedtest-rollback-*` — the Batch A/B post-cutover shape.
 
-One open question the values deliberately do not answer: the LXC
-mounted `./web:/etc/ssl/web`, presumably certificates for the app
-itself. In-pod, Caddy terminates TLS and the app is reached over
-plain HTTP on localhost, so the mount is carried for parity but may
-be dead weight — at cutover, check whether the directory is
-referenced by the app's config; if not, drop the volume in a
-follow-up commit.
+The LXC's `./web:/etc/ssl/web` directory was empty and no files in
+`speedtest-app` referenced it. Caddy terminates TLS and the app is
+reached over plain HTTP on localhost, so the unused `web-certs`
+volume is dropped during cutover.
 
 Secrets stay in Vault and outside Argo's ownership:
 `speedtest-tracker-external` (`DB_USERNAME`, `DB_PASSWORD`,
@@ -53,7 +50,7 @@ executor from a one-use Headscale pre-auth key (headscale CLI on
 the Pangolin VPS) — no operator step.
 
 Backups: Velero Schedule `speedtest-tracker-daily` (in the values)
-with pod annotation `backup.velero.io/backup-volumes: config,db-data,apprise,web-certs`
+with pod annotation `backup.velero.io/backup-volumes: config-local,db-data-local,apprise-local`
 and a pre-backup hook that writes a `pg_dump` into the database
 volume first. The network policy is the house default-deny
 CiliumNetworkPolicy, in the values as
