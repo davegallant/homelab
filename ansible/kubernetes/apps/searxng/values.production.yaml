@@ -2,5 +2,19 @@
 newt:
   enabled: true
   existingSecret: searxng-newt-external
+  resources:
+    requests:
+      cpu: 5m
+      memory: 24Mi
+searxng:
+  resources:
+    requests:
+      cpu: 5m
+      memory: 272Mi
+valkey:
+  resources:
+    requests:
+      cpu: 5m
+      memory: 16Mi
 settings:
   existingSecret: searxng-settings-external
