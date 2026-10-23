@@ -116,7 +116,11 @@ persistence:
   # cannot make a PodVolumeBackup from this claim.
   data:
     type: persistentVolumeClaim
-    existingClaim: navidrome
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 5Gi
     advancedMounts:
       navidrome:
         app:
