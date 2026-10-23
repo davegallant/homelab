@@ -28,16 +28,13 @@ controllers:
   invidious:
     type: deployment
     strategy: Recreate
-    # Staging: the pod starts at cutover, once the database has been
-    # restored into db-data and the LXC stack is stopped (README).
-    replicas: 0
     pod:
       annotations:
         # Opt-in filesystem backup of the database volume, with a
         # consistent logical dump written into the volume first so
         # the filesystem backup carries a restorable copy. The
         # companion cache is excluded by omission (it regenerates).
-        backup.velero.io/backup-volumes: db-data
+        backup.velero.io/backup-volumes: db-data-local
         pre.hook.backup.velero.io/container: db
         pre.hook.backup.velero.io/command: '["/bin/sh","-c","PGPASSWORD=$POSTGRES_PASSWORD pg_dump -U $POSTGRES_USER
           -d $POSTGRES_DB > /var/lib/postgresql/invidious-backup.sql"]'
@@ -199,11 +196,20 @@ service:
         port: 3000
 
 persistence:
+  # Keep the original local-path claim read-only for rollback.
   db-data:
     type: persistentVolumeClaim
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 5Gi
+    advancedMounts:
+      invidious:
+        db:
+          - path: /mnt/invidious-rollback-db-data
+            readOnly: true
+  db-data-local:
+    type: persistentVolumeClaim
+    existingClaim: invidious-db-data-local
     advancedMounts:
       invidious:
         db:

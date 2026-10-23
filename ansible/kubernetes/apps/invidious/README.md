@@ -48,7 +48,7 @@ Secrets stay in Vault and outside Argo's ownership, both created by
 `POSTGRES_PASSWORD`).
 
 Backups: Velero Schedule `invidious-daily` (in the values) with pod
-annotation `backup.velero.io/backup-volumes: db-data` and a
+annotation `backup.velero.io/backup-volumes: db-data-local` and a
 pre-backup hook that writes a `pg_dump` into the volume, so the
 filesystem backup carries a restorable copy. The network policy is
 the house default-deny CiliumNetworkPolicy, in the values as
@@ -111,9 +111,9 @@ kubectl --context admin@homelab apply -f ansible/kubernetes/apps/argocd/applicat
    video end-to-end (this exercises the companion, not just the app
    — the dashboard alone proves nothing); log in and confirm
    subscriptions/history survived. Argo Synced/Healthy. Create and
-   verify a Velero backup with its `db-data` PodVolumeBackup (the
+   verify a Velero backup with its `db-data-local` PodVolumeBackup (the
    script in the Navidrome README, with schedule `invidious-daily`
-   and volume `db-data`).
+   and volume `db-data-local`).
 7. Leave the stopped LXC as rollback target until soak completes.
 
 Rollback: `docker compose up -d` on the LXC (its Newt sidecar
