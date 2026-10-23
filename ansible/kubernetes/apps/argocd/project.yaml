@@ -49,6 +49,16 @@ spec:
       namespace: invidious
     - server: https://kubernetes.default.svc
       namespace: speedtest-tracker
+    # Batch D: the *arr suite (authored 2026-10-23). qBittorrent
+    # deliberately stays on its LXC — no namespace for it.
+    - server: https://kubernetes.default.svc
+      namespace: prowlarr
+    - server: https://kubernetes.default.svc
+      namespace: sonarr
+    - server: https://kubernetes.default.svc
+      namespace: radarr
+    - server: https://kubernetes.default.svc
+      namespace: lidarr
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
     - group: apps
