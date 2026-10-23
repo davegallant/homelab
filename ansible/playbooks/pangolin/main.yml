@@ -42,6 +42,7 @@
       igotify: [tag:monitored, tag:pangolin]
       invidious: [tag:monitored, tag:pangolin]
       jellyfin: [tag:monitored, tag:pangolin]
+      kratos: [tag:external]
       maloja: [tag:maloja, tag:monitored]
       mcleod: [tag:external, tag:beszel-agent]
       miniflux: [tag:monitored, tag:pangolin]
