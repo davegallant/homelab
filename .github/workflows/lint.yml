@@ -32,18 +32,14 @@ jobs:
         run: |
           # These manual operational playbooks load Vault directly. GitHub PR
           # lint runs without secrets; local `just lint` validates them fully.
-          ansible-lint \
-            --exclude playbooks/talos-cluster/gitops-secrets.yml \
-            --exclude playbooks/talos-cluster/argocd.yml \
-            --exclude playbooks/talos-cluster/bentopdf-secret.yml \
-            --exclude playbooks/talos-cluster/bentopdf.yml \
-            --exclude playbooks/talos-cluster/kiwix.yml \
-            --exclude playbooks/talos-cluster/miniflux.yml \
-            --exclude playbooks/talos-cluster/homepage.yml \
-            --exclude playbooks/talos-cluster/apply-velero.yml \
-            --exclude playbooks/talos-cluster/searxng.yml \
-            --exclude playbooks/talos-cluster/verify-cutover.yml \
-            --exclude playbooks/talos-cluster/verify-velero-backup.yml
+          # The exclude list is derived from the playbooks themselves (any
+          # talos-cluster playbook that references the Vault file), so it
+          # cannot drift when a new Vault-loading playbook is added.
+          excludes=()
+          while IFS= read -r playbook; do
+            excludes+=(--exclude "$playbook")
+          done < <(grep -rl --include='*.yml' 'group_vars/all/secrets.yaml' playbooks/talos-cluster/ | sort)
+          ansible-lint "${excludes[@]}"
 
       - name: Run shellcheck
         run: shellcheck generate-containers-table.sh scripts/*.sh

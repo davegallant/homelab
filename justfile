@@ -10,7 +10,7 @@ default:
 # Lint YAML, Ansible content and shell scripts
 lint:
     yamllint -c .yamllint.yaml ansible/ .forgejo/ .github/
-    cd ansible && ansible-lint
+    cd ansible && ANSIBLE_VAULT_PASSWORD_FILE="${ANSIBLE_VAULT_PASSWORD_FILE:-$PWD/.vault_pass}" ansible-lint
     shellcheck generate-containers-table.sh scripts/*.sh
 
 # Install the repository's pre-commit checks
