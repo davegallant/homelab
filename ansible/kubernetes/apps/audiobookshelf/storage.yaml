@@ -1,0 +1,107 @@
+---
+# Storage for audiobookshelf, applied once by hand (see README.md)
+# and deliberately NOT managed by Argo CD: the homelab AppProject
+# allows namespace-scoped resources only, so namespaces and static
+# volumes stay an Ansible / kubectl concern.
+#
+# Three volume families, three different natures:
+#   audiobookshelf-audiobooks / audiobookshelf-podcasts - the
+#                     libraries, static NFS PVs onto the existing
+#                     TrueNAS exports the LXC reads today (mounted
+#                     under /mnt/media by the Proxmox host).
+#                     Read-write, matching the LXC mounts: the app
+#                     writes metadata and progress into the library
+#                     trees. The data never moves and is never
+#                     Velero-backed-up (TrueNAS snapshots + Drive
+#                     sync, same as Kiwix).
+#   config / metadata - the app's small state, chart-managed
+#                     local-path PVCs declared in
+#                     values.production.yaml; nothing lives here.
+#
+# Verify the share paths against the LXC's mounts before applying:
+# the exports below follow the Kiwix spelling (/mnt/tank/media/<name>)
+# and the LXC's /mnt/media/<name> mount points.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: audiobookshelf
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: audiobookshelf-audiobooks
+spec:
+  capacity:
+    storage: 1Ti # nominal; NFS reports the export's real size
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+    - noatime
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: truenas-audiobookshelf-audiobooks
+    volumeAttributes:
+      server: 192.168.1.16
+      share: /mnt/tank/media/Audiobooks
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: audiobookshelf-audiobooks
+  namespace: audiobookshelf
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: audiobookshelf-audiobooks
+  resources:
+    requests:
+      storage: 1Ti
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: audiobookshelf-podcasts
+spec:
+  capacity:
+    storage: 1Ti # nominal; NFS reports the export's real size
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+    - noatime
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: truenas-audiobookshelf-podcasts
+    volumeAttributes:
+      server: 192.168.1.16
+      share: /mnt/tank/media/Podcasts
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: audiobookshelf-podcasts
+  namespace: audiobookshelf
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: audiobookshelf-podcasts
+  resources:
+    requests:
+      storage: 1Ti
