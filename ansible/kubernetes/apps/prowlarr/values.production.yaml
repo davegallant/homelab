@@ -220,9 +220,7 @@ configMaps:
 persistence:
   config:
     type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 5Gi
+    existingClaim: prowlarr-config-local
     advancedMounts:
       prowlarr:
         app:
