@@ -37,7 +37,7 @@ neighbouring container — plus `APP_SECRET`, `POSTGRES_USER`,
 `POSTGRES_PASSWORD`).
 
 Backups: Velero Schedule `umami-daily` (in the values) with pod
-annotation `backup.velero.io/backup-volumes: db-data` and a pre-backup
+annotation `backup.velero.io/backup-volumes: db-data-local` and a pre-backup
 hook that writes a `pg_dump` into the volume, so the filesystem
 backup carries a restorable copy. The network policy is the house
 default-deny CiliumNetworkPolicy, in the values as
@@ -101,9 +101,9 @@ kubectl --context admin@homelab apply -f ansible/kubernetes/apps/argocd/applicat
    values, commit, push, approve Sync.
 6. Verify: pod `3/3` Ready; the public Umami URL loads and shows the
    existing websites; Argo Synced/Healthy. Create and verify a Velero
-   backup with its `db-data` PodVolumeBackup (the script in the
+   backup with its `db-data-local` PodVolumeBackup (the script in the
    Navidrome README, with schedule `umami-daily` and volume
-   `db-data`).
+   `db-data-local`).
 7. Leave the stopped LXC as rollback target until soak completes.
 
 Rollback: `docker compose up -d` on the LXC (its Newt sidecar
