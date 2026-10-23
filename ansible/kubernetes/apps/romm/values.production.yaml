@@ -367,8 +367,6 @@ rawResources:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: romm
           - toEntities:
-              - cluster
-          - toEntities:
               - world
         egressDeny:
           - toCIDR:

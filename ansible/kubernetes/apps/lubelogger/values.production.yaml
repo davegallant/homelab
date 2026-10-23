@@ -311,8 +311,6 @@ rawResources:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: lubelogger
           - toEntities:
-              - cluster
-          - toEntities:
               - world
             toPorts:
               - ports:

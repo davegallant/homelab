@@ -274,8 +274,6 @@ rawResources:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: invidious
           - toEntities:
-              - cluster
-          - toEntities:
               - world
         egressDeny:
           - toCIDR:

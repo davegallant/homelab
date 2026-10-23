@@ -283,8 +283,6 @@ rawResources:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: maloja
           - toEntities:
-              - cluster
-          - toEntities:
               - world
             toPorts:
               - ports:

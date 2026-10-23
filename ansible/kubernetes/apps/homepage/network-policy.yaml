@@ -32,8 +32,6 @@ spec:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: homepage
     - toEntities:
-        - cluster
-    - toEntities:
         - world
       toPorts:
         - ports:

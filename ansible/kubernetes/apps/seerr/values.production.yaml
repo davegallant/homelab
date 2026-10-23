@@ -320,8 +320,6 @@ rawResources:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: seerr
           - toEntities:
-              - cluster
-          - toEntities:
               - world
             toPorts:
               - ports:

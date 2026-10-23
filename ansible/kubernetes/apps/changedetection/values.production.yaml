@@ -297,8 +297,6 @@ rawResources:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: changedetection
           - toEntities:
-              - cluster
-          - toEntities:
               - world
         egressDeny:
           - toCIDR:

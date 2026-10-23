@@ -5,7 +5,7 @@ metadata:
   name: default-deny
   namespace: cilium-system
 spec:
-  description: Default deny for Cilium Relay/UI pods with agent gRPC and cluster access.
+  description: Default deny for Cilium Relay/UI pods with same-namespace traffic and agent gRPC access.
   endpointSelector: {}
   ingress:
     - fromEndpoints:
@@ -33,8 +33,6 @@ spec:
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: cilium-system
-    - toEntities:
-        - cluster
     - toEntities:
         - host
         - remote-node

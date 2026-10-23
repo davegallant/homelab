@@ -35,4 +35,10 @@ spec:
             - port: "53"
               protocol: TCP
     - toEntities:
-        - cluster
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+            - port: "6443"
+              protocol: TCP
