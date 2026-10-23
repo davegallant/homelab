@@ -14,7 +14,7 @@ spec:
   storageClassName: pve-g3-1-local
   volumeMode: Filesystem
   local:
-    path: /var/mnt/local-path/pvc-2570b3d1-b453-4043-9fe0-aeee7bae1918_invidious_invidious-db-data
+    path: /var/mnt/local-path/pvc-9ec07eca-afab-42e8-9e11-76b11a1880ff_invidious_invidious-db-w1-stage
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -22,7 +22,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - k8s-w-2
+                - k8s-w-1
   claimRef:
     namespace: invidious
     name: invidious-db-data-local

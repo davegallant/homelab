@@ -28,7 +28,7 @@ controllers:
   invidious:
     type: deployment
     strategy: Recreate
-    replicas: 0
+    replicas: 1
     pod:
       annotations:
         # Opt-in filesystem backup of the database volume, with a
