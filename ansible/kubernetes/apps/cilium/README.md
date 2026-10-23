@@ -90,3 +90,17 @@ thrashing; the CRD metadata warning alone did not establish Kubernetes
 1.37 incompatibility. The 512 MiB cap is now used in both migration and
 steady-state values; the 192 MiB scheduling request is retained pending
 measurements during the worker canary.
+
+## Per-node transition
+
+After the three secondary agents and Relay verify healthy, use
+`cilium-migrate-node.yml -e cilium_migration_node=k8s-w-2` first, then w-1
+and cp-1 only after each node's connectivity and application gates pass.
+The play cordons, applies the CiliumNodeConfig selector, restarts that
+agent, reboots only that node, checks Ready and agent rollout, and
+uncordons it. It uses the guide's optional-drain path: the local-PV apps
+cannot move to another node, so rebooting recreates their sandboxes on
+their existing worker. Expect that node's apps to be unavailable during
+the reboot. Flannel remains installed throughout these transitions.
+The play does not advance to another node or automatically roll back;
+the operator runs the full canary verification before continuing.

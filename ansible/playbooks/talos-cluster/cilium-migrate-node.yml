@@ -1,0 +1,133 @@
+---
+- name: Migrate one Talos node onto the Cilium overlay
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  vars:
+    talos_kube_context: ""
+    talos_private_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.local/share/homelab-talos"
+    talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
+    cilium_migration_node: ""
+  tasks:
+    - name: Require one configured node and an explicit cluster context
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - cilium_migration_node in talos_nodes | map(attribute='name') | list
+
+    - name: Select the migration node
+      ansible.builtin.set_fact:
+        cilium_selected_node: "{{ talos_nodes | selectattr('name', 'equalto', cilium_migration_node) | first }}"
+
+    - name: Require all nodes Ready before migrating one node
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", wait, --for=condition=Ready, nodes, --all, --timeout=120s]
+      changed_when: false
+
+    - name: Require the Cilium DaemonSet healthy before migration
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, cilium-system, rollout, status, daemonset/cilium, --timeout=120s]
+      changed_when: false
+
+    - name: Read Cilium agent coverage before migration
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, cilium-system, get, daemonset/cilium, -o, 'jsonpath={.status.numberReady}']
+      register: cilium_migration_agents
+      changed_when: false
+
+    - name: Require three healthy agents before selecting a node
+      ansible.builtin.assert:
+        that:
+          - cilium_migration_agents.stdout == '3'
+
+    - name: Read application health before migration
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - argocd
+          - get
+          - applications
+          - -o
+          - 'jsonpath={range .items[*]}{.status.sync.status}{" "}{.status.health.status}{"\n"}{end}'
+      register: cilium_migration_apps
+      changed_when: false
+
+    - name: Require the healthy application baseline
+      ansible.builtin.assert:
+        that:
+          - cilium_migration_apps.stdout_lines | length > 0
+          - cilium_migration_apps.stdout_lines | reject('equalto', 'Synced Healthy') | list | length == 0
+
+    - name: Cordon the selected node
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", cordon, "{{ cilium_migration_node }}"]
+      changed_when: true
+
+    - name: Select Cilium as this node's CNI
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - label
+          - node
+          - "{{ cilium_migration_node }}"
+          - --overwrite
+          - io.cilium.migration/cilium-default=true
+      changed_when: true
+
+    - name: Restart only the selected node's agent to write its CNI configuration
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - cilium-system
+          - delete
+          - pod
+          - --field-selector
+          - "spec.nodeName={{ cilium_migration_node }}"
+          - -l
+          - k8s-app=cilium
+      changed_when: true
+
+    - name: Wait for the selected CNI configuration to become ready
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, cilium-system, rollout, status, daemonset/cilium, --timeout=300s]
+      changed_when: false
+
+    - name: Reboot only the selected Talos node
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - reboot
+          - --talosconfig
+          - "{{ talos_private_dir }}/base/talosconfig"
+          - --endpoints
+          - "{{ cilium_selected_node.address }}"
+          - --nodes
+          - "{{ cilium_selected_node.address }}"
+          - --timeout
+          - 10m
+      changed_when: true
+
+    - name: Wait for the migrated node Ready
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", wait, --for=condition=Ready, "node/{{ cilium_migration_node }}", --timeout=600s]
+      changed_when: false
+
+    - name: Verify Cilium recovered after the reboot
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, cilium-system, rollout, status, daemonset/cilium, --timeout=300s]
+      changed_when: false
+
+    - name: Uncordon the migrated node
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", uncordon, "{{ cilium_migration_node }}"]
+      changed_when: true
