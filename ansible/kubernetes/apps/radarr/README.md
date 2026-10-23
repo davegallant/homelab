@@ -185,3 +185,12 @@ The saved step-0 baseline was 1,701 files and 584,095,532 bytes from
 was restarted and is serving again. The media source was corrected to
 `192.168.1.83:/mnt/pool`, and both qBittorrent policy entries use
 `192.168.1.152/32`. No Headscale key or node changes were made.
+
+## Batch D continuation status (2026-10-23)
+
+Fresh API baseline: 271 movies and 224 movie files. The refreshed config
+copy's per-file path+size manifest diff was empty. The first and replacement
+bootstrap keys each decoded to 88 characters, failing the required 64-character
+assertion; neither was used to activate the pod. Radarr remains parked at
+`replicas: 0`, its LXC Compose stack is running, and the two unused one-hour
+Headscale keys will expire. No Headscale node was created or deleted.

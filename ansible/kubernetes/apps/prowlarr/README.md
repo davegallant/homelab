@@ -170,3 +170,15 @@ The copy matches the stopped LXC source file-for-file by path and size
 by one file and 25,680 regular-file bytes before copying. That baseline gate
 was not accepted. The LXC Compose stack was restarted and is serving again.
 No Headscale key or node changes were made.
+
+## Batch D continuation status (2026-10-23)
+
+Fresh API baseline: 8 indexers (8 enabled), 3 applications. The stopped-source
+refresh found one extra path in the existing claim, so the corrected manifest
+diff was not empty: the claim retains
+`Sentry/FDD003821460B16D4E0D4235129BD6BFAF29B751/__processing/1792783053_-953__1495009.envelope`
+(344 bytes), absent from the frozen source. It was preserved. Prowlarr remains
+parked at `replicas: 0`, its LXC Compose stack is running, and no pod was
+activated. Two unused one-hour Headscale keys were created; each failed the
+required assertion at 88 characters and will expire. No Headscale node was
+created or deleted. Batch-close application connection tests remain pending.
