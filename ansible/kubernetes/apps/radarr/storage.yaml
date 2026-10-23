@@ -1,0 +1,73 @@
+---
+# Storage for radarr, applied once by hand (see README.md) and
+# deliberately NOT managed by Argo CD: the homelab AppProject allows
+# namespace-scoped resources only, so namespaces and static volumes
+# stay an Ansible / kubectl concern.
+#
+# Two volume families, two different natures:
+#   radarr-media  - the shared media tree, a static NFS PV onto the
+#                   existing TrueNAS export the *arr LXCs and
+#                   qBittorrent read today, mounted at /mnt — the
+#                   identical path, so database paths stay true and
+#                   hardlink imports keep working (NFS link/rename
+#                   are server-side within the export). Read-write,
+#                   matching the LXC mount. The data never moves and
+#                   is never Velero-backed-up (TrueNAS snapshots +
+#                   Drive sync, same as Kiwix and RomM).
+#   app state     - config is a chart-managed local-path PVC
+#                   declared in values.production.yaml; nothing
+#                   lives here.
+#
+# VERIFY BEFORE APPLYING (README step 0): the share below follows
+# the house spelling (/mnt/tank/media) — confirm against the LXC's
+# actual mount (`findmnt /mnt` on the radarr LXC) and correct it if
+# the tree is a different export. If /mnt on the LXC spans several
+# exports, create one PV per export and mount them under /mnt with
+# subPath entries in the values instead; the in-pod tree must be
+# identical either way.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: radarr
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: radarr-media
+spec:
+  capacity:
+    storage: 1Ti # nominal; NFS reports the export's real size
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+    - noatime
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: truenas-radarr-media
+    volumeAttributes:
+      server: 192.168.1.83
+      share: /mnt/pool
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-media
+  namespace: radarr
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: radarr-media
+  resources:
+    requests:
+      storage: 1Ti
