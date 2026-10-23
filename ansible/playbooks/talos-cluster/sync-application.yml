@@ -1,0 +1,60 @@
+---
+- name: Apply a repository Application and request one manual sync
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    talos_kube_context: ""
+    talos_application: ""
+  tasks:
+    - name: Require an explicit cluster and Application
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - talos_application is match('^[a-z0-9][a-z0-9-]*$')
+
+    - name: Apply the repository Application definition
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - apply
+          - -f
+          - "{{ playbook_dir }}/../../kubernetes/apps/argocd/applications/{{ talos_application }}.yaml"
+      changed_when: true
+
+    - name: Request a manual Argo CD sync without pruning
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - argocd
+          - patch
+          - application
+          - "{{ talos_application }}"
+          - --type=merge
+          - --patch
+          - '{"operation":{"initiatedBy":{"username":"ansible-operator"},"sync":{"prune":false,"syncStrategy":{"hook":{}}}}}'
+      changed_when: true
+
+    - name: Wait for the manual sync to finish healthy
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - argocd
+          - get
+          - application
+          - "{{ talos_application }}"
+          - -o
+          - 'jsonpath={.status.operationState.phase}{" "}{.status.sync.status}{" "}{.status.health.status}'
+      register: talos_application_sync
+      until: talos_application_sync.stdout == 'Succeeded Synced Healthy'
+      retries: 60
+      delay: 10
+      changed_when: false
