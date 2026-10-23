@@ -1,14 +1,23 @@
-- name: Read the chart-owned Velero Schedule
+- name: Read Homepage's chart-owned Velero Schedule
   ansible.builtin.command:
-    argv: [kubectl, --context, "{{ talos_kube_context }}", -n, velero, get, "schedule/{{ cilium_backup_namespace }}-daily", -o, json]
+    argv: [kubectl, --context, "{{ talos_kube_context }}", -n, velero, get, schedule/homepage-daily, -o, json]
   register: cilium_backup_schedule
+  when: cilium_backup_namespace == 'homepage'
   changed_when: false
 
-- name: Require file-system backup in the source Schedule
+- name: Select the repository-owned backup template
+  ansible.builtin.set_fact:
+    cilium_backup_template: >-
+      {{ (cilium_backup_schedule.stdout | from_json).spec.template
+         if cilium_backup_namespace == 'homepage'
+         else (lookup('ansible.builtin.file', playbook_dir + '/../../kubernetes/apps/changedetection/values.production.yaml')
+               | from_yaml).rawResources.backupSchedule.manifest.spec.template }}
+
+- name: Require the intended namespace and secret exclusion
   ansible.builtin.assert:
     that:
-      - (cilium_backup_schedule.stdout | from_json).spec.template.defaultVolumesToFsBackup | bool
-      - cilium_backup_namespace in (cilium_backup_schedule.stdout | from_json).spec.template.includedNamespaces
+      - cilium_backup_namespace in cilium_backup_template.includedNamespaces
+      - "'secrets' in cilium_backup_template.excludedResources"
 
 - name: Create a migration verification backup from the Schedule template
   ansible.builtin.command:
@@ -17,7 +26,7 @@
       {{ {'apiVersion': 'velero.io/v1', 'kind': 'Backup',
           'metadata': {'name': cilium_backup_namespace ~ '-cilium-' ~ cilium_backup_stamp,
                        'namespace': 'velero'},
-          'spec': (cilium_backup_schedule.stdout | from_json).spec.template} | to_json }}
+          'spec': cilium_backup_template} | to_json }}
   changed_when: true
 
 - name: Wait for the backup to complete
