@@ -1,12 +1,12 @@
 ---
 # Paperless-ngx — Argo CD production values (bjw-s app-template 5.3.0).
-# Source of truth for the workload: playbooks/paperless-ngx/docker-compose.yml
+# Active workload definition: this file; the LXC Compose stack is retired.
 # (app docker.io/paperlessngx/paperless-ngx 3.3.3, port 8000; broker
 # docker.io/library/redis 8 as a second container in the same pod).
-# Public via Pangolin: the compose pairs the app with a Newt sidecar,
+# Public via Pangolin: the retired LXC paired the app with a Newt sidecar,
 # reproduced in-pod with the *same* Newt identity, so the existing
 # Pangolin route and public URL carry over unchanged. Do not rewrite
-# this app as tailnet-only; the compose is authoritative.
+# this app as tailnet-only.
 #
 # The compose sets no PAPERLESS_DBHOST, so Paperless uses its SQLite
 # database in the data volume — there is deliberately no Postgres

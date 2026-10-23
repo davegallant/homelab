@@ -7,16 +7,17 @@ definition is `../argocd/applications/invidious.yaml`. Syncs are
 manual, pruning is off, and deleting the Application preserves the
 workload.
 
-Workload source of truth: `playbooks/invidious/docker-compose.yml`
+Workload definition: `values.production.yaml`. The migrated LXC
+Compose stack and its Ansible playbook have been retired.
 (app `quay.io/invidious/invidious:2026.10.23-4a271da`, port 3000;
 companion `quay.io/invidious/invidious-companion:2026.10.18-fcb0456`,
 port 8282; database `docker.io/postgres:18.6` — all three in one pod
 here, where the compose ran them as separate services).
 
-Exposure is **public via Pangolin** — the compose pairs the app with
-a Newt sidecar, reproduced in-pod with the *same* Newt identity, so
-the existing Pangolin route and public URL carry over unchanged. Do
-not rewrite this app as tailnet-only; the compose is authoritative.
+Exposure is **public via Pangolin** — the retired LXC paired the app
+with a Newt sidecar, reproduced in-pod with the *same* Newt identity,
+so the existing Pangolin route and public URL carry over unchanged.
+Do not rewrite this app as tailnet-only.
 Expect a brief public outage at cutover while the Newt identity
 moves from the LXC to the pod.
 
@@ -124,7 +125,7 @@ twice.
 ## Batch C execution status (2026-10-23)
 
 Invidious is live on Talos; the LXC Compose stack is stopped and its
-playbook is excluded from daily CI with `.no-ci`. Cutover counts were
+Ansible playbook has been retired. Cutover counts were
 1 user and 0 videos. The dump was 16,802,200 bytes
 (SHA-256 `7a1fc10e557488d604b0f3d549190c7f0189c0ba98d7e2ff02cd8f2e2cadd278`),
 and the restored database matched those counts before playback verification.
