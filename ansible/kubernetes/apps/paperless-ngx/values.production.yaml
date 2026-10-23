@@ -1,0 +1,261 @@
+---
+# Paperless-ngx — Argo CD production values (bjw-s app-template 5.3.0).
+# Source of truth for the workload: playbooks/paperless-ngx/docker-compose.yml
+# (app docker.io/paperlessngx/paperless-ngx 3.3.3, port 8000; broker
+# docker.io/library/redis 8 as a second container in the same pod).
+# Public via Pangolin: the compose pairs the app with a Newt sidecar,
+# reproduced in-pod with the *same* Newt identity, so the existing
+# Pangolin route and public URL carry over unchanged. Do not rewrite
+# this app as tailnet-only; the compose is authoritative.
+#
+# The compose sets no PAPERLESS_DBHOST, so Paperless uses its SQLite
+# database in the data volume — there is deliberately no Postgres
+# here. State is four file volumes (data, media, consume, export),
+# all chart-managed local-path PVCs; media holds the actual documents
+# and stays local on purpose, because NFS data is never
+# Velero-backed-up. Redis data is broker state only and is NOT
+# copied at cutover; the broker starts empty.
+#
+# Secrets stay outside Git and outside Argo's ownership:
+#   paperless-newt-external  (PANGOLIN_ENDPOINT, NEWT_ID, NEWT_SECRET)
+#                            — playbooks/talos-cluster/paperless-secret.yml
+#   paperless-external       (PAPERLESS_SECRET_KEY,
+#                             PAPERLESS_ADMIN_USER,
+#                             PAPERLESS_ADMIN_PASSWORD, PAPERLESS_URL)
+#                            — same playbook
+controllers:
+  paperless-ngx:
+    type: deployment
+    strategy: Recreate
+    # Staging: the pod starts at cutover, once the file volumes have
+    # been copied and the LXC stack is stopped (README).
+    replicas: 0
+    pod:
+      annotations:
+        # Opt-in filesystem backup of the file volumes (Redis broker
+        # state excluded by omission). The pre-backup hook writes a
+        # consistent SQLite copy into the data volume first, so the
+        # filesystem backup carries a clean database alongside the
+        # live (possibly WAL-dirty) one.
+        backup.velero.io/backup-volumes: data,media,consume,export
+        pre.hook.backup.velero.io/container: app
+        pre.hook.backup.velero.io/command: '["/usr/bin/env","python3","-c","import sqlite3; s=sqlite3.connect(\"/usr/src/paperless/data/db.sqlite3\");
+          d=sqlite3.connect(\"/usr/src/paperless/data/db-backup.sqlite3\"); s.backup(d)"]'
+    containers:
+      app:
+        image:
+          repository: docker.io/paperlessngx/paperless-ngx
+          tag: 3.3.3
+          digest: sha256:dba0242c1df1843643df4eb50ce5639f3a7900f414879088fd5bed8eaf2d456d
+        envFrom:
+          - secretRef:
+              name: paperless-external
+        env:
+          PAPERLESS_TIME_ZONE: UTC
+          # The compose reaches Redis by service name; in-pod it is
+          # the neighbouring container.
+          PAPERLESS_REDIS: redis://127.0.0.1:6379
+        probes:
+          startup:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8000
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              # First boot runs migrations and builds the search
+              # index; give it the wide budget.
+              failureThreshold: 60
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8000
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8000
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            # OCR and indexing bursts are CPU-hungry and brief.
+            cpu: 4000m
+            memory: 2Gi
+      redis:
+        image:
+          repository: docker.io/library/redis
+          tag: "8"
+          digest: sha256:97ec88159e6d7cfb5ddef9015386087d58a912de80112f06ebdfa78fa5989901
+        probes:
+          startup:
+            enabled: true
+            type: TCP
+            port: 6379
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: TCP
+            port: 6379
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: TCP
+            port: 6379
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      newt:
+        image:
+          repository: docker.io/fosrl/newt
+          tag: 1.19.0
+          digest: sha256:0189c8287058b800cca825590e4c39946b3815344ca48678dd0b96616d639319
+        envFrom:
+          - secretRef:
+              name: paperless-newt-external
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 192Mi
+
+service:
+  paperless-ngx:
+    controller: paperless-ngx
+    ports:
+      http:
+        port: 8000
+
+persistence:
+  data:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    advancedMounts:
+      paperless-ngx:
+        app:
+          - path: /usr/src/paperless/data
+  media:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 20Gi
+    advancedMounts:
+      paperless-ngx:
+        app:
+          - path: /usr/src/paperless/media
+  consume:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    advancedMounts:
+      paperless-ngx:
+        app:
+          - path: /usr/src/paperless/consume
+  export:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    advancedMounts:
+      paperless-ngx:
+        app:
+          - path: /usr/src/paperless/export
+  redis-data:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    advancedMounts:
+      paperless-ngx:
+        redis:
+          - path: /data
+
+rawResources:
+  daily:
+    enabled: true
+    manifest:
+      apiVersion: velero.io/v1
+      kind: Schedule
+      metadata:
+        name: paperless-ngx-daily
+        namespace: velero
+      spec:
+        schedule: "0 3 * * *"
+        template:
+          ttl: 336h
+          includedNamespaces:
+            - paperless-ngx
+          excludedResources:
+            - secrets
+          defaultVolumesToFsBackup: false
+          snapshotVolumes: false
+          storageLocation: default
+
+  defaultDenyNetworkPolicy:
+    enabled: true
+    manifest:
+      apiVersion: cilium.io/v2
+      kind: CiliumNetworkPolicy
+      metadata:
+        name: default-deny
+        namespace: paperless-ngx
+      spec:
+        description: Default deny with internet fetch access, cluster DNS, and explicit internal-range denies.
+        endpointSelector: {}
+        ingress:
+          - fromEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: paperless-ngx
+        egress:
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: kube-system
+                  k8s:k8s-app: kube-dns
+            toPorts:
+              - ports:
+                  - port: "53"
+                    protocol: UDP
+                  - port: "53"
+                    protocol: TCP
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: paperless-ngx
+          - toEntities:
+              - cluster
+          - toEntities:
+              - world
+        egressDeny:
+          - toCIDR:
+              - 192.168.1.0/24
+              - 10.96.0.0/12
+              - 10.245.0.0/16
