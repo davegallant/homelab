@@ -1,0 +1,117 @@
+---
+# Storage for lidarr, applied once by hand (see README.md) and
+# deliberately NOT managed by Argo CD: the homelab AppProject allows
+# namespace-scoped resources only, so namespaces and static volumes
+# stay an Ansible / kubectl concern.
+#
+# Two volume families, two different natures:
+#   lidarr-media  - the shared media tree, a static NFS PV onto the
+#                   existing TrueNAS export the *arr LXCs and
+#                   qBittorrent read today, mounted at /mnt — the
+#                   identical path, so database paths stay true and
+#                   hardlink imports keep working (NFS link/rename
+#                   are server-side within the export). Read-write,
+#                   matching the LXC mount. The data never moves and
+#                   is never Velero-backed-up (TrueNAS snapshots +
+#                   Drive sync, same as Kiwix and RomM).
+#   app state     - config is a chart-managed local-path PVC
+#                   declared in values.production.yaml; nothing
+#                   lives here.
+#
+# VERIFY BEFORE APPLYING (README step 0): the share below follows
+# the house spelling (/mnt/tank/media) — confirm against the LXC's
+# actual mount (`findmnt /mnt` on the lidarr LXC) and correct it if
+# the tree is a different export. If /mnt on the LXC spans several
+# exports, create one PV per export and mount them under /mnt with
+# subPath entries in the values instead; the in-pod tree must be
+# identical either way.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lidarr
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: lidarr-media
+spec:
+  capacity:
+    storage: 1Ti # nominal; NFS reports the export's real size
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+    - noatime
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: truenas-lidarr-media
+    volumeAttributes:
+      server: 192.168.1.83
+      share: /mnt/pool
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lidarr-media
+  namespace: lidarr
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: lidarr-media
+  resources:
+    requests:
+      storage: 1Ti
+
+---
+# The LXC's separate /music mount. The share below is the TrueNAS
+# Music export from the Proxmox host's fstab; VERIFY against the
+# lidarr LXC first (README step 0): if /music there is a symlink or
+# bind into the /mnt tree instead of this export mounted directly,
+# drop this PV/PVC pair and mount the lidarr-media claim at /music
+# with the matching subPath in the values.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: lidarr-music
+spec:
+  capacity:
+    storage: 1Ti # nominal; NFS reports the export's real size
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+    - noatime
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: truenas-lidarr-music
+    volumeAttributes:
+      server: 192.168.1.16
+      share: /mnt/tank/media/Music
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lidarr-music
+  namespace: lidarr
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: lidarr-music
+  resources:
+    requests:
+      storage: 1Ti
