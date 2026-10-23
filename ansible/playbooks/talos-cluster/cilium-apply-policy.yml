@@ -24,10 +24,14 @@
 
     - name: Read the app-template policy from its production values
       ansible.builtin.set_fact:
-        cilium_policy_manifest: >-
-          {{ (lookup('ansible.builtin.file', playbook_dir + '/../../kubernetes/'
-          + cilium_policy_values_path) | from_yaml).rawResources
-          [cilium_policy_values_key].manifest }}
+        cilium_policy_values: >-
+          {{ lookup('ansible.builtin.file', playbook_dir + '/../../kubernetes/'
+          + cilium_policy_values_path) | from_yaml }}
+      when: cilium_policy_source == 'values'
+
+    - name: Select the policy manifest from the production values
+      ansible.builtin.set_fact:
+        cilium_policy_manifest: "{{ cilium_policy_values.rawResources[cilium_policy_values_key].manifest }}"
       when: cilium_policy_source == 'values'
 
     - name: Read a bespoke policy manifest from its workload directory
