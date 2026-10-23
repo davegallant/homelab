@@ -10,6 +10,7 @@
     cilium_policy_path: ""
     cilium_policy_values_path: ""
     cilium_policy_values_key: defaultDenyNetworkPolicy
+    cilium_policy_verify_url: ""
   tasks:
     - name: Require an explicit cluster and workload namespace
       ansible.builtin.assert:
@@ -73,4 +74,19 @@
         | selectattr('type', 'equalto', 'Valid') | selectattr('status', 'equalto', 'True') | list | length > 0
       retries: 60
       delay: 5
+      changed_when: false
+
+    - name: Verify the workload endpoint after applying its policy
+      ansible.builtin.uri:
+        url: "{{ cilium_policy_verify_url }}"
+        method: GET
+        follow_redirects: all
+        status_code: 200
+        timeout: 20
+      register: cilium_policy_http
+      until: cilium_policy_http.status | default(0) == 200
+      retries: 12
+      delay: 5
+      when: cilium_policy_verify_url | length > 0
+      no_log: true
       changed_when: false
