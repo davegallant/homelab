@@ -183,8 +183,8 @@ controllers:
               name: invidious-newt-external
         resources:
           requests:
-            cpu: 25m
-            memory: 64Mi
+            cpu: 5m
+            memory: 24Mi
           limits:
             cpu: 200m
             memory: 192Mi
