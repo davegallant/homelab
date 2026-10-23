@@ -86,7 +86,7 @@ controllers:
               failureThreshold: 3
         resources:
           requests:
-            cpu: 100m
+            cpu: 20m
             memory: 256Mi
           limits:
             cpu: 1000m
@@ -115,7 +115,7 @@ controllers:
           TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
         resources:
           requests:
-            cpu: 25m
+            cpu: 10m
             memory: 64Mi
           limits:
             cpu: 200m
@@ -135,7 +135,7 @@ controllers:
           - caddyfile
         resources:
           requests:
-            cpu: 25m
+            cpu: 10m
             memory: 32Mi
           limits:
             cpu: 100m
