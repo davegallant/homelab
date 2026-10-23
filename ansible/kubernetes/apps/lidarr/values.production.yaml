@@ -45,7 +45,7 @@ controllers:
         # Opt-in filesystem backup of the config volume only; the
         # NFS media tree is excluded by omission (TrueNAS snapshots
         # + Drive sync protect it, never Velero).
-        backup.velero.io/backup-volumes: config
+        backup.velero.io/backup-volumes: config-local
     containers:
       app:
         image:
