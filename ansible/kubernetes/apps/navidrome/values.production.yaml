@@ -1,0 +1,193 @@
+---
+# Navidrome — Argo CD production values (bjw-s app-template 5.3.0).
+# Source of truth for the workload: playbooks/navidrome/docker-compose.yml
+# (image docker.io/deluan/navidrome 0.64.2, port 4533, ./data:/data,
+# /music:/music:ro).
+#
+# PUBLIC via Pangolin, exactly as on the LXC: the compose pairs the app
+# with a Newt sidecar (fosrl/newt 1.19.0), and this values file
+# reproduces that pairing in-pod. Navidrome is NOT tailnet-only — the
+# Newt identity below is the same one the LXC uses, so the existing
+# Pangolin route (and its public URL) carries over unchanged.
+#
+# Secrets stay outside Git and outside Argo's ownership, both created
+# by playbooks/talos-cluster/navidrome-secret.yml from Vault:
+#   navidrome-newt-external (PANGOLIN_ENDPOINT, NEWT_ID, NEWT_SECRET)
+#   navidrome-external      (ND_LASTFM_APIKEY, ND_LASTFM_SECRET)
+controllers:
+  navidrome:
+    type: deployment
+    strategy: Recreate
+    # STAGING: 0 until the LXC data dir has been copied into the PVC
+    # (see README.md). The cutover commit removes this line.
+    replicas: 0
+    pod:
+      annotations:
+        # Opt-in filesystem backup of the app data volume only; the
+        # NFS library is excluded by omission (TrueNAS snapshots +
+        # Drive sync protect it, never Velero).
+        backup.velero.io/backup-volumes: data
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+    containers:
+      app:
+        image:
+          repository: docker.io/deluan/navidrome
+          tag: 0.64.2
+          digest: sha256:38dc2727bfcfd5ede290f8ada114fc90368146f265ae4701ddddbcbe2a44ee52
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+        envFrom:
+          - secretRef:
+              name: navidrome-external
+        env:
+          ND_ENABLEINSIGHTSCOLLECTOR: "false"
+          ND_AUTOIMPORTPLAYLISTS: "false"
+          # The LXC points ListenBrainz at Maloja's tailnet URL, which
+          # a pod cannot resolve or route to (no MagicDNS in-pod).
+          # Maloja is in-cluster now, so the scrobble target becomes
+          # its Service DNS name; the default-deny policy's cluster
+          # egress already permits it. If Maloja gains an ingress
+          # policy, it needs a matching fromEndpoints exception for
+          # this namespace (see README.md).
+          ND_LISTENBRAINZ_BASEURL: http://maloja.maloja.svc.cluster.local:42010/apis/listenbrainz/1/
+        probes:
+          startup:
+            enabled: true
+            type: HTTP
+            path: /ping
+            port: 4533
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 24
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /ping
+            port: 4533
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: HTTP
+            path: /ping
+            port: 4533
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+      newt:
+        image:
+          repository: docker.io/fosrl/newt
+          tag: 1.19.0
+          digest: sha256:0189c8287058b800cca825590e4c39946b3815344ca48678dd0b96616d639319
+        envFrom:
+          - secretRef:
+              name: navidrome-newt-external
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 192Mi
+
+service:
+  navidrome:
+    controller: navidrome
+    ports:
+      http:
+        port: 4533
+
+persistence:
+  data:
+    type: persistentVolumeClaim
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    advancedMounts:
+      navidrome:
+        app:
+          - path: /data
+  library:
+    type: persistentVolumeClaim
+    existingClaim: navidrome-music
+    advancedMounts:
+      navidrome:
+        app:
+          - path: /music
+            readOnly: true
+
+rawResources:
+  backupSchedule:
+    enabled: true
+    manifest:
+      apiVersion: velero.io/v1
+      kind: Schedule
+      metadata:
+        name: navidrome-daily
+        namespace: velero
+      spec:
+        schedule: "0 3 * * *"
+        template:
+          ttl: 336h
+          includedNamespaces:
+            - navidrome
+          excludedResources:
+            - secrets
+          defaultVolumesToFsBackup: false
+          snapshotVolumes: false
+          storageLocation: default
+
+  defaultDenyNetworkPolicy:
+    enabled: true
+    manifest:
+      apiVersion: cilium.io/v2
+      kind: CiliumNetworkPolicy
+      metadata:
+        name: default-deny
+        namespace: navidrome
+      spec:
+        description: Default deny with internet fetch access, cluster DNS, and explicit internal-range denies.
+        endpointSelector: {}
+        ingress:
+          - fromEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: navidrome
+        egress:
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: kube-system
+                  k8s:k8s-app: kube-dns
+            toPorts:
+              - ports:
+                  - port: "53"
+                    protocol: UDP
+                  - port: "53"
+                    protocol: TCP
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: navidrome
+          - toEntities:
+              - cluster
+          - toEntities:
+              - world
+        egressDeny:
+          - toCIDR:
+              - 192.168.1.0/24
+              - 10.96.0.0/12
+              - 10.245.0.0/16
