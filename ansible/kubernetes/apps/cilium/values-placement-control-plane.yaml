@@ -3,3 +3,6 @@ nodeSelector:
 envoy:
   nodeSelector:
     kubernetes.io/hostname: k8s-cp-1
+resources:
+  limits:
+    memory: 512Mi

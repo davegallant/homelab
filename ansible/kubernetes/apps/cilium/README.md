@@ -74,3 +74,11 @@ The worker-host memory checks apply to the default `cluster` scope; no
 component is added to w-2 in the diagnostic scope. The migration values
 enable pprof on localhost:6060 for a local kubectl port-forward.
 Expand to the cluster scope only after the pve-g3-2 memory gate passes.
+
+The control-plane diagnostic overlay raises only the agent memory limit to
+512 MiB. At 256 MiB the agent cgroup recorded over 96,000 limit hits,
+5.9 million direct page scans, 7,503 major faults, and sustained full
+memory pressure without an OOM kill. Its main thread was in uninterruptible
+sleep and localhost health/profiler requests timed out. This experiment
+tests memory reclaim as the cause before attributing the stalls to the
+Kubernetes version. The worker placement and limits are unchanged.
