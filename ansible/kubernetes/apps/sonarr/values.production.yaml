@@ -188,6 +188,11 @@ configMaps:
 persistence:
   config:
     type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 5Gi
+  config-local:
+    type: persistentVolumeClaim
     existingClaim: sonarr-config-local
     advancedMounts:
       sonarr:
