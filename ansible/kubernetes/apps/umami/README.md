@@ -6,14 +6,15 @@ Application — no local chart. Desired state is
 is `../argocd/applications/umami.yaml`. Syncs are manual, pruning is
 off, and deleting the Application preserves the workload.
 
-Workload source of truth: `playbooks/umami/docker-compose.yml`
+Workload definition: `values.production.yaml`. The migrated LXC
+Compose stack and its Ansible playbook have been retired.
 (app `ghcr.io/umami-software/umami:3.4.0`, port 3000; database
 `docker.io/postgres:18.6` as a second container in the same pod).
 
-Exposure is **public via Pangolin** — the compose pairs the app with a
-Newt sidecar, reproduced in-pod with the *same* Newt identity, so the
-existing Pangolin route and public URL carry over unchanged. Do not
-rewrite this app as tailnet-only; the compose is authoritative.
+Exposure is **public via Pangolin** — the retired LXC paired the app
+with a Newt sidecar, reproduced in-pod with the *same* Newt identity,
+so the existing Pangolin route and public URL carry over unchanged.
+Do not rewrite this app as tailnet-only.
 Expect a brief public outage at cutover while the Newt identity moves
 from the LXC to the pod.
 
