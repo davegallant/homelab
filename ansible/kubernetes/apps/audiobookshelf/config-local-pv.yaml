@@ -1,0 +1,56 @@
+---
+# Rebind the copied config directory through a static local PV so Velero
+# can create a PodVolumeBackup; the original PVC remains mounted read-only
+# for rollback inspection.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: audiobookshelf-config-local
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  local:
+    path: /var/mnt/local-path/pvc-7bf41207-8791-458e-97ca-70b624a20bce_audiobookshelf_audiobookshelf-config
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w-1
+  claimRef:
+    namespace: audiobookshelf
+    name: audiobookshelf-config-local
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: audiobookshelf-metadata-local
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  local:
+    path: /var/mnt/local-path/pvc-952797a7-efcc-4f31-96b4-f4c5e85ca9de_audiobookshelf_audiobookshelf-metadata
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w-1
+  claimRef:
+    namespace: audiobookshelf
+    name: audiobookshelf-metadata-local

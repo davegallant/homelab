@@ -29,7 +29,7 @@ controllers:
         # Opt-in filesystem backup of the two state volumes; the NFS
         # libraries are excluded by omission (TrueNAS snapshots +
         # Drive sync protect them, never Velero).
-        backup.velero.io/backup-volumes: config,metadata
+        backup.velero.io/backup-volumes: config-local,metadata-local
     containers:
       app:
         image:
@@ -105,12 +105,36 @@ persistence:
     advancedMounts:
       audiobookshelf:
         app:
+          - path: /mnt/audiobookshelf-rollback-config
+            readOnly: true
+  config-local:
+    type: persistentVolumeClaim
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
+    storageClass: pve-g3-1-local
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    advancedMounts:
+      audiobookshelf:
+        app:
           - path: /config
   metadata:
     type: persistentVolumeClaim
     annotations:
       argocd.argoproj.io/ignore-healthcheck: "true"
     storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    advancedMounts:
+      audiobookshelf:
+        app:
+          - path: /mnt/audiobookshelf-rollback-metadata
+            readOnly: true
+  metadata-local:
+    type: persistentVolumeClaim
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
+    storageClass: pve-g3-1-local
     accessMode: ReadWriteOnce
     size: 10Gi
     advancedMounts:
