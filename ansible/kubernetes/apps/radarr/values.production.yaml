@@ -1,6 +1,6 @@
 ---
 # Radarr — Argo CD production values (bjw-s app-template 5.3.0).
-# Source of truth for the workload: playbooks/radarr/docker-compose.yml
+# Workload definition: this file, rendered by the bjw-s app-template chart.
 # (app docker.io/linuxserver/radarr 6.4.4, port 7878; config on a
 # local volume, the shared media tree at /mnt).
 # Tailnet-only: exposure mirrors the RomM pod — userspace Tailscale
