@@ -27,9 +27,6 @@ controllers:
   paperless-ngx:
     type: deployment
     strategy: Recreate
-    # Staging: the pod starts at cutover, once the file volumes have
-    # been copied and the LXC stack is stopped (README).
-    replicas: 0
     pod:
       annotations:
         # Opt-in filesystem backup of the file volumes (Redis broker
@@ -37,7 +34,7 @@ controllers:
         # consistent SQLite copy into the data volume first, so the
         # filesystem backup carries a clean database alongside the
         # live (possibly WAL-dirty) one.
-        backup.velero.io/backup-volumes: data,media,consume,export
+        backup.velero.io/backup-volumes: data-local,media-local,consume-local,export-local
         pre.hook.backup.velero.io/container: app
         pre.hook.backup.velero.io/command: '["/usr/bin/env","python3","-c","import sqlite3; s=sqlite3.connect(\"/usr/src/paperless/data/db.sqlite3\");
           d=sqlite3.connect(\"/usr/src/paperless/data/db-backup.sqlite3\"); s.backup(d)"]'
@@ -162,12 +159,28 @@ persistence:
     advancedMounts:
       paperless-ngx:
         app:
+          - path: /mnt/paperless-rollback-data
+            readOnly: true
+  data-local:
+    type: persistentVolumeClaim
+    existingClaim: paperless-ngx-data-local
+    advancedMounts:
+      paperless-ngx:
+        app:
           - path: /usr/src/paperless/data
   media:
     type: persistentVolumeClaim
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 20Gi
+    advancedMounts:
+      paperless-ngx:
+        app:
+          - path: /mnt/paperless-rollback-media
+            readOnly: true
+  media-local:
+    type: persistentVolumeClaim
+    existingClaim: paperless-ngx-media-local
     advancedMounts:
       paperless-ngx:
         app:
@@ -180,12 +193,28 @@ persistence:
     advancedMounts:
       paperless-ngx:
         app:
+          - path: /mnt/paperless-rollback-consume
+            readOnly: true
+  consume-local:
+    type: persistentVolumeClaim
+    existingClaim: paperless-ngx-consume-local
+    advancedMounts:
+      paperless-ngx:
+        app:
           - path: /usr/src/paperless/consume
   export:
     type: persistentVolumeClaim
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 5Gi
+    advancedMounts:
+      paperless-ngx:
+        app:
+          - path: /mnt/paperless-rollback-export
+            readOnly: true
+  export-local:
+    type: persistentVolumeClaim
+    existingClaim: paperless-ngx-export-local
     advancedMounts:
       paperless-ngx:
         app:

@@ -44,7 +44,7 @@ Secrets stay in Vault and outside Argo's ownership, both created by
 `PAPERLESS_ADMIN_PASSWORD`, `PAPERLESS_URL`).
 
 Backups: Velero Schedule `paperless-ngx-daily` (in the values) with
-pod annotation `backup.velero.io/backup-volumes: data,media,consume,export`
+pod annotation `backup.velero.io/backup-volumes: data-local,media-local,consume-local,export-local`
 and a pre-backup hook that writes a consistent SQLite copy
 (`db-backup.sqlite3`, via the SQLite online-backup API) into the
 data volume first. The network policy is the house default-deny
