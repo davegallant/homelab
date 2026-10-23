@@ -1,0 +1,43 @@
+---
+# Cutover PV points at the directory provisioned by Umami's initial
+# local-path claim; the original claim remains mounted read-only for rollback.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: umami-db-data-local
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  local:
+    path: /var/mnt/local-path/pvc-a2e13c89-dde8-4c69-ba51-65bc23acf971_umami_umami
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w-1
+  claimRef:
+    namespace: umami
+    name: umami-db-data-local
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: umami-db-data-local
+  namespace: umami
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  volumeName: umami-db-data-local
