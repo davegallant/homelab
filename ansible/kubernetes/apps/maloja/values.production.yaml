@@ -266,6 +266,8 @@ rawResources:
           - fromEndpoints:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: maloja
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: navidrome
         egress:
           - toEndpoints:
               - matchLabels:
