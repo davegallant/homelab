@@ -9,6 +9,10 @@ tunnelProtocol: vxlan
 tunnelPort: 8473
 kubeProxyReplacement: false
 policyEnforcementMode: never
+pprof:
+  enabled: true
+  address: localhost
+  port: 6060
 operator:
   replicas: 1
   nodeSelector:
