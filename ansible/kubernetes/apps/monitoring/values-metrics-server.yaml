@@ -12,6 +12,10 @@ defaultArgs:
   - --metric-resolution=60s
   - --kubelet-insecure-tls
 args: []
+livenessProbe:
+  timeoutSeconds: 5
+readinessProbe:
+  timeoutSeconds: 5
 resources:
   requests:
     cpu: 25m

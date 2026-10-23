@@ -1,0 +1,54 @@
+---
+- name: Increase metrics-server probe tolerance on Talos Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    talos_kube_context: ""
+  tasks:
+    - name: Require an explicit cluster context
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+
+    - name: Set metrics-server liveness and readiness probe timeouts
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - kube-system
+          - patch
+          - deployment/metrics-server
+          - --type=strategic
+          - --patch
+          - >-
+            {"spec":{"template":{"spec":{"containers":[{"name":"metrics-server","livenessProbe":{"timeoutSeconds":5},"readinessProbe":{"timeoutSeconds":5}}]}}}}
+      changed_when: true
+
+    - name: Wait for the metrics-server rollout
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - kube-system
+          - rollout
+          - status
+          - deployment/metrics-server
+          - --timeout=120s
+      changed_when: false
+
+    - name: Wait for the metrics API to become available
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - wait
+          - --for=condition=Available
+          - apiservice/v1beta1.metrics.k8s.io
+          - --timeout=120s
+      changed_when: false
