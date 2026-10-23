@@ -130,7 +130,7 @@ server:
 redis:
   image:
     repository: docker.io/library/redis
-    tag: 8.6.4-alpine@sha256:2cc044fc5a07c9b701f8f1255a309ae9ad7856e694ac03513bf3648c01e40763
+    tag: 8.10.2-alpine@sha256:0bf6577d7774e592b29d093e3ac9390eb91e13d72c21e506afce736de5e0eeb0
   resources:
     requests:
       cpu: 10m
