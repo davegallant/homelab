@@ -1,0 +1,67 @@
+- name: Read the chart-owned Velero Schedule
+  ansible.builtin.command:
+    argv: [kubectl, --context, "{{ talos_kube_context }}", -n, velero, get, "schedule/{{ cilium_backup_namespace }}-daily", -o, json]
+  register: cilium_backup_schedule
+  changed_when: false
+
+- name: Require file-system backup in the source Schedule
+  ansible.builtin.assert:
+    that:
+      - (cilium_backup_schedule.stdout | from_json).spec.template.defaultVolumesToFsBackup | bool
+      - cilium_backup_namespace in (cilium_backup_schedule.stdout | from_json).spec.template.includedNamespaces
+
+- name: Create a migration verification backup from the Schedule template
+  ansible.builtin.command:
+    argv: [kubectl, --context, "{{ talos_kube_context }}", apply, -f, "-"]
+    stdin: >-
+      {{ {'apiVersion': 'velero.io/v1', 'kind': 'Backup',
+          'metadata': {'name': cilium_backup_namespace ~ '-cilium-' ~ cilium_backup_stamp,
+                       'namespace': 'velero'},
+          'spec': (cilium_backup_schedule.stdout | from_json).spec.template} | to_json }}
+  changed_when: true
+
+- name: Wait for the backup to complete
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - -n
+      - velero
+      - get
+      - "backup/{{ cilium_backup_namespace }}-cilium-{{ cilium_backup_stamp }}"
+      - -o
+      - jsonpath={.status.phase}
+  register: cilium_backup_phase
+  until: cilium_backup_phase.stdout == 'Completed'
+  retries: 120
+  delay: 10
+  changed_when: false
+
+- name: Read the completed backup's pod-volume results
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - -n
+      - velero
+      - get
+      - podvolumebackups
+      - -l
+      - "velero.io/backup-name={{ cilium_backup_namespace }}-cilium-{{ cilium_backup_stamp }}"
+      - -o
+      - json
+  register: cilium_backup_pvbs
+  changed_when: false
+
+- name: Require nonzero completed PodVolumeBackups
+  ansible.builtin.assert:
+    that:
+      - (cilium_backup_pvbs.stdout | from_json)['items'] | length > 0
+      - >-
+        (cilium_backup_pvbs.stdout | from_json)['items']
+        | rejectattr('status.phase', 'equalto', 'Completed') | list | length == 0
+      - >-
+        (cilium_backup_pvbs.stdout | from_json)['items']
+        | selectattr('spec.volume', 'equalto', 'tailscale-state') | list | length == 0
