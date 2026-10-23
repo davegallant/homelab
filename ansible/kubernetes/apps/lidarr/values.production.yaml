@@ -1,0 +1,359 @@
+---
+# Lidarr — Argo CD production values (bjw-s app-template 5.3.0).
+# Source of truth for the workload: playbooks/lidarr/docker-compose.yml
+# (app docker.io/linuxserver/lidarr 3.1.0, port 8686; config on a
+# local volume, the shared media tree at /mnt, plus the LXC's
+# separate /music mount as a second static claim — storage.yaml).
+# Tailnet-only: exposure mirrors the RomM pod — userspace Tailscale
+# sidecar TCP-forwarding 443 to an in-pod Caddy (8443), which
+# terminates a real certificate (Cloudflare DNS-01) and proxies to
+# Lidarr on 127.0.0.1:8686, replacing the LXC's host Caddy role.
+# The tailnet URL is unchanged.
+#
+# Batch D design note: qBittorrent does NOT move with the *arr
+# suite. It keeps its LXC, its static LAN IP, and its OPNsense →
+# Mullvad policy route. This pod reaches it over the LAN exactly
+# as the LXC does today; the CiliumNetworkPolicy below carries the
+# one new rule that split requires (egress to qBittorrent's API).
+#
+# The media tree stays on TrueNAS (static NFS claim lidarr-media,
+# see storage.yaml), mounted at /mnt — the identical path the LXC
+# uses, so every path in Lidarr's database stays true and hardlink
+# imports keep working (NFS link/rename are server-side within the
+# export). It never moves and is never Velero-backed-up (TrueNAS
+# snapshots + Drive sync).
+#
+# Secrets stay outside Git and outside Argo's ownership:
+#   lidarr-caddy-external    (key cloudflare_api_token) — gitops-secrets.yml
+#   lidarr-tailscale-auth    (key TS_AUTHKEY, one-use)  — bootstrap only
+# There is deliberately no app Secret: Lidarr's API key and qBittorrent
+# credentials live in its config.xml, which arrives with the copied
+# /config.
+#
+# CUTOVER SUBSTITUTION (README step 0): the qBittorrent egress rule
+# below uses 192.168.1.152/32 (TEST-NET-3, unroutable — fails safe).
+# Replace BOTH occurrences with qBittorrent's real static LAN IP
+# before the staging commit.
+controllers:
+  lidarr:
+    type: deployment
+    strategy: Recreate
+    # Staging: the pod starts at cutover, once the config has been
+    # copied and verified (README).
+    replicas: 0
+    pod:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-w-1
+      annotations:
+        # Opt-in filesystem backup of the config volume only; the
+        # NFS media tree is excluded by omission (TrueNAS snapshots
+        # + Drive sync protect it, never Velero).
+        backup.velero.io/backup-volumes: config
+    containers:
+      app:
+        image:
+          repository: docker.io/linuxserver/lidarr
+          tag: 3.1.0
+          digest: sha256:d8549ff9ea29b4015c32257360652c1000c31ea471a2b3f0835ae77292faf35b
+        env:
+          PUID: "1000"
+          PGID: "1000"
+          UMASK: "002"
+          TZ: Etc/UTC
+        probes:
+          startup:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8686
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8686
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: TCP
+            port: 8686
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+      tailscale:
+        image:
+          repository: ghcr.io/tailscale/tailscale
+          tag: v1.104.1
+          digest: sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
+        envFrom:
+          # The bootstrap-created Secret holds exactly one key
+          # (TS_AUTHKEY), imported here as the env var of that name.
+          # Optional: once the identity persists in tailscale-state,
+          # the Secret is deleted and the sidecar runs without it.
+          - secretRef:
+              name: lidarr-tailscale-auth
+              optional: true
+        env:
+          TS_AUTH_ONCE: "true"
+          TS_HOSTNAME: lidarr
+          TS_STATE_DIR: /var/lib/tailscale
+          # State lives on the local PVC, so disable Kubernetes Secret storage.
+          TS_KUBE_SECRET: ""
+          TS_USERSPACE: "true"
+          TS_EXTRA_ARGS: --login-server=https://hs.davegallant.ca --accept-dns=false
+          TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 192Mi
+      caddy:
+        image:
+          repository: ghcr.io/davegallant/homelab-caddy-cloudflare
+          tag: 2.11.6-a8737d0
+          digest: sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
+        command:
+          - caddy
+        args:
+          - run
+          - --config
+          - /etc/caddy/Caddyfile
+          - --adapter
+          - caddyfile
+        resources:
+          requests:
+            cpu: 25m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+
+service:
+  lidarr:
+    controller: lidarr
+    ports:
+      http:
+        port: 8686
+
+configMaps:
+  # Keys are short on purpose: bjw-s names the rendered ConfigMaps
+  # <release>-<key>, and the persistence entries below reference the
+  # resulting lidarr-tailscale / lidarr-caddy names.
+  tailscale:
+    data:
+      serve-config.json: |
+        {
+          "TCP": {
+            "443": {
+              "TCPForward": "127.0.0.1:8443"
+            }
+          }
+        }
+  caddy:
+    data:
+      Caddyfile: |
+        {
+          auto_https disable_redirects
+          https_port 8443
+          tls_resolvers 1.1.1.1
+          servers {
+            protocols h1 h2
+          }
+        }
+
+        lidarr.tail.davegallant.ca {
+          bind 127.0.0.1
+
+          tls {
+            dns cloudflare {file./run/secrets/cloudflare_api_token}
+            propagation_delay 30s
+            propagation_timeout -1
+          }
+
+          reverse_proxy 127.0.0.1:8686
+        }
+
+persistence:
+  config:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    advancedMounts:
+      lidarr:
+        app:
+          - path: /config
+  media:
+    type: persistentVolumeClaim
+    existingClaim: lidarr-media
+    advancedMounts:
+      lidarr:
+        app:
+          - path: /mnt
+  music:
+    type: persistentVolumeClaim
+    existingClaim: lidarr-music
+    advancedMounts:
+      lidarr:
+        app:
+          - path: /music
+  tailscale-state:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    advancedMounts:
+      lidarr:
+        tailscale:
+          - path: /var/lib/tailscale
+  tailscale-config:
+    type: configMap
+    name: lidarr-tailscale
+    advancedMounts:
+      lidarr:
+        tailscale:
+          - path: /etc/tailscale/serve-config.json
+            subPath: serve-config.json
+            readOnly: true
+  caddy-config:
+    type: configMap
+    name: lidarr-caddy
+    advancedMounts:
+      lidarr:
+        caddy:
+          - path: /etc/caddy/Caddyfile
+            subPath: Caddyfile
+            readOnly: true
+  caddy-state:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 256Mi
+    advancedMounts:
+      lidarr:
+        caddy:
+          - path: /data
+  caddy-runtime:
+    type: emptyDir
+    advancedMounts:
+      lidarr:
+        caddy:
+          - path: /config
+  caddy-secret:
+    type: secret
+    name: lidarr-caddy-external
+    advancedMounts:
+      lidarr:
+        caddy:
+          - path: /run/secrets/cloudflare_api_token
+            subPath: cloudflare_api_token
+            readOnly: true
+
+rawResources:
+  daily:
+    enabled: true
+    manifest:
+      apiVersion: velero.io/v1
+      kind: Schedule
+      metadata:
+        name: lidarr-daily
+        namespace: velero
+      spec:
+        schedule: "0 3 * * *"
+        template:
+          ttl: 336h
+          includedNamespaces:
+            - lidarr
+          excludedResources:
+            - secrets
+          defaultVolumesToFsBackup: false
+          snapshotVolumes: false
+          storageLocation: default
+
+  defaultDenyNetworkPolicy:
+    enabled: true
+    manifest:
+      apiVersion: cilium.io/v2
+      kind: CiliumNetworkPolicy
+      metadata:
+        name: default-deny
+        namespace: lidarr
+      spec:
+        description: Default deny with metadata-fetch egress, cluster DNS, Prowlarr access, and a single LAN exception for the qBittorrent API on its LXC.
+        endpointSelector: {}
+        ingress:
+          - fromEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: lidarr
+          # Prowlarr pushes indexer results and syncs over the API.
+          - fromEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: prowlarr
+            toPorts:
+              - ports:
+                  - port: "8686"
+                    protocol: TCP
+        egress:
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: kube-system
+                  k8s:k8s-app: kube-dns
+            toPorts:
+              - ports:
+                  - port: "53"
+                    protocol: UDP
+                  - port: "53"
+                    protocol: TCP
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: lidarr
+          # The apps poll Prowlarr's Torznab feeds; at cutover each
+          # app's Prowlarr indexer URL is repointed to the Service.
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: prowlarr
+            toPorts:
+              - ports:
+                  - port: "9696"
+                    protocol: TCP
+          # qBittorrent stays on its LXC: the download-client API is
+          # the one LAN destination this pod may reach. SUBSTITUTE
+          # the real static IP for 192.168.1.152/32 at cutover (README
+          # step 0) — TEST-NET-3 is unroutable, so an unsubstituted
+          # policy fails safe (test fails, nothing leaks).
+          - toCIDRSet:
+              - cidr: 192.168.1.152/32
+            toPorts:
+              - ports:
+                  - port: "8080"
+                    protocol: TCP
+          - toEntities:
+              - cluster
+          - toEntities:
+              - world
+        egressDeny:
+          # The world allow above must never become a LAN backdoor;
+          # deny the private ranges right back out, excepting only
+          # the qBittorrent host (same substitution as above).
+          - toCIDRSet:
+              - cidr: 192.168.1.0/24
+                except:
+                  - 192.168.1.152/32
+              - cidr: 10.96.0.0/12
+              - cidr: 10.245.0.0/16
