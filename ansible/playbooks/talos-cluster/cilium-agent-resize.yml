@@ -1,0 +1,51 @@
+---
+- name: Resize the control-plane diagnostic Cilium agent
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    talos_kube_context: ""
+  tasks:
+    - name: Require the intended cluster context
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+
+    - name: Find the control-plane Cilium agent
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - cilium-system
+          - get
+          - pods
+          - -l
+          - k8s-app=cilium
+          - --field-selector=spec.nodeName=k8s-cp-1
+          - -o
+          - jsonpath={.items[*].metadata.name}
+      register: cilium_diagnostic_pod
+      changed_when: false
+
+    - name: Require exactly one diagnostic agent
+      ansible.builtin.assert:
+        that:
+          - cilium_diagnostic_pod.stdout.split() | length == 1
+
+    - name: Raise the agent memory cap in place to test reclaim pressure
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - cilium-system
+          - patch
+          - "pod/{{ cilium_diagnostic_pod.stdout }}"
+          - --subresource=resize
+          - --type=strategic
+          - --patch
+          - '{"spec":{"containers":[{"name":"cilium-agent","resources":{"limits":{"memory":"512Mi"}}}]}}'
+      changed_when: true
