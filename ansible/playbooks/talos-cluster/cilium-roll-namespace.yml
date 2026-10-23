@@ -1,0 +1,104 @@
+---
+- name: Recreate and verify one workload namespace on Cilium
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../group_vars/all/vars.yaml
+    - ../../group_vars/all/secrets.yaml
+  vars:
+    talos_kube_context: ""
+    cilium_workload_namespace: ""
+    cilium_workload_urls:
+      homepage: "https://homepage.{{ headscale_magic_dns_domain }}/"
+      kiwix: "https://kiwix.{{ headscale_magic_dns_domain }}/"
+      argocd: "https://argocd.{{ headscale_magic_dns_domain }}/"
+      maloja: "https://maloja.{{ headscale_magic_dns_domain }}/"
+      lubelogger: "https://lubelogger.{{ headscale_magic_dns_domain }}/"
+      seerr: "https://seerr.{{ headscale_magic_dns_domain }}/"
+      changedetection: "https://changedetection.{{ headscale_magic_dns_domain }}/"
+      miniflux: "{{ miniflux_url }}"
+      searxng: "{{ searxng_url }}"
+      bentopdf: "{{ bentopdf_url }}"
+  tasks:
+    - name: Require an explicit context and namespace
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+          - cilium_workload_namespace is match('^[a-z0-9][a-z0-9-]*$')
+          - cilium_workload_namespace != 'cilium-system'
+
+    - name: Read the namespace controllers
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, "{{ cilium_workload_namespace }}", get, "deployment,statefulset,daemonset", -o, json]
+      register: cilium_namespace_controllers
+      changed_when: false
+
+    - name: Restart controllers using the pod network
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - "{{ cilium_workload_namespace }}"
+          - rollout
+          - restart
+          - "{{ item.kind | lower }}/{{ item.metadata.name }}"
+      loop: "{{ (cilium_namespace_controllers.stdout | from_json)['items'] }}"
+      loop_control:
+        label: "{{ item.kind }}/{{ item.metadata.name }}"
+      when:
+        - not (item.spec.template.spec.hostNetwork | default(false))
+        - item.spec.replicas | default(1) | int > 0
+      changed_when: true
+
+    - name: Wait for the restarted controllers
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - "{{ cilium_workload_namespace }}"
+          - rollout
+          - status
+          - "{{ item.kind | lower }}/{{ item.metadata.name }}"
+          - --timeout=600s
+      loop: "{{ (cilium_namespace_controllers.stdout | from_json)['items'] }}"
+      loop_control:
+        label: "{{ item.kind }}/{{ item.metadata.name }}"
+      when:
+        - not (item.spec.template.spec.hostNetwork | default(false))
+        - item.spec.replicas | default(1) | int > 0
+      changed_when: false
+
+    - name: Require Cilium endpoint coverage for the namespace
+      ansible.builtin.command:
+        argv:
+          - python3
+          - "{{ playbook_dir }}/../../kubernetes/apps/cilium/verify-endpoints.py"
+          - --context
+          - "{{ talos_kube_context }}"
+          - --namespace
+          - "{{ cilium_workload_namespace }}"
+      register: cilium_namespace_endpoints
+      until: cilium_namespace_endpoints.rc == 0
+      retries: 30
+      delay: 5
+      changed_when: false
+
+    - name: Verify the application's HTTPS endpoint
+      ansible.builtin.uri:
+        url: "{{ cilium_workload_urls[cilium_workload_namespace] }}"
+        method: GET
+        follow_redirects: all
+        status_code: 200
+        timeout: 20
+      register: cilium_namespace_http
+      until: cilium_namespace_http.status | default(0) == 200
+      retries: 30
+      delay: 5
+      when: cilium_workload_namespace in cilium_workload_urls
+      no_log: true
+      changed_when: false
