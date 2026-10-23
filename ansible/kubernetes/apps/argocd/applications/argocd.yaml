@@ -12,6 +12,19 @@ spec:
       targetRevision: "10.10.5"
       helm:
         releaseName: argocd
+        valuesObject:
+          controller:
+            nodeSelector:
+              kubernetes.io/hostname: k8s-cp-1
+            tolerations:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+          repoServer:
+            nodeSelector:
+              kubernetes.io/hostname: k8s-cp-1
+            tolerations:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
         valueFiles:
           - $values/ansible/kubernetes/apps/argocd/values.yaml
           - $values/ansible/kubernetes/apps/argocd/values.production.yaml
