@@ -8,7 +8,7 @@
     cilium_cli_binary: cilium
     cilium_connectivity_stage: canary
     cilium_connectivity_node: k8s-w-2
-    cilium_flow_validation: warning
+    cilium_flow_validation: strict
     cilium_echo_image: >-
       gcr.io/k8s-staging-gateway-api/echo-advanced:v20251204-v1.4.1@sha256:96c3b75534386ca36c0c76ac8fdbe695f63f35bb3e0632537ffba9732c1f58c9
   tasks:
@@ -38,13 +38,53 @@
           - --echo-image
           - "{{ cilium_echo_image }}"
           - --test
-          - '^(no-policies.*|health)$'
+          - '^(no-policies.*|health)$,!no-policies/pod-to-service'
           - --flow-validation
           - "{{ cilium_flow_validation }}"
           - --timeout
           - 20m
       when: cilium_connectivity_stage == 'canary'
       changed_when: true
+
+    - name: Verify the Service scenario without the upstream VIP flow matcher
+      ansible.builtin.command:
+        argv:
+          - "{{ cilium_cli_binary }}"
+          - --context
+          - "{{ talos_kube_context }}"
+          - --namespace
+          - cilium-system
+          - connectivity
+          - test
+          - --single-node
+          - --node-selector
+          - "kubernetes.io/hostname={{ cilium_connectivity_node }}"
+          - --test-namespace
+          - cilium-canary
+          - --namespace-labels
+          - pod-security.kubernetes.io/enforce=privileged
+          - --echo-image
+          - "{{ cilium_echo_image }}"
+          - --test
+          - '^no-policies/pod-to-service$'
+          - --flow-validation
+          - disabled
+          - --timeout
+          - 10m
+      when: cilium_connectivity_stage == 'canary'
+      changed_when: true
+
+    - name: Require translated Service request and reply flows in Hubble
+      ansible.builtin.command:
+        argv:
+          - python3
+          - "{{ playbook_dir }}/../../kubernetes/apps/cilium/verify-service-flow.py"
+          - --context
+          - "{{ talos_kube_context }}"
+          - --node
+          - "{{ cilium_connectivity_node }}"
+      when: cilium_connectivity_stage == 'canary'
+      changed_when: false
 
     - name: Run the full connectivity and policy suite after migration
       ansible.builtin.command:
