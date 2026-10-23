@@ -28,14 +28,27 @@
   gather_facts: false
   vars_files:
     - ../../kubernetes/apps/cilium/vars.yaml
+    - ../../group_vars/all/secrets.yaml
   vars:
     talos_kube_context: ""
+    cilium_bootstrap_mode: migration
+    cilium_recovery: false
     cilium_apps_dir: "{{ playbook_dir }}/../../kubernetes/apps/cilium"
   tasks:
     - name: Validate the secondary installation scope
       ansible.builtin.assert:
         that:
           - cilium_install_scope | default('cluster') in ['cluster', 'control-plane']
+          - cilium_bootstrap_mode in ['migration', 'steady']
+
+    - name: Leave Argo-managed Cilium to manual sync unless explicitly recovering
+      ansible.builtin.include_tasks:
+        file: ../../tasks/assert-not-argocd-managed.yml
+      vars:
+        gitops_guard_namespace: cilium-system
+        gitops_guard_kind: daemonset
+        gitops_guard_name: cilium
+      when: not (cilium_recovery | bool)
 
     - name: Read the active kubectl context
       ansible.builtin.command:
@@ -63,6 +76,7 @@
           - node/k8s-w-1
           - node/k8s-w-2
       changed_when: false
+      when: not (cilium_recovery | bool)
 
     - name: Read Argo CD application health before installation
       ansible.builtin.command:
@@ -78,6 +92,7 @@
           - jsonpath={range .items[*]}{.status.sync.status}{" "}{.status.health.status}{"\n"}{end}
       register: cilium_apps_before
       changed_when: false
+      when: not (cilium_recovery | bool)
 
     - name: Require all applications Synced and Healthy before installation
       ansible.builtin.assert:
@@ -85,6 +100,7 @@
           - cilium_apps_before.stdout_lines | length > 0
           - cilium_apps_before.stdout_lines | reject('equalto', 'Synced Healthy') | list | length == 0
         fail_msg: "All Argo CD applications must be Synced and Healthy before Cilium installation."
+      when: not (cilium_recovery | bool)
 
     - name: Read node InternalIP addresses before installation
       ansible.builtin.command:
@@ -121,12 +137,14 @@
           - jsonpath={.status.numberReady}
       register: cilium_flannel_ready
       changed_when: false
+      when: cilium_bootstrap_mode == 'migration'
 
     - name: Require all Flannel agents before secondary installation
       ansible.builtin.assert:
         that:
           - cilium_flannel_ready.stdout | int == 3
         fail_msg: "Flannel is not healthy on all three nodes; do not start the migration."
+      when: cilium_bootstrap_mode == 'migration'
 
     - name: Apply the Cilium Pod Security exception namespace
       ansible.builtin.command:
@@ -138,6 +156,11 @@
           - -f
           - "{{ cilium_apps_dir }}/namespace.yaml"
       changed_when: false
+
+    - name: Materialize Vault-owned TLS for steady-state recovery
+      ansible.builtin.include_tasks:
+        file: cilium-tls-tasks.yml
+      when: cilium_bootstrap_mode == 'steady'
 
     - name: Validate the pinned secondary-mode Cilium chart
       ansible.builtin.command:
@@ -153,7 +176,7 @@
           - --namespace
           - cilium-system
           - --values
-          - "{{ cilium_apps_dir }}/values-migration.yaml"
+          - "{{ cilium_apps_dir }}/{{ 'values-migration.yaml' if cilium_bootstrap_mode == 'migration' else 'values.yaml' }}"
           - --values
           - "{{ cilium_apps_dir }}/values-placement-{{ cilium_install_scope | default('cluster') }}.yaml"
       changed_when: false
@@ -175,7 +198,7 @@
           - --namespace
           - cilium-system
           - --values
-          - "{{ cilium_apps_dir }}/values-migration.yaml"
+          - "{{ cilium_apps_dir }}/{{ 'values-migration.yaml' if cilium_bootstrap_mode == 'migration' else 'values.yaml' }}"
           - --values
           - "{{ cilium_apps_dir }}/values-placement-{{ cilium_install_scope | default('cluster') }}.yaml"
           - --wait
@@ -194,6 +217,7 @@
           - -f
           - "{{ cilium_apps_dir }}/nodeconfig.yaml"
       changed_when: true
+      when: cilium_bootstrap_mode == 'migration'
 
     - name: Verify Cilium agents are ready in secondary mode
       ansible.builtin.command:

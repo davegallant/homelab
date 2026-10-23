@@ -7,16 +7,13 @@ metadata:
 spec:
   project: homelab-platform
   sources:
-    - repoURL: https://helm.cilium.io/
+    - repoURL: {{ cilium_chart_repo }}
       chart: cilium
-      targetRevision: "1.20.3"
+      targetRevision: "{{ cilium_chart_version }}"
       helm:
         releaseName: cilium
-        valueFiles:
-          - $values/ansible/kubernetes/apps/cilium/values.yaml
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      ref: values
+        valuesObject:
+{{ lookup('ansible.builtin.file', playbook_dir + '/../../kubernetes/apps/cilium/values.yaml') | from_yaml | to_nice_yaml(indent=2) | indent(10, true) }}
   destination:
     server: https://kubernetes.default.svc
     namespace: cilium-system

@@ -136,3 +136,28 @@ the invalid VIP matcher disabled. `verify-service-flow.py` independently
 requires HTTP 200 plus FORWARDED translated SYN and SYN-ACK for each client,
 and fails on any drop in those connections. No connectivity scenario is
 omitted. Strict Hubble validation remains the default elsewhere.
+
+## Primary CNI, Vault ownership, and Argo CD adoption
+
+After every pod-network pod verifies as a Cilium endpoint, run
+`cilium-primary.yml`. It first records Helm retention for its three generated
+TLS Secrets, then materializes their existing contents from encrypted Vault
+using the ansible-vault field manager, then applies the steady-state values.
+The steady chart references existing TLS Secrets and renders no Secrets.
+The certificates were imported intact; no private key or certificate data
+was printed. Certificate renewal must update Vault and rematerialize these
+Secrets before expiration; Helm/Argo no longer regenerates them.
+
+Run `cilium-adopt.yml` to apply the platform permissions and rendered Cilium
+Application and request one manual sync without pruning. The Application
+template embeds the repository values as valuesObject, so adoption does
+not require pushing unreviewed main changes to the live-host CI pipeline.
+The chart version still comes from vars.yaml. Future Cilium value changes
+use the adoption playbook to update the Application and manually sync it.
+
+The bootstrap remains the recovery path: use `cilium.yml` with
+`cilium_bootstrap_mode=steady` and `cilium_recovery=true` only for explicit
+recovery when Argo is unavailable. This rematerializes TLS from Vault,
+installs the pinned steady-state chart, and bypasses the healthy-base
+checks that cannot pass during a CNI failure. Normal runs refuse to
+overwrite resources already tracked by Argo CD.

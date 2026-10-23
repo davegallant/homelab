@@ -1,0 +1,84 @@
+---
+- name: Make Cilium primary while preserving Vault-owned Hubble TLS
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/apps/cilium/vars.yaml
+    - ../../group_vars/all/secrets.yaml
+  vars:
+    talos_kube_context: ""
+    cilium_apps_dir: "{{ playbook_dir }}/../../kubernetes/apps/cilium"
+  tasks:
+    - name: Require an explicit cluster context
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+
+    - name: Require the release has not already been adopted by Argo CD
+      ansible.builtin.include_tasks:
+        file: ../../tasks/assert-not-argocd-managed.yml
+      vars:
+        gitops_guard_namespace: cilium-system
+        gitops_guard_kind: daemonset
+        gitops_guard_name: cilium
+
+    - name: Require every pod-network pod to be a Cilium endpoint
+      ansible.builtin.command:
+        argv: [python3, "{{ cilium_apps_dir }}/verify-endpoints.py", --context, "{{ talos_kube_context }}"]
+      changed_when: false
+
+    - name: Record retention for Helm-generated TLS Secrets before relinquishing them
+      ansible.builtin.command:
+        argv:
+          - helm
+          - upgrade
+          - cilium
+          - cilium
+          - --repo
+          - "{{ cilium_chart_repo }}"
+          - --version
+          - "{{ cilium_chart_version }}"
+          - --kube-context
+          - "{{ talos_kube_context }}"
+          - --namespace
+          - cilium-system
+          - --values
+          - "{{ cilium_apps_dir }}/values-migration.yaml"
+          - --values
+          - "{{ cilium_apps_dir }}/values-retain-tls.yaml"
+          - --wait
+          - --timeout
+          - 10m
+      changed_when: true
+
+    - name: Apply Vault-owned Hubble TLS
+      ansible.builtin.include_tasks:
+        file: cilium-tls-tasks.yml
+
+    - name: Enable primary CNI configuration and policy enforcement
+      ansible.builtin.command:
+        argv:
+          - helm
+          - upgrade
+          - cilium
+          - cilium
+          - --repo
+          - "{{ cilium_chart_repo }}"
+          - --version
+          - "{{ cilium_chart_version }}"
+          - --kube-context
+          - "{{ talos_kube_context }}"
+          - --namespace
+          - cilium-system
+          - --values
+          - "{{ cilium_apps_dir }}/values.yaml"
+          - --wait
+          - --timeout
+          - 10m
+      changed_when: true
+
+    - name: Verify primary Cilium agents
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, cilium-system, rollout, status, daemonset/cilium, --timeout=300s]
+      changed_when: false
