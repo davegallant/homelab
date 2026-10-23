@@ -280,8 +280,6 @@ rawResources:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: paperless-ngx
           - toEntities:
-              - cluster
-          - toEntities:
               - world
         egressDeny:
           - toCIDR:

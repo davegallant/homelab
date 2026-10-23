@@ -26,8 +26,6 @@ spec:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: bentopdf
     - toEntities:
-        - cluster
-    - toEntities:
         - world
   egressDeny:
     - toCIDR:

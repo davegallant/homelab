@@ -430,8 +430,6 @@ rawResources:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: speedtest-tracker
           - toEntities:
-              - cluster
-          - toEntities:
               - world
         egressDeny:
           - toCIDR:

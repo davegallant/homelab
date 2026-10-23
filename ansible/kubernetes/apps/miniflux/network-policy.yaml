@@ -26,8 +26,6 @@ spec:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: miniflux
     - toEntities:
-        - cluster
-    - toEntities:
         - world
   egressDeny:
     - toCIDR:

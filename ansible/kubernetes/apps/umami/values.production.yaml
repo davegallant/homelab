@@ -215,8 +215,6 @@ rawResources:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: umami
           - toEntities:
-              - cluster
-          - toEntities:
               - world
         egressDeny:
           - toCIDR:

@@ -60,16 +60,27 @@ checking the `pve-g3-2` host memory gate.
 
 Default-deny policies are now active. Each app policy lives in that app's
 directory and is applied with `playbooks/talos-cluster/cilium-apply-policy.yml`.
-They allow same-namespace traffic, kube-dns, cluster access, and documented
-dependencies. The sidecar egress includes Tailscale control/relay and
-Cloudflare DNS-01/API. Internet-fetching namespaces (`changedetection`,
-`miniflux`, `searxng`) have explicit LAN and cluster-range denies. Homepage
-and Kiwix have a single TrueNAS host exception; Alloy is limited to Loki
-`:3100`, VictoriaMetrics `:8428`, and kubelet metrics; Velero is limited to
-Garage S3 `:3900`. Argo CD has HTTPS egress for GitHub and configured chart
-repositories. The NFS CSI policy selects only the controller in shared
-`kube-system`; its privileged node plugin uses host networking. See the
-policy inventory in `ansible/kubernetes/README.md`.
+Application policies allow same-namespace traffic, kube-dns on TCP/UDP 53,
+and documented external dependencies. They do not grant the `cluster` entity:
+that entity includes other pods, nodes, and the Kubernetes API, bypassing
+CIDR-based restrictions for managed cluster identities. Infrastructure
+controllers get explicit `kube-apiserver` access on TCP 443/6443. Relay/UI
+can reach Cilium agents on TCP 4244.
+
+Sidecar egress includes Tailscale control/relay and Cloudflare DNS-01/API.
+Internet-fetching namespaces (`changedetection`, `miniflux`, `searxng`)
+retain explicit LAN and cluster-range denies. Homepage and Kiwix retain
+single-host TrueNAS exceptions. Alloy can reach the API, node metrics on
+TCP 10250/9100/9964, CoreDNS metrics on TCP 9153, kube-state-metrics on TCP
+8080, Loki on TCP 3100, and VictoriaMetrics on TCP 8428. Velero can reach
+the API and Garage S3 on TCP 3900. Argo CD retains HTTPS egress for GitHub
+and configured chart repositories.
+
+The NFS CSI policy selects only the controller in shared `kube-system`.
+The current controller and node plugins use host networking, which endpoint
+policies do not isolate. These policies also do not restrict destinations
+inside userspace Tailscale/Newt tunnels. See the policy inventory in
+`ansible/kubernetes/README.md`.
 
 ## Agent memory investigation and placement
 

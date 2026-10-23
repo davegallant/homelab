@@ -32,7 +32,13 @@ spec:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: velero
     - toEntities:
-        - cluster
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+            - port: "6443"
+              protocol: TCP
     - toCIDR:
         - 192.168.1.16/32
       toPorts:
