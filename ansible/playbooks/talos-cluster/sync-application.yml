@@ -52,9 +52,9 @@
           - application
           - "{{ talos_application }}"
           - -o
-          - 'jsonpath={.status.operationState.phase}{" "}{.status.sync.status}{" "}{.status.health.status}'
+          - 'jsonpath={.operation}{"|"}{.status.operationState.phase}{" "}{.status.sync.status}{" "}{.status.health.status}'
       register: talos_application_sync
-      until: talos_application_sync.stdout == 'Succeeded Synced Healthy'
+      until: talos_application_sync.stdout == '|Succeeded Synced Healthy'
       retries: 60
       delay: 10
       changed_when: false
