@@ -178,3 +178,23 @@ PodVolumeBackups was recorded. The deployment is parked at zero replicas,
 14,392 results; its tailnet URL returned HTTP 302. The unused one-time
 Headscale key and Kubernetes bootstrap Secret were deleted. The existing LXC
 Headscale node remains online; no ACL or policy changes were made.
+
+## Activation gate retry (2026-10-23)
+
+The final dump included the LXC's additional scheduled result: both
+the stopped LXC source and the restored cluster database had 14,393
+results. The pod scheduled on `k8s-w-1`, and its app, database,
+Apprise, and Caddy containers became Ready. The Tailscale container
+crash-looped with `error initializing kube client` because
+`TS_KUBE_SECRET` was set to the literal string `false` while the pod
+has `automountServiceAccountToken: false`. The pod never registered
+a new Headscale node. The activation gate failed, so the deployment
+was returned to zero replicas and the LXC Compose stack was restarted;
+the LXC app returned HTTP 200 and the tailnet URL returned HTTP 302.
+
+The bootstrap Secret and unused one-use preauth key were deleted. The
+original LXC Headscale node remains online, no other Headscale nodes or
+ACLs were changed, and the CiliumNetworkPolicy remains Valid. No manual
+speedtest or Velero backup was recorded. The copied database, config,
+and Apprise data and static `k8s-w-1` PV bindings remain available for
+the next attempt.
