@@ -251,7 +251,7 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/traefik | v3.7 |
 | docker.io/twinproduction/gatus | v5.37.0 |
 | docker.io/valkey/valkey | 9 |
-| docker.io/victoriametrics/victoria-metrics | v1.121.0 |
+| docker.io/victoriametrics/victoria-metrics | v1.154.1 |
 | ghcr.io/advplyr/audiobookshelf | 2.37.1 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.6.0.1 |
 | ghcr.io/dispatcharr/dispatcharr | 0.32.0 |
