@@ -161,3 +161,9 @@ recovery when Argo is unavailable. This rematerializes TLS from Vault,
 installs the pinned steady-state chart, and bypasses the healthy-base
 checks that cannot pass during a CNI failure. Normal runs refuse to
 overwrite resources already tracked by Argo CD.
+
+`rollOutCiliumPods: true` makes the chart checksum its ConfigMap into the
+agent pod template. Config changes therefore restart agents one at a time
+(`maxUnavailable: 1`). A healthy DaemonSet alone does not prove a changed
+ConfigMap has been consumed: after primary transition, check the running
+agent's PolicyEnforcement value is default rather than never.
