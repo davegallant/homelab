@@ -29,9 +29,6 @@ controllers:
   prowlarr:
     type: deployment
     strategy: Recreate
-    # Staging: the pod starts at cutover, once the config has been
-    # copied and verified (README).
-    replicas: 0
     pod:
       nodeSelector:
         kubernetes.io/hostname: k8s-w-1
