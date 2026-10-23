@@ -1,5 +1,5 @@
 ---
-# Cutover PV for the copied Speedtest Tracker configuration on k8s-w-2.
+# Cutover PV for the copied Speedtest Tracker configuration on k8s-w-1.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -13,7 +13,7 @@ spec:
   storageClassName: pve-g3-1-local
   volumeMode: Filesystem
   local:
-    path: /var/mnt/local-path/pvc-5be7e0ab-65d9-4528-a426-f537bdc524e1_speedtest-tracker_speedtest-tracker-config
+    path: /var/mnt/local-path/pvc-21ee0289-d3d3-4c9d-98f1-31c19ff8467c_speedtest-tracker_speedtest-tracker-config
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -21,7 +21,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - k8s-w-2
+                - k8s-w-1
   claimRef:
     namespace: speedtest-tracker
     name: speedtest-tracker-config-local

@@ -29,7 +29,7 @@ controllers:
   speedtest-tracker:
     type: deployment
     strategy: Recreate
-    # Parked until worker memory is available for the local volumes on k8s-w-2.
+    # Parked: k8s-w-1 had only 155m CPU request capacity free; this pod needs 275m.
     replicas: 0
     pod:
       annotations:
