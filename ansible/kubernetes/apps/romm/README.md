@@ -27,11 +27,15 @@ mount). It never moves and is never Velero-backed-up (TrueNAS
 snapshots + Drive sync). Verify the share path against the LXC's
 mount source before applying `storage.yaml`.
 
-State volumes (local-path PVCs): `config` (~/config on the LXC),
+LXC source state: `config` (`~/config` on the LXC),
 `resources` and `redis-data` (the compose's named volumes), and
 `mysql-data` for MariaDB. Volume names below assume the compose
 project prefix from the LXC (compose file in `/root`); confirm with
 `docker volume ls` on the LXC first and adjust.
+
+Kubernetes binds the copied state through static local PVs defined in
+`state-local-pv.yaml`. The app mounts the `*-local` claims; the original
+local-path claims remain read-only at rollback paths for Argo ownership.
 
 Secrets stay in Vault and outside Argo's ownership: `romm-external`
 (DB + auth + IGDB keys) from `playbooks/talos-cluster/romm-secret.yml`,
@@ -40,7 +44,7 @@ bootstrap-only one-use `romm-tailscale-auth`.
 
 Backups: Velero Schedule `romm-daily` (in the values, opt-in mode)
 with pod annotation
-`backup.velero.io/backup-volumes: mysql-data,config,resources,redis-data`
+`backup.velero.io/backup-volumes: mysql-data-local,config-local,resources-local,redis-data-local`
 plus a pre-backup hook that writes a `mariadb-dump` of the `romm`
 database into the database volume, so the filesystem backup carries
 a consistent logical copy. The network policy is the house
@@ -125,9 +129,16 @@ from a debug pod before scheduling the cutover.
 
 4. **Dave gate — the only one.** Retire the LXC's tailnet node on
    the Headscale host (`headscale nodes delete --identifier
-   <old-romm-id>`), mint a one-use preauth key, and create the
-   `romm-tailscale-auth` Secret (key `TS_AUTHKEY`) from it, as in
-   the Seerr README.
+   <old-romm-id>`), then create the one-use preauth Secret without
+   printing its value:
+
+   ```sh
+   ssh root@pangolin 'docker exec headscale headscale preauthkeys create --user 1 --expiration 1h --output json' \
+     | jq -sr 'map(select(type == "object" and has("key"))) | last | .key' \
+     | tr -d '\r\n' \
+     | kubectl --context admin@homelab -n romm create secret generic romm-tailscale-auth --from-file=TS_AUTHKEY=/dev/stdin
+   ```
+
 5. Remove `replicas: 0` from the values, commit, push, approve
    Sync. The pod starts; MariaDB initializes an empty `romm`
    database; the app may error against it briefly — expected.
