@@ -1,6 +1,5 @@
 [homelab]
 adguard-home
-audiobookshelf
 bedrock
 beszel
 cinema
@@ -14,13 +13,11 @@ immich
 invidious
 jellyfin
 lidarr
-navidrome
 paperless-ngx
 pangolin
 prowlarr
 qbittorrent
 radarr
-romm
 sonarr
 speedtest-tracker
 umami
