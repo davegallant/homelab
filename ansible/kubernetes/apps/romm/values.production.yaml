@@ -1,0 +1,400 @@
+---
+# RomM — Argo CD production values (bjw-s app-template 5.3.0).
+# Source of truth for the workload: playbooks/romm/docker-compose.yml
+# (app docker.io/rommapp/romm 5.4.0, port 8080; database
+# docker.io/mariadb 13.0.2 as a second container in the same pod,
+# the Miniflux in-pod database pattern).
+# Tailnet-only: exposure mirrors the Kiwix pod — userspace Tailscale
+# sidecar TCP-forwarding 443 to an in-pod Caddy (8443), which
+# terminates a real certificate (Cloudflare DNS-01) and proxies to
+# RomM on 127.0.0.1:8080, replacing the LXC's host Caddy role.
+#
+# The library stays on TrueNAS (static NFS claim romm-library, see
+# storage.yaml); only the small state volumes are PVCs here.
+#
+# Secrets stay outside Git and outside Argo's ownership:
+#   romm-caddy-external    (key cloudflare_api_token) — gitops-secrets.yml
+#   romm-external          (DB_PASSWD, MARIADB_PASSWORD,
+#                           MARIADB_ROOT_PASSWORD, ROMM_AUTH_SECRET_KEY,
+#                           IGDB_CLIENT_ID, IGDB_CLIENT_SECRET)
+#                          — playbooks/talos-cluster/romm-secret.yml
+#   romm-tailscale-auth    (key TS_AUTHKEY, one-use)  — bootstrap only
+# The app container envFrom-imports the whole romm-external Secret
+# (the MARIADB_* keys are inert there) and the db container does the
+# same (DB_PASSWD / IGDB_* are inert there): one Secret, no renames.
+# The optional MOBYGAMES / STEAMGRIDDB keys are commented out in the
+# source compose and are deliberately not carried over.
+controllers:
+  romm:
+    type: deployment
+    strategy: Recreate
+    # STAGING: 0 until the LXC state has been copied and the database
+    # dumped (see README.md). The cutover commit removes this line.
+    replicas: 0
+    pod:
+      annotations:
+        # Opt-in filesystem backup of the state volumes; the NFS
+        # library is excluded by omission (TrueNAS snapshots + Drive
+        # sync protect it, never Velero). The pre-backup hook writes
+        # a consistent logical dump into the database volume so the
+        # filesystem backup carries a restorable copy.
+        backup.velero.io/backup-volumes: mysql-data,config,resources,redis-data
+        pre.hook.backup.velero.io/container: db
+        pre.hook.backup.velero.io/command: '["/bin/sh","-c","mariadb-dump --single-transaction -u root
+          -p$MARIADB_ROOT_PASSWORD romm > /var/lib/mysql/romm-backup.sql"]'
+    containers:
+      app:
+        image:
+          repository: docker.io/rommapp/romm
+          tag: 5.4.0
+          digest: sha256:03295f95a6290e752641f9553ac4198b0e5b71b879d57f7b2371b98f608feb54
+        envFrom:
+          - secretRef:
+              name: romm-external
+        env:
+          # The compose reaches the database by service name; in-pod
+          # it is the neighbouring container.
+          DB_HOST: 127.0.0.1
+          DB_NAME: romm
+          DB_USER: romm-user
+        probes:
+          startup:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8080
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8080
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8080
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+      db:
+        image:
+          repository: docker.io/mariadb
+          tag: 13.0.2
+          digest: sha256:0e4bb0f339feba125d1154fbacd36c16ec8518f52e44e1f82ecec7d6771caf39
+        envFrom:
+          - secretRef:
+              name: romm-external
+        env:
+          MARIADB_DATABASE: romm
+          MARIADB_USER: romm-user
+        probes:
+          startup:
+            enabled: true
+            type: TCP
+            port: 3306
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: TCP
+            port: 3306
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: TCP
+            port: 3306
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+      tailscale:
+        image:
+          repository: ghcr.io/tailscale/tailscale
+          tag: v1.104.1
+          digest: sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
+        envFrom:
+          # The bootstrap-created Secret holds exactly one key
+          # (TS_AUTHKEY), imported here as the env var of that name.
+          # Optional: once the identity persists in tailscale-state,
+          # the Secret is deleted and the sidecar runs without it.
+          - secretRef:
+              name: romm-tailscale-auth
+              optional: true
+        env:
+          TS_AUTH_ONCE: "true"
+          TS_HOSTNAME: romm
+          TS_STATE_DIR: /var/lib/tailscale
+          TS_KUBE_SECRET: "false"
+          TS_USERSPACE: "true"
+          TS_EXTRA_ARGS: --login-server=https://hs.davegallant.ca --accept-dns=false
+          TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 192Mi
+      caddy:
+        image:
+          repository: ghcr.io/davegallant/homelab-caddy-cloudflare
+          tag: 2.11.6-a8737d0
+          digest: sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
+        command:
+          - caddy
+        args:
+          - run
+          - --config
+          - /etc/caddy/Caddyfile
+          - --adapter
+          - caddyfile
+        resources:
+          requests:
+            cpu: 25m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+
+service:
+  romm:
+    controller: romm
+    ports:
+      http:
+        port: 8080
+
+configMaps:
+  # Keys are short on purpose: bjw-s names the rendered ConfigMaps
+  # <release>-<key>, and the persistence entries below reference the
+  # resulting romm-tailscale / romm-caddy names.
+  tailscale:
+    data:
+      serve-config.json: |
+        {
+          "TCP": {
+            "443": {
+              "TCPForward": "127.0.0.1:8443"
+            }
+          }
+        }
+  caddy:
+    data:
+      Caddyfile: |
+        {
+          auto_https disable_redirects
+          https_port 8443
+          tls_resolvers 1.1.1.1
+          servers {
+            protocols h1 h2
+          }
+        }
+
+        romm.tail.davegallant.ca {
+          bind 127.0.0.1
+
+          tls {
+            dns cloudflare {file./run/secrets/cloudflare_api_token}
+            propagation_delay 30s
+            propagation_timeout -1
+          }
+
+          reverse_proxy 127.0.0.1:8080
+        }
+
+persistence:
+  library:
+    type: persistentVolumeClaim
+    existingClaim: romm-library
+    advancedMounts:
+      romm:
+        app:
+          - path: /romm/library
+          - path: /romm/assets
+            subPath: assets
+  resources:
+    type: persistentVolumeClaim
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    advancedMounts:
+      romm:
+        app:
+          - path: /romm/resources
+  redis-data:
+    type: persistentVolumeClaim
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    advancedMounts:
+      romm:
+        app:
+          - path: /redis-data
+  config:
+    type: persistentVolumeClaim
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    advancedMounts:
+      romm:
+        app:
+          - path: /romm/config
+  mysql-data:
+    type: persistentVolumeClaim
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    advancedMounts:
+      romm:
+        db:
+          - path: /var/lib/mysql
+  tailscale-state:
+    type: persistentVolumeClaim
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 64Mi
+    advancedMounts:
+      romm:
+        tailscale:
+          - path: /var/lib/tailscale
+  tailscale-config:
+    type: configMap
+    name: romm-tailscale
+    advancedMounts:
+      romm:
+        tailscale:
+          - path: /etc/tailscale/serve-config.json
+            subPath: serve-config.json
+            readOnly: true
+  caddy-config:
+    type: configMap
+    name: romm-caddy
+    advancedMounts:
+      romm:
+        caddy:
+          - path: /etc/caddy/Caddyfile
+            subPath: Caddyfile
+            readOnly: true
+  caddy-state:
+    type: persistentVolumeClaim
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 256Mi
+    advancedMounts:
+      romm:
+        caddy:
+          - path: /data
+  caddy-runtime:
+    type: emptyDir
+    advancedMounts:
+      romm:
+        caddy:
+          - path: /config
+  caddy-secret:
+    type: secret
+    name: romm-caddy-external
+    advancedMounts:
+      romm:
+        caddy:
+          - path: /run/secrets/cloudflare_api_token
+            subPath: cloudflare_api_token
+            readOnly: true
+
+rawResources:
+  backupSchedule:
+    enabled: true
+    manifest:
+      apiVersion: velero.io/v1
+      kind: Schedule
+      metadata:
+        name: romm-daily
+        namespace: velero
+      spec:
+        schedule: "0 3 * * *"
+        template:
+          ttl: 336h
+          includedNamespaces:
+            - romm
+          excludedResources:
+            - secrets
+          defaultVolumesToFsBackup: false
+          snapshotVolumes: false
+          storageLocation: default
+
+  defaultDenyNetworkPolicy:
+    enabled: true
+    manifest:
+      apiVersion: cilium.io/v2
+      kind: CiliumNetworkPolicy
+      metadata:
+        name: default-deny
+        namespace: romm
+      spec:
+        description: Default deny with internet fetch access, cluster DNS, and explicit internal-range denies.
+        endpointSelector: {}
+        ingress:
+          - fromEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: romm
+        egress:
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: kube-system
+                  k8s:k8s-app: kube-dns
+            toPorts:
+              - ports:
+                  - port: "53"
+                    protocol: UDP
+                  - port: "53"
+                    protocol: TCP
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: romm
+          - toEntities:
+              - cluster
+          - toEntities:
+              - world
+        egressDeny:
+          - toCIDR:
+              - 192.168.1.0/24
+              - 10.96.0.0/12
+              - 10.245.0.0/16
