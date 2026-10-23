@@ -29,6 +29,8 @@ controllers:
     type: deployment
     strategy: Recreate
     pod:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-w-1
       annotations:
         # Opt-in filesystem backup of the state volumes; the NFS
         # library is excluded by omission (TrueNAS snapshots + Drive
@@ -237,79 +239,31 @@ persistence:
           - path: /romm/library
           - path: /romm/assets
             subPath: assets
-  resources:
-    type: persistentVolumeClaim
-    annotations:
-      argocd.argoproj.io/ignore-healthcheck: "true"
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 5Gi
-    advancedMounts:
-      romm:
-        app:
-          - path: /mnt/romm-rollback/resources
-            readOnly: true
   resources-local:
     type: persistentVolumeClaim
-    existingClaim: romm-resources-local
+    existingClaim: romm-resources-w1
     advancedMounts:
       romm:
         app:
           - path: /romm/resources
 
-  redis-data:
-    type: persistentVolumeClaim
-    annotations:
-      argocd.argoproj.io/ignore-healthcheck: "true"
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 1Gi
-    advancedMounts:
-      romm:
-        app:
-          - path: /mnt/romm-rollback/redis-data
-            readOnly: true
   redis-data-local:
     type: persistentVolumeClaim
-    existingClaim: romm-redis-data-local
+    existingClaim: romm-redis-data-w1
     advancedMounts:
       romm:
         app:
           - path: /redis-data
-  config:
-    type: persistentVolumeClaim
-    annotations:
-      argocd.argoproj.io/ignore-healthcheck: "true"
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 1Gi
-    advancedMounts:
-      romm:
-        app:
-          - path: /mnt/romm-rollback/config
-            readOnly: true
   config-local:
     type: persistentVolumeClaim
-    existingClaim: romm-config-local
+    existingClaim: romm-config-w1
     advancedMounts:
       romm:
         app:
           - path: /romm/config
-  mysql-data:
-    type: persistentVolumeClaim
-    annotations:
-      argocd.argoproj.io/ignore-healthcheck: "true"
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 5Gi
-    advancedMounts:
-      romm:
-        db:
-          - path: /mnt/romm-rollback/mysql-data
-            readOnly: true
   mysql-data-local:
     type: persistentVolumeClaim
-    existingClaim: romm-mysql-data-local
+    existingClaim: romm-mysql-data-w1
     advancedMounts:
       romm:
         db:
@@ -318,9 +272,7 @@ persistence:
     type: persistentVolumeClaim
     annotations:
       argocd.argoproj.io/ignore-healthcheck: "true"
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 64Mi
+    existingClaim: romm-tailscale-state-w1
     advancedMounts:
       romm:
         tailscale:
@@ -347,9 +299,7 @@ persistence:
     type: persistentVolumeClaim
     annotations:
       argocd.argoproj.io/ignore-healthcheck: "true"
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 256Mi
+    existingClaim: romm-caddy-state-w1
     advancedMounts:
       romm:
         caddy:
