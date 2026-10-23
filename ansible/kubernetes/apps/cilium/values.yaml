@@ -58,7 +58,7 @@ resources:
     cpu: 100m
     memory: 192Mi
   limits:
-    memory: 256Mi
+    memory: 512Mi
 hubble:
   enabled: true
   relay:
