@@ -17,7 +17,7 @@ services:
   # Keep the image pinned by tag and manifest-list digest. Verify both
   # before changing the version (repo convention — never invent a digest).
   victoriametrics:
-    image: docker.io/victoriametrics/victoria-metrics:v1.121.0@sha256:4f65d40da793ee125f7fbf9f882114520b0168949c4b9fb2c11403168d9dc3f9
+    image: docker.io/victoriametrics/victoria-metrics:v1.154.1@sha256:c7884f32920dd45a9d86542a717227e63af03e060e53bbf8031e6e6fd0e1e05d
     container_name: victoriametrics
     user: "0"
     restart: always
