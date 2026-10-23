@@ -1,0 +1,66 @@
+---
+# Storage for navidrome, applied once by hand (see README.md) and
+# deliberately NOT managed by Argo CD: the homelab AppProject allows
+# namespace-scoped resources only, so namespaces and static volumes
+# stay an Ansible / kubectl concern.
+#
+# Two volumes, two different natures:
+#   navidrome-music - the music library, a static NFS PV onto the
+#                     existing TrueNAS export the LXC reads today
+#                     (mounted as /music by the Proxmox host).
+#                     Read-only; the data never moves and is never
+#                     Velero-backed-up (its protection is TrueNAS
+#                     snapshots + Drive sync, same as Kiwix).
+#   navidrome data  - the small app state (sqlite DB, cache) is a
+#                     chart-managed local-path PVC declared in
+#                     values.production.yaml; nothing lives here.
+#
+# Verify the share path against the LXC's mount before applying:
+# the export below follows the Kiwix spelling (/mnt/tank/media/<app>).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: navidrome
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: navidrome-music
+spec:
+  capacity:
+    storage: 1Ti # nominal; NFS reports the export's real size
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+    - noatime
+  csi:
+    driver: nfs.csi.k8s.io
+    readOnly: true
+    volumeHandle: truenas-navidrome-music
+    volumeAttributes:
+      server: 192.168.1.16
+      share: /mnt/tank/media/Music
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: navidrome-music
+  namespace: navidrome
+spec:
+  accessModes:
+    - ReadOnlyMany
+  storageClassName: ""
+  volumeName: navidrome-music
+  resources:
+    requests:
+      storage: 1Ti
