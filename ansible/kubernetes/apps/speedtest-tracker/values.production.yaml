@@ -29,7 +29,8 @@ controllers:
   speedtest-tracker:
     type: deployment
     strategy: Recreate
-    replicas: 1
+    # Parked after bootstrap auth-key parsing failed.
+    replicas: 0
     pod:
       annotations:
         # Opt-in filesystem backup of the state volumes, with a

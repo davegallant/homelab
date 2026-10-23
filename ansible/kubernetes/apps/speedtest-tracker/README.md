@@ -198,3 +198,16 @@ ACLs were changed, and the CiliumNetworkPolicy remains Valid. No manual
 speedtest or Velero backup was recorded. The copied database, config,
 and Apprise data and static `k8s-w-1` PV bindings remain available for
 the next attempt.
+
+
+## Retry 3 status (2026-10-23)
+
+The `TS_KUBE_SECRET: ""` fix synced. The pod scheduled on `k8s-w-1`,
+but the Tailscale sidecar rejected the one-use Headscale key with
+`hash length mismatch, expected 64 chars, got 65`: the Secret file included
+a trailing newline. The gate failed before a new Headscale node registered;
+the old LXC node was not changed. The deployment is parked at zero replicas,
+the failed bootstrap Secret was deleted, and Headscale key ID 59 was expired.
+The LXC Compose stack remains running (`speedtest-tracker`, `speedtest-db`,
+`apprise`). No tailnet URL, manual test, or Velero backup gate was passed.
+Data and the static `k8s-w-1` PV bindings were not changed.
