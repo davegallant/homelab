@@ -49,3 +49,8 @@ spec:
         - ports:
             - port: "2049"
               protocol: TCP
+  egressDeny:
+    - toCIDRSet:
+        - cidr: 192.168.1.0/24
+          except:
+            - 192.168.1.16/32
