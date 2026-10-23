@@ -57,6 +57,9 @@ controllers:
           PGID: "1000"
           UMASK: "002"
           TZ: Etc/UTC
+          HTTP_PROXY: http://127.0.0.1:1055
+          HTTPS_PROXY: http://127.0.0.1:1055
+          NO_PROXY: localhost,127.0.0.1,.svc,.cluster.local
         probes:
           startup:
             enabled: true
@@ -111,6 +114,7 @@ controllers:
           # State lives on the local PVC, so disable Kubernetes Secret storage.
           TS_KUBE_SECRET: ""
           TS_USERSPACE: "true"
+          TS_OUTBOUND_HTTP_PROXY_LISTEN: 127.0.0.1:1055
           TS_EXTRA_ARGS: --login-server=https://hs.davegallant.ca --accept-dns=false
           TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
         resources:
