@@ -80,8 +80,8 @@ controllers:
               failureThreshold: 3
         resources:
           requests:
-            cpu: 100m
-            memory: 256Mi
+            cpu: 15m
+            memory: 40Mi
           limits:
             cpu: 1000m
             memory: 1Gi
@@ -95,7 +95,7 @@ controllers:
               name: navidrome-newt-external
         resources:
           requests:
-            cpu: 25m
+            cpu: 10m
             memory: 64Mi
           limits:
             cpu: 200m
