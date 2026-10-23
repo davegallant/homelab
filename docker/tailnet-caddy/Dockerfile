@@ -4,5 +4,5 @@ RUN xcaddy build \
     --with github.com/caddy-dns/cloudflare@a8737d0 \
     --replace github.com/libdns/cloudflare=/src/libdns-cloudflare
 
-FROM docker.io/library/caddy:2.11.7-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
+FROM docker.io/library/caddy:2.11.7-alpine@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
