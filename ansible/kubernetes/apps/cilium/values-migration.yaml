@@ -1,3 +1,6 @@
+updateStrategy:
+  rollingUpdate:
+    maxUnavailable: 1
 ipam:
   mode: cluster-pool
   operator:

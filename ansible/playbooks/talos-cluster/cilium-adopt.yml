@@ -1,0 +1,65 @@
+---
+- name: Adopt the pinned Cilium chart into Argo CD
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/apps/cilium/vars.yaml
+    - ../../group_vars/all/secrets.yaml
+  vars:
+    talos_kube_context: ""
+  tasks:
+    - name: Require an explicit cluster context
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+
+    - name: Apply Vault-owned Hubble TLS
+      ansible.builtin.include_tasks:
+        file: cilium-tls-tasks.yml
+
+    - name: Apply the platform project's Cilium permissions
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", apply, -f, "{{ playbook_dir }}/../../kubernetes/apps/argocd/platform-project.yaml"]
+      changed_when: true
+
+    - name: Apply the Cilium Application with repository-owned values
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", apply, -f, "-"]
+        stdin: "{{ lookup('ansible.builtin.template', playbook_dir + '/../../kubernetes/apps/argocd/applications/cilium.yaml.j2') }}"
+      changed_when: true
+
+    - name: Request one manual Cilium sync without pruning
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - argocd
+          - patch
+          - application
+          - cilium
+          - --type=merge
+          - --patch
+          - '{"operation":{"initiatedBy":{"username":"ansible-operator"},"sync":{"prune":false,"syncStrategy":{"hook":{}}}}}'
+      changed_when: true
+
+    - name: Wait for Cilium to be synced and healthy under Argo CD
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - argocd
+          - get
+          - application
+          - cilium
+          - -o
+          - 'jsonpath={.operation}{"|"}{.status.operationState.phase}{" "}{.status.sync.status}{" "}{.status.health.status}'
+      register: cilium_adoption
+      until: cilium_adoption.stdout == '|Succeeded Synced Healthy'
+      retries: 90
+      delay: 10
+      changed_when: false

@@ -1,3 +1,6 @@
+updateStrategy:
+  rollingUpdate:
+    maxUnavailable: 1
 ipam:
   mode: cluster-pool
   operator:
@@ -61,8 +64,16 @@ resources:
     memory: 512Mi
 hubble:
   enabled: true
+  tls:
+    auto:
+      enabled: false
+    server:
+      existingSecret: hubble-server-certs
   relay:
     enabled: true
+    tls:
+      client:
+        existingSecret: hubble-relay-client-certs
     replicas: 1
     resources:
       requests:

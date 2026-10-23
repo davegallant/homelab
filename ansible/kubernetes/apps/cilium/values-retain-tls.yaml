@@ -1,0 +1,2 @@
+nonIdempotentAnnotations:
+  helm.sh/resource-policy: keep

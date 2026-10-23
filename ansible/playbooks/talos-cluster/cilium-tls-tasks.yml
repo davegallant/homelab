@@ -1,0 +1,27 @@
+- name: Require the Vault-owned Hubble TLS inventory
+  ansible.builtin.assert:
+    that:
+      - cilium_hubble_tls_secrets | length == 3
+  no_log: true
+
+- name: Materialize Hubble TLS Secrets from Ansible Vault
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --context
+      - "{{ talos_kube_context }}"
+      - apply
+      - --server-side
+      - --force-conflicts
+      - --field-manager=ansible-vault
+      - -f
+      - "-"
+    stdin: >-
+      {{ {'apiVersion': 'v1', 'kind': 'Secret',
+          'metadata': {'name': item.name, 'namespace': 'cilium-system',
+                       'annotations': {'helm.sh/resource-policy': 'keep',
+                                       'homelab.davegallant.ca/secret-owner': 'ansible-vault'}},
+          'type': item.type, 'data': item.data} | to_json }}
+  loop: "{{ cilium_hubble_tls_secrets }}"
+  no_log: true
+  changed_when: true
