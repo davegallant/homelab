@@ -38,7 +38,7 @@ controllers:
         # sync protect it, never Velero). The pre-backup hook writes
         # a consistent logical dump into the database volume so the
         # filesystem backup carries a restorable copy.
-        backup.velero.io/backup-volumes: mysql-data,config,resources,redis-data
+        backup.velero.io/backup-volumes: mysql-data-local,config-local,resources-local,redis-data-local
         pre.hook.backup.velero.io/container: db
         pre.hook.backup.velero.io/command: '["/bin/sh","-c","mariadb-dump --single-transaction -u root
           -p$MARIADB_ROOT_PASSWORD romm > /var/lib/mysql/romm-backup.sql"]'
@@ -249,7 +249,16 @@ persistence:
     advancedMounts:
       romm:
         app:
+          - path: /mnt/romm-rollback/resources
+            readOnly: true
+  resources-local:
+    type: persistentVolumeClaim
+    existingClaim: romm-resources-local
+    advancedMounts:
+      romm:
+        app:
           - path: /romm/resources
+
   redis-data:
     type: persistentVolumeClaim
     annotations:
@@ -257,6 +266,14 @@ persistence:
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 1Gi
+    advancedMounts:
+      romm:
+        app:
+          - path: /mnt/romm-rollback/redis-data
+            readOnly: true
+  redis-data-local:
+    type: persistentVolumeClaim
+    existingClaim: romm-redis-data-local
     advancedMounts:
       romm:
         app:
@@ -271,6 +288,14 @@ persistence:
     advancedMounts:
       romm:
         app:
+          - path: /mnt/romm-rollback/config
+            readOnly: true
+  config-local:
+    type: persistentVolumeClaim
+    existingClaim: romm-config-local
+    advancedMounts:
+      romm:
+        app:
           - path: /romm/config
   mysql-data:
     type: persistentVolumeClaim
@@ -279,6 +304,14 @@ persistence:
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 5Gi
+    advancedMounts:
+      romm:
+        db:
+          - path: /mnt/romm-rollback/mysql-data
+            readOnly: true
+  mysql-data-local:
+    type: persistentVolumeClaim
+    existingClaim: romm-mysql-data-local
     advancedMounts:
       romm:
         db:
