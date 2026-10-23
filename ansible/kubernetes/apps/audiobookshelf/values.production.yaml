@@ -156,7 +156,7 @@ persistence:
           - path: /podcasts
 
 rawResources:
-  backupSchedule:
+  daily:
     enabled: true
     manifest:
       apiVersion: velero.io/v1
