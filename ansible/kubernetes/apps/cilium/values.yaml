@@ -88,6 +88,26 @@ hubble:
       - key: node-role.kubernetes.io/control-plane
         operator: Exists
   ui:
-    enabled: false
+    enabled: true
+    nodeSelector:
+      kubernetes.io/os: linux
+      kubernetes.io/hostname: k8s-cp-1
+    tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+    backend:
+      resources:
+        requests:
+          cpu: 25m
+          memory: 64Mi
+        limits:
+          memory: 128Mi
+    frontend:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
   metrics:
     enabled: []
