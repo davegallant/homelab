@@ -223,7 +223,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/adguard/adguardhome | v0.107.79 |
 | docker.io/caronc/apprise | 2.0.1 |
 | docker.io/deluan/navidrome | 0.64.2 |
-| docker.io/dgtlmoon/changedetection.io | 0.60.9 |
 | docker.io/docker | 29.9.2-dind |
 | docker.io/fosrl/gerbil | 1.5.2 |
 | docker.io/fosrl/newt | 1.19.0 |
@@ -235,7 +234,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/henrygd/beszel | 0.21.1 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.10.1 |
 | docker.io/jellyfin/jellyfin | 12.2 |
-| docker.io/krateng/maloja | 3.2.9 |
 | docker.io/library/redis | 8 |
 | docker.io/linuxserver/lidarr | 3.1.0 |
 | docker.io/linuxserver/prowlarr | 2.6.5 |
@@ -244,7 +242,6 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | docker.io/linuxserver/sonarr | 4.0.20 |
 | docker.io/linuxserver/speedtest-tracker | 1.15.1 |
 | docker.io/mariadb | 13.0.2 |
-| docker.io/miniflux/miniflux | 2.3.4 |
 | docker.io/paperlessngx/paperless-ngx | 3.3.3 |
 | docker.io/postgres | 18.6 |
 | docker.io/rommapp/romm | 5.4.0 |
@@ -256,12 +253,9 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 | ghcr.io/androidseb25/igotify-notification-assist | v1.6.0.1 |
 | ghcr.io/dispatcharr/dispatcharr | 0.32.0 |
 | ghcr.io/flaresolverr/flaresolverr | v3.5.2 |
-| ghcr.io/hargata/lubelogger | v1.4.5 |
 | ghcr.io/immich-app/immich-machine-learning | v3.3.5 |
 | ghcr.io/immich-app/immich-server | v3.3.5 |
 | ghcr.io/immich-app/postgres | 14-vectorchord0.4.3-pgvectors0.2.0 |
-| ghcr.io/kiwix/kiwix-serve | 3.8.2 |
-| ghcr.io/seerr-team/seerr | v3.5.1 |
 | ghcr.io/seriousm4x/upsnap | 5.7.2 |
 | ghcr.io/umami-software/umami | 3.4.0 |
 | quay.io/invidious/invidious | 2026.10.23-4a271da |
