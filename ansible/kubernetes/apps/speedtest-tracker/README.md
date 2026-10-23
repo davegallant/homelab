@@ -106,9 +106,10 @@ the tailnet (cutover step 4).
    README) and verify the step-1 count matches. Copy `./speedtest-app`
    into the `config` claim and the Apprise `./apprise-config`,
    `./plugin`, `./attach` directories into the `apprise` claim's
-   subPaths with datacopy helper pods; copy `./web` into `web-certs`
-   too (parity, pending the check in the intro). Verify file counts
-   and bytes for the file copies (LubeLogger README method).
+   subPaths with datacopy helper pods. The empty, unused `./web`
+   directory is deliberately not copied; Caddy terminates TLS.
+   Verify file counts and bytes for the file copies (LubeLogger
+   README method).
    Anything unverifiable → restart the LXC stack, leave Speedtest
    Tracker serving there, and report.
 4. Headscale (executor, no operator gate): the pod's Tailscale
@@ -129,6 +130,17 @@ the tailnet (cutover step 4).
    Navidrome README, schedule `speedtest-tracker-daily`).
 7. Leave the stopped LXC as rollback target until soak completes.
 
+### Worker placement before retry
+
+Before creating or provisioning any Speedtest claims, cordon
+`k8s-w-2` so local-path claims are first-consumer provisioned on
+`k8s-w-1`. Local-path volumes are tied to their first worker; the
+first attempt provisioned on `k8s-w-2`, where the pod could not
+schedule. Keep `k8s-w-2` cordoned through claim creation, data
+restore/copy, static PV binding, and the scheduling gate. If the pod
+still cannot schedule on `k8s-w-1`, park Speedtest at zero replicas,
+restart the LXC, and uncordon `k8s-w-2` after confirming the LXC serves.
+
 Rollback: `docker compose up -d` on the LXC and re-register its
 tailnet node; bring the cluster pod down via a `replicas: 0` commit
 + Sync so the `speedtest-tracker` tailnet name is not claimed
@@ -145,3 +157,24 @@ request. The LXC stack was restarted; it now has 14,392 results after
 a scheduled run. Headscale still has only the LXC's
 `speedtest-tracker` node; the unused one-time auth key was revoked.
 No Kubernetes backup or test run was recorded.
+
+## Retry status (2026-10-23)
+
+The stranded `k8s-w-2` attempt was removed after confirming the LXC stack was
+running. `k8s-w-2` was cordoned before the retry's claims were provisioned or
+any data moved. The database, config, and Apprise PVCs mounted by the
+migration helper provisioned on `k8s-w-1`; the caddy and Tailscale state PVCs
+remain pending because the workload pod never scheduled. The database restore
+matched at 14,392 results, and app configuration matched at 46 files and
+4,446,440 bytes. The Apprise `config`, `plugin`, and `attach` directories each
+matched at 0 files and 0 bytes. The unused `./web` directory was not copied.
+
+The static database, config, and Apprise PVs are bound to those `k8s-w-1`
+paths. The K8s pod could not pass the scheduling gate: `k8s-w-1` had about
+155m free CPU request capacity, while the pod requests 275m. The pod never
+started, so no K8s URL check, manual speedtest, or Velero backup with completed
+PodVolumeBackups was recorded. The deployment is parked at zero replicas,
+`k8s-w-2` is uncordoned, and the LXC was restarted and verified serving at
+14,392 results; its tailnet URL returned HTTP 302. The unused one-time
+Headscale key and Kubernetes bootstrap Secret were deleted. The existing LXC
+Headscale node remains online; no ACL or policy changes were made.

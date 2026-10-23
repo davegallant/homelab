@@ -1,5 +1,5 @@
 ---
-# Cutover PV for the copied Apprise configuration on k8s-w-2.
+# Cutover PV for the copied Apprise configuration on k8s-w-1.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -13,7 +13,7 @@ spec:
   storageClassName: pve-g3-1-local
   volumeMode: Filesystem
   local:
-    path: /var/mnt/local-path/pvc-8b4bbcf7-954d-439c-ab4a-55dd0f1c0216_speedtest-tracker_speedtest-tracker-apprise
+    path: /var/mnt/local-path/pvc-7bb2a138-720e-45a1-8c4f-b4da0ce99646_speedtest-tracker_speedtest-tracker-apprise
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -21,7 +21,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - k8s-w-2
+                - k8s-w-1
   claimRef:
     namespace: speedtest-tracker
     name: speedtest-tracker-apprise-local
