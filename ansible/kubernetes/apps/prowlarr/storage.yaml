@@ -1,0 +1,13 @@
+---
+# Storage for prowlarr: namespace only. Prowlarr has no media
+# mounts; its config is a chart-managed local-path PVC declared
+# in values.production.yaml. Applied once by hand (see README.md),
+# not managed by Argo CD.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prowlarr
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline

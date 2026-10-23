@@ -1,0 +1,379 @@
+---
+# Prowlarr — Argo CD production values (bjw-s app-template 5.3.0).
+# Source of truth for the workload: playbooks/prowlarr/docker-compose.yml
+# (app docker.io/linuxserver/prowlarr 2.6.5, port 9696, config on a
+# local volume; Flaresolverr ghcr.io/flaresolverr/flaresolverr v3.5.2
+# as a second service in the same compose).
+# Tailnet-only: exposure mirrors the RomM pod — userspace Tailscale
+# sidecar TCP-forwarding 443 to an in-pod Caddy (8443), which
+# terminates a real certificate (Cloudflare DNS-01) and proxies to
+# Prowlarr on 127.0.0.1:9696, replacing the LXC's host Caddy role.
+# The tailnet URL is unchanged.
+#
+# Flaresolverr moves in-pod as a second app container, reachable at
+# 127.0.0.1:8191 exactly as the compose's service-name networking
+# presented it; at cutover Prowlarr's Flaresolverr URL is repointed
+# from http://flaresolverr:8191 to http://127.0.0.1:8191 (README).
+# Prowlarr has no media mounts and never talks to qBittorrent — the
+# *arr apps poll its Torznab feeds, and it syncs app profiles over
+# the apps' APIs; at cutover those connections are repointed to the
+# cluster Services (README), which the network policy below allows.
+#
+# Secrets stay outside Git and outside Argo's ownership:
+#   prowlarr-caddy-external  (key cloudflare_api_token) — gitops-secrets.yml
+#   prowlarr-tailscale-auth  (key TS_AUTHKEY, one-use)   — bootstrap only
+# There is deliberately no app Secret: Prowlarr's API key and its
+# app/indexer credentials live in its config, which arrives with
+# the copied /config.
+controllers:
+  prowlarr:
+    type: deployment
+    strategy: Recreate
+    # Staging: the pod starts at cutover, once the config has been
+    # copied and verified (README).
+    replicas: 0
+    pod:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-w-1
+      annotations:
+        # Opt-in filesystem backup of the config volume.
+        backup.velero.io/backup-volumes: config
+    containers:
+      app:
+        image:
+          repository: docker.io/linuxserver/prowlarr
+          tag: 2.6.5
+          digest: sha256:b3b00047ed20f6ce2b16780145cb6a0acb51c9e28ea6aa6f5dcd33c7034f1797
+        env:
+          PUID: "1000"
+          PGID: "1000"
+          TZ: Etc/UTC
+        probes:
+          startup:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 9696
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 9696
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: TCP
+            port: 9696
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+      flaresolverr:
+        image:
+          repository: ghcr.io/flaresolverr/flaresolverr
+          tag: v3.5.2
+          digest: sha256:c80ae007ce2ccdcd217a12426e4f039ef763ff90738c808d38810c3e59323767
+        env:
+          LOG_LEVEL: info
+          LOG_HTML: "false"
+          CAPTCHA_SOLVER: none
+          TZ: Etc/UTC
+        probes:
+          startup:
+            enabled: true
+            type: TCP
+            port: 8191
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: TCP
+            port: 8191
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: TCP
+            port: 8191
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 50m
+            memory: 256Mi
+          limits:
+            # Headless Chromium spikes while solving.
+            cpu: 500m
+            memory: 1Gi
+      tailscale:
+        image:
+          repository: ghcr.io/tailscale/tailscale
+          tag: v1.104.1
+          digest: sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
+        envFrom:
+          # The bootstrap-created Secret holds exactly one key
+          # (TS_AUTHKEY), imported here as the env var of that name.
+          # Optional: once the identity persists in tailscale-state,
+          # the Secret is deleted and the sidecar runs without it.
+          - secretRef:
+              name: prowlarr-tailscale-auth
+              optional: true
+        env:
+          TS_AUTH_ONCE: "true"
+          TS_HOSTNAME: prowlarr
+          TS_STATE_DIR: /var/lib/tailscale
+          # State lives on the local PVC, so disable Kubernetes Secret storage.
+          TS_KUBE_SECRET: ""
+          TS_USERSPACE: "true"
+          TS_EXTRA_ARGS: --login-server=https://hs.davegallant.ca --accept-dns=false
+          TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 192Mi
+      caddy:
+        image:
+          repository: ghcr.io/davegallant/homelab-caddy-cloudflare
+          tag: 2.11.6-a8737d0
+          digest: sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
+        command:
+          - caddy
+        args:
+          - run
+          - --config
+          - /etc/caddy/Caddyfile
+          - --adapter
+          - caddyfile
+        resources:
+          requests:
+            cpu: 25m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+
+service:
+  prowlarr:
+    controller: prowlarr
+    ports:
+      http:
+        port: 9696
+
+configMaps:
+  # Keys are short on purpose: bjw-s names the rendered ConfigMaps
+  # <release>-<key>, and the persistence entries below reference the
+  # resulting prowlarr-tailscale / prowlarr-caddy names.
+  tailscale:
+    data:
+      serve-config.json: |
+        {
+          "TCP": {
+            "443": {
+              "TCPForward": "127.0.0.1:8443"
+            }
+          }
+        }
+  caddy:
+    data:
+      Caddyfile: |
+        {
+          auto_https disable_redirects
+          https_port 8443
+          tls_resolvers 1.1.1.1
+          servers {
+            protocols h1 h2
+          }
+        }
+
+        prowlarr.tail.davegallant.ca {
+          bind 127.0.0.1
+
+          tls {
+            dns cloudflare {file./run/secrets/cloudflare_api_token}
+            propagation_delay 30s
+            propagation_timeout -1
+          }
+
+          reverse_proxy 127.0.0.1:9696
+        }
+
+persistence:
+  config:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    advancedMounts:
+      prowlarr:
+        app:
+          - path: /config
+  tailscale-state:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    advancedMounts:
+      prowlarr:
+        tailscale:
+          - path: /var/lib/tailscale
+  tailscale-config:
+    type: configMap
+    name: prowlarr-tailscale
+    advancedMounts:
+      prowlarr:
+        tailscale:
+          - path: /etc/tailscale/serve-config.json
+            subPath: serve-config.json
+            readOnly: true
+  caddy-config:
+    type: configMap
+    name: prowlarr-caddy
+    advancedMounts:
+      prowlarr:
+        caddy:
+          - path: /etc/caddy/Caddyfile
+            subPath: Caddyfile
+            readOnly: true
+  caddy-state:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 256Mi
+    advancedMounts:
+      prowlarr:
+        caddy:
+          - path: /data
+  caddy-runtime:
+    type: emptyDir
+    advancedMounts:
+      prowlarr:
+        caddy:
+          - path: /config
+  caddy-secret:
+    type: secret
+    name: prowlarr-caddy-external
+    advancedMounts:
+      prowlarr:
+        caddy:
+          - path: /run/secrets/cloudflare_api_token
+            subPath: cloudflare_api_token
+            readOnly: true
+
+rawResources:
+  daily:
+    enabled: true
+    manifest:
+      apiVersion: velero.io/v1
+      kind: Schedule
+      metadata:
+        name: prowlarr-daily
+        namespace: velero
+      spec:
+        schedule: "0 3 * * *"
+        template:
+          ttl: 336h
+          includedNamespaces:
+            - prowlarr
+          excludedResources:
+            - secrets
+          defaultVolumesToFsBackup: false
+          snapshotVolumes: false
+          storageLocation: default
+
+  defaultDenyNetworkPolicy:
+    enabled: true
+    manifest:
+      apiVersion: cilium.io/v2
+      kind: CiliumNetworkPolicy
+      metadata:
+        name: default-deny
+        namespace: prowlarr
+      spec:
+        description: Default deny with indexer egress, cluster DNS, and two-way API access with the *arr apps.
+        endpointSelector: {}
+        ingress:
+          - fromEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: prowlarr
+          # The *arr apps poll Prowlarr's Torznab feeds.
+          - fromEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: sonarr
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: radarr
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: lidarr
+            toPorts:
+              - ports:
+                  - port: "9696"
+                    protocol: TCP
+        egress:
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: kube-system
+                  k8s:k8s-app: kube-dns
+            toPorts:
+              - ports:
+                  - port: "53"
+                    protocol: UDP
+                  - port: "53"
+                    protocol: TCP
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: prowlarr
+          # App-profile sync and connection tests target the apps'
+          # APIs; their base URLs are repointed to these Services
+          # at cutover (README).
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: sonarr
+            toPorts:
+              - ports:
+                  - port: "8989"
+                    protocol: TCP
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: radarr
+            toPorts:
+              - ports:
+                  - port: "7878"
+                    protocol: TCP
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: lidarr
+            toPorts:
+              - ports:
+                  - port: "8686"
+                    protocol: TCP
+          - toEntities:
+              - cluster
+          - toEntities:
+              - world
+        egressDeny:
+          - toCIDR:
+              - 192.168.1.0/24
+              - 10.96.0.0/12
+              - 10.245.0.0/16
