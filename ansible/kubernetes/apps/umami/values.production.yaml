@@ -146,17 +146,15 @@ service:
 
 persistence:
   # Keep the original local-path claim mounted read-only for rollback.
-  db-data:
+  rollback-db-data:
     type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 2Gi
+    existingClaim: umami
     advancedMounts:
       umami:
         db:
           - path: /mnt/umami-rollback-db-data
             readOnly: true
-  db-data-local:
+  db-data:
     type: persistentVolumeClaim
     existingClaim: umami-db-data-local
     advancedMounts:
