@@ -200,9 +200,7 @@ persistence:
   # Keep the original local-path claim read-only for rollback.
   db-data:
     type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 5Gi
+    existingClaim: invidious-db-rollback-w1
     advancedMounts:
       invidious:
         db:
