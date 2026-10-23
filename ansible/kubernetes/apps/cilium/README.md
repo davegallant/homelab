@@ -129,3 +129,10 @@ reported with Kubernetes 1.36 and Cilium 1.19.5 too; it is not evidence of
 a 1.37 pairing failure. The play now uses the CLI default `warning` mode
 and retains Hubble observation alongside actual request success. Set
 `cilium_flow_validation=strict` to reproduce the matcher failure.
+
+Warning mode still fails this matcher. The canary therefore runs the
+unaffected scenarios strictly, then runs the same Service scenario with
+the invalid VIP matcher disabled. `verify-service-flow.py` independently
+requires HTTP 200 plus FORWARDED translated SYN and SYN-ACK for each client,
+and fails on any drop in those connections. No connectivity scenario is
+omitted. Strict Hubble validation remains the default elsewhere.
