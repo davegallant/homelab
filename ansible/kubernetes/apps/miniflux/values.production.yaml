@@ -4,3 +4,15 @@ pangolinEndpoint: https://pangolin.davegallant.ca
 existingSecret: miniflux-external
 newt:
   enabled: true
+  resources:
+    requests:
+      cpu: 5m
+miniflux:
+  resources:
+    requests:
+      cpu: 5m
+      memory: 48Mi
+db:
+  resources:
+    requests:
+      cpu: 20m
