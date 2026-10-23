@@ -118,3 +118,14 @@ Before strict Hubble validation, expose Relay only on localhost with
 `kubectl --context admin@homelab -n cilium-system port-forward --address=127.0.0.1 service/hubble-relay 4245:80`.
 Use the connectivity playbook's `cleanup-canary` or `cleanup-full` stage
 to remove its test resources afterward.
+
+The canary's first strict flow run completed its connectivity requests but
+reported two pod-to-Service flow mismatches: the matcher expected the
+Service VIP while Hubble recorded the translated backend IP. Controlled
+Service and direct-pod requests both preserved client identity and showed
+forwarded SYN, SYN-ACK, payload, and FIN flows. This resembles the upstream
+[flow-validation issue](https://github.com/cilium/cilium-cli/issues/3255),
+reported with Kubernetes 1.36 and Cilium 1.19.5 too; it is not evidence of
+a 1.37 pairing failure. The play now uses the CLI default `warning` mode
+and retains Hubble observation alongside actual request success. Set
+`cilium_flow_validation=strict` to reproduce the matcher failure.

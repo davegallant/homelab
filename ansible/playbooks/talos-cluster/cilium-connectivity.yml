@@ -8,6 +8,7 @@
     cilium_cli_binary: cilium
     cilium_connectivity_stage: canary
     cilium_connectivity_node: k8s-w-2
+    cilium_flow_validation: warning
     cilium_echo_image: >-
       gcr.io/k8s-staging-gateway-api/echo-advanced:v20251204-v1.4.1@sha256:96c3b75534386ca36c0c76ac8fdbe695f63f35bb3e0632537ffba9732c1f58c9
   tasks:
@@ -39,7 +40,7 @@
           - --test
           - '^(no-policies.*|health)$'
           - --flow-validation
-          - strict
+          - "{{ cilium_flow_validation }}"
           - --timeout
           - 20m
       when: cilium_connectivity_stage == 'canary'
@@ -62,7 +63,7 @@
           - --echo-image
           - "{{ cilium_echo_image }}"
           - --flow-validation
-          - strict
+          - "{{ cilium_flow_validation }}"
           - --timeout
           - 40m
       when: cilium_connectivity_stage == 'full'
