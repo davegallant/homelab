@@ -34,7 +34,7 @@ controllers:
         kubernetes.io/hostname: k8s-w-1
       annotations:
         # Opt-in filesystem backup of the config volume.
-        backup.velero.io/backup-volumes: config
+        backup.velero.io/backup-volumes: config-local
     containers:
       app:
         image:
