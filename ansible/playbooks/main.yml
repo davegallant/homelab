@@ -13,7 +13,6 @@
 - import_playbook: invidious/main.yml
 - import_playbook: jellyfin/main.yml
 - import_playbook: lidarr/main.yml
-- import_playbook: paperless-ngx/main.yml
 - import_playbook: pangolin/main.yml
 - import_playbook: prowlarr/main.yml
 - import_playbook: qbittorrent/main.yml

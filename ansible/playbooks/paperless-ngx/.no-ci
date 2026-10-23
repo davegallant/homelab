@@ -1,2 +1,0 @@
-# Paperless-ngx has migrated to Talos; keep its retired LXC playbook
-# out of the all-host CI matrix and daily cron.
