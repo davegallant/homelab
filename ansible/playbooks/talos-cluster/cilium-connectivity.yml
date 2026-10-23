@@ -15,7 +15,7 @@
       ansible.builtin.assert:
         that:
           - talos_kube_context | length > 0
-          - cilium_connectivity_stage in ['canary', 'full']
+          - cilium_connectivity_stage in ['canary', 'full', 'cleanup-canary', 'cleanup-full']
 
     - name: Run the canary connectivity suite with Hubble flow validation
       ansible.builtin.command:
@@ -66,4 +66,20 @@
           - --timeout
           - 40m
       when: cilium_connectivity_stage == 'full'
+      changed_when: true
+
+    - name: Remove only the connectivity suite's diagnostic resources
+      ansible.builtin.command:
+        argv:
+          - "{{ cilium_cli_binary }}"
+          - --context
+          - "{{ talos_kube_context }}"
+          - --namespace
+          - cilium-system
+          - connectivity
+          - test
+          - --test-namespace
+          - "{{ 'cilium-canary' if cilium_connectivity_stage == 'cleanup-canary' else 'cilium-test' }}"
+          - --cleanup
+      when: cilium_connectivity_stage in ['cleanup-canary', 'cleanup-full']
       changed_when: true

@@ -113,3 +113,8 @@ migration. Run it again with `cilium_connectivity_stage=full` after enabling
 policy enforcement to exercise the complete connectivity and policy suite.
 The test namespaces are diagnostic Pod Security exceptions and must be
 removed with the CLI cleanup path after verification.
+
+Before strict Hubble validation, expose Relay only on localhost with
+`kubectl --context admin@homelab -n cilium-system port-forward --address=127.0.0.1 service/hubble-relay 4245:80`.
+Use the connectivity playbook's `cleanup-canary` or `cleanup-full` stage
+to remove its test resources afterward.
