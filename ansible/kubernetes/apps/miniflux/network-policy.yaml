@@ -1,0 +1,36 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: default-deny
+  namespace: miniflux
+spec:
+  description: Default deny with internet fetch access, cluster DNS, and explicit internal-range denies.
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: miniflux
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: miniflux
+    - toEntities:
+        - cluster
+    - toEntities:
+        - world
+  egressDeny:
+    - toCIDR:
+        - 192.168.1.0/24
+        - 10.96.0.0/12
+        - 10.245.0.0/16
