@@ -562,18 +562,46 @@ separate approved Grafana playbook run after removing the source-and-port rule
 from the repo closes the LAN path again. The Alloy RBAC and ConfigMap can stay
 for troubleshooting until their removal is separately approved.
 
-## Planned hardening
+## Implemented hardening
 
-- **Cilium CNI migration (decided 2026-10-22; implementation design).** The
-  cluster runs Talos-managed Flannel on `10.244.0.0/16` with VXLAN UDP 8472.
-  Cilium 1.20.3 will be installed in secondary mode with cluster-pool IPAM on
-  `10.245.0.0/16`, VXLAN UDP 8473, and policy enforcement disabled during
-  node-by-node migration. The design, values, Talos patch, bootstrap playbook,
-  and compatibility exit gate are in [`apps/cilium`](apps/cilium/README.md).
-  Kubernetes is v1.37.0, outside Cilium 1.20.3's tested 1.33–1.36 matrix;
-  the w-2 canary is the hard exit gate. kube-proxy remains enabled. Following
-  migration, default-deny policies will be added per namespace with explicit
-  Tailscale, Cloudflare, DNS, cluster, and documented application egress.
+- **Cilium CNI (completed 2026-10-23).** All three Talos nodes run Cilium
+  `1.20.3` with cluster-pool IPAM on `10.245.0.0/16` (`/24` per node) and
+  VXLAN UDP `8473`. Flannel has been removed; kube-proxy remains enabled.
+  Kubernetes is `1.37.0`, outside Cilium 1.20.3's tested `1.33–1.36` matrix.
+  The dual-overlay migration and observed compatibility evidence are recorded
+  in [`apps/cilium`](apps/cilium/README.md).
+- **Default-deny policies.** Each policy is stored beside its workload and
+  applied through `playbooks/talos-cluster/cilium-apply-policy.yml`. App
+  policies allow cluster DNS, intra-namespace traffic, the documented app
+  dependencies, and the sidecar's Tailscale/Cloudflare egress. Internet
+  fetchers explicitly deny LAN and cluster CIDRs. Homepage and Kiwix have a
+  single TrueNAS host exception; Alloy has only its Loki and VictoriaMetrics
+  targets; Velero has only Garage S3. The live inventory is: `changedetection`,
+  `miniflux`, `searxng`, `bentopdf`, `homepage`, `kiwix`, `lubelogger`,
+  `maloja`, `seerr`, `alloy`, `monitoring`, `argocd`, `velero`,
+  `local-path-storage`, `cilium-system`, and a CSI-controller-only policy in
+  shared `kube-system`. The NFS CSI node plugin uses host networking, so its
+  node-side NFS mount is verified with a fresh PVC smoke test rather than
+  treated as pod egress.
+- **Hubble access.** Hubble Relay is a ClusterIP in `cilium-system`. For the
+  CLI, port-forward `service/hubble-relay` from `4245:80`; `hubble status`
+  then reports the connected agents and `hubble observe` shows flows. The UI
+  is also enabled and can be opened with a localhost-only port-forward from
+  `service/hubble-ui` `12000:80` at <http://localhost:12000>.
+- **Pod Security exception.** `cilium-system` has privileged enforcement for
+  the CNI DaemonSet, with audit and warn kept at baseline, matching the
+  platform-exception shape used by Velero. The namespace is managed in
+  `apps/cilium/namespace.yaml`.
+- **Phase verification.** Nodes are Ready on Kubernetes `1.37.0`; Cilium
+  agents and Relay are healthy on all nodes; every pod-network workload is a
+  Cilium endpoint. Homepage and changedetection migration backups completed
+  with completed PodVolumeBackups. The full `cilium connectivity test` did
+  not complete reliably because its temporary echo pods failed readiness; no
+  failure was isolated to the Kubernetes 1.37 pairing. Hubble showed the
+  documented Loki/metrics/Garage flows forwarded and denied direct LAN and
+  SSDP/Tailscale peer-discovery attempts; app HTTPS checks passed through the
+  permitted sidecar path.
+
 - **Kyverno: deferred.** Admission policy via Kyverno was considered and set
   aside: Argo CD AppProject whitelists, Pod Security baseline labels, and
   digest-pinned images already cover the admission side at this scale.

@@ -1,155 +1,109 @@
-# Cilium migration design
+# Cilium CNI migration and operations
 
-The Talos cluster currently uses Talos-managed Flannel with pod CIDR
-`10.244.0.0/16` and VXLAN UDP 8472. Cilium is pinned to chart 1.20.3 and
-will use cluster-pool IPAM with pod CIDR `10.245.0.0/16`, per-node `/24`
-allocations, and VXLAN UDP 8473. Kube-proxy remains enabled; this avoids a
-second dataplane change during the migration.
+## Current cluster state
 
-## Supported live-migration sequence
+The Talos cluster runs Kubernetes `1.37.0` with Cilium chart `1.20.3` as its
+primary CNI. Cluster-pool IPAM assigns `10.245.0.0/16` (`/24` per node) and
+VXLAN uses UDP `8473`. Flannel has been removed and kube-proxy remains enabled.
+Talos machine configuration sets `cluster.network.cni.name: none`; Cilium
+reuses Talos's cgroup v2 and bpffs mounts, sets the cgroup root to
+`/sys/fs/cgroup`, and omits `SYS_MODULE`.
 
-The [Cilium live-migration guide](https://docs.cilium.io/en/stable/installation/k8s-install-migration/)
-requires a distinct pod CIDR, cluster-pool IPAM, and a distinct overlay
-protocol or port. Install Cilium first in secondary mode with policy
-enforcement disabled and no CNI configuration installed. A selector-based
-`CiliumNodeConfig` opts individual nodes into Cilium. Migrate one node at a
-time: cordon and drain it, label it for Cilium, restart its Cilium agent,
-reboot it, verify its new pod IP and API reachability, then uncordon it.
-Remove Flannel only after all nodes and pods have moved. The chart has
-separate migration and steady-state values files for this transition.
+All three nodes are Ready. The migration verified every pod-network workload
+as a Cilium endpoint; host-network pods are outside endpoint policy. Cilium
+agents, operator, Relay and UI are healthy. Hubble Relay reports 3/3 connected
+nodes. The rollout and its remaining connectivity-test limitation are recorded
+below.
+
+## Live-migration sequence (completed 2026-10-23)
+
+The run followed the [Cilium live-migration guide](https://docs.cilium.io/en/stable/installation/k8s-install-migration/):
+Cilium 1.20.3 was installed first in secondary mode with cluster-pool IPAM,
+a separate pod CIDR, VXLAN UDP 8473, and policy enforcement disabled. A
+selector-based `CiliumNodeConfig` migrated one node at a time. `k8s-w-2` was
+the canary, followed by `k8s-w-1` and `k8s-cp-1`; each node was health-gated
+before proceeding. Flannel was removed only after all pod-network workloads
+had moved. Migration and steady-state values remain separate in this app.
 
 Talos v1.14's [Cilium guide](https://docs.siderolabs.com/kubernetes-guides/cni/deploying-cilium)
-uses a `KubeFlannelCNIConfig` delete patch to set CNI to `none`. That patch is
-included in the generated control-plane and worker machine configs and will
-be applied through the manual Talos Ansible flow. Cilium reuses Talos's
-existing cgroup v2 and bpffs mounts; chart auto-mounting is disabled, the
-cgroup root is `/sys/fs/cgroup`, and `SYS_MODULE` is omitted. kube-proxy stays
-enabled, so KubePrism-specific kube-proxy replacement settings are not used.
+uses a `KubeFlannelCNIConfig` delete patch to set CNI to `none`. The repo's
+generated control-plane and worker configs carry that change through the
+manual Talos Ansible flow. Kube-proxy replacement was not selected, so
+KubePrism-specific kube-proxy values are not used.
 Talos 1.14's [configuration changes](https://github.com/siderolabs/talos/releases/tag/v1.14.0)
 also support pinning kubelet node IP selection to `192.168.1.0/24` with
-`KubeNodeConfig`; this keeps the
-reachable LAN address as the Kubernetes InternalIP when Cilium creates its
-`cilium_host` interface. Secondary mode sets `cni.exclusive: false` so
-Flannel's CNI file remains in place until each node is explicitly selected
-through `CiliumNodeConfig`.
+`KubeNodeConfig`; this keeps the reachable LAN address as the Kubernetes
+InternalIP when Cilium creates its `cilium_host` interface. Secondary mode
+set `cni.exclusive: false`, leaving Flannel's CNI file in place until each
+node was explicitly selected through `CiliumNodeConfig`.
 
 ## Compatibility exit gate
 
-The cluster runs Kubernetes v1.37.0. Cilium 1.20.3's tested compatibility
-matrix lists Kubernetes 1.33 through 1.36; 1.37 is outside that tested range.
-After the w-2 canary, the run stops and removes secondary-mode Cilium if the
-connectivity suite fails in a way attributable to that pairing. Flannel and
-all existing pod networking remain in place at that exit point.
-
-The canary suite includes `cilium connectivity test`, a sidecar app's tailnet
-HTTPS endpoint, and Hubble flow inspection. Alloy's existing w-2 readiness
-shortfall is a recorded baseline and is not attributed to Cilium unless it
-degrades from the measured starting state.
+At the time of the migration, Cilium 1.20.3's tested compatibility matrix
+listed Kubernetes 1.33 through 1.36; this cluster's Kubernetes 1.37.0 pairing
+was outside that tested range. The w-2 canary passed node health, Cilium
+endpoint, sidecar HTTPS, and Hubble checks. The full `cilium connectivity
+test` did not complete reliably: temporary echo pods failed readiness and the
+suite stalled. No failure was isolated to the Kubernetes 1.37 pairing. The
+test namespaces were cleaned up. Direct workload, DNS, Hubble flow, NFS, and
+backup checks were used for rollout gates; the full CLI suite remains
+unverified. Alloy's w-2 readiness shortfall pre-dated migration.
 
 ## Pod Security and resource placement
 
-The `cilium-system` namespace has the privileged Pod Security enforcement
-exception needed by Cilium's DaemonSet, matching the platform exception shape
-used for Velero. Its audit and warn levels remain baseline. Cilium requests
-192 MiB per agent and caps each at 512 MiB. The single operator and Hubble
-Relay are pinned to the 4 GiB control-plane node; Relay requests 64 MiB. The
-4 GiB w-1 is at 98% of requested memory at baseline, so neither component is
-scheduled there. Before installation, compare w-2's measured workload use
-and the `pve-g3-2` host memory gate in `provision-vms.yml`.
+The `cilium-system` namespace has privileged Pod Security enforcement for the
+CNI DaemonSet, matching the exception shape used by Velero; audit and warn
+remain baseline. These labels are in `namespace.yaml`. Cilium agents request
+192 MiB and cap at 512 MiB. Operator, Relay, and UI are pinned to
+`k8s-cp-1`. `k8s-w-2` was raised to 2.5 GiB through the Ansible VM flow after
+checking the `pve-g3-2` host memory gate.
 
-NetworkPolicies are deliberately disabled during dual-overlay migration.
-After Flannel is removed, policies will be introduced one namespace at a
-time. Every application Pod's policy includes its Tailscale sidecar's
-control/relay traffic and Caddy's Cloudflare DNS-01/API traffic. Application
-specific LAN exceptions are restricted to Garage S3, Loki, TrueNAS NFS, and
-Homepage's documented proxy calls. Internet-fetching apps get world egress
-with explicit LAN and cluster-range denies.
+Default-deny policies are now active. Each app policy lives in that app's
+directory and is applied with `playbooks/talos-cluster/cilium-apply-policy.yml`.
+They allow same-namespace traffic, kube-dns, cluster access, and documented
+dependencies. The sidecar egress includes Tailscale control/relay and
+Cloudflare DNS-01/API. Internet-fetching namespaces (`changedetection`,
+`miniflux`, `searxng`) have explicit LAN and cluster-range denies. Homepage
+and Kiwix have a single TrueNAS host exception; Alloy is limited to Loki
+`:3100`, VictoriaMetrics `:8428`, and kubelet metrics; Velero is limited to
+Garage S3 `:3900`. Argo CD has HTTPS egress for GitHub and configured chart
+repositories. The NFS CSI policy selects only the controller in shared
+`kube-system`; its privileged node plugin uses host networking. See the
+policy inventory in `ansible/kubernetes/README.md`.
 
-## Agent diagnostics without worker placement
+## Agent memory investigation and placement
 
-`cilium.yml -e cilium_install_scope=control-plane` restricts the agent and
-Envoy DaemonSets to `k8s-cp-1`. Operator and Relay already run there. This
-secondary installation writes no CNI configuration and migrates no pods.
-The worker-host memory checks apply to the default `cluster` scope; no
-component is added to w-2 in the diagnostic scope. The migration values
-enable pprof on localhost:6060 for a local kubectl port-forward.
-Expand to the cluster scope only after the pve-g3-2 memory gate passes.
+During pre-migration diagnostics, a 256 MiB agent limit caused reclaim
+thrashing; increasing the limit to 512 MiB restored Ready status and Hubble
+health. The steady-state chart uses that 512 MiB limit with a 192 MiB
+request. The w-2 VM was raised to 2.5 GiB through the Talos Ansible VM flow
+after the `pve-g3-2` memory gate passed. The agent and Envoy DaemonSets now
+run on all three nodes; operator, Relay, and UI remain on the control plane.
 
-The control-plane diagnostic overlay raises only the agent memory limit to
-512 MiB. At 256 MiB the agent cgroup recorded over 96,000 limit hits,
-5.9 million direct page scans, 7,503 major faults, and sustained full
-memory pressure without an OOM kill. Its main thread was in uninterruptible
-sleep and localhost health/profiler requests timed out. This experiment
-tests memory reclaim as the cause before attributing the stalls to the
-Kubernetes version. The worker placement and limits are unchanged.
+## Migration and connectivity playbooks
 
-At 512 MiB the diagnostic agent became Ready, its status returned `OK`,
-all 12 controllers were healthy, and Hubble reported `Ok`. Relay connected
-to its peer over TLS and became Ready. The 256 MiB cap caused reclaim
-thrashing; the CRD metadata warning alone did not establish Kubernetes
-1.37 incompatibility. The 512 MiB cap is now used in both migration and
-steady-state values; the 192 MiB scheduling request is retained pending
-measurements during the worker canary.
-
-## Per-node transition
-
-After the three secondary agents and Relay verify healthy, use
-`cilium-migrate-node.yml -e cilium_migration_node=k8s-w-2` first, then w-1
-and cp-1 only after each node's connectivity and application gates pass.
-The play cordons, applies the CiliumNodeConfig selector, restarts that
-agent, reboots only that node, checks Ready and agent rollout, and
-uncordons it. It uses the guide's optional-drain path: the local-PV apps
-cannot move to another node, so rebooting recreates their sandboxes on
-their existing worker. Expect that node's apps to be unavailable during
-the reboot. Flannel remains installed throughout these transitions.
-The play does not advance to another node or automatically roll back;
-the operator runs the full canary verification before continuing.
-
-`cilium-connectivity.yml` runs the canary's no-policy routing scenarios and
-health tests with strict Hubble flow validation, pinned test images, and
-a temporary privileged test namespace. Dave approved this split on
-2026-10-22 because policy enforcement remains disabled during dual-overlay
-migration. Run it again with `cilium_connectivity_stage=full` after enabling
-policy enforcement to exercise the complete connectivity and policy suite.
-The test namespaces are diagnostic Pod Security exceptions and must be
-removed with the CLI cleanup path after verification.
-
-Before strict Hubble validation, expose Relay only on localhost with
-`kubectl --context admin@homelab -n cilium-system port-forward --address=127.0.0.1 service/hubble-relay 4245:80`.
-Use the connectivity playbook's `cleanup-canary` or `cleanup-full` stage
-to remove its test resources afterward.
-
-The canary's first strict flow run completed its connectivity requests but
-reported two pod-to-Service flow mismatches: the matcher expected the
-Service VIP while Hubble recorded the translated backend IP. Controlled
-Service and direct-pod requests both preserved client identity and showed
-forwarded SYN, SYN-ACK, payload, and FIN flows. This resembles the upstream
-[flow-validation issue](https://github.com/cilium/cilium-cli/issues/3255),
-reported with Kubernetes 1.36 and Cilium 1.19.5 too; it is not evidence of
-a 1.37 pairing failure. The play now uses the CLI default `warning` mode
-and retains Hubble observation alongside actual request success. Set
-`cilium_flow_validation=strict` to reproduce the matcher failure.
-
-Warning mode still fails this matcher. The canary therefore runs the
-unaffected scenarios strictly, then runs the same Service scenario with
-the invalid VIP matcher disabled. `verify-service-flow.py` independently
-requires HTTP 200 plus FORWARDED translated SYN and SYN-ACK for each client,
-and fails on any drop in those connections. No connectivity scenario is
-omitted. Strict Hubble validation remains the default elsewhere.
+The completed node order was w-2 canary, w-1, then cp-1. The repo retains
+`cilium-migrate-node.yml`, `cilium-remove-flannel.yml`, and
+`cilium-connectivity.yml` for diagnosis and recovery. Connectivity test
+namespaces were cleaned up. The full CLI suite did not finish because its
+temporary echo pods failed readiness; it is not recorded as passing. The
+run found no failure attributable to Kubernetes 1.37. App URL checks,
+endpoint validation, NFS/PVC smoke, backups, and Hubble flow inspection
+passed their gates.
 
 ## Primary CNI, Vault ownership, and Argo CD adoption
 
-After every pod-network pod verifies as a Cilium endpoint, run
-`cilium-primary.yml`. It first records Helm retention for its three generated
-TLS Secrets, then materializes their existing contents from encrypted Vault
-using the ansible-vault field manager, then applies the steady-state values.
+`cilium-primary.yml` completed the transition after every pod-network pod
+verified as a Cilium endpoint. It recorded Helm retention for the three
+generated TLS Secrets, materialized their existing contents from encrypted
+Vault using the ansible-vault field manager, then applied steady-state values.
 The steady chart references existing TLS Secrets and renders no Secrets.
 The certificates were imported intact; no private key or certificate data
 was printed. Certificate renewal must update Vault and rematerialize these
 Secrets before expiration; Helm/Argo no longer regenerates them.
 
-Run `cilium-adopt.yml` to apply the platform permissions and rendered Cilium
-Application and request one manual sync without pruning. The Application
+`cilium-adopt.yml` applied the platform permissions and rendered Cilium
+Application, then requested one manual sync without pruning. The Application
 template embeds the repository values as valuesObject, so adoption does
 not require pushing unreviewed main changes to the live-host CI pipeline.
 The chart version still comes from vars.yaml. Future Cilium value changes
@@ -165,8 +119,8 @@ overwrite resources already tracked by Argo CD.
 `rollOutCiliumPods: true` makes the chart checksum its ConfigMap into the
 agent pod template. Config changes therefore restart agents one at a time
 (`maxUnavailable: 1`). A healthy DaemonSet alone does not prove a changed
-ConfigMap has been consumed: after primary transition, check the running
-agent's PolicyEnforcement value is default rather than never.
+ConfigMap has been consumed: check the running agent's PolicyEnforcement
+value is `default` rather than `never` after a Cilium values change.
 
 ## Hubble UI
 
@@ -183,3 +137,13 @@ KUBECONFIG="$HOME/.local/share/homelab-talos/kubeconfig" \
 ```
 
 Open <http://localhost:12000>. The UI uses Hubble Relay for flow data.
+
+Hubble Relay CLI access uses the same localhost-only pattern:
+
+```sh
+KUBECONFIG="$HOME/.local/share/homelab-talos/kubeconfig" \
+  kubectl --context admin@homelab -n cilium-system port-forward \
+  --address 127.0.0.1 svc/hubble-relay 4245:80
+hubble status
+hubble observe --namespace changedetection --last 50
+```
