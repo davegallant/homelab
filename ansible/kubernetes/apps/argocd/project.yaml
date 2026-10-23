@@ -33,6 +33,13 @@ spec:
       namespace: maloja
     - server: https://kubernetes.default.svc
       namespace: changedetection
+    # Batch B: the NFS media tier (authored 2026-10-22).
+    - server: https://kubernetes.default.svc
+      namespace: navidrome
+    - server: https://kubernetes.default.svc
+      namespace: audiobookshelf
+    - server: https://kubernetes.default.svc
+      namespace: romm
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
     - group: apps
