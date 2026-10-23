@@ -1,0 +1,219 @@
+---
+# Umami — Argo CD production values (bjw-s app-template 5.3.0).
+# Source of truth for the workload: playbooks/umami/docker-compose.yml
+# (app ghcr.io/umami-software/umami 3.4.0, port 3000; database
+# docker.io/postgres 18.6 as a second container in the same pod, the
+# Miniflux in-pod database pattern).
+# Public via Pangolin: the compose pairs the app with a Newt sidecar,
+# reproduced in-pod with the *same* Newt identity, so the existing
+# Pangolin route and public URL carry over unchanged. Do not rewrite
+# this app as tailnet-only; the compose is authoritative.
+#
+# The only state is the Postgres data directory (chart-managed
+# local-path PVC, volume db-data). The app itself is stateless.
+#
+# Secrets stay outside Git and outside Argo's ownership:
+#   umami-newt-external  (PANGOLIN_ENDPOINT, NEWT_ID, NEWT_SECRET)
+#                        — playbooks/talos-cluster/umami-secret.yml
+#   umami-external       (DATABASE_URL, APP_SECRET, POSTGRES_USER,
+#                         POSTGRES_PASSWORD) — same playbook
+# DATABASE_URL is assembled by the secret playbook with host
+# 127.0.0.1: the compose reaches the database by service name, in-pod
+# it is the neighbouring container.
+controllers:
+  umami:
+    type: deployment
+    strategy: Recreate
+    # Staging: the pod starts at cutover, once the database has been
+    # restored into db-data and the LXC stack is stopped (README).
+    replicas: 0
+    pod:
+      annotations:
+        # Opt-in filesystem backup of the database volume, with a
+        # consistent logical dump written into the volume first so
+        # the filesystem backup carries a restorable copy.
+        backup.velero.io/backup-volumes: db-data
+        pre.hook.backup.velero.io/container: db
+        pre.hook.backup.velero.io/command: '["/bin/sh","-c","PGPASSWORD=$POSTGRES_PASSWORD pg_dump -U $POSTGRES_USER
+          -d $POSTGRES_DB > /var/lib/postgresql/umami-backup.sql"]'
+    containers:
+      app:
+        image:
+          repository: ghcr.io/umami-software/umami
+          tag: 3.4.0
+          digest: sha256:85909afc45bdcda1917394594a087421fdbb05610fded0fa9f6fb861abb2f367
+        envFrom:
+          - secretRef:
+              name: umami-external
+        env:
+          DATABASE_TYPE: postgresql
+        probes:
+          startup:
+            enabled: true
+            type: HTTP
+            path: /api/heartbeat
+            port: 3000
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /api/heartbeat
+            port: 3000
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: HTTP
+            path: /api/heartbeat
+            port: 3000
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+      db:
+        image:
+          repository: docker.io/library/postgres
+          tag: "18.6"
+          digest: sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29d6761ddb6
+        envFrom:
+          - secretRef:
+              name: umami-external
+        env:
+          POSTGRES_DB: umami
+        probes:
+          startup:
+            enabled: true
+            type: TCP
+            port: 5432
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: TCP
+            port: 5432
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: TCP
+            port: 5432
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+      newt:
+        image:
+          repository: docker.io/fosrl/newt
+          tag: 1.19.0
+          digest: sha256:0189c8287058b800cca825590e4c39946b3815344ca48678dd0b96616d639319
+        envFrom:
+          - secretRef:
+              name: umami-newt-external
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 192Mi
+
+service:
+  umami:
+    controller: umami
+    ports:
+      http:
+        port: 3000
+
+persistence:
+  db-data:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 2Gi
+    advancedMounts:
+      umami:
+        db:
+          - path: /var/lib/postgresql
+
+rawResources:
+  daily:
+    enabled: true
+    manifest:
+      apiVersion: velero.io/v1
+      kind: Schedule
+      metadata:
+        name: umami-daily
+        namespace: velero
+      spec:
+        schedule: "0 3 * * *"
+        template:
+          ttl: 336h
+          includedNamespaces:
+            - umami
+          excludedResources:
+            - secrets
+          defaultVolumesToFsBackup: false
+          snapshotVolumes: false
+          storageLocation: default
+
+  defaultDenyNetworkPolicy:
+    enabled: true
+    manifest:
+      apiVersion: cilium.io/v2
+      kind: CiliumNetworkPolicy
+      metadata:
+        name: default-deny
+        namespace: umami
+      spec:
+        description: Default deny with internet fetch access, cluster DNS, and explicit internal-range denies.
+        endpointSelector: {}
+        ingress:
+          - fromEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: umami
+        egress:
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: kube-system
+                  k8s:k8s-app: kube-dns
+            toPorts:
+              - ports:
+                  - port: "53"
+                    protocol: UDP
+                  - port: "53"
+                    protocol: TCP
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: umami
+          - toEntities:
+              - cluster
+          - toEntities:
+              - world
+        egressDeny:
+          - toCIDR:
+              - 192.168.1.0/24
+              - 10.96.0.0/12
+              - 10.245.0.0/16
