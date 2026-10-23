@@ -1,16 +1,14 @@
 ---
 # Speedtest Tracker — Argo CD production values (bjw-s app-template 5.3.0).
-# Source of truth for the workload: playbooks/speedtest-tracker/docker-compose.yml
-# (app docker.io/linuxserver/speedtest-tracker 1.15.1, port 80;
-# database docker.io/postgres 18.6 and a caronc/apprise 2.0.1
-# notification service as further containers in the same pod).
+# Migrated from the LXC stack: Speedtest Tracker 1.15.1 (port 80),
+# PostgreSQL 18.6, and Apprise 2.0.1 run as containers in this pod.
 # Tailnet-only: exposure mirrors the RomM pod — userspace Tailscale
 # sidecar TCP-forwarding 443 to an in-pod Caddy (8443), which
 # terminates a real certificate (Cloudflare DNS-01) and proxies to
 # the app on 127.0.0.1:80, replacing the LXC's tailnet_caddy role.
 # The tailnet URL is unchanged.
 #
-# The compose reaches the database by service name; in-pod
+# The former compose reached the database by service name; in-pod
 # DB_HOST is 127.0.0.1. Apprise stays a separate container on
 # 127.0.0.1:8000, as the app expects a notification service URL.
 #
