@@ -84,7 +84,7 @@ controllers:
               failureThreshold: 3
         resources:
           requests:
-            cpu: 250m
+            cpu: 25m
             memory: 512Mi
           limits:
             # OCR and indexing bursts are CPU-hungry and brief.
@@ -122,8 +122,8 @@ controllers:
               failureThreshold: 3
         resources:
           requests:
-            cpu: 50m
-            memory: 128Mi
+            cpu: 5m
+            memory: 16Mi
           limits:
             cpu: 500m
             memory: 512Mi
@@ -137,8 +137,8 @@ controllers:
               name: paperless-newt-external
         resources:
           requests:
-            cpu: 25m
-            memory: 64Mi
+            cpu: 10m
+            memory: 24Mi
           limits:
             cpu: 200m
             memory: 192Mi
