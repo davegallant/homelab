@@ -1,0 +1,96 @@
+---
+- name: Remove Flannel after every pod has moved to primary Cilium
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../kubernetes/cluster/vars.yaml
+  vars:
+    talos_kube_context: ""
+    talos_private_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.local/share/homelab-talos"
+    talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
+  tasks:
+    - name: Require an explicit cluster context
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+
+    - name: Verify every active pod-network pod is a Cilium endpoint
+      ansible.builtin.command:
+        argv: [python3, "{{ playbook_dir }}/../../kubernetes/apps/cilium/verify-endpoints.py", --context, "{{ talos_kube_context }}"]
+      changed_when: false
+
+    - name: Read the primary Cilium policy mode
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, cilium-system, get, configmap/cilium-config, -o, 'jsonpath={.data.enable-policy}']
+      register: cilium_primary_policy_mode
+      changed_when: false
+
+    - name: Require primary Cilium before removing the old provider
+      ansible.builtin.assert:
+        that:
+          - cilium_primary_policy_mode.stdout == 'default'
+
+    - name: Disable Flannel through Talos machine config one node at a time
+      ansible.builtin.include_tasks:
+        file: cilium-disable-flannel-node.yml
+      loop: >-
+        {{ [talos_nodes | selectattr('name', 'equalto', 'k8s-w-2') | first,
+            talos_nodes | selectattr('name', 'equalto', 'k8s-w-1') | first,
+            talos_nodes | selectattr('name', 'equalto', 'k8s-cp-1') | first] }}
+      loop_control:
+        loop_var: cilium_flannel_node
+        label: "{{ cilium_flannel_node.name }}"
+
+    - name: Remove the inactive Flannel DaemonSet and configuration
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - kube-system
+          - delete
+          - daemonset/kube-flannel
+          - configmap/kube-flannel-cfg
+          - serviceaccount/flannel
+          - --ignore-not-found=true
+      changed_when: true
+
+    - name: Remove Flannel's cluster RBAC
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", delete, clusterrole/flannel, clusterrolebinding/flannel, --ignore-not-found=true]
+      changed_when: true
+
+    - name: Remove the completed per-node migration override
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, cilium-system, delete, ciliumnodeconfig/cilium-migration, --ignore-not-found=true]
+      changed_when: true
+
+    - name: Require no Flannel workload or configuration remains
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - kube-system
+          - get
+          - daemonset/kube-flannel
+          - configmap/kube-flannel-cfg
+          - serviceaccount/flannel
+          - --ignore-not-found=true
+          - -o
+          - name
+      register: cilium_flannel_remnants
+      changed_when: false
+
+    - name: Assert Flannel resources are absent
+      ansible.builtin.assert:
+        that:
+          - cilium_flannel_remnants.stdout | length == 0
+
+    - name: Verify endpoint coverage after removing Flannel
+      ansible.builtin.command:
+        argv: [python3, "{{ playbook_dir }}/../../kubernetes/apps/cilium/verify-endpoints.py", --context, "{{ talos_kube_context }}"]
+      changed_when: false

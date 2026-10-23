@@ -1,0 +1,53 @@
+- name: Require the next Talos node Ready before removing Flannel management
+  ansible.builtin.command:
+    argv: [kubectl, --context, "{{ talos_kube_context }}", wait, --for=condition=Ready, "node/{{ cilium_flannel_node.name }}", --timeout=120s]
+  changed_when: false
+
+- name: Validate the Talos Flannel-disable patch without exposing machine secrets
+  ansible.builtin.command:
+    argv:
+      - "{{ talosctl_binary }}"
+      - patch
+      - machineconfig
+      - --talosconfig
+      - "{{ talos_private_dir }}/base/talosconfig"
+      - --endpoints
+      - "{{ cilium_flannel_node.address }}"
+      - --nodes
+      - "{{ cilium_flannel_node.address }}"
+      - --patch-file
+      - "{{ playbook_dir }}/../../kubernetes/cluster/cilium-disable-flannel.patch.yaml"
+      - --mode
+      - auto
+      - --dry-run
+  no_log: true
+  changed_when: false
+
+- name: Disable Talos-managed Flannel on this node
+  ansible.builtin.command:
+    argv:
+      - "{{ talosctl_binary }}"
+      - patch
+      - machineconfig
+      - --talosconfig
+      - "{{ talos_private_dir }}/base/talosconfig"
+      - --endpoints
+      - "{{ cilium_flannel_node.address }}"
+      - --nodes
+      - "{{ cilium_flannel_node.address }}"
+      - --patch-file
+      - "{{ playbook_dir }}/../../kubernetes/cluster/cilium-disable-flannel.patch.yaml"
+      - --mode
+      - auto
+  no_log: true
+  changed_when: true
+
+- name: Health-gate this Talos node before proceeding
+  ansible.builtin.command:
+    argv: [kubectl, --context, "{{ talos_kube_context }}", wait, --for=condition=Ready, "node/{{ cilium_flannel_node.name }}", --timeout=300s]
+  changed_when: false
+
+- name: Require Cilium agents healthy after the machine-config change
+  ansible.builtin.command:
+    argv: [kubectl, --context, "{{ talos_kube_context }}", -n, cilium-system, rollout, status, daemonset/cilium, --timeout=300s]
+  changed_when: false
