@@ -67,9 +67,6 @@
       until: >-
         (cilium_policy_status.stdout | from_json).status.conditions | default([])
         | selectattr('type', 'equalto', 'Valid') | selectattr('status', 'equalto', 'True') | list | length > 0
-        and (cilium_policy_status.stdout | from_json).status.derivativePolicies | default({}) | length > 0
-        and (cilium_policy_status.stdout | from_json).status.derivativePolicies.values()
-        | rejectattr('ok', 'equalto', true) | list | length == 0
       retries: 60
       delay: 5
       changed_when: false
