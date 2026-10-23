@@ -11,6 +11,7 @@
         argv: [cat, /proc/meminfo]
       register: cilium_pve_meminfo
       changed_when: false
+      when: cilium_install_scope | default('cluster') == 'cluster'
 
     - name: Require the agent request plus the 2 GiB host reserve
       ansible.builtin.assert:
@@ -19,6 +20,7 @@
             (((cilium_pve_meminfo.stdout_lines | select('match', '^MemAvailable:') | first).split()[1] | int) / 1024)
             >= (cilium_agent_memory_request_mib + pve_memory_reserve_mib)
         fail_msg: "Cilium needs its 192 MiB request in addition to pve-g3-2's 2 GiB free-memory reserve."
+      when: cilium_install_scope | default('cluster') == 'cluster'
 
 - name: Install Cilium in secondary migration mode on Talos Kubernetes
   hosts: localhost
@@ -30,6 +32,11 @@
     talos_kube_context: ""
     cilium_apps_dir: "{{ playbook_dir }}/../../kubernetes/apps/cilium"
   tasks:
+    - name: Validate the secondary installation scope
+      ansible.builtin.assert:
+        that:
+          - cilium_install_scope | default('cluster') in ['cluster', 'control-plane']
+
     - name: Read the active kubectl context
       ansible.builtin.command:
         argv: [kubectl, config, current-context]
@@ -147,6 +154,8 @@
           - cilium-system
           - --values
           - "{{ cilium_apps_dir }}/values-migration.yaml"
+          - --values
+          - "{{ cilium_apps_dir }}/values-placement-{{ cilium_install_scope | default('cluster') }}.yaml"
       changed_when: false
 
     - name: Install pinned Cilium in secondary mode
@@ -167,6 +176,8 @@
           - cilium-system
           - --values
           - "{{ cilium_apps_dir }}/values-migration.yaml"
+          - --values
+          - "{{ cilium_apps_dir }}/values-placement-{{ cilium_install_scope | default('cluster') }}.yaml"
           - --wait
           - --timeout
           - 10m
@@ -237,6 +248,7 @@
         argv: [cat, /proc/meminfo]
       register: cilium_pve_meminfo_after
       changed_when: false
+      when: cilium_install_scope | default('cluster') == 'cluster'
 
     - name: Require pve-g3-2 to retain the 2 GiB free-memory reserve
       ansible.builtin.assert:
@@ -245,3 +257,4 @@
             (((cilium_pve_meminfo_after.stdout_lines | select('match', '^MemAvailable:') | first).split()[1] | int) / 1024)
             >= pve_memory_reserve_mib
         fail_msg: "Cilium must leave pve-g3-2 with at least 2 GiB available memory."
+      when: cilium_install_scope | default('cluster') == 'cluster'

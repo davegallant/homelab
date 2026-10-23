@@ -64,3 +64,13 @@ control/relay traffic and Caddy's Cloudflare DNS-01/API traffic. Application
 specific LAN exceptions are restricted to Garage S3, Loki, TrueNAS NFS, and
 Homepage's documented proxy calls. Internet-fetching apps get world egress
 with explicit LAN and cluster-range denies.
+
+## Agent diagnostics without worker placement
+
+`cilium.yml -e cilium_install_scope=control-plane` restricts the agent and
+Envoy DaemonSets to `k8s-cp-1`. Operator and Relay already run there. This
+secondary installation writes no CNI configuration and migrates no pods.
+The worker-host memory checks apply to the default `cluster` scope; no
+component is added to w-2 in the diagnostic scope. The migration values
+enable pprof on localhost:6060 for a local kubectl port-forward.
+Expand to the cluster scope only after the pve-g3-2 memory gate passes.
