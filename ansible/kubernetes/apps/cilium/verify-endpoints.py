@@ -14,7 +14,7 @@ scope = ['-n', args.namespace] if args.namespace else ['-A']
 
 
 def read(kind):
-    return json.loads(subprocess.check_output(base + scope + ['get', kind, '-o', 'json'],
+    return json.loads(subprocess.check_output(base + ['get', kind] + scope + ['-o', 'json'],
                                              text=True, timeout=30))['items']
 
 
