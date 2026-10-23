@@ -47,8 +47,8 @@ talos_nodes:
     previous_address: 192.168.1.7
     mac: BC:24:11:9F:DF:4D
     vcpu: 2
-    memory_mib: 2288
-    allowed_memory_mib: [2048, 2288]
+    memory_mib: 2560
+    allowed_memory_mib: [2048, 2288, 2560]
     disk_gib: 25
     storage: local-lvm
 
