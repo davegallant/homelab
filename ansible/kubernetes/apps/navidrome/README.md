@@ -33,7 +33,7 @@ Secrets stay in Vault and outside Argo's ownership, both created by
 (Pangolin/Newt) and `navidrome-external` (Last.fm keys).
 
 Backups: Velero Schedule `navidrome-daily` (in the values, opt-in
-mode) with pod annotation `backup.velero.io/backup-volumes: data`.
+mode) with pod annotation `backup.velero.io/backup-volumes: data-local`.
 The network policy is the house default-deny CiliumNetworkPolicy, in
 the values as `rawResources.defaultDenyNetworkPolicy`.
 
@@ -116,12 +116,13 @@ from a debug pod before scheduling the cutover.
    excluded. Mismatch → debug and re-copy; if it will not verify,
    restart the LXC stack, leave Navidrome serving there, and report.
 
-   Then bind the copied directory through a repo-managed static local
-   PV (write `data-local-pv.yaml` from the dynamic claim's
-   provisioned path and node, following `seerr/config-local-pv.yaml`)
-   and add the `data-local` claim to the values with the original
-   claim kept mounted read-only at `/mnt/navidrome-rollback-data` —
-   the Batch A post-cutover shape.
+   Then bind the copied directory through the repo-managed static local PV in
+   `data-local-pv.yaml`, which uses the dynamic claim's provisioned path and
+   node. Add the `data-local` claim to the values and keep the original
+   `navidrome` claim mounted read-only at `/mnt/navidrome-rollback-data` —
+   the Batch A post-cutover shape. Commit and push the values and PV, apply
+   the PV, and manually Sync while `replicas: 0` remains set. Confirm
+   `navidrome-data-local` is Bound before continuing.
 
 3. There is no Headscale gate for this app (it is public); the gate
    is the cutover approval itself.
@@ -141,12 +142,12 @@ from a debug pod before scheduling the cutover.
      --for=jsonpath='{.status.phase}'=Completed "backup/$BACKUP" --timeout=600s
    PVBS="$(kubectl --context admin@homelab -n velero \
      get podvolumebackups.velero.io -l "velero.io/backup-name=$BACKUP" -o json)"
-   PVB="$(jq -er --arg volume data '
+   PVB="$(jq -er --arg volume data-local '
      .items as $items
      | if ($items | length) == 1 and $items[0].spec.volume == $volume
         and $items[0].status.phase == "Completed"
        then $items[0].metadata.name
-       else error("expected one Completed data PodVolumeBackup") end' <<<"$PVBS")"
+       else error("expected one Completed data-local PodVolumeBackup") end' <<<"$PVBS")"
    printf 'Verified backup %s; PodVolumeBackup %s: Completed\n' "$BACKUP" "$PVB"
    ```
 

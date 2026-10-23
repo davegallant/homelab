@@ -26,7 +26,7 @@ controllers:
         # Opt-in filesystem backup of the app data volume only; the
         # NFS library is excluded by omission (TrueNAS snapshots +
         # Drive sync protect it, never Velero).
-        backup.velero.io/backup-volumes: data
+        backup.velero.io/backup-volumes: data-local
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
@@ -112,11 +112,21 @@ service:
         port: 4533
 
 persistence:
+  # Keep the original hostPath-backed claim present for rollback. Velero
+  # cannot make a PodVolumeBackup from this claim.
   data:
+    type: persistentVolumeClaim
+    existingClaim: navidrome
+    advancedMounts:
+      navidrome:
+        app:
+          - path: /mnt/navidrome-rollback-data
+            readOnly: true
+  data-local:
     type: persistentVolumeClaim
     annotations:
       argocd.argoproj.io/ignore-healthcheck: "true"
-    storageClass: local-path
+    storageClass: pve-g3-1-local
     accessMode: ReadWriteOnce
     size: 5Gi
     advancedMounts:
