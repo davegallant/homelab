@@ -195,7 +195,7 @@ controllers:
           TS_HOSTNAME: speedtest-tracker
           TS_STATE_DIR: /var/lib/tailscale
           # State lives on the local PVC, so disable Kubernetes Secret storage.
-          TS_KUBE_SECRET: "false"
+          TS_KUBE_SECRET: ""
           TS_USERSPACE: "true"
           TS_EXTRA_ARGS: --login-server=https://hs.davegallant.ca --accept-dns=false
           TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
