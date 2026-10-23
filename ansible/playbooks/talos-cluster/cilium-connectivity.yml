@@ -9,6 +9,8 @@
     cilium_connectivity_stage: canary
     cilium_connectivity_node: k8s-w-2
     cilium_flow_validation: strict
+    cilium_connectivity_timeout: 60m
+    cilium_connectivity_junit_file: /tmp/cilium-connectivity-full.junit.xml
     cilium_echo_image: >-
       gcr.io/k8s-staging-gateway-api/echo-advanced:v20251204-v1.4.1@sha256:96c3b75534386ca36c0c76ac8fdbe695f63f35bb3e0632537ffba9732c1f58c9
   tasks:
@@ -104,8 +106,10 @@
           - "{{ cilium_echo_image }}"
           - --flow-validation
           - "{{ cilium_flow_validation }}"
+          - --junit-file
+          - "{{ cilium_connectivity_junit_file }}"
           - --timeout
-          - 40m
+          - "{{ cilium_connectivity_timeout }}"
       when: cilium_connectivity_stage == 'full'
       changed_when: true
 
