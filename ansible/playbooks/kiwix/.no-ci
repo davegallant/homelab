@@ -1,2 +1,0 @@
-# Retired LXC: Kiwix is managed by Argo CD on Talos. Keep this playbook
-# only as historical recovery material; do not deploy it in daily CI.

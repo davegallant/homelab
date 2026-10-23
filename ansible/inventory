@@ -2,9 +2,7 @@
 adguard-home
 audiobookshelf
 bedrock
-bento-pdf
 beszel
-changedetection
 cinema
 dispatcharr
 forgejo
@@ -15,11 +13,7 @@ igotify
 immich
 invidious
 jellyfin
-kiwix
 lidarr
-lubelogger
-maloja
-miniflux
 navidrome
 paperless-ngx
 pangolin
@@ -27,8 +21,6 @@ prowlarr
 qbittorrent
 radarr
 romm
-searxng
-seerr
 sonarr
 speedtest-tracker
 umami
