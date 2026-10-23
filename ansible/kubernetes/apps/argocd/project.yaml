@@ -49,3 +49,7 @@ spec:
       kind: Service
     - group: velero.io
       kind: Schedule
+    # The default-deny CiliumNetworkPolicy each app carries as a
+    # rawResource in its values (Phase 4 pattern).
+    - group: cilium.io
+      kind: CiliumNetworkPolicy

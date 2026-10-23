@@ -1,0 +1,43 @@
+---
+- name: Apply the repository homelab AppProject
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    talos_kube_context: ""
+  tasks:
+    - name: Require an explicit cluster context
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+
+    - name: Apply the repository AppProject definition
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - apply
+          - -f
+          - "{{ playbook_dir }}/../../kubernetes/apps/argocd/project.yaml"
+      register: argocd_project_apply
+      changed_when: "'created' in argocd_project_apply.stdout or 'configured' in argocd_project_apply.stdout"
+
+    - name: Verify the CiliumNetworkPolicy resource is permitted
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - argocd
+          - get
+          - appproject
+          - homelab
+          - -o
+          - yaml
+      register: argocd_policy_permission
+      changed_when: false
+      failed_when: >-
+        'group: cilium.io' not in argocd_policy_permission.stdout or
+        'kind: CiliumNetworkPolicy' not in argocd_policy_permission.stdout

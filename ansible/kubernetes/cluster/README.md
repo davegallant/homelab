@@ -27,6 +27,12 @@ through AdGuard Home at `.77` with OPNsense at `.1` as fallback. The
 `previous_address` values in `vars.yaml` document the one-time move from DHCP.
 All three nodes were Ready at the static addresses after the transition.
 
+The cluster's steady-state CNI is Cilium `1.20.3` on Kubernetes `1.37.0`,
+using cluster-pool pod CIDR `10.245.0.0/16` and VXLAN UDP `8473`. Talos has
+`cluster.network.cni.name: none`; Flannel has been removed, while kube-proxy
+remains enabled. See [`../apps/cilium/README.md`](../apps/cilium/README.md)
+for the live-migration record, policy inventory, and recovery path.
+
 The storage patches create the three local volume directories on every node.
 Only `k8s-w-1` is eligible for the Homepage pod and its local PVs. If that
 worker is lost, Homepage remains down until it returns or its data is restored
