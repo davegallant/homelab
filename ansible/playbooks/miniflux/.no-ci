@@ -1,2 +1,0 @@
-# Retired LXC: Miniflux is managed by Argo CD on Talos. Keep this playbook
-# only as historical recovery material; its database is stale after cutover.
