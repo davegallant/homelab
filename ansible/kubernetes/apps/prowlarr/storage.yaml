@@ -11,3 +11,44 @@ metadata:
     pod-security.kubernetes.io/enforce: baseline
     pod-security.kubernetes.io/audit: baseline
     pod-security.kubernetes.io/warn: baseline
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prowlarr-config-local
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  local:
+    path: /var/mnt/local-path/pvc-af67b6a4-2472-4d8c-8286-abf553f8261d_prowlarr_prowlarr-config
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w-1
+  claimRef:
+    namespace: prowlarr
+    name: prowlarr-config-local
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prowlarr-config-local
+  namespace: prowlarr
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: pve-g3-1-local
+  volumeName: prowlarr-config-local
+  resources:
+    requests:
+      storage: 5Gi

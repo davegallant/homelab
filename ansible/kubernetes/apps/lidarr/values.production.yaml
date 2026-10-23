@@ -189,9 +189,7 @@ configMaps:
 persistence:
   config:
     type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 5Gi
+    existingClaim: lidarr-config-local
     advancedMounts:
       lidarr:
         app:

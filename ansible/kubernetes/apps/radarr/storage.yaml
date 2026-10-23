@@ -71,3 +71,44 @@ spec:
   resources:
     requests:
       storage: 1Ti
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: radarr-config-local
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  local:
+    path: /var/mnt/local-path/pvc-2cf5a60c-0bcb-426d-bad9-fae1f27d3938_radarr_radarr-config
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w-1
+  claimRef:
+    namespace: radarr
+    name: radarr-config-local
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-config-local
+  namespace: radarr
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: pve-g3-1-local
+  volumeName: radarr-config-local
+  resources:
+    requests:
+      storage: 5Gi
