@@ -179,6 +179,6 @@ diff was not empty: the claim retains
 `Sentry/FDD003821460B16D4E0D4235129BD6BFAF29B751/__processing/1792783053_-953__1495009.envelope`
 (344 bytes), absent from the frozen source. It was preserved. Prowlarr remains
 parked at `replicas: 0`, its LXC Compose stack is running, and no pod was
-activated. Two unused one-hour Headscale keys were created; each failed the
-required assertion at 88 characters and will expire. No Headscale node was
+activated. Two unused Headscale keys (IDs 63–64) failed the required assertion
+at 88 characters and were explicitly expired. No Headscale node was
 created or deleted. Batch-close application connection tests remain pending.

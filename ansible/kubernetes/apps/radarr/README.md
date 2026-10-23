@@ -190,7 +190,7 @@ was restarted and is serving again. The media source was corrected to
 
 Fresh API baseline: 271 movies and 224 movie files. The refreshed config
 copy's per-file path+size manifest diff was empty. The first and replacement
-bootstrap keys each decoded to 88 characters, failing the required 64-character
-assertion; neither was used to activate the pod. Radarr remains parked at
-`replicas: 0`, its LXC Compose stack is running, and the two unused one-hour
-Headscale keys will expire. No Headscale node was created or deleted.
+bootstrap keys (IDs 67–68) each decoded to 88 characters, failing the required
+64-character assertion; neither was used to activate the pod, and both were
+explicitly expired. Radarr remains parked at `replicas: 0` and its LXC Compose
+stack is running. No Headscale node was created or deleted.
