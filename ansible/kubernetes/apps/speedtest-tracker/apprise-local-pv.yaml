@@ -1,0 +1,42 @@
+---
+# Cutover PV for the copied Apprise configuration on k8s-w-2.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: speedtest-tracker-apprise-local
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  local:
+    path: /var/mnt/local-path/pvc-8b4bbcf7-954d-439c-ab4a-55dd0f1c0216_speedtest-tracker_speedtest-tracker-apprise
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w-2
+  claimRef:
+    namespace: speedtest-tracker
+    name: speedtest-tracker-apprise-local
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: speedtest-tracker-apprise-local
+  namespace: speedtest-tracker
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: pve-g3-1-local
+  volumeMode: Filesystem
+  volumeName: speedtest-tracker-apprise-local
