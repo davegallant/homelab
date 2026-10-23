@@ -2,7 +2,20 @@
 magicDnsDomain: tail.davegallant.ca
 headscaleDomain: hs.davegallant.ca
 tailscaleHostname: kiwix
+kiwix:
+  resources:
+    requests:
+      cpu: 5m
+      memory: 24Mi
 caddy:
   existingSecret: kiwix-caddy-external
+  resources:
+    requests:
+      cpu: 5m
+      memory: 16Mi
 tailscale:
   enabled: true
+  resources:
+    requests:
+      cpu: 5m
+      memory: 24Mi
