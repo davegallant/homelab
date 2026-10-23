@@ -65,8 +65,8 @@ controllers:
               failureThreshold: 3
         resources:
           requests:
-            cpu: 100m
-            memory: 384Mi
+            cpu: 5m
+            memory: 272Mi
           limits:
             cpu: 1000m
             memory: 2Gi
@@ -80,8 +80,8 @@ controllers:
               name: audiobookshelf-newt-external
         resources:
           requests:
-            cpu: 25m
-            memory: 64Mi
+            cpu: 5m
+            memory: 40Mi
           limits:
             cpu: 200m
             memory: 192Mi
