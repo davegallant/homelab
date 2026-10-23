@@ -173,5 +173,5 @@ settings:
 # and there are no persistent volumes to capture.
 backup:
   enabled: true
-  schedule: "0 3 * * *"
+  schedule: "5 3 * * *"
   ttl: 336h

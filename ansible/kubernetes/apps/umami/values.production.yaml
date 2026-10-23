@@ -174,7 +174,7 @@ rawResources:
         name: umami-daily
         namespace: velero
       spec:
-        schedule: "0 3 * * *"
+        schedule: "0 4 * * *"
         template:
           ttl: 336h
           includedNamespaces:

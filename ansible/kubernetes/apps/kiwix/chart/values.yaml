@@ -75,5 +75,5 @@ cloudflareApiToken: ""
 # volumes in backup-volumes-excludes for explicitness.
 backup:
   enabled: true
-  schedule: "0 3 * * *"
+  schedule: "10 3 * * *"
   ttl: 336h

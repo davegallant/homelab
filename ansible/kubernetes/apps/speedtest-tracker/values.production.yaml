@@ -389,7 +389,7 @@ rawResources:
         name: speedtest-tracker-daily
         namespace: velero
       spec:
-        schedule: "0 3 * * *"
+        schedule: "5 4 * * *"
         template:
           ttl: 336h
           includedNamespaces:
