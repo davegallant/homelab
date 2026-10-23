@@ -1,0 +1,279 @@
+---
+# Invidious — Argo CD production values (bjw-s app-template 5.3.0).
+# Source of truth for the workload: playbooks/invidious/docker-compose.yml
+# (app quay.io/invidious/invidious 2026.10.23-4a271da, port 3000;
+# companion quay.io/invidious/invidious-companion 2026.10.18-fcb0456,
+# port 8282; database docker.io/postgres 18.6 — all in one pod).
+# Public via Pangolin: the compose pairs the app with a Newt sidecar,
+# reproduced in-pod with the *same* Newt identity, so the existing
+# Pangolin route and public URL carry over unchanged. Do not rewrite
+# this app as tailnet-only; the compose is authoritative.
+#
+# Two deliberate in-pod translations of the compose:
+#   - The database and the companion are neighbouring containers, so
+#     the generated INVIDIOUS_CONFIG points at 127.0.0.1 for both
+#     (see playbooks/talos-cluster/invidious-secret.yml, which builds
+#     the whole config block into the Secret).
+#   - The companion keeps the compose's hardening (read-only root
+#     filesystem, all capabilities dropped); its only writable path
+#     is the youtubei.js cache volume.
+#
+# Secrets stay outside Git and outside Argo's ownership:
+#   invidious-newt-external  (PANGOLIN_ENDPOINT, NEWT_ID, NEWT_SECRET)
+#                            — playbooks/talos-cluster/invidious-secret.yml
+#   invidious-external       (INVIDIOUS_CONFIG, SERVER_SECRET_KEY,
+#                             POSTGRES_USER, POSTGRES_PASSWORD)
+#                            — same playbook
+controllers:
+  invidious:
+    type: deployment
+    strategy: Recreate
+    # Staging: the pod starts at cutover, once the database has been
+    # restored into db-data and the LXC stack is stopped (README).
+    replicas: 0
+    pod:
+      annotations:
+        # Opt-in filesystem backup of the database volume, with a
+        # consistent logical dump written into the volume first so
+        # the filesystem backup carries a restorable copy. The
+        # companion cache is excluded by omission (it regenerates).
+        backup.velero.io/backup-volumes: db-data
+        pre.hook.backup.velero.io/container: db
+        pre.hook.backup.velero.io/command: '["/bin/sh","-c","PGPASSWORD=$POSTGRES_PASSWORD pg_dump -U $POSTGRES_USER
+          -d $POSTGRES_DB > /var/lib/postgresql/invidious-backup.sql"]'
+    containers:
+      app:
+        image:
+          repository: quay.io/invidious/invidious
+          tag: 2026.10.23-4a271da
+          digest: sha256:385e0ae4cd79e1bf3fe37fa97a02dca758754a58dc3b34f1a13b7bc0e15b2721
+        envFrom:
+          - secretRef:
+              name: invidious-external
+        probes:
+          startup:
+            enabled: true
+            type: TCP
+            port: 3000
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              # First boot checks/migrates every table
+              # (check_tables: true); give it the wide budget.
+              failureThreshold: 60
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 3000
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            # TCP on purpose: an HTTP liveness would couple restarts
+            # to page rendering and upstream YouTube state.
+            enabled: true
+            type: TCP
+            port: 3000
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 2000m
+            memory: 1Gi
+      companion:
+        image:
+          repository: quay.io/invidious/invidious-companion
+          tag: 2026.10.18-fcb0456
+          digest: sha256:5642790b67c2ce655a630dbff1342051bd98674abc8e469551117a3d4b6bedcc
+        envFrom:
+          - secretRef:
+              name: invidious-external
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+        probes:
+          startup:
+            enabled: true
+            type: TCP
+            port: 8282
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: TCP
+            port: 8282
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: TCP
+            port: 8282
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+      db:
+        image:
+          repository: docker.io/library/postgres
+          tag: "18.6"
+          digest: sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29d6761ddb6
+        envFrom:
+          - secretRef:
+              name: invidious-external
+        env:
+          POSTGRES_DB: invidious
+        probes:
+          startup:
+            enabled: true
+            type: TCP
+            port: 5432
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: TCP
+            port: 5432
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: TCP
+            port: 5432
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+      newt:
+        image:
+          repository: docker.io/fosrl/newt
+          tag: 1.19.0
+          digest: sha256:0189c8287058b800cca825590e4c39946b3815344ca48678dd0b96616d639319
+        envFrom:
+          - secretRef:
+              name: invidious-newt-external
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 192Mi
+
+service:
+  invidious:
+    controller: invidious
+    ports:
+      http:
+        port: 3000
+
+persistence:
+  db-data:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    advancedMounts:
+      invidious:
+        db:
+          - path: /var/lib/postgresql
+  companion-cache:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    advancedMounts:
+      invidious:
+        companion:
+          - path: /var/tmp/youtubei.js
+
+rawResources:
+  daily:
+    enabled: true
+    manifest:
+      apiVersion: velero.io/v1
+      kind: Schedule
+      metadata:
+        name: invidious-daily
+        namespace: velero
+      spec:
+        schedule: "0 3 * * *"
+        template:
+          ttl: 336h
+          includedNamespaces:
+            - invidious
+          excludedResources:
+            - secrets
+          defaultVolumesToFsBackup: false
+          snapshotVolumes: false
+          storageLocation: default
+
+  defaultDenyNetworkPolicy:
+    enabled: true
+    manifest:
+      apiVersion: cilium.io/v2
+      kind: CiliumNetworkPolicy
+      metadata:
+        name: default-deny
+        namespace: invidious
+      spec:
+        description: Default deny with internet fetch access, cluster DNS, and explicit internal-range denies.
+        endpointSelector: {}
+        ingress:
+          - fromEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: invidious
+        egress:
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: kube-system
+                  k8s:k8s-app: kube-dns
+            toPorts:
+              - ports:
+                  - port: "53"
+                    protocol: UDP
+                  - port: "53"
+                    protocol: TCP
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: invidious
+          - toEntities:
+              - cluster
+          - toEntities:
+              - world
+        egressDeny:
+          - toCIDR:
+              - 192.168.1.0/24
+              - 10.96.0.0/12
+              - 10.245.0.0/16
