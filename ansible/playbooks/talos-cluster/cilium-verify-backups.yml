@@ -1,0 +1,24 @@
+---
+- name: Verify data backups after the Cilium migration
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    talos_kube_context: ""
+    cilium_backup_stamp: "{{ lookup('ansible.builtin.pipe', 'date +%Y%m%d%H%M%S') }}"
+  tasks:
+    - name: Require an explicit cluster context
+      ansible.builtin.assert:
+        that:
+          - talos_kube_context | length > 0
+
+    - name: Keep the same backup timestamp throughout this run
+      ansible.builtin.set_fact:
+        cilium_backup_stamp: "{{ cilium_backup_stamp }}"
+
+    - name: Back up Homepage and one Batch A application
+      ansible.builtin.include_tasks:
+        file: cilium-backup-one.yml
+      loop: [homepage, changedetection]
+      loop_control:
+        loop_var: cilium_backup_namespace
