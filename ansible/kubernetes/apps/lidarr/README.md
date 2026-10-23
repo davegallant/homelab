@@ -37,7 +37,7 @@ credentials live in `config.xml`, which arrives with the copied
 `/config`.
 
 Backups: Velero Schedule `lidarr-daily` (in the values) with pod
-annotation `backup.velero.io/backup-volumes: config`. The network
+annotation `backup.velero.io/backup-volumes: config-local`. The network
 policy is the house default-deny CiliumNetworkPolicy, in the values
 as `rawResources.defaultDenyNetworkPolicy`, plus the qBittorrent
 exception described there.
@@ -114,6 +114,11 @@ failure mode and stops this app here.
    Mismatch → debug and re-copy; if a copy will not verify, park
    this app (below) and report.
 
+   The app mounts `lidarr-config-local`, a retained Local PV in
+   `storage.yaml` on k8s-w-1 that points to the same on-disk config
+   directory as the original `lidarr-config` claim. The original
+   claim and PV stay retained and are not deleted.
+
 3. Create the bootstrap Tailscale auth Secret from a one-use
    Headscale pre-auth key — the RomM pipeline verbatim, only the
    namespace and Secret name change:
@@ -125,10 +130,11 @@ failure mode and stops this app here.
      | kubectl --context admin@homelab -n lidarr create secret generic lidarr-tailscale-auth --from-file=TS_AUTHKEY=/dev/stdin
    ```
 
-   Assert before activating: decode the Secret's `TS_AUTHKEY`
-   and confirm its length is exactly 64 characters (print the
-   count only, never the key). Not 64 → recreate it; do not
-   proceed on a bad key.
+   Assert before activating: the decoded `TS_AUTHKEY` uses the
+   modern `hskey-auth-<12-char-prefix>-<64-char-secret>` format
+   (88 characters total). Assert the secret component is exactly
+   64 characters; print only the count, never the key. Recreate a
+   key that fails this check; do not activate with it.
 
 4. Remove `replicas: 0` from the values, commit
    `feat(lidarr): activate Batch D migration`, push, approve Sync.
