@@ -154,3 +154,14 @@ initiative — state-reversing actions are Dave's explicit call, in
 the moment. If a step is genuinely ambiguous, stop and ask rather
 than guess. The stopped LXC stays in place as the fallback until
 Dave retires it.
+
+## Batch D execution status (2026-10-23)
+
+Prowlarr is **parked**. The Argo Application and all three chart claims
+remain in place with `replicas: 0`; the config PVC is Bound to `k8s-w-1`.
+The copy matches the stopped LXC source file-for-file by path and size
+(908 files, 137,924,700 regular-file bytes). The saved step-0 baseline was
+907 files and 138,023,052 bytes from `du -sb`; the frozen source had grown
+by one file and 25,680 regular-file bytes before copying. That baseline gate
+was not accepted. The LXC Compose stack was restarted and is serving again.
+No Headscale key or node changes were made.

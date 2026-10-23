@@ -169,3 +169,15 @@ state-reversing actions are Dave's explicit call, in the moment.
 If a step is genuinely ambiguous, stop and ask rather than guess.
 The stopped LXC stays in place as the fallback until Dave retires
 it.
+
+## Batch D execution status (2026-10-23)
+
+Sonarr is **parked**. The Argo Application, claims, and copied config remain
+in place with `replicas: 0`; the config PVC is Bound to `k8s-w-1`. The copy
+matches the stopped LXC source (744 files, 280,464,293 regular-file bytes).
+The saved step-0 baseline was 742 files and 280,764,841 bytes from `du -sb`,
+so the baseline gate was not accepted. The runbook's shorthand `/root/config`
+source did not exist; the observed source was `/root/sonarr/config`. The LXC
+Compose stack was restarted and is serving again. The media source was
+corrected to `192.168.1.83:/mnt/pool`, and both qBittorrent policy entries
+use `192.168.1.152/32`. No Headscale key or node changes were made.

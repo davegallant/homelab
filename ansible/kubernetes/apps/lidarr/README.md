@@ -174,3 +174,15 @@ state-reversing actions are Dave's explicit call, in the moment.
 If a step is genuinely ambiguous, stop and ask rather than guess.
 The stopped LXC stays in place as the fallback until Dave retires
 it.
+
+## Batch D execution status (2026-10-23)
+
+Lidarr is **parked**. The Argo Application, claims, and copied config remain
+in place with `replicas: 0`; the config PVC is Bound to `k8s-w-1`. The copy
+matches the stopped LXC source (1,604 files, 712,562,661 regular-file bytes).
+The saved step-0 baseline was 1,603 files and 715,244,129 bytes from
+`du -sb`, so the baseline gate was not accepted. The LXC Compose stack was
+restarted and is serving again. The `/mnt` source was corrected to
+`192.168.1.83:/mnt/pool`; `/music` remains `192.168.1.16:/mnt/tank/media/Music`.
+Both qBittorrent policy entries use `192.168.1.152/32`. No Headscale key or
+node changes were made.
