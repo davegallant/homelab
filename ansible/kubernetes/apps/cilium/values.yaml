@@ -1,3 +1,4 @@
+rollOutCiliumPods: true
 updateStrategy:
   rollingUpdate:
     maxUnavailable: 1
