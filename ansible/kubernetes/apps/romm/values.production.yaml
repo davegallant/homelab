@@ -270,8 +270,6 @@ persistence:
           - path: /var/lib/mysql
   tailscale-state:
     type: persistentVolumeClaim
-    annotations:
-      argocd.argoproj.io/ignore-healthcheck: "true"
     existingClaim: romm-tailscale-state-w1
     advancedMounts:
       romm:
@@ -297,8 +295,6 @@ persistence:
             readOnly: true
   caddy-state:
     type: persistentVolumeClaim
-    annotations:
-      argocd.argoproj.io/ignore-healthcheck: "true"
     existingClaim: romm-caddy-state-w1
     advancedMounts:
       romm:
