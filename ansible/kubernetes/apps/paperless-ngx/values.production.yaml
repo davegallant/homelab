@@ -239,7 +239,7 @@ rawResources:
         name: paperless-ngx-daily
         namespace: velero
       spec:
-        schedule: "0 3 * * *"
+        schedule: "15 4 * * *"
         template:
           ttl: 336h
           includedNamespaces:

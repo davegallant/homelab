@@ -168,10 +168,41 @@ are reconciled. The retired Homepage LXC is not a rollback target.
 
 The Kubernetes layer is backed up by Velero with Kopia filesystem backups:
 Talos cluster → Velero/node-agent → Garage on TrueNAS → covered by Dave's
-existing TrueNAS-to-Drive sync. The `homepage-daily` schedule runs at 03:00,
+existing TrueNAS-to-Drive sync. The `homepage-daily` schedule runs at 03:15 UTC,
 keeps backups for 14 days, includes only `homepage`, and excludes Secrets.
 Secrets are intentionally excluded because Velero's resource archive is not
 encrypted. Recreate them from Vault before judging restored workloads.
+
+Daily namespace backups are staggered in UTC (23:00–00:30 Toronto during
+daylight saving time; 22:00–23:30 in winter):
+
+| Namespace | Start (UTC) |
+|---|---|
+| `bentopdf` | 03:00 |
+| `searxng` | 03:05 |
+| `kiwix` | 03:10 |
+| `homepage` | 03:15 |
+| `changedetection` | 03:20 |
+| `lubelogger` | 03:25 |
+| `maloja` | 03:30 |
+| `seerr` | 03:35 |
+| `miniflux` | 03:40 |
+| `navidrome` | 03:45 |
+| `audiobookshelf` | 03:50 |
+| `invidious` | 03:55 |
+| `umami` | 04:00 |
+| `speedtest-tracker` | 04:05 |
+| `paperless-ngx` | 04:15 |
+| `romm` | 04:30 |
+
+The smaller backups start five minutes apart; Paperless and RomM have larger
+slots after their recent runs took about 3 and 15 minutes respectively.
+This leaves a buffer before the NAS 01:00 Toronto offsite sync and Proxmox
+02:00 Toronto backup job at the observed durations. Staggering is not a
+global concurrency lock: longer runs or manual backups can still overlap.
+Keep schedule names stable; when a chart rename creates a replacement,
+remove the obsolete Schedule explicitly after checking equivalent coverage,
+using orphan deletion to preserve existing Backups.
 
 Use direct `kubectl` and `talosctl` commands for recovery; no Ansible playbook
 is required. Set the context and backup name first, and stop if the cluster,

@@ -77,5 +77,5 @@ newtSecret: ""
 # the restored data matches the Vault value by construction).
 backup:
   enabled: true
-  schedule: "0 3 * * *"
+  schedule: "40 3 * * *"
   ttl: 336h

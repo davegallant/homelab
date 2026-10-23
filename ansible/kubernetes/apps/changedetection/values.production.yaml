@@ -256,7 +256,7 @@ rawResources:
         name: changedetection-daily
         namespace: velero
       spec:
-        schedule: "0 3 * * *"
+        schedule: "20 3 * * *"
         template:
           ttl: 336h
           includedNamespaces:

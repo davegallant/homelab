@@ -326,7 +326,7 @@ rawResources:
         name: romm-daily
         namespace: velero
       spec:
-        schedule: "0 3 * * *"
+        schedule: "30 4 * * *"
         template:
           ttl: 336h
           includedNamespaces:
