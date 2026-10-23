@@ -1,0 +1,37 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: csi-controller-default-deny
+  namespace: kube-system
+spec:
+  description: Restrict the NFS CSI controller in shared kube-system; node-plugin pods use host networking.
+  endpointSelector:
+    matchLabels:
+      k8s:app: csi-nfs-controller
+  ingress:
+    - fromEntities:
+        - host
+      toPorts:
+        - ports:
+            - port: "29652"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+    - toEntities:
+        - cluster
+    - toCIDR:
+        - 192.168.1.16/32
+      toPorts:
+        - ports:
+            - port: "2049"
+              protocol: TCP
