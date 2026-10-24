@@ -1,6 +1,6 @@
 ---
 # One playbook for the whole SearXNG lifecycle on Talos. The Helm chart
-# (ansible/kubernetes/apps/searxng/chart) owns the in-cluster packaging; this
+# (kubernetes/apps/searxng/chart) owns the in-cluster packaging; this
 # playbook owns the choreography Helm cannot do: Vault-rendered values,
 # functional verification, and the LXC <-> cluster cutover of the Pangolin
 # Newt identity.
@@ -24,7 +24,7 @@
   vars:
     searxng_action: stage
     searxng_public_url: ""
-    searxng_chart_dir: "{{ playbook_dir }}/../../kubernetes/apps/searxng/chart"
+    searxng_chart_dir: "{{ playbook_dir }}/../../../kubernetes/apps/searxng/chart"
   vars_prompt:
     - name: talos_kube_context
       prompt: Enter the expected kubectl context for the Talos cluster
@@ -52,7 +52,7 @@
           - searxng_newt_id is defined
           - searxng_newt_secret is defined
           - pangolin_endpoint is defined
-        fail_msg: "Missing Vault variables. searxng_secret_key must be added to group_vars/all/secrets.yaml (see ansible/kubernetes/apps/searxng/README.md)."
+        fail_msg: "Missing Vault variables. searxng_secret_key must be added to group_vars/all/secrets.yaml (see kubernetes/apps/searxng/README.md)."
       when: searxng_action != 'verify'
 
     - name: Require the public URL for cutover and rollback
@@ -92,7 +92,7 @@
       block:
         - name: Render Vault-backed Helm values
           ansible.builtin.template:
-            src: "{{ playbook_dir }}/../../kubernetes/apps/searxng/values.secrets.yaml.j2"
+            src: "{{ playbook_dir }}/../../../kubernetes/apps/searxng/values.secrets.yaml.j2"
             dest: "{{ searxng_render_dir.path }}/values.secrets.yaml"
             mode: "0600"
           no_log: true

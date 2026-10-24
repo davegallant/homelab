@@ -2,12 +2,19 @@
 
 This repo contains [Ansible playbooks](./ansible/playbooks/) and Docker Compose files that provision and manage a fully self-hosted homelab running on [Proxmox](https://proxmox.com).
 
-Most services run in individual Ubuntu LXC containers managed by Ansible. Homepage runs on the Talos Kubernetes pilot. [Headscale](https://headscale.net) (self-hosted Tailscale control plane) handles networking, and [Grafana Alloy](https://grafana.com/docs/alloy/) ships logs to Loki.
-
-> **Why Proxmox + LXC instead of a single Docker host?**
-> Proxmox makes it trivial to snapshot, backup, and live-migrate individual services between nodes from a single web UI. LXC containers are lightweight enough that 36+ services run comfortably without fighting for resources.
+Services run on either Ubuntu LXC containers managed by Ansible or on a three-node Talos Kubernetes cluster managed through Argo CD. [Headscale](https://headscale.net) (self-hosted Tailscale control plane) handles networking, and [Grafana Alloy](https://grafana.com/docs/alloy/) ships logs to Loki.
 
 ---
+
+## Documentation
+
+| Area | Start here |
+|---|---|
+| Kubernetes applications and platform | [Kubernetes overview](kubernetes/README.md) |
+| Talos VMs and recovery constraints | [Cluster layout](kubernetes/cluster/README.md) |
+| Application updates and ownership | [Release management](kubernetes/apps/argocd/MANAGEMENT.md) |
+| Kubernetes backups and restore drill | [Backup runbook](kubernetes/BACKUPS.md) |
+| VPS backup automation | [Backup role](ansible/roles/vps_backup/README.md) |
 
 ## Architecture
 
@@ -28,14 +35,16 @@ graph TD
             grafana["grafana + loki"]
             beszel["beszel"]
             jellyfin["jellyfin"]
-            sonarr["sonarr / radarr"]
+            qbittorrent["qbittorrent"]
             n2etc["..."]
         end
         N1 <-->|"direct WireGuard mesh\n(SSH + ACLs, no central hop)"| N2
     end
 
-    subgraph Talos["Talos Kubernetes pilot"]
-        homepage["homepage"]
+    subgraph Talos["Talos Kubernetes on Proxmox VMs"]
+        apps["Homepage + application workloads"]
+        argocd["Argo CD (manual sync)"]
+        argocd --> apps
     end
 
     N1 -.->|"coordination"| headscale
@@ -43,7 +52,7 @@ graph TD
     Proxmox -->|"Newt tunnel sidecar\n(per service)"| pangolin
     pangolin -->|"HTTPS"| internet["Public Internet"]
 
-    subgraph PerHost["Every LXC container runs"]
+    subgraph PerHost["Typical managed LXC"]
         docker["Docker"]
         caddy["Caddy\n(tailnet HTTPS)"]
         alloy["Grafana Alloy\n(systemd)"]
@@ -54,10 +63,14 @@ graph TD
     beszelagent -->|"system metrics"| beszel
 ```
 
-Each Ansible-managed LXC container runs:
+Most Ansible-managed LXC containers run:
+
 - **Docker** (installed via Ansible)
 - **Grafana Alloy** (systemd service — ships journald + Docker logs → central Loki)
 - **beszel-agent** (systemd service — reports system metrics → central Beszel)
+
+Hosts without Docker collect journal logs only. The off-tailnet Pangolin VPS
+skips Alloy and Beszel. Kubernetes uses an Alloy DaemonSet for pod logs.
 
 ---
 
@@ -145,7 +158,7 @@ Each Ansible-managed LXC container runs:
 
 ## Networking
 
-All hosts run the **Headscale** client (self-hosted Tailscale control plane) with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh) enabled — there are no open SSH ports on the public internet. The Headscale ACL source is `ansible/playbooks/pangolin/policy.headscale.hujson`. The Pangolin playbook validates it and updates Headscale's policy database when the active policy differs. Pangolin is excluded from CI, so run `just run "--limit pangolin"` from `ansible/` to apply policy changes. The Headscale server itself runs in Docker on the Pangolin VPS, which stays off the tailnet.
+Tailnet hosts run the **Tailscale client** against Headscale with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh) enabled. The off-tailnet Pangolin VPS uses ordinary SSH through the operator’s SSH configuration. The Headscale ACL source is `ansible/playbooks/pangolin/policy.headscale.hujson`. The Pangolin playbook validates it and updates Headscale's policy database when the active policy differs. Pangolin is excluded from CI, so run `just run "--limit pangolin"` from `ansible/` to apply policy changes. The Headscale server itself runs in Docker on the Pangolin VPS, which stays off the tailnet.
 
 The remote nodes `muse` and `mcleod` use `tag:external` and can initiate tailnet DNS queries. `mcleod` also uses `tag:beszel-agent`, which allows it to send metrics to the Beszel HTTPS endpoint without granting access to Loki or other tagged services. Pangolin Newt hosts use `tag:pangolin` plus `tag:monitored`; they can reach the Beszel HTTPS endpoint and Loki ingestion port, with Navidrome separately allowed to reach Maloja over HTTPS. The Beszel, Loki, and Maloja hosts have dedicated destination tags. These tagged nodes cannot initiate SSH; tailnet member devices can SSH into tagged nodes when the destination accepts Tailscale SSH. The Pangolin playbook assigns tags by hostname from `headscale_node_tags` after nodes enroll, so re-registered nodes regain their tags on the next playbook run. Check the live policy and all managed tags with `just check-headscale-policy`.
 
@@ -159,12 +172,13 @@ Headscale advertises the primary AdGuard Home resolver and a secondary AdGuard H
 
 ## Logging
 
-Every host runs **[Grafana Alloy](https://grafana.com/docs/alloy/)** as a systemd service. It ships two log streams to a central Loki instance:
+Managed tailnet LXC hosts run **[Grafana Alloy](https://grafana.com/docs/alloy/)** as a systemd service. It ships two log streams to a central Loki instance:
 
 - **journald** — all systemd unit logs, labelled with `host` and `unit`
 - **Docker** — all container logs, labelled with `host` and `container` name
 
-Any service's logs are searchable in Grafana.
+The Kubernetes Alloy DaemonSet collects pod logs through the Kubernetes API;
+it does not collect Talos node service logs. See the [logging runbook](kubernetes/OBSERVABILITY.md).
 
 ---
 
@@ -173,7 +187,7 @@ Any service's logs are searchable in Grafana.
 ### Prerequisites
 
 - A Proxmox cluster with LXC containers provisioned and named to match `ansible/inventory`
-- Headscale client installed on each container (playbooks assume Tailscale SSH as the only access method)
+- Tailscale client registered with Headscale on tailnet containers; SSH access configured separately for Pangolin
 - Ansible Vault password written to `ansible/.vault_pass`
 
 ### Developer Environment
@@ -181,14 +195,17 @@ Any service's logs are searchable in Grafana.
 A [Nix flake](./flake.nix) provides a reproducible dev shell with all required tools:
 
 ```sh
-nix develop   # provides: ansible, just
+nix develop   # Ansible, ansible-lint, just, shellcheck, yamllint
 ```
 
-Or install manually: `ansible`, `just`.
+Or install those tools manually.
 
 ### Running Playbooks
 
-All commands are run from the `ansible/` directory:
+LXC deployment commands run from `ansible/` and apply changes to live hosts.
+The all-host list is defined in [playbooks/main.yml](ansible/playbooks/main.yml);
+it excludes retired LXC workloads. Kubernetes follows the separate
+[Argo CD workflow](kubernetes/apps/argocd/MANAGEMENT.md).
 
 ```sh
 # Install required Ansible Galaxy collections
@@ -206,13 +223,30 @@ ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .v
 
 ## Maintenance
 
+Work on local `main`; push only when explicitly requested. A push touching
+`ansible/**` triggers the Forgejo deployment matrix, and the daily schedule
+reapplies eligible playbooks. The matrix discovers service `main.yml` files
+independently of the all-host import list and skips `.no-ci` directories.
+Manual single-host dispatch also refuses `.no-ci` hosts. The local
+`just run-parallel` recipe does **not** honor those markers; inspect it before use.
+
+From the repository root, run `just lint` for YAML, Ansible, and shell checks.
+Talos syntax checks load Vault variables; set `ANSIBLE_VAULT_PASSWORD_FILE`
+to the protected local password helper when needed. `just install-hooks`
+configures the repository's pre-commit checks.
+
 [Renovate](https://docs.renovatebot.com) monitors all Docker image versions and opens PRs with updates. All images are pinned to specific versions **and** SHA digests (e.g., `image:v1.2.3@sha256:abc123`) to prevent silent supply-chain drift. Custom versioning rules handle date-versioned images like SearXNG and Invidious.
 
 [ProxMenux](https://github.com/MacRimi/ProxMenux) is used to run update scripts and monitor key vitals of running Proxmox nodes.
 
 ---
 
-## Container Image Index
+## Compose image index
+
+Generated from tracked `docker-compose.yml` files by
+[generate-containers-table.sh](generate-containers-table.sh). This includes
+retained Compose definitions and excludes Kubernetes images; use each
+application’s production values for Kubernetes pins.
 
 <!-- DOCKER_SERVICES_START -->
 | Image | Version |

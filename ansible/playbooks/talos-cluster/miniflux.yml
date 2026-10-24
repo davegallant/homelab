@@ -1,6 +1,6 @@
 ---
 # One playbook for the whole Miniflux lifecycle on Talos. The Helm
-# chart (ansible/kubernetes/apps/miniflux/chart) owns the in-cluster
+# chart (kubernetes/apps/miniflux/chart) owns the in-cluster
 # packaging — app, Postgres StatefulSet, Newt sidecar, Velero
 # schedule; this playbook owns what Helm cannot do: Vault-rendered
 # values, storage, functional verification, the pg_dump data
@@ -33,8 +33,8 @@
     miniflux_action: stage
     talos_kube_context: ""
     miniflux_namespace: miniflux
-    miniflux_apps_dir: "{{ playbook_dir }}/../../kubernetes/apps/miniflux"
-    miniflux_chart_dir: "{{ playbook_dir }}/../../kubernetes/apps/miniflux/chart"
+    miniflux_apps_dir: "{{ playbook_dir }}/../../../kubernetes/apps/miniflux"
+    miniflux_chart_dir: "{{ playbook_dir }}/../../../kubernetes/apps/miniflux/chart"
     miniflux_counts_sql: >-
       SELECT 'users|' || count(*) FROM users
       UNION ALL SELECT 'feeds|' || count(*) FROM feeds

@@ -4,7 +4,7 @@
   gather_facts: false
   serial: 1
   vars_files:
-    - ../../kubernetes/cluster/vars.yaml
+    - ../../../kubernetes/cluster/vars.yaml
   tasks:
     - name: Select this host's Talos worker
       ansible.builtin.set_fact:

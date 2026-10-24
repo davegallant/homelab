@@ -19,7 +19,7 @@
           - "{{ talos_kube_context }}"
           - apply
           - -f
-          - "{{ playbook_dir }}/../../kubernetes/apps/argocd/project.yaml"
+          - "{{ playbook_dir }}/../../../kubernetes/apps/argocd/project.yaml"
       register: argocd_project_apply
       changed_when: "'created' in argocd_project_apply.stdout or 'configured' in argocd_project_apply.stdout"
 

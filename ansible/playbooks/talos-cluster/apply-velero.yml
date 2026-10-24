@@ -93,26 +93,26 @@
 
         - name: Copy Velero namespace manifest
           ansible.builtin.copy:
-            src: "{{ playbook_dir }}/../../kubernetes/apps/velero/namespace.yaml"
+            src: "{{ playbook_dir }}/../../../kubernetes/apps/velero/namespace.yaml"
             dest: "{{ velero_render_dir.path }}/namespace.yaml"
             mode: "0600"
 
         - name: Render Garage credentials
           ansible.builtin.template:
-            src: "{{ playbook_dir }}/../../kubernetes/apps/velero/credentials.yaml.j2"
+            src: "{{ playbook_dir }}/../../../kubernetes/apps/velero/credentials.yaml.j2"
             dest: "{{ velero_render_dir.path }}/credentials.yaml"
             mode: "0600"
           no_log: true
 
         - name: Render Velero Helm values
           ansible.builtin.template:
-            src: "{{ playbook_dir }}/../../kubernetes/apps/velero/values.yaml.j2"
+            src: "{{ playbook_dir }}/../../../kubernetes/apps/velero/values.yaml.j2"
             dest: "{{ velero_render_dir.path }}/values.yaml"
             mode: "0600"
 
         - name: Render Garage object listing Job
           ansible.builtin.template:
-            src: "{{ playbook_dir }}/../../kubernetes/apps/velero/garage-list-job.yaml.j2"
+            src: "{{ playbook_dir }}/../../../kubernetes/apps/velero/garage-list-job.yaml.j2"
             dest: "{{ velero_render_dir.path }}/garage-list-job.yaml"
             mode: "0600"
 

@@ -1,6 +1,6 @@
 ---
 # NFS CSI driver: the cluster's NAS-mount platform piece (see
-# ../../kubernetes/apps/nfs-csi/README.md). Installs the upstream
+# ../../../kubernetes/apps/nfs-csi/README.md). Installs the upstream
 # csi-driver-nfs chart into kube-system; the smoke action proves a real
 # mount against the TrueNAS Kiwix export with a throwaway rig.
 #
@@ -15,11 +15,11 @@
   connection: local
   gather_facts: false
   vars_files:
-    - ../../kubernetes/apps/nfs-csi/vars.yaml
+    - ../../../kubernetes/apps/nfs-csi/vars.yaml
   vars:
     nfs_csi_action: install
     talos_kube_context: ""
-    nfs_csi_apps_dir: "{{ playbook_dir }}/../../kubernetes/apps/nfs-csi"
+    nfs_csi_apps_dir: "{{ playbook_dir }}/../../../kubernetes/apps/nfs-csi"
   tasks:
     - name: Check that Helm is still the release manager
       ansible.builtin.include_tasks:

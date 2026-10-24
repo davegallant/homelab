@@ -1,6 +1,6 @@
 ---
 # One playbook for the whole BentoPDF lifecycle on Talos. The Helm chart
-# (ansible/kubernetes/apps/bentopdf/chart) owns the in-cluster packaging;
+# (kubernetes/apps/bentopdf/chart) owns the in-cluster packaging;
 # this playbook owns the choreography Helm cannot do: Vault-rendered
 # values, functional verification, and the LXC <-> cluster cutover of
 # the Pangolin Newt identity.
@@ -24,7 +24,7 @@
   vars:
     bentopdf_action: stage
     bentopdf_public_url: ""
-    bentopdf_chart_dir: "{{ playbook_dir }}/../../kubernetes/apps/bentopdf/chart"
+    bentopdf_chart_dir: "{{ playbook_dir }}/../../../kubernetes/apps/bentopdf/chart"
   vars_prompt:
     - name: talos_kube_context
       prompt: Enter the expected kubectl context for the Talos cluster
@@ -107,7 +107,7 @@
       block:
         - name: Render Vault-backed Helm values
           ansible.builtin.template:
-            src: "{{ playbook_dir }}/../../kubernetes/apps/bentopdf/values.secrets.yaml.j2"
+            src: "{{ playbook_dir }}/../../../kubernetes/apps/bentopdf/values.secrets.yaml.j2"
             dest: "{{ bentopdf_render_dir.path }}/values.secrets.yaml"
             mode: "0600"
           no_log: true

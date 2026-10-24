@@ -3,7 +3,7 @@
   hosts: pve-g3-1
   gather_facts: false
   vars_files:
-    - ../../kubernetes/cluster/vars.yaml
+    - ../../../kubernetes/cluster/vars.yaml
   vars:
     talos_backup_job_id: backup-60dffa30-abad
   tasks:

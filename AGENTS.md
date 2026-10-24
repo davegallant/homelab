@@ -231,7 +231,7 @@ For a trusted source that needs just one published port, use
 ## Talos Kubernetes Pilot
 
 For Talos VM, Kubernetes workload, Homepage cutover, or backup work, first read
-`ansible/kubernetes/README.md` and `ansible/kubernetes/cluster/README.md`. Manage
+`kubernetes/README.md` and `kubernetes/cluster/README.md`. Manage
 infrastructure through `ansible/playbooks/talos-cluster/`; these manual
 playbooks are separate from the all-host playbook and CI flows. Pin Kubernetes
 container images to both a version and SHA digest.
@@ -245,7 +245,7 @@ secret.
   application container outbound tailnet routing or MagicDNS. Verify real
   application API calls, not only the dashboard root. Homepage v2.6.0 creates
   custom Node HTTP agents, and its TrueNAS widget uses a WebSocket; both need
-  the proxy handling in `ansible/kubernetes/apps/homepage/proxy-agent.cjs`.
+  the proxy handling in `kubernetes/apps/homepage/proxy-agent.cjs`.
 - Talos enforces the cluster-wide Pod Security baseline. A sidecar needing
   `NET_ADMIN`, `NET_RAW`, or `/dev/net/tun` requires a separately reviewed
   policy exception; the Homepage pilot uses a userspace HTTP proxy instead.

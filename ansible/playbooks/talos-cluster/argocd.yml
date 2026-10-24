@@ -4,12 +4,12 @@
   connection: local
   gather_facts: false
   vars_files:
-    - ../../kubernetes/apps/argocd/vars.yaml
+    - ../../../kubernetes/apps/argocd/vars.yaml
     - ../../group_vars/all/vars.yaml
     - ../../group_vars/all/secrets.yaml
   vars:
     talos_kube_context: admin@homelab
-    argocd_apps_dir: "{{ playbook_dir }}/../../kubernetes/apps/argocd"
+    argocd_apps_dir: "{{ playbook_dir }}/../../../kubernetes/apps/argocd"
   tasks:
     - name: Check that Helm is still the release manager
       ansible.builtin.include_tasks:

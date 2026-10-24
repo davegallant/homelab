@@ -16,7 +16,7 @@
       - --nodes
       - "{{ cilium_flannel_node.address }}"
       - --patch-file
-      - "{{ playbook_dir }}/../../kubernetes/cluster/cilium-disable-flannel.patch.yaml"
+      - "{{ playbook_dir }}/../../../kubernetes/cluster/cilium-disable-flannel.patch.yaml"
       - --mode
       - auto
       - --dry-run
@@ -36,7 +36,7 @@
       - --nodes
       - "{{ cilium_flannel_node.address }}"
       - --patch-file
-      - "{{ playbook_dir }}/../../kubernetes/cluster/cilium-disable-flannel.patch.yaml"
+      - "{{ playbook_dir }}/../../../kubernetes/cluster/cilium-disable-flannel.patch.yaml"
       - --mode
       - auto
   no_log: true

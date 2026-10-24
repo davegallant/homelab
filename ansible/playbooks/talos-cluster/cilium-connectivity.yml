@@ -80,7 +80,7 @@
       ansible.builtin.command:
         argv:
           - python3
-          - "{{ playbook_dir }}/../../kubernetes/apps/cilium/verify-service-flow.py"
+          - "{{ playbook_dir }}/../../../kubernetes/apps/cilium/verify-service-flow.py"
           - --context
           - "{{ talos_kube_context }}"
           - --node

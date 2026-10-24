@@ -10,7 +10,7 @@
     cilium_backup_template: >-
       {{ (cilium_backup_schedule.stdout | from_json).spec.template
          if cilium_backup_namespace == 'homepage'
-         else (lookup('ansible.builtin.file', playbook_dir + '/../../kubernetes/apps/changedetection/values.production.yaml')
+         else (lookup('ansible.builtin.file', playbook_dir + '/../../../kubernetes/apps/changedetection/values.production.yaml')
                | from_yaml).rawResources.backupSchedule.manifest.spec.template }}
 
 - name: Require the intended namespace and secret exclusion
