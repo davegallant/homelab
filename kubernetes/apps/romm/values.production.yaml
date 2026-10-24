@@ -173,9 +173,6 @@ controllers:
             memory: 192Mi
       caddy:
         securityContext:
-          capabilities:
-            drop:
-              - ALL
           allowPrivilegeEscalation: false
         image:
           repository: ghcr.io/davegallant/homelab-caddy-cloudflare
