@@ -28,6 +28,9 @@ controllers:
     containers:
       app:
         securityContext:
+          capabilities:
+            drop:
+              - ALL
           allowPrivilegeEscalation: false
         image:
           repository: ghcr.io/seerr-team/seerr
