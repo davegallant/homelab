@@ -103,3 +103,29 @@ KUBECONFIG="$HOME/.local/share/homelab-talos/kubeconfig" \
 hubble status
 hubble observe --namespace changedetection --last 50
 ```
+
+## Hubble metrics and dashboard
+
+Cilium enables the `drop`, `flow`, `dns`, and `http` metric groups. Alloy
+scrapes each agent's `hubble-metrics` endpoint on TCP 9965 and remote-writes
+the samples to VictoriaMetrics. The Cilium agent pods use `hostNetwork: true`,
+so each target IP is its node IP. The pod-endpoint egress rule could not match
+these host destinations; the approved fix added TCP 9965 to Alloy's existing
+`host`/`remote-node` egress rule in `../alloy/network-policy.yaml`. The
+`cilium-system` ingress rule for TCP 9965 remains as-is; namespace endpoint
+policies do not govern these host-network destinations.
+
+The passing metrics gate is `up{job="hubble"} == 1` on all three nodes and
+data in `hubble_flows_processed_total` and `hubble_drop_total`. DNS and HTTP
+families require L7-parsed flows. This cluster currently has no L7 rules in
+its network policies and no FQDN policies, so empty DNS and HTTP series are
+expected. The corresponding panels are deferred until those policies exist;
+their queries to restore are:
+
+- DNS: `sum by (rcode) (rate(hubble_dns_responses_total[5m]))`
+- HTTP: `sum by (status) (rate(hubble_http_requests_total[5m]))`
+
+The four-panel dashboard is in Grafana's Homelab folder at
+<https://grafana.tail.davegallant.ca/d/hubble/hubble>. The drop alert remains
+deferred pending several days of baseline observation; no alert rule was
+added in this rollout.
