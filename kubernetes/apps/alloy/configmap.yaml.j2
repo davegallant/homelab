@@ -159,7 +159,7 @@ data:
     }
 
     // Annotation-driven targets: any Service annotated
-    // prometheus.io/scrape=true is scraped (kube-state-metrics today).
+    // prometheus.io/scrape=true is scraped (kube-state-metrics and Hubble).
     discovery.kubernetes "service_endpoints" {
       role = "endpoints"
     }
@@ -199,48 +199,4 @@ data:
       targets    = discovery.relabel.annotated_services.output
       forward_to = [prometheus.remote_write.victoriametrics.receiver]
       honor_labels = true
-    }
-
-    // Hubble metrics: Cilium agent pods expose the hubble-metrics port
-    // (9965, plain HTTP) once hubble.metrics.enabled is non-empty.
-    // Discovered by agent pod label, kept on the hubble-metrics port.
-    discovery.kubernetes "hubble_pods" {
-      role = "pod"
-
-      selectors {
-        role  = "pod"
-        label = "k8s-app=cilium"
-      }
-    }
-
-    discovery.relabel "hubble" {
-      targets = discovery.kubernetes.hubble_pods.targets
-
-      rule {
-        source_labels = ["__meta_kubernetes_pod_container_port_name"]
-        regex         = "hubble-metrics"
-        action        = "keep"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_pod_node_name"]
-        target_label  = "instance"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_pod_node_name"]
-        target_label  = "node"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_namespace"]
-        target_label  = "namespace"
-      }
-      rule {
-        replacement  = "homelab"
-        target_label = "cluster"
-      }
-    }
-
-    prometheus.scrape "hubble" {
-      targets    = discovery.relabel.hubble.output
-      job_name   = "hubble"
-      forward_to = [prometheus.remote_write.victoriametrics.receiver]
     }
