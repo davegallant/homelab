@@ -110,4 +110,8 @@ hubble:
         limits:
           memory: 64Mi
   metrics:
-    enabled: []
+    enabled:
+      - drop
+      - flow
+      - dns
+      - http
