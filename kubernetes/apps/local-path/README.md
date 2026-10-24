@@ -3,8 +3,7 @@
 Why this exists: the static local PV pattern (hand-written PV +
 machine-config `.keep` entry per app) makes every new stateful app
 cost a node reboot, because Talos only writes `machine.files` at
-boot. That was fine for the first apps; it does not scale across the
-migration queue. From here on, node-local volumes come from Rancher's
+boot. Node-local volumes now come from Rancher's
 local-path-provisioner: a workload ships a PVC against the
 `local-path` StorageClass, the provisioner's helper pod creates the
 directory on the node the pod lands on, and no machine config or
