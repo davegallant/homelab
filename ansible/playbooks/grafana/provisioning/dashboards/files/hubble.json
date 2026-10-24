@@ -1,7 +1,7 @@
 {
   "uid": "hubble",
   "title": "Hubble",
-  "description": "Cilium Hubble flow visibility: forwarded vs dropped flows, drops by reason and destination namespace, flows by source namespace. Series are scraped by Alloy from the Cilium agent hubble-metrics port (9965) and remote-written to VictoriaMetrics. DNS/HTTP panels deferred: those metric families only emit with L7/FQDN policies, which the cluster does not currently use. No datapath change; read-only observability.",
+  "description": "Hubble metrics attributed by scrape node, protocol, flow type, verdict, and drop reason. Queries select job=\"hubble\" to avoid duplicate samples from Alloy's annotation-driven scrape job. Hubble metrics do not currently emit source or destination pod labels; namespace is only the cilium-system scrape-target namespace. DNS/HTTP panels remain deferred until L7/FQDN policies are used. No datapath or policy change; read-only observability.",
   "tags": ["talos", "cilium", "hubble"],
   "schemaVersion": 40,
   "version": 1,
@@ -35,8 +35,8 @@
         {
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "editorMode": "code",
-          "expr": "sum by (verdict) (rate(hubble_flows_processed_total[5m]))",
-          "legendFormat": "{{verdict}}",
+          "expr": "sum by (node, type, protocol, verdict) (rate(hubble_flows_processed_total{job=\"hubble\"}[5m]))",
+          "legendFormat": "{{node}} / {{type}} / {{protocol}} / {{verdict}}",
           "refId": "A"
         }
       ]
@@ -64,16 +64,16 @@
         {
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "editorMode": "code",
-          "expr": "sum by (reason) (rate(hubble_drop_total[5m]))",
-          "legendFormat": "{{reason}}",
+          "expr": "sum by (node, protocol, reason) (rate(hubble_drop_total{job=\"hubble\"}[5m]))",
+          "legendFormat": "{{node}} / {{protocol}} / {{reason}}",
           "refId": "A"
         }
       ]
     },
     {
       "id": 3,
-      "type": "timeseries",
-      "title": "Drops by destination namespace",
+      "type": "table",
+      "title": "Top drops by node, protocol, and reason",
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
       "fieldConfig": {
@@ -85,16 +85,14 @@
         },
         "overrides": []
       },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
+      "options": { "showHeader": true, "cellHeight": "sm", "sortBy": [{ "displayName": "Value", "desc": true }] },
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "editorMode": "code",
-          "expr": "sum by (destination_namespace) (rate(hubble_drop_total[5m]))",
-          "legendFormat": "{{destination_namespace}}",
+          "expr": "topk(10, sum by (node, protocol, reason) (rate(hubble_drop_total{job=\"hubble\"}[5m])) > 0)",
+          "format": "table",
+          "instant": true,
           "refId": "A"
         }
       ]
@@ -102,7 +100,7 @@
     {
       "id": 4,
       "type": "timeseries",
-      "title": "Flows by source namespace",
+      "title": "Forwarded events by node, protocol, and type",
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
       "fieldConfig": {
@@ -122,8 +120,8 @@
         {
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "editorMode": "code",
-          "expr": "sum by (source_namespace) (rate(hubble_flows_processed_total[5m]))",
-          "legendFormat": "{{source_namespace}}",
+          "expr": "sum by (node, protocol, type) (rate(hubble_flows_processed_total{job=\"hubble\", verdict=\"FORWARDED\"}[5m]))",
+          "legendFormat": "{{node}} / {{protocol}} / {{type}}",
           "refId": "A"
         }
       ]
