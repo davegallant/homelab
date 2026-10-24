@@ -163,6 +163,39 @@ two IP destinations as `cidr:192.168.1.0/24`/`reserved:world` and
 `reserved:world`; the 10.245 addresses were `reserved:host`. This is an
 observation only. No policy was changed or widened.
 
+A fresh `hubble observe --verdict DROPPED --since 3m` sample contained 692
+flows timestamped 2026-10-24 19:59:03–20:00:06 UTC. It attributes both target
+destinations to workload pods:
+
+- `192.168.1.52:41641`: 250 UDP egress drops, `POLICY_DENY`, all on destination
+  port 41641. Sources were `seerr/seerr-5bc6f4466d-t5g8x` (40),
+  `sonarr/sonarr-cc778df89-44fjp` (28), `radarr/radarr-55595558c-vqdmf` (28),
+  `lidarr/lidarr-7b45c964b-8xjfq` (28),
+  `lubelogger/lubelogger-58d8f56f67-lgtjm` (22),
+  `changedetection/changedetection-bb8d64ff7-zt2cv` (20),
+  `speedtest-tracker/speedtest-tracker-5869d7b77-p5vpb` (16),
+  `maloja/maloja-7b87fc7cf9-vx9m8` (14),
+  `prowlarr/prowlarr-75d9d4b55-vk4m7` (14),
+  `homepage/homepage-84996664c-gpj89` (14),
+  `romm/romm-5d775db57f-6lsxd` (14), and
+  `kiwix/kiwix-d9d58c8d4-vtcnx` (12). The repo inventory does not identify
+  `192.168.1.52`; its owner is unknown.
+- `204.244.250.128`: 218 UDP egress drops, `POLICY_DENIED`, to ports 9930
+  (102), 56858 (88), 15479 (14), and 58910 (14). Sources were
+  `seerr/seerr-5bc6f4466d-t5g8x` (80 total),
+  `lubelogger/lubelogger-58d8f56f67-lgtjm` (44),
+  `homepage/homepage-84996664c-gpj89` (42),
+  `maloja/maloja-7b87fc7cf9-vx9m8` (28), and
+  `kiwix/kiwix-d9d58c8d4-vtcnx` (24).
+
+The `traffic_direction` field was `EGRESS` for every flow to both addresses.
+That conflicts with the earlier task note calling the `204.244.250.128` flows
+ingress; this attribution records the Hubble event field. Every captured
+five-tuple to either destination repeated 12–40 times during the sample, so
+these look like repeated retry-like attempts rather than one-offs; the flow
+evidence does not prove application-level retry intent. No policy or Cilium
+configuration was changed.
+
 The dashboard panels select the annotation-driven job and use `instance`,
 protocol, flow type, verdict, and drop reason. The namespace panels remain
 removed because the available namespace label describes the scrape target,
