@@ -92,9 +92,6 @@ controllers:
             memory: 2Gi
       redis:
         securityContext:
-          capabilities:
-            drop:
-              - ALL
           allowPrivilegeEscalation: false
         image:
           repository: docker.io/library/redis
