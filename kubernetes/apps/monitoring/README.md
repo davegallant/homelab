@@ -56,13 +56,13 @@ kubelet /metrics/cadvisor --/        |
 - `../../../ansible/playbooks/talos-cluster/monitoring.yml` — install | verify.
 - Grafana side: `../../../ansible/playbooks/grafana/docker-compose.yml` (the
   victoriametrics service), `../../../ansible/playbooks/grafana/provisioning/`
-  (datasources + the Cluster Vitals dashboard).
+  (datasources, the Cluster Vitals dashboard, and critical cluster alerts).
 
 ## Run order
 
 1. `apply-alloy.yml` (picks up the metrics pipeline + RBAC).
 2. `monitoring.yml` (default install; cluster-side checks only).
-3. Grafana playbook (adds VictoriaMetrics + datasource + dashboard).
+3. Grafana playbook (adds VictoriaMetrics + datasource + dashboard + alert rules).
 4. `monitoring.yml -e monitoring_action=verify` (end-to-end: series
    from all three nodes + KSM + cAdvisor present in VictoriaMetrics).
 5. `just lint`.
