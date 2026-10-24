@@ -27,6 +27,7 @@ controllers:
     type: deployment
     strategy: Recreate
     pod:
+      automountServiceAccountToken: false
       nodeSelector:
         kubernetes.io/hostname: k8s-w-1
       annotations:
@@ -41,6 +42,8 @@ controllers:
           -p$MARIADB_ROOT_PASSWORD romm > /var/lib/mysql/romm-backup.sql"]'
     containers:
       app:
+        securityContext:
+          allowPrivilegeEscalation: false
         image:
           repository: docker.io/rommapp/romm
           tag: 5.4.0
@@ -90,6 +93,8 @@ controllers:
             cpu: 2000m
             memory: 2Gi
       db:
+        securityContext:
+          allowPrivilegeEscalation: false
         image:
           repository: docker.io/mariadb
           tag: 13.0.2
@@ -133,6 +138,11 @@ controllers:
             cpu: 1000m
             memory: 1Gi
       tailscale:
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          allowPrivilegeEscalation: false
         image:
           repository: ghcr.io/tailscale/tailscale
           tag: v1.104.1
@@ -162,6 +172,11 @@ controllers:
             cpu: 200m
             memory: 192Mi
       caddy:
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          allowPrivilegeEscalation: false
         image:
           repository: ghcr.io/davegallant/homelab-caddy-cloudflare
           tag: 2.11.6-a8737d0

@@ -15,6 +15,7 @@ controllers:
     type: deployment
     strategy: Recreate
     pod:
+      automountServiceAccountToken: false
       annotations:
         # Opt-in filesystem backup of the app data volume only; the
         # NFS library is excluded by omission (TrueNAS snapshots +
@@ -32,6 +33,10 @@ controllers:
         securityContext:
           runAsUser: 1000
           runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
         envFrom:
           - secretRef:
               name: navidrome-external
@@ -82,6 +87,11 @@ controllers:
             cpu: 1000m
             memory: 1Gi
       newt:
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          allowPrivilegeEscalation: false
         image:
           repository: docker.io/fosrl/newt
           tag: 1.19.0

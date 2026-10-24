@@ -16,6 +16,7 @@ controllers:
     type: deployment
     strategy: Recreate
     pod:
+      automountServiceAccountToken: false
       annotations:
         # Opt-in filesystem backup of the two state volumes; the NFS
         # libraries are excluded by omission (TrueNAS snapshots +
@@ -23,6 +24,8 @@ controllers:
         backup.velero.io/backup-volumes: config-local,metadata-local
     containers:
       app:
+        securityContext:
+          allowPrivilegeEscalation: false
         image:
           repository: ghcr.io/advplyr/audiobookshelf
           tag: 2.37.1
@@ -63,6 +66,11 @@ controllers:
             cpu: 1000m
             memory: 2Gi
       newt:
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          allowPrivilegeEscalation: false
         image:
           repository: docker.io/fosrl/newt
           tag: 1.19.0

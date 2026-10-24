@@ -25,6 +25,7 @@ controllers:
     type: deployment
     strategy: Recreate
     pod:
+      automountServiceAccountToken: false
       annotations:
         # Opt-in filesystem backup of the database volume, with a
         # consistent logical dump written into the volume first so
@@ -35,6 +36,8 @@ controllers:
           -d $POSTGRES_DB > /var/lib/postgresql/umami-backup.sql"]'
     containers:
       app:
+        securityContext:
+          allowPrivilegeEscalation: false
         image:
           repository: ghcr.io/umami-software/umami
           tag: 3.4.0
@@ -80,6 +83,8 @@ controllers:
             cpu: 1000m
             memory: 512Mi
       db:
+        securityContext:
+          allowPrivilegeEscalation: false
         image:
           repository: docker.io/library/postgres
           tag: "18.6"
@@ -122,6 +127,11 @@ controllers:
             cpu: 1000m
             memory: 1Gi
       newt:
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          allowPrivilegeEscalation: false
         image:
           repository: docker.io/fosrl/newt
           tag: 1.19.0
