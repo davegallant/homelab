@@ -37,6 +37,8 @@ spec:
         - name: kiwix
           image: {{ .Values.kiwix.image }}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
           # The LXC Compose passes command "*.zim"; in Kubernetes the
           # image entrypoint stays and the glob is the argument,
           # expanded by the image's shell in /data exactly as under
@@ -78,6 +80,11 @@ spec:
         - name: tailscale
           image: {{ .Values.tailscale.image }}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            allowPrivilegeEscalation: false
           env:
             - name: TS_AUTHKEY
               valueFrom:
@@ -113,6 +120,8 @@ spec:
         - name: caddy
           image: {{ .Values.caddy.image }}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
           command:
             - caddy
           args:

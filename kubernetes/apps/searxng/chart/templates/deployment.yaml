@@ -24,6 +24,8 @@ spec:
         - name: searxng
           image: {{ .Values.searxng.image }}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
           env:
             - name: UWSGI_WORKERS
               value: {{ .Values.searxng.uwsgiWorkers | quote }}
@@ -64,6 +66,7 @@ spec:
                 - CHOWN
                 - SETGID
                 - SETUID
+            allowPrivilegeEscalation: false
           volumeMounts:
             - name: searxng-settings
               mountPath: /etc/searxng/settings.yml
@@ -73,6 +76,11 @@ spec:
         - name: newt
           image: {{ .Values.newt.image }}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            allowPrivilegeEscalation: false
           envFrom:
             - secretRef:
                 name: {{ .Values.newt.existingSecret | default "searxng-newt" | quote }}

@@ -29,6 +29,8 @@ spec:
         - name: miniflux
           image: {{ .Values.miniflux.image }}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
           env:
             - name: DB_USER
               valueFrom:
@@ -89,6 +91,11 @@ spec:
         - name: newt
           image: {{ .Values.newt.image }}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            allowPrivilegeEscalation: false
           env:
             - name: PANGOLIN_ENDPOINT
               value: {{ required "pangolinEndpoint must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.pangolinEndpoint | quote }}

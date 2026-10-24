@@ -12,14 +12,13 @@
 #
 # Secrets stay outside Git and outside Argo's ownership:
 #   romm-caddy-external    (key cloudflare_api_token) — gitops-secrets.yml
-#   romm-external          (DB_PASSWD, MARIADB_PASSWORD,
-#                           MARIADB_ROOT_PASSWORD, ROMM_AUTH_SECRET_KEY,
+#   romm-app-external      (DB_PASSWD, ROMM_AUTH_SECRET_KEY,
 #                           IGDB_CLIENT_ID, IGDB_CLIENT_SECRET)
+#   romm-db-external       (MARIADB_PASSWORD, MARIADB_ROOT_PASSWORD)
 #                          — playbooks/talos-cluster/romm-secret.yml
 #   romm-tailscale-auth    (key TS_AUTHKEY, one-use)  — bootstrap only
-# The app container envFrom-imports the whole romm-external Secret
-# (the MARIADB_* keys are inert there) and the db container does the
-# same (DB_PASSWD / IGDB_* are inert there): one Secret, no renames.
+# Keep app and database credentials in separate Secrets so the web
+# application never receives MARIADB_ROOT_PASSWORD.
 # The optional MOBYGAMES / STEAMGRIDDB keys are commented out in the
 # source compose and are deliberately not carried over.
 controllers:
@@ -50,7 +49,7 @@ controllers:
           digest: sha256:03295f95a6290e752641f9553ac4198b0e5b71b879d57f7b2371b98f608feb54
         envFrom:
           - secretRef:
-              name: romm-external
+              name: romm-app-external
         env:
           # The compose reaches the database by service name; in-pod
           # it is the neighbouring container.
@@ -101,7 +100,7 @@ controllers:
           digest: sha256:0e4bb0f339feba125d1154fbacd36c16ec8518f52e44e1f82ecec7d6771caf39
         envFrom:
           - secretRef:
-              name: romm-external
+              name: romm-db-external
         env:
           MARIADB_DATABASE: romm
           MARIADB_USER: romm-user

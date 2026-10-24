@@ -20,6 +20,8 @@ spec:
         - name: bentopdf
           image: {{ .Values.bentopdf.image }}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
           ports:
             - name: http
               containerPort: {{ .Values.bentopdf.port }}
@@ -51,6 +53,11 @@ spec:
         - name: newt
           image: {{ .Values.newt.image }}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            allowPrivilegeEscalation: false
           envFrom:
             - secretRef:
                 name: {{ .Values.newt.existingSecret | default "bentopdf-newt" | quote }}
