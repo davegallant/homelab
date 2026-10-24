@@ -178,8 +178,8 @@ destinations to workload pods:
   `prowlarr/prowlarr-75d9d4b55-vk4m7` (14),
   `homepage/homepage-84996664c-gpj89` (14),
   `romm/romm-5d775db57f-6lsxd` (14), and
-  `kiwix/kiwix-d9d58c8d4-vtcnx` (12). The repo inventory does not identify
-  `192.168.1.52`; its owner is unknown.
+  `kiwix/kiwix-d9d58c8d4-vtcnx` (12). Dave identified `192.168.1.52` as
+  Gatus; this address is not listed in the repo inventory.
 - `204.244.250.128`: 218 UDP egress drops, `POLICY_DENIED`, to ports 9930
   (102), 56858 (88), 15479 (14), and 58910 (14). Sources were
   `seerr/seerr-5bc6f4466d-t5g8x` (80 total),
