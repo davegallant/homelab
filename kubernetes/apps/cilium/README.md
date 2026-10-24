@@ -78,6 +78,57 @@ agent pod template. Config changes therefore restart agents one at a time
 ConfigMap has been consumed: check the running agent's PolicyEnforcement
 value is `default` rather than `never` after a Cilium values change.
 
+## WireGuard pod encryption
+
+Cilium transparent WireGuard encryption is enabled for remote pod-to-pod
+traffic with `encryption.enabled: true` and `encryption.type: wireguard`.
+`encryption.nodeEncryption` remains unset, so node traffic is outside this
+scope. kube-proxy replacement, VXLAN, IPAM, and policy enforcement are
+unchanged. The values change is recorded in commit `37a2b282`.
+
+The initial peer check expected remote pod CIDRs in WireGuard `allowed-ips`.
+That expectation applies to native-routing mode and was incorrect for this
+cluster's VXLAN tunnel mode. Cilium wraps the node-to-node VXLAN traffic in
+WireGuard, so each peer correctly has the remote node IP as a `/32`. All three
+agents reported `Encryption: Wireguard`, `cilium_wg0`, listen port `51871`,
+two peers, matching remote `CiliumNode` public keys, and recent handshakes.
+The agents were Ready and the Cilium DaemonSet was fully updated (3/3).
+
+Cross-node TCP tests succeeded in both directions using the existing test
+pods; the same-node test succeeded as the unencrypted negative control. During
+a 512 KiB cross-node transfer, the `cilium_wg0` capture decoded the inner VXLAN
+flow on TCP/8080 between pod IPs `10.245.2.147` and `10.245.1.110`. The paired
+underlay capture observed WireGuard UDP `51871` and no plaintext VXLAN UDP
+`8473` or directly visible pod-IP packets. The broad capture interval had 663
+packets on `cilium_wg0`, 960 WireGuard UDP packets on the underlay, and zero
+plaintext VXLAN or underlay pod-IP packets. Peer transfer counters increased
+by about 589 KiB TX and 595 KiB RX during the transfer. The same-node test
+flow did not appear on `cilium_wg0`. All temporary test pods and capture files
+inside the Cilium agents were removed; no test workloads remained.
+
+The w-2 baseline sampler ran from 2026-10-24 21:00:17 to 21:49:03 UTC and was
+then stopped. A manual backup from the existing `navidrome-daily` schedule
+provided the representative load on w-2: backup
+`navidrome-daily-20261024215355` ran from 21:53:55 to 21:54:06 UTC and
+completed with one PodVolumeBackup on `k8s-w-2` (`data-local`,
+306,953,210 bytes). Velero reported one namespace warning because an old,
+already completed Navidrome pod could not have its volume backed up; the live
+pod's PodVolumeBackup completed successfully. The backup itself completed,
+with no Velero or cluster errors. The scheduled nightly backup remains
+unchanged.
+
+During the backup, w-2 had about 1.50 GB available memory, 284m CPU, and
+2,643 MiB memory use. The post-backup sample had about 1.49 GB available,
+367m CPU, and 2,578 MiB memory use; the baseline was about 1.52–1.55 GB
+available and 260–410m CPU. `MemoryPressure` remained `False`. Memory PSI had
+a brief sub-0.5% ten-second average during the transfer and returned to zero
+afterward; cumulative waiting and stalled time increased by about 0.078 and
+0.061 seconds across the observation period. All three Cilium agents remained
+Ready with zero restarts. The cluster-wide container restart total stayed at
+174, with no OOM-killed containers and no running pods unready. The observation
+gate passed. OCR and scan activity was waived for this closeout because the
+backup was the agreed representative heavy activity.
+
 ## Hubble UI
 
 The steady-state values enable Hubble UI on `k8s-cp-1`, with a ClusterIP
