@@ -12,6 +12,9 @@ routingMode: tunnel
 tunnelProtocol: vxlan
 tunnelPort: 8473
 kubeProxyReplacement: false
+encryption:
+  enabled: true
+  type: wireguard
 policyEnforcementMode: default
 operator:
   replicas: 1
