@@ -39,6 +39,8 @@ spec:
         - name: homepage
           image: {{ .Values.homepage.image }}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
           env:
             - name: PUID
               value: {{ .Values.homepage.puid | quote }}
@@ -113,6 +115,11 @@ spec:
         - name: tailscale
           image: {{ .Values.tailscale.image }}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            allowPrivilegeEscalation: false
           env:
             - name: TS_AUTHKEY
               valueFrom:
@@ -151,6 +158,8 @@ spec:
         - name: caddy
           image: {{ .Values.caddy.image }}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
           command:
             - caddy
           args:

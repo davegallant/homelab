@@ -59,6 +59,7 @@ spec:
                 - SETGID
                 - SETUID
                 - DAC_OVERRIDE
+            allowPrivilegeEscalation: false
           volumeMounts:
             - name: valkey-data
               mountPath: /data

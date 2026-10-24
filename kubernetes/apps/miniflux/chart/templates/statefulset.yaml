@@ -38,6 +38,8 @@ spec:
         - name: miniflux-db
           image: {{ .Values.db.image }}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
           env:
             - name: POSTGRES_USER
               # Clear the legacy literal during server-side apply adoption.
