@@ -51,9 +51,13 @@ The existing 02:00 Proxmox snapshot job now includes all three Talos VMs and
 stores them on `proxmox-backups` NFS. `backup-now.yml` takes a manual
 backup; `snapshot-etcd.yml` also stores an etcd snapshot containing cluster state
 in a protected directory on the same off-host store. VM backups include the
-Homepage local PV paths. Homepage's former LXC playbook has been retired; keep
-the recovery drill current and separately protect the operator's Talos
-credentials. The Alloy
+Homepage local PV paths. The 02:00 `proxmox-backups` vzdump job stages
+temporary files under local `/var/tmp` on the executing Proxmox node; backup
+archives still go to NFS. Keep `/var/tmp` available on both Proxmox nodes
+because unprivileged LXC backup workers cannot write to the restricted NFS
+export. Homepage's former LXC
+playbook has been retired; keep the recovery drill current and separately
+protect the operator's Talos credentials. The Alloy
 DaemonSet is described in [the logging runbook](../OBSERVABILITY.md); it collects pod logs through
 the Kubernetes API without node filesystem mounts.
 
