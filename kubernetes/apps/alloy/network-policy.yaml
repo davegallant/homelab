@@ -68,3 +68,11 @@ spec:
               protocol: TCP
             - port: "8428"
               protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: cilium-system
+            k8s:k8s-app: cilium
+      toPorts:
+        - ports:
+            - port: "9965"
+              protocol: TCP
