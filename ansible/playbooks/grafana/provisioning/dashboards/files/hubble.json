@@ -1,7 +1,7 @@
 {
   "uid": "hubble",
   "title": "Hubble",
-  "description": "Cilium Hubble flow visibility: forwarded vs dropped flows, drops by reason and namespace, DNS responses, HTTP status. Series are scraped by Alloy from the Cilium agent hubble-metrics port (9965) and remote-written to VictoriaMetrics. No datapath change; read-only observability.",
+  "description": "Cilium Hubble flow visibility: forwarded vs dropped flows, drops by reason and destination namespace, flows by source namespace. Series are scraped by Alloy from the Cilium agent hubble-metrics port (9965) and remote-written to VictoriaMetrics. DNS/HTTP panels deferred: those metric families only emit with L7/FQDN policies, which the cluster does not currently use. No datapath change; read-only observability.",
   "tags": ["talos", "cilium", "hubble"],
   "schemaVersion": 40,
   "version": 1,
@@ -124,64 +124,6 @@
           "editorMode": "code",
           "expr": "sum by (source_namespace) (rate(hubble_flows_processed_total[5m]))",
           "legendFormat": "{{source_namespace}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 5,
-      "type": "timeseries",
-      "title": "DNS responses by rcode",
-      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "reqps",
-          "min": 0,
-          "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 1, "spanNulls": false }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-          "editorMode": "code",
-          "expr": "sum by (rcode) (rate(hubble_dns_responses_total[5m]))",
-          "legendFormat": "{{rcode}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 6,
-      "type": "timeseries",
-      "title": "HTTP requests by status",
-      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "reqps",
-          "min": 0,
-          "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 1, "spanNulls": false }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-          "editorMode": "code",
-          "expr": "sum by (status) (rate(hubble_http_requests_total[5m]))",
-          "legendFormat": "{{status}}",
           "refId": "A"
         }
       ]
