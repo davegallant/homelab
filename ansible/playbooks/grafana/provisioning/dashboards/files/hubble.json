@@ -1,7 +1,7 @@
 {
   "uid": "hubble",
   "title": "Hubble",
-  "description": "Hubble metrics attributed by scrape node, protocol, flow type, verdict, and drop reason. Queries select job=\"hubble\" to avoid duplicate samples from Alloy's annotation-driven scrape job. Hubble metrics do not currently emit source or destination pod labels; namespace is only the cilium-system scrape-target namespace. DNS/HTTP panels remain deferred until L7/FQDN policies are used. No datapath or policy change; read-only observability.",
+  "description": "Hubble metrics scraped once by Alloy's annotation-driven service job and attributed by scrape target, protocol, flow type, verdict, and drop reason. The scrape target label is the Cilium agent endpoint IP; Hubble does not currently emit source or destination pod labels. DNS/HTTP panels remain deferred until L7/FQDN policies are used. No datapath or policy change; read-only observability.",
   "tags": ["talos", "cilium", "hubble"],
   "schemaVersion": 40,
   "version": 1,
@@ -35,8 +35,8 @@
         {
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "editorMode": "code",
-          "expr": "sum by (node, type, protocol, verdict) (rate(hubble_flows_processed_total{job=\"hubble\"}[5m]))",
-          "legendFormat": "{{node}} / {{type}} / {{protocol}} / {{verdict}}",
+          "expr": "sum by (instance, type, protocol, verdict) (rate(hubble_flows_processed_total{job=\"prometheus.scrape.annotated_services\"}[5m]))",
+          "legendFormat": "{{instance}} / {{type}} / {{protocol}} / {{verdict}}",
           "refId": "A"
         }
       ]
@@ -64,8 +64,8 @@
         {
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "editorMode": "code",
-          "expr": "sum by (node, protocol, reason) (rate(hubble_drop_total{job=\"hubble\"}[5m]))",
-          "legendFormat": "{{node}} / {{protocol}} / {{reason}}",
+          "expr": "sum by (instance, protocol, reason) (rate(hubble_drop_total{job=\"prometheus.scrape.annotated_services\"}[5m]))",
+          "legendFormat": "{{instance}} / {{protocol}} / {{reason}}",
           "refId": "A"
         }
       ]
@@ -73,7 +73,7 @@
     {
       "id": 3,
       "type": "table",
-      "title": "Top drops by node, protocol, and reason",
+      "title": "Top drops by agent endpoint, protocol, and reason",
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
       "fieldConfig": {
@@ -90,7 +90,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "editorMode": "code",
-          "expr": "topk(10, sum by (node, protocol, reason) (rate(hubble_drop_total{job=\"hubble\"}[5m])) > 0)",
+          "expr": "topk(10, sum by (instance, protocol, reason) (rate(hubble_drop_total{job=\"prometheus.scrape.annotated_services\"}[5m])) > 0)",
           "format": "table",
           "instant": true,
           "refId": "A"
@@ -100,7 +100,7 @@
     {
       "id": 4,
       "type": "timeseries",
-      "title": "Forwarded events by node, protocol, and type",
+      "title": "Forwarded events by agent endpoint, protocol, and type",
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
       "fieldConfig": {
@@ -120,8 +120,8 @@
         {
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "editorMode": "code",
-          "expr": "sum by (node, protocol, type) (rate(hubble_flows_processed_total{job=\"hubble\", verdict=\"FORWARDED\"}[5m]))",
-          "legendFormat": "{{node}} / {{protocol}} / {{type}}",
+          "expr": "sum by (instance, protocol, type) (rate(hubble_flows_processed_total{job=\"prometheus.scrape.annotated_services\", verdict=\"FORWARDED\"}[5m]))",
+          "legendFormat": "{{instance}} / {{protocol}} / {{type}}",
           "refId": "A"
         }
       ]
