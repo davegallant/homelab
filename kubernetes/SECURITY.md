@@ -5,7 +5,7 @@
   VXLAN UDP `8473`. Flannel has been removed; kube-proxy remains enabled.
   Kubernetes is `1.37.0`, outside Cilium 1.20.3's tested `1.33–1.36` matrix.
   The dual-overlay migration and observed compatibility evidence are recorded
-  in [`apps/cilium`](apps/cilium/README.md).
+  in [`apps/cilium`](apps/cilium/).
 - **Default-deny policies.** Each policy is stored beside its workload and
   applied through `playbooks/talos-cluster/cilium-apply-policy.yml`. App
   policies allow cluster DNS, intra-namespace traffic, the documented app

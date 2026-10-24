@@ -1,5 +1,5 @@
 ---
-# Cutover PV points at the directory provisioned by Umami's initial
+# Static PV points at the directory provisioned by Umami's initial
 # local-path claim; the original claim remains mounted read-only for rollback.
 apiVersion: v1
 kind: PersistentVolume

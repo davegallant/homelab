@@ -1,14 +1,12 @@
 ---
-# Storage for invidious, applied once by hand (see README.md) and
+# Storage for invidious, applied once by hand and
 # deliberately NOT managed by Argo CD: the homelab AppProject allows
 # namespace-scoped resources only, so namespaces and static volumes
 # stay an Ansible / kubectl concern.
 #
-# Invidious has no static volumes at staging: the Postgres data
-# directory and the companion cache are chart-managed local-path
-# PVCs declared in values.production.yaml. This file creates just
-# the namespace; the static local-PV bind happens at cutover
-# (README).
+# The Postgres data directory and companion cache use chart-managed
+# local-path PVCs declared in values.production.yaml. This file creates
+# just the namespace.
 apiVersion: v1
 kind: Namespace
 metadata:

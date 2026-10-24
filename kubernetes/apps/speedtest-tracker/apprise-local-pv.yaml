@@ -1,5 +1,5 @@
 ---
-# Cutover PV for the copied Apprise configuration on k8s-w-1.
+# Static PV for the Apprise configuration on k8s-w-1.
 apiVersion: v1
 kind: PersistentVolume
 metadata:

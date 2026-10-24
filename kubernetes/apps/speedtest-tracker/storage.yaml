@@ -1,14 +1,12 @@
 ---
-# Storage for speedtest-tracker, applied once by hand (see
-# README.md) and deliberately NOT managed by Argo CD: the homelab
+# Storage for speedtest-tracker, applied once by hand and
+# deliberately NOT managed by Argo CD: the homelab
 # AppProject allows namespace-scoped resources only, so namespaces
 # and static volumes stay an Ansible / kubectl concern.
 #
-# Speedtest Tracker has no static volumes at staging: app config,
-# the Postgres data directory, the Apprise state and the Tailscale /
-# Caddy state are chart-managed local-path PVCs declared in
-# values.production.yaml. This file creates just the namespace; the
-# static local-PV binds happen at cutover (README).
+# App config, PostgreSQL, Apprise, Tailscale, and Caddy state use
+# chart-managed local-path PVCs declared in values.production.yaml.
+# This file creates just the namespace.
 apiVersion: v1
 kind: Namespace
 metadata:

@@ -1,5 +1,5 @@
 ---
-# This cutover-specific static local PV points at the directory provisioned
+# This static local PV points at the directory provisioned
 # by the initial lubelogger-data local-path claim. Velero can back up local
 # PVs, while its filesystem backup does not support the original hostPath PV.
 apiVersion: v1

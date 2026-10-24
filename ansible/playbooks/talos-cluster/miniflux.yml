@@ -69,7 +69,7 @@
           - pangolin_endpoint is defined
           - miniflux_newt_id is defined
           - miniflux_newt_secret is defined
-        fail_msg: "Missing Miniflux variables in group_vars (all pre-date this migration; see ansible/playbooks/miniflux/docker-compose.yml)."
+        fail_msg: "Missing Miniflux variables in group_vars/all/secrets.yaml or group_vars/all/vars.yaml."
       when: miniflux_action != 'verify'
 
     - name: Read the active kubectl context

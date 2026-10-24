@@ -39,7 +39,7 @@ All three nodes were Ready at the static addresses after the transition.
 The cluster's steady-state CNI is Cilium `1.20.3` on Kubernetes `1.37.0`,
 using cluster-pool pod CIDR `10.245.0.0/16` and VXLAN UDP `8473`. Talos has
 `cluster.network.cni.name: none`; Flannel has been removed, while kube-proxy
-remains enabled. See [`../apps/cilium/README.md`](../apps/cilium/README.md)
+remains enabled. See [`../apps/cilium/`](../apps/cilium/)
 for the live-migration record, policy inventory, and recovery path.
 
 The storage patches create the three local volume directories on every node.

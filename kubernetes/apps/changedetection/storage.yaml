@@ -1,5 +1,5 @@
 ---
-# Namespace for changedetection, applied once by hand (see README.md) and
+# Namespace for changedetection, applied once by hand and
 # deliberately NOT managed by Argo CD: the homelab AppProject allows
 # namespace-scoped resources only, so namespaces stay an Ansible /
 # kubectl concern. The PVCs themselves are chart-managed

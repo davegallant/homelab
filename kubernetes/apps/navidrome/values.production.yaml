@@ -1,14 +1,10 @@
 ---
 # Navidrome — Argo CD production values (bjw-s app-template 5.3.0).
-# Source of truth for the workload: playbooks/navidrome/docker-compose.yml
-# (image docker.io/deluan/navidrome 0.64.2, port 4533, ./data:/data,
-# /music:/music:ro).
+# Application configuration: this file. Navidrome uses
+# docker.io/deluan/navidrome 0.64.2 on port 4533.
 #
-# PUBLIC via Pangolin, exactly as on the LXC: the compose pairs the app
-# with a Newt sidecar (fosrl/newt 1.19.0), and this values file
-# reproduces that pairing in-pod. Navidrome is NOT tailnet-only — the
-# Newt identity below is the same one the LXC uses, so the existing
-# Pangolin route (and its public URL) carries over unchanged.
+# Public via Pangolin through the Newt sidecar. Preserve the existing
+# identity when changing the sidecar configuration.
 #
 # Secrets stay outside Git and outside Argo's ownership, both created
 # by playbooks/talos-cluster/navidrome-secret.yml from Vault:
@@ -48,7 +44,7 @@ controllers:
           # its Service DNS name; the default-deny policy's cluster
           # egress already permits it. If Maloja gains an ingress
           # policy, it needs a matching fromEndpoints exception for
-          # this namespace (see README.md).
+          # this namespace.
           ND_LISTENBRAINZ_BASEURL: http://maloja.maloja.svc.cluster.local:42010/apis/listenbrainz/1/
         probes:
           startup:

@@ -1,28 +1,20 @@
 ---
 # Audiobookshelf — Argo CD production values (bjw-s app-template 5.3.0).
-# Source of truth for the workload: playbooks/audiobookshelf/docker-compose.yml
-# (image ghcr.io/advplyr/audiobookshelf 2.37.1, port 80,
-# /mnt/media/Audiobooks:/audiobooks, /mnt/media/Podcasts:/podcasts,
-# ./metadata:/metadata, ./config:/config).
+# Application configuration: this file. Audiobookshelf uses
+# ghcr.io/advplyr/audiobookshelf 2.37.1 on port 80.
 #
-# PUBLIC via Pangolin — this app STAYS public, exactly as on the LXC:
-# the compose's Newt sidecar (fosrl/newt 1.19.0) is reproduced in-pod
-# with the same Newt identity, so the existing Pangolin route and
-# public URL carry over unchanged. Never rewrite it as tailnet.
+# Public via Pangolin through the Newt sidecar. Preserve the existing
+# identity when changing the sidecar configuration.
 #
 # Secrets stay outside Git and outside Argo's ownership, created by
 # playbooks/talos-cluster/audiobookshelf-secret.yml from Vault:
 #   audiobookshelf-newt-external (PANGOLIN_ENDPOINT, NEWT_ID, NEWT_SECRET)
 #
-# The image runs as root (no user: in the compose); the copied config
-# and metadata keep their LXC ownership — no fsGroup is set here.
+# The image runs as root; no fsGroup is set here.
 controllers:
   audiobookshelf:
     type: deployment
     strategy: Recreate
-    # STAGING: 0 until the LXC config and metadata dirs have been
-    # copied into the PVCs (see README.md). The cutover commit
-    # removes this line.
     pod:
       annotations:
         # Opt-in filesystem backup of the two state volumes; the NFS
