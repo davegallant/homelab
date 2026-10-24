@@ -47,6 +47,25 @@ off-host etcd snapshots protect cluster state. Protect the operator's Talos
 credentials and Ansible Vault too. Isolate a full VM restore from the live
 cluster until node identity and etcd membership are reconciled.
 
+## RomM current backup
+
+The current RomM backup is `romm-current-20261024022620`. It completed on
+2026-10-24 with no Velero warnings or errors and a 14-day TTL. Its four
+annotated volumes all have completed Kopia PodVolumeBackups: config (95 bytes),
+resources (1,217,172,959 bytes), Redis (6,867,498 bytes), and MariaDB
+(191,548,412 bytes). The MariaDB pre-backup hook succeeded (`HooksFailed: 0`)
+and left a 3,206,043-byte `romm-backup.sql` in the backed-up database volume.
+
+These four claims use static Kubernetes `local` PVs on `k8s-w-1`, declared in
+`apps/romm/state-local-pv.yaml`, and point at the existing active data
+directories. Rancher's local-path provisioner defaults to `hostPath`, which
+Velero does not support for filesystem backups. The stale RomM PVC/PV objects
+on `k8s-w-2` were removed after backup verification; their directories remain
+on disk because the reclaim policy is `Retain`. The ROM library remains on
+TrueNAS and is protected by its separate NAS backup path. Verify future RomM
+backups by checking all four PodVolumeBackups and their nonzero byte counts;
+the top-level `Completed` phase by itself is insufficient.
+
 For large data transfers, use a tar stream or another length-preserving copy
 method. Piping a large SQL dump through `kubectl exec -i ... cat > file` can
 truncate it. Compare file counts and byte totals, verify dump checksums before

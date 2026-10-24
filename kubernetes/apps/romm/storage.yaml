@@ -14,10 +14,11 @@
 #                     in the values. The data never moves and is
 #                     never Velero-backed-up (TrueNAS snapshots +
 #                     Drive sync, same as Kiwix).
-#   app state       - config, resources, redis data and the MariaDB
-#                     data are chart-managed local-path PVCs
-#                     declared in values.production.yaml; nothing
-#                     lives here.
+#   app state       - config, resources, redis data and MariaDB data
+#                     use static local PVs declared in
+#                     state-local-pv.yaml. Their paths stay on w-1;
+#                     the local volume type is required for Velero
+#                     filesystem backups.
 #
 # Verify the share path against the LXC's mount before applying:
 # the export below follows the Kiwix spelling (/mnt/tank/media/<app>).

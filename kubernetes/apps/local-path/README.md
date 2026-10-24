@@ -49,9 +49,15 @@ reboot is involved — for any future app, planned or not.
   use `local-path`; a chart's storage.yaml shrinks to nothing for
   local data — the PVC goes in the chart with
   `storageClassName: local-path`.
-- **Backups unchanged:** a local-path volume is an ordinary PVC
-  volume to Velero — opt-in annotations and hooks work exactly as
-  they do for Miniflux's static volume.
+- **Velero compatibility:** local-path-provisioner defaults to
+  `hostPath` volumes. Velero filesystem backups do not support
+  `hostPath`; they support Kubernetes `local` PVs. For a dynamically
+  provisioned PVC that needs Velero filesystem backup, set the
+  `volumeType: local` PVC annotation before provisioning it. Existing
+  `hostPath` PVs must be replaced or copied into `local` PVs; changing
+  the StorageClass default does not convert existing volumes. Confirm
+  each backup has completed PodVolumeBackups with nonzero bytes before
+  relying on it.
 
 ## Verification
 
