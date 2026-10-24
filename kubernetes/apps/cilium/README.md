@@ -115,12 +115,20 @@ these host destinations; the approved fix added TCP 9965 to Alloy's existing
 `cilium-system` ingress rule for TCP 9965 remains as-is; namespace endpoint
 policies do not govern these host-network destinations.
 
-The passing metrics gate is `up{job="hubble"} == 1` on all three nodes and
-data in `hubble_flows_processed_total` and `hubble_drop_total`. DNS and HTTP
-families require L7-parsed flows. This cluster currently has no L7 rules in
-its network policies and no FQDN policies, so empty DNS and HTTP series are
-expected. The corresponding panels are deferred until those policies exist;
-their queries to restore are:
+Alloy scrapes the three annotated Hubble service endpoints once, using
+`job="prometheus.scrape.annotated_services"`. The dedicated `hubble` scrape
+job was removed because it duplicated those same endpoints. VictoriaMetrics
+verified three `up` series for service `hubble-metrics`; after the old
+five-minute samples expired, only the annotation-driven job returned fresh
+Hubble rates. At 2026-10-24 19:49 UTC, a five-minute sample was about 165
+forwarded events/s and 17 drops/s; live rates vary with cluster traffic. The
+dashboard filters on this job and groups by `instance`, the Cilium agent
+endpoint IP.
+
+DNS and HTTP families require L7-parsed flows. This cluster currently has no
+L7 rules in its network policies and no FQDN policies, so empty DNS and HTTP
+series are expected. The corresponding panels are deferred until those
+policies exist; their queries to restore are:
 
 - DNS: `sum by (rcode) (rate(hubble_dns_responses_total[5m]))`
 - HTTP: `sum by (status) (rate(hubble_http_requests_total[5m]))`
@@ -132,33 +140,40 @@ added in this rollout.
 
 ### Hubble metric attribution follow-up
 
-VictoriaMetrics reports these labels for `hubble_flows_processed_total`:
-`cluster`, `instance`, `job`, `namespace`, `node`, `protocol`, `subtype`,
-`type`, and `verdict`. `subtype` is present on Trace series. For
-`hubble_drop_total`, the labels are `cluster`, `instance`, `job`, `namespace`,
-`node`, `protocol`, and `reason`. Neither family includes source or
-destination pod, namespace, workload, or IP labels. The `namespace` on the
-`job="hubble"` series is the scrape target namespace `cilium-system`, not a
-flow endpoint namespace.
+VictoriaMetrics metric labels describe the scrape target and flow class, not
+flow endpoints. Neither `hubble_flows_processed_total` nor `hubble_drop_total`
+includes source or destination pod, namespace, workload, or IP labels. Endpoint
+attribution therefore uses Hubble flow events, not metric labels.
 
-The former unfiltered dashboard queries combined two Alloy scrape jobs:
-`hubble` and `prometheus.scrape.annotated_services`, which both scrape the
-Hubble metrics service. At the observed five-minute rate, the `hubble` job
-reported about 167 forwarded events/s and 11.9 drops/s; the annotation-driven
-job reported a similar rate. This explains the earlier roughly 340/s forwarded
-and 22/s drop totals: they counted both scrape jobs. Forwarded events were
-dominated by TCP Trace events (about 114/s per job) and UDP Trace events (about
-39/s per job); PolicyVerdict events contributed about 14/s per job. Drops were
-UDP policy denials, about 6.3/s with reason `POLICY_DENIED` and 5.5/s with reason
-`POLICY_DENY`, mainly on `k8s-w-1` and `k8s-w-2`. The metrics do not identify
-the endpoint pods or destinations, so they cannot establish whether these are
-retries or name the affected workloads. No policy was widened.
+After the deduplicated scrape was stable, a three-minute
+`hubble observe --verdict DROPPED` sample returned 826 flows, all on workers:
+502 on `k8s-w-1` and 324 on `k8s-w-2`. The largest source groups were
+`seerr/seerr-5bc6f4466d-t5g8x` (130 flows),
+`lubelogger/lubelogger-58d8f56f67-lgtjm` (86),
+`maloja/maloja-7b87fc7cf9-vx9m8` (76),
+`kiwix/kiwix-d9d58c8d4-vtcnx` (74), and
+`homepage/homepage-84996664c-gpj89` (58). These were UDP policy drops.
 
-The dashboard now filters on `job="hubble"` to avoid doubling its displayed
-rates and attributes its panels by the labels that exist: node, protocol, flow
-type, verdict, and drop reason. The namespace panels were removed because the
-available namespace label describes the scrape target, not flow endpoints.
-Source/destination pod panels remain unavailable until Hubble is configured to
-emit endpoint context labels. The dashboard's top drops table consequently
-breaks down by node, protocol, and reason rather than claiming endpoint
-attribution.
+The largest destination groups were `192.168.1.52:41641` (`POLICY_DENY`,
+276 flows), `204.244.250.128` (`POLICY_DENIED`, 278 flows across UDP ports
+9930, 56858, 15479, 14692, 58910, and 55502), host identities
+`10.245.2.92:5351` (96) and `10.245.1.169:5351` (64), and
+`239.255.255.250:1900` (`POLICY_DENIED`, 56). Hubble identified the first
+two IP destinations as `cidr:192.168.1.0/24`/`reserved:world` and
+`reserved:world`; the 10.245 addresses were `reserved:host`. This is an
+observation only. No policy was changed or widened.
+
+The dashboard panels select the annotation-driven job and use `instance`,
+protocol, flow type, verdict, and drop reason. The namespace panels remain
+removed because the available namespace label describes the scrape target,
+not a flow endpoint. Source/destination pod panels remain unavailable in
+metrics until Hubble emits endpoint context labels. The drop alert remains
+deferred pending several days of baseline observation; no alert rule was
+added.
+
+The Talos apply playbook's bare `homelab` context expectation was stale during
+the earlier run, which used `admin@homelab` after verifying the server and
+node identities. The current workstation kubeconfig has only the `homelab`
+context and resolves to the same expected control-plane endpoint and nodes.
+Update the playbook's context check in a separate reviewed change; this run
+used the default kubeconfig and made no playbook edit.
