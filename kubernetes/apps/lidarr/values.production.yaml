@@ -14,8 +14,8 @@
 # LAN IP and OPNsense → Mullvad policy route. The saved client endpoint
 # remains qbittorrent.tail.davegallant.ca:443. This app uses its own
 # userspace Tailscale sidecar's HTTP proxy for tailnet HTTP(S); cluster
-# service traffic bypasses that proxy. The policy below retains the
-# narrow LAN exception described below.
+# service traffic bypasses that proxy. The policy allows the sidecar's
+# outbound connection without a direct LAN exception.
 #
 # The media tree stays on TrueNAS (static NFS claim lidarr-media,
 # see storage.yaml), mounted at /mnt — the identical path the LXC
@@ -31,7 +31,6 @@
 # credentials live in its config.xml, which arrives with the copied
 # /config.
 #
-# qBittorrent's static LAN IP is 192.168.1.152/32.
 controllers:
   lidarr:
     type: deployment
@@ -302,7 +301,7 @@ rawResources:
         name: default-deny
         namespace: lidarr
       spec:
-        description: Default deny with metadata-fetch egress, cluster DNS, Prowlarr access, the Tailscale HTTP proxy, and one narrow qBittorrent LAN exception.
+        description: Default deny with metadata-fetch egress, cluster DNS, Prowlarr access, and the Tailscale HTTP proxy.
         endpointSelector: {}
         ingress:
           - fromEndpoints:
@@ -338,25 +337,13 @@ rawResources:
               - ports:
                   - port: "9696"
                     protocol: TCP
-          # Narrow LAN exception for the qBittorrent API. The saved
-          # download-client endpoint uses the Tailscale sidecar proxy.
-          - toCIDRSet:
-              - cidr: 192.168.1.152/32
-            toPorts:
-              - ports:
-                  - port: "8080"
-                    protocol: TCP
           - toEntities:
               - cluster
           - toEntities:
               - world
         egressDeny:
-          # The world allow above must never become a LAN backdoor;
-          # deny the private ranges right back out, excepting only
-          # the qBittorrent host (same substitution as above).
+          # The world allow above must never become a LAN backdoor.
           - toCIDRSet:
               - cidr: 192.168.1.0/24
-                except:
-                  - 192.168.1.152/32
               - cidr: 10.96.0.0/12
               - cidr: 10.245.0.0/16
