@@ -24,6 +24,11 @@
   spec matched the Argo-tracked
   `changedetection/changedetection-defaultdenynetworkpolicy`. Keep the
   Argo-tracked policy as the namespace's canonical default-deny policy.
+- **Retired qBittorrent LAN exceptions (2026-10-24).** Sonarr, Radarr, and
+  Lidarr use their Tailscale sidecars' outbound HTTP proxy for
+  `qbittorrent.tail.davegallant.ca:443`; their Cilium policies now deny the
+  LAN without a `192.168.1.152:8080` allow rule or `/32` carve-out. Prowlarr
+  does not connect to qBittorrent.
 - **Hubble access.** Hubble Relay is a ClusterIP in `cilium-system`. For the
   CLI, port-forward `service/hubble-relay` from `4245:80`; `hubble status`
   then reports the connected agents and `hubble observe` shows flows. The UI
