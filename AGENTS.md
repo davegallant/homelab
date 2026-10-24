@@ -235,6 +235,15 @@ For Talos VM, Kubernetes workload, Homepage cutover, or backup work, first read
 infrastructure through `ansible/playbooks/talos-cluster/`; these manual
 playbooks are separate from the all-host playbook and CI flows. Pin Kubernetes
 container images to both a version and SHA digest.
+
+Use kubectl's default kubeconfig and current context when they resolve to the
+intended cluster. Before a cluster mutation, verify the API server and expected
+node names; specify `--context` only when selecting a real alternate context.
+For gated multi-step work, verify each gate against live state. A failed gate
+freezes that step: retain evidence, report the result, and leave completed steps
+in place unless Dave explicitly authorizes a state reversal in the moment, or
+the frozen state is actively harming workloads or data.
+
 The Talos playbooks load Vault variables during syntax checking; set
 `ANSIBLE_VAULT_PASSWORD_FILE` to the protected local password helper when
 running `just lint` locally. Pass `--vault-password-file` to manual playbooks
