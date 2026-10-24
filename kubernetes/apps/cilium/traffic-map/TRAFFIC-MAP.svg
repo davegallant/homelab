@@ -1,0 +1,402 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1714" viewBox="0 0 2000 1714">
+<rect width="100%" height="100%" fill="white"/>
+<text x="40" y="42" font-family="Helvetica,Arial,sans-serif" font-size="24" font-weight="bold">Kubernetes workload flows — 30-minute Hubble sample</text>
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#627d98"/></marker><marker id="arrow-denied" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#c62828"/></marker></defs>
+<path d="M 922.5,194.8 C 845.0,92.8 1155.0,92.8 1077.5,194.8" fill="none" stroke="#627d98" stroke-width="4.0" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1000.0" y="129.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">80/tcp · 1104</text>
+<path d="M 837.1,244.3 Q 907.6,155.3 939.8,230.7" fill="none" stroke="#627d98" stroke-width="2.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="898.0" y="196.4" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">21820/udp · 31 across 1 IPs</text>
+<path d="M 837.1,244.3 Q 907.9,157.3 939.8,230.7" fill="none" stroke="#627d98" stroke-width="3.6" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="898.2" y="197.4" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 364 across 1 IPs</text>
+<path d="M 837.1,244.3 Q 907.6,155.3 939.8,230.7" fill="none" stroke="#627d98" stroke-width="3.6" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="898.0" y="196.4" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">51820/udp · 424 across 1 IPs</text>
+<path d="M 1090.1,216.4 C 1016.1,114.4 1312.1,114.4 1238.1,216.4" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1164.1" y="151.4" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">8080/tcp · 1209</text>
+<path d="M 1008.1,244.4 Q 1000.0,177.4 939.9,244.4" fill="none" stroke="#627d98" stroke-width="2.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="987.0" y="210.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">21820/udp · 30 across 1 IPs</text>
+<path d="M 1008.1,244.4 Q 1000.0,179.4 939.9,244.4" fill="none" stroke="#627d98" stroke-width="3.6" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="987.0" y="211.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 364 across 1 IPs</text>
+<path d="M 1008.1,244.4 Q 1000.0,177.4 939.9,244.4" fill="none" stroke="#627d98" stroke-width="3.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="987.0" y="210.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">51820/udp · 304 across 1 IPs</text>
+<path d="M 1351.7,342.4 Q 1398.5,458.5 1514.6,505.3" fill="none" stroke="#c62828" stroke-width="3.2" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1415.8" y="441.2" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 156</text>
+<path d="M 1351.7,342.4 Q 1397.8,459.2 1514.6,505.3" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1415.5" y="441.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">5351/udp · 624</text>
+<path d="M 1154.2,286.3 Q 1081.6,237.4 939.8,258.1" fill="none" stroke="#627d98" stroke-width="3.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1064.3" y="254.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">15479/udp · 303 across 1 IPs</text>
+<path d="M 1154.2,286.3 Q 1081.0,241.4 939.8,258.1" fill="none" stroke="#627d98" stroke-width="3.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1064.0" y="256.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 156 across 1 IPs</text>
+<path d="M 1154.2,286.3 Q 1081.4,238.4 939.8,258.1" fill="none" stroke="#627d98" stroke-width="4.0" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1064.2" y="255.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">3478/udp · 1119 across 65 IPs</text>
+<path d="M 1154.2,286.3 Q 1089.7,176.0 939.8,258.1" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1068.3" y="224.1" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 606 across 1 IPs</text>
+<path d="M 1154.2,286.3 Q 1089.7,176.0 939.8,258.1" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1068.3" y="224.1" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 1212 across 4 IPs</text>
+<path d="M 1154.2,286.3 Q 1086.7,198.8 939.8,258.1" fill="none" stroke="#627d98" stroke-width="3.9" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1066.8" y="235.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 756 across 4 IPs</text>
+<path d="M 1154.2,286.3 Q 1081.7,236.4 939.8,258.1" fill="none" stroke="#627d98" stroke-width="3.4" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1064.3" y="254.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">9930/udp · 280 across 1 IPs</text>
+<path d="M 1469.2,444.5 Q 1501.1,567.7 1591.8,656.9" fill="none" stroke="#c62828" stroke-width="3.2" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1515.8" y="559.2" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 156</text>
+<path d="M 1469.2,444.5 Q 1500.2,568.2 1591.8,656.9" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1515.3" y="559.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">5351/udp · 624</text>
+<path d="M 1332.5,377.5 Q 1168.0,229.9 939.6,272.2" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1152.0" y="277.4" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">15479/udp · 606 across 1 IPs</text>
+<path d="M 1332.5,377.5 Q 1167.0,233.8 939.6,272.2" fill="none" stroke="#c62828" stroke-width="3.5" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1151.5" y="279.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 312 across 1 IPs</text>
+<path d="M 1332.5,377.5 Q 1167.8,230.9 939.6,272.2" fill="none" stroke="#627d98" stroke-width="4.0" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1151.9" y="277.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">3478/udp · 996 across 65 IPs</text>
+<path d="M 1332.5,377.5 Q 1164.7,242.5 939.6,272.2" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1150.3" y="283.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 606 across 1 IPs</text>
+<path d="M 1332.5,377.5 Q 1164.7,242.5 939.6,272.2" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1150.3" y="283.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 1209 across 4 IPs</text>
+<path d="M 1332.5,377.5 Q 1158.7,264.7 939.6,272.2" fill="none" stroke="#627d98" stroke-width="3.9" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1147.4" y="294.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 740 across 3 IPs</text>
+<path d="M 1332.5,377.5 Q 1150.2,296.6 939.6,272.2" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1143.1" y="310.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">58910/udp · 606 across 1 IPs</text>
+<path d="M 1332.5,377.5 Q 1168.3,228.9 939.6,272.2" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1152.2" y="276.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">9930/udp · 606 across 1 IPs</text>
+<path d="M 1556.7,829.0 C 1479.2,727.0 1789.2,727.0 1711.7,829.0" fill="none" stroke="#627d98" stroke-width="4.3" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1634.2" y="764.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">3000/tcp · 2080</text>
+<path d="M 1590.0,823.1 Q 1277.0,496.0 880.0,278.3" fill="none" stroke="#627d98" stroke-width="2.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1256.0" y="523.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">21820/udp · 31 across 1 IPs</text>
+<path d="M 1590.0,823.1 Q 1275.8,497.6 880.0,278.3" fill="none" stroke="#627d98" stroke-width="3.8" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1255.4" y="524.1" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 664 across 18 IPs</text>
+<path d="M 1590.0,823.1 Q 1277.0,496.0 880.0,278.3" fill="none" stroke="#627d98" stroke-width="3.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1256.0" y="523.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">51820/udp · 304 across 1 IPs</text>
+<path d="M 1612.6,984.1 Q 1640.6,857.0 1612.6,729.9" fill="none" stroke="#c62828" stroke-width="3.2" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1626.6" y="857.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 156</text>
+<path d="M 1612.6,984.1 Q 1641.6,857.0 1612.6,729.9" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1627.1" y="857.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">5351/udp · 620</text>
+<path d="M 1577.9,986.5 Q 1287.9,569.1 870.5,279.1" fill="none" stroke="#c62828" stroke-width="3.5" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1256.0" y="601.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 312 across 1 IPs</text>
+<path d="M 1577.9,986.5 Q 1273.0,584.0 870.5,279.1" fill="none" stroke="#c62828" stroke-width="3.5" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1248.6" y="608.4" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">23104/udp · 316 across 1 IPs</text>
+<path d="M 1577.9,986.5 Q 1290.0,567.0 870.5,279.1" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1257.1" y="599.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">3478/udp · 1182 across 67 IPs</text>
+<path d="M 1577.9,986.5 Q 1281.5,575.5 870.5,279.1" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1252.9" y="604.1" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 606 across 1 IPs</text>
+<path d="M 1577.9,986.5 Q 1281.5,575.5 870.5,279.1" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1252.9" y="604.1" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 1212 across 4 IPs</text>
+<path d="M 1577.9,986.5 Q 1265.2,591.8 870.5,279.1" fill="none" stroke="#627d98" stroke-width="3.9" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1244.7" y="612.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 808 across 4 IPs</text>
+<path d="M 1577.9,986.5 Q 1275.8,581.2 870.5,279.1" fill="none" stroke="#c62828" stroke-width="3.6" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1250.0" y="607.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">56858/udp · 394 across 1 IPs</text>
+<path d="M 1577.9,986.5 Q 1291.4,565.6 870.5,279.1" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1257.8" y="599.2" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">9930/udp · 606 across 1 IPs</text>
+<path d="M 1554.1,1137.2 Q 1610.6,937.4 1607.7,729.8" fill="none" stroke="#627d98" stroke-width="3.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1595.8" y="935.4" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 158</text>
+<path d="M 1554.1,1137.2 Q 1611.6,937.5 1607.7,729.8" fill="none" stroke="#627d98" stroke-width="3.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1596.3" y="935.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">5351/udp · 315</text>
+<path d="M 1413.3,1192.0 Q 1045.7,1204.1 703.5,1285.4" fill="none" stroke="#627d98" stroke-width="2.8" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1052.0" y="1221.4" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">9696/tcp · 61</text>
+<path d="M 1522.1,1138.7 Q 1265.5,653.3 863.0,279.8" fill="none" stroke="#627d98" stroke-width="3.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1229.0" y="681.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 158 across 1 IPs</text>
+<path d="M 1522.1,1138.7 Q 1247.3,667.3 863.0,279.8" fill="none" stroke="#627d98" stroke-width="1.8" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1219.9" y="688.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">21002/udp · 5 across 1 IPs</text>
+<path d="M 1522.1,1138.7 Q 1248.9,666.0 863.0,279.8" fill="none" stroke="#627d98" stroke-width="3.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1220.7" y="687.6" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">23104/udp · 157 across 1 IPs</text>
+<path d="M 1522.1,1138.7 Q 1267.9,651.4 863.0,279.8" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1230.2" y="680.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">3478/udp · 1189 across 67 IPs</text>
+<path d="M 1522.1,1138.7 Q 1258.4,658.7 863.0,279.8" fill="none" stroke="#c62828" stroke-width="4.1" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1225.5" y="684.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 1212 across 1 IPs</text>
+<path d="M 1522.1,1138.7 Q 1258.4,658.7 863.0,279.8" fill="none" stroke="#627d98" stroke-width="4.3" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1225.5" y="684.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 1813 across 6 IPs</text>
+<path d="M 1522.1,1138.7 Q 1240.1,672.7 863.0,279.8" fill="none" stroke="#627d98" stroke-width="3.9" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1216.3" y="691.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 739 across 3 IPs</text>
+<path d="M 1522.1,1138.7 Q 1238.6,674.0 863.0,279.8" fill="none" stroke="#627d98" stroke-width="1.8" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1215.5" y="691.6" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">52566/udp · 5 across 1 IPs</text>
+<path d="M 1522.1,1138.7 Q 1246.5,667.9 863.0,279.8" fill="none" stroke="#627d98" stroke-width="1.7" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1219.5" y="688.6" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">56776/udp · 4 across 1 IPs</text>
+<path d="M 1522.1,1138.7 Q 1252.0,663.6 863.0,279.8" fill="none" stroke="#627d98" stroke-width="3.3" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1222.3" y="686.4" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">56858/udp · 196 across 1 IPs</text>
+<path d="M 1522.1,1138.7 Q 1269.5,650.2 863.0,279.8" fill="none" stroke="#627d98" stroke-width="3.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1231.0" y="679.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">9930/udp · 301 across 1 IPs</text>
+<path d="M 1453.3,1268.5 Q 1538.5,927.9 1544.4,576.8" fill="none" stroke="#c62828" stroke-width="3.2" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1518.7" y="925.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 156</text>
+<path d="M 1453.3,1268.5 Q 1539.5,928.0 1544.4,576.8" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1519.1" y="925.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">5351/udp · 624</text>
+<path d="M 1427.7,1269.5 Q 1229.6,724.4 856.6,280.4" fill="none" stroke="#c62828" stroke-width="3.5" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1185.9" y="749.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 312 across 1 IPs</text>
+<path d="M 1427.7,1269.5 Q 1167.3,760.4 856.6,280.4" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1154.7" y="767.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">3478/udp · 1211 across 67 IPs</text>
+<path d="M 1427.7,1269.5 Q 1221.8,728.9 856.6,280.4" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1182.0" y="751.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 614 across 1 IPs</text>
+<path d="M 1427.7,1269.5 Q 1221.8,728.9 856.6,280.4" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1182.0" y="751.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 1160 across 4 IPs</text>
+<path d="M 1427.7,1269.5 Q 1201.9,740.4 856.6,280.4" fill="none" stroke="#627d98" stroke-width="3.9" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1172.0" y="757.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 718 across 3 IPs</text>
+<path d="M 1427.7,1269.5 Q 1214.9,732.9 856.6,280.4" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1178.5" y="753.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">56858/udp · 614 across 1 IPs</text>
+<path d="M 1427.7,1269.5 Q 1169.0,759.4 856.6,280.4" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1155.6" y="767.2" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">9930/udp · 614 across 1 IPs</text>
+<path d="M 1332.2,1369.8 Q 1493.5,1061.4 1597.5,729.3" fill="none" stroke="#c62828" stroke-width="3.2" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1479.2" y="1055.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 158</text>
+<path d="M 1332.2,1369.8 Q 1494.4,1061.8 1597.5,729.3" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1479.6" y="1055.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">5351/udp · 632</text>
+<path d="M 1302.0,1369.8 Q 1162.4,789.7 850.9,280.8" fill="none" stroke="#c62828" stroke-width="3.5" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1119.4" y="807.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 316 across 1 IPs</text>
+<path d="M 1302.0,1369.8 Q 1165.2,788.6 850.9,280.8" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1120.8" y="807.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">3478/udp · 1181 across 66 IPs</text>
+<path d="M 1302.0,1369.8 Q 1154.1,793.2 850.9,280.8" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1115.3" y="809.2" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 606 across 1 IPs</text>
+<path d="M 1302.0,1369.8 Q 1154.1,793.2 850.9,280.8" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1115.3" y="809.2" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 1212 across 4 IPs</text>
+<path d="M 1302.0,1369.8 Q 1132.8,802.0 850.9,280.8" fill="none" stroke="#627d98" stroke-width="3.9" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1104.7" y="813.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 759 across 3 IPs</text>
+<path d="M 1302.0,1369.8 Q 1146.7,796.2 850.9,280.8" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1111.6" y="810.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">56858/udp · 606 across 1 IPs</text>
+<path d="M 1302.0,1369.8 Q 1167.0,787.8 850.9,280.8" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1121.7" y="806.6" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">9930/udp · 606 across 1 IPs</text>
+<path d="M 1092.1,1441.6 C 1020.1,1339.6 1308.1,1339.6 1236.1,1441.6" fill="none" stroke="#627d98" stroke-width="4.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1164.1" y="1376.6" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">8080/tcp · 1444</text>
+<path d="M 1012.2,1489.6 Q 1076.8,1440.7 1107.9,1477.0" fill="none" stroke="#627d98" stroke-width="3.7" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1068.5" y="1462.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">5432/tcp · 541</text>
+<path d="M 1154.3,1432.8 Q 1063.8,839.9 845.7,281.2" fill="none" stroke="#627d98" stroke-width="2.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1031.9" y="848.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">21820/udp · 30 across 1 IPs</text>
+<path d="M 1154.3,1432.8 Q 1061.8,840.4 845.7,281.2" fill="none" stroke="#627d98" stroke-width="3.6" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1030.9" y="848.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 364 across 1 IPs</text>
+<path d="M 1154.3,1432.8 Q 1063.8,839.9 845.7,281.2" fill="none" stroke="#627d98" stroke-width="3.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1031.9" y="848.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">51820/udp · 322 across 1 IPs</text>
+<path d="M 758.4,1441.6 C 680.9,1339.6 990.9,1339.6 913.4,1441.6" fill="none" stroke="#627d98" stroke-width="4.4" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="835.9" y="1376.6" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">4533/tcp · 2647</text>
+<path d="M 835.9,1432.6 Q 904.9,857.0 835.9,281.4" fill="none" stroke="#627d98" stroke-width="2.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="870.4" y="857.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">21820/udp · 30 across 1 IPs</text>
+<path d="M 835.9,1432.6 Q 902.9,857.0 835.9,281.4" fill="none" stroke="#627d98" stroke-width="3.6" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="869.4" y="857.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 364 across 1 IPs</text>
+<path d="M 835.9,1432.6 Q 904.9,857.0 835.9,281.4" fill="none" stroke="#627d98" stroke-width="3.6" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="870.4" y="857.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">51820/udp · 393 across 1 IPs</text>
+<path d="M 605.4,1378.2 C 527.9,1276.2 837.9,1276.2 760.4,1378.2" fill="none" stroke="#627d98" stroke-width="4.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="682.9" y="1313.2" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">8000/tcp · 2905</text>
+<path d="M 687.8,1369.3 Q 835.7,835.4 831.0,281.4" fill="none" stroke="#627d98" stroke-width="2.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="797.6" y="830.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">21820/udp · 30 across 1 IPs</text>
+<path d="M 687.8,1369.3 Q 833.7,835.1 831.0,281.4" fill="none" stroke="#627d98" stroke-width="3.6" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="796.6" y="830.2" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 364 across 1 IPs</text>
+<path d="M 687.8,1369.3 Q 835.7,835.4 831.0,281.4" fill="none" stroke="#627d98" stroke-width="3.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="797.6" y="830.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">51820/udp · 304 across 1 IPs</text>
+<path d="M 608.7,1272.4 Q 1099.1,1028.6 1555.4,725.9" fill="none" stroke="#627d98" stroke-width="3.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1090.6" y="1013.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 156</text>
+<path d="M 608.7,1272.4 Q 1099.6,1029.5 1555.4,725.9" fill="none" stroke="#627d98" stroke-width="3.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1090.8" y="1014.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">5351/udp · 312</text>
+<path d="M 561.4,1268.7 Q 790.3,800.8 826.0,281.2" fill="none" stroke="#627d98" stroke-width="3.4" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="742.0" y="787.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">15479/udp · 245 across 1 IPs</text>
+<path d="M 561.4,1268.7 Q 786.4,799.8 826.0,281.2" fill="none" stroke="#627d98" stroke-width="3.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="740.1" y="787.4" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 156 across 1 IPs</text>
+<path d="M 561.4,1268.7 Q 789.3,800.6 826.0,281.2" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="741.5" y="787.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">3478/udp · 1143 across 67 IPs</text>
+<path d="M 561.4,1268.7 Q 777.8,797.4 826.0,281.2" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="735.7" y="786.2" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 604 across 1 IPs</text>
+<path d="M 561.4,1268.7 Q 777.8,797.4 826.0,281.2" fill="none" stroke="#627d98" stroke-width="4.0" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="735.7" y="786.2" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 980 across 4 IPs</text>
+<path d="M 561.4,1268.7 Q 755.5,791.5 826.0,281.2" fill="none" stroke="#627d98" stroke-width="3.9" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="724.6" y="783.2" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 871 across 6 IPs</text>
+<path d="M 561.4,1268.7 Q 723.7,783.0 826.0,281.2" fill="none" stroke="#627d98" stroke-width="3.4" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="708.7" y="778.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">58910/udp · 245 across 1 IPs</text>
+<path d="M 561.4,1268.7 Q 791.3,801.1 826.0,281.2" fill="none" stroke="#627d98" stroke-width="3.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="742.5" y="788.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">9930/udp · 303 across 1 IPs</text>
+<path d="M 528.2,1142.0 Q 1043.2,961.2 1535.2,724.9" fill="none" stroke="#627d98" stroke-width="3.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1037.4" y="947.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 158</text>
+<path d="M 528.2,1142.0 Q 1043.5,962.1 1535.2,724.9" fill="none" stroke="#627d98" stroke-width="3.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1037.6" y="947.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">5351/udp · 314</text>
+<path d="M 477.9,1209.4 Q 472.6,1261.7 524.4,1270.1" fill="none" stroke="#627d98" stroke-width="2.3" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="486.9" y="1250.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">9696/tcp · 20</text>
+<path d="M 465.9,1137.7 Q 728.3,744.5 820.8,280.8" fill="none" stroke="#627d98" stroke-width="3.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="685.8" y="726.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 158 across 1 IPs</text>
+<path d="M 465.9,1137.7 Q 707.1,735.7 820.8,280.8" fill="none" stroke="#627d98" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="675.2" y="722.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">21002/udp · 2 across 1 IPs</text>
+<path d="M 465.9,1137.7 Q 708.9,736.4 820.8,280.8" fill="none" stroke="#627d98" stroke-width="3.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="676.1" y="722.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">23104/udp · 139 across 1 IPs</text>
+<path d="M 465.9,1137.7 Q 731.1,745.6 820.8,280.8" fill="none" stroke="#627d98" stroke-width="4.0" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="687.2" y="727.4" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">3478/udp · 963 across 66 IPs</text>
+<path d="M 465.9,1137.7 Q 720.0,741.0 820.8,280.8" fill="none" stroke="#c62828" stroke-width="4.1" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="681.7" y="725.1" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 1210 across 1 IPs</text>
+<path d="M 465.9,1137.7 Q 720.0,741.0 820.8,280.8" fill="none" stroke="#627d98" stroke-width="4.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="681.7" y="725.1" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 1666 across 6 IPs</text>
+<path d="M 465.9,1137.7 Q 698.8,732.2 820.8,280.8" fill="none" stroke="#627d98" stroke-width="3.8" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="671.0" y="720.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 669 across 3 IPs</text>
+<path d="M 465.9,1137.7 Q 696.9,731.5 820.8,280.8" fill="none" stroke="#627d98" stroke-width="1.7" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="670.1" y="720.4" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">52566/udp · 4 across 1 IPs</text>
+<path d="M 465.9,1137.7 Q 706.1,735.3 820.8,280.8" fill="none" stroke="#627d98" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="674.7" y="722.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">56776/udp · 2 across 1 IPs</text>
+<path d="M 465.9,1137.7 Q 712.6,738.0 820.8,280.8" fill="none" stroke="#627d98" stroke-width="3.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="678.0" y="723.6" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">56858/udp · 171 across 1 IPs</text>
+<path d="M 465.9,1137.7 Q 732.9,746.4 820.8,280.8" fill="none" stroke="#627d98" stroke-width="3.4" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="688.1" y="727.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">9930/udp · 264 across 1 IPs</text>
+<path d="M 503.4,990.1 Q 1026.4,955.5 1500.8,722.8" fill="none" stroke="#c62828" stroke-width="3.2" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1014.3" y="906.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 160</text>
+<path d="M 503.4,990.1 Q 1007.2,884.0 1500.8,722.8" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1004.7" y="870.2" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">5351/udp · 640</text>
+<path d="M 408.2,985.2 Q 688.7,677.3 815.1,280.4" fill="none" stroke="#627d98" stroke-width="3.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="650.2" y="655.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 160 across 1 IPs</text>
+<path d="M 408.2,985.2 Q 670.5,666.8 815.1,280.4" fill="none" stroke="#627d98" stroke-width="3.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="641.1" y="649.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">23104/udp · 128 across 1 IPs</text>
+<path d="M 408.2,985.2 Q 691.3,678.8 815.1,280.4" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="651.5" y="655.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">3478/udp · 1135 across 64 IPs</text>
+<path d="M 408.2,985.2 Q 680.9,672.8 815.1,280.4" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="646.3" y="652.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 606 across 1 IPs</text>
+<path d="M 408.2,985.2 Q 680.9,672.8 815.1,280.4" fill="none" stroke="#627d98" stroke-width="4.0" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="646.3" y="652.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 1071 across 4 IPs</text>
+<path d="M 408.2,985.2 Q 661.0,661.3 815.1,280.4" fill="none" stroke="#627d98" stroke-width="3.8" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="636.3" y="647.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 680 across 3 IPs</text>
+<path d="M 408.2,985.2 Q 674.0,668.8 815.1,280.4" fill="none" stroke="#627d98" stroke-width="3.3" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="642.8" y="650.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">56858/udp · 182 across 1 IPs</text>
+<path d="M 408.2,985.2 Q 693.1,679.8 815.1,280.4" fill="none" stroke="#627d98" stroke-width="3.4" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="652.3" y="656.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">9930/udp · 268 across 1 IPs</text>
+<path d="M 295.8,829.0 C 225.8,727.0 505.8,727.0 435.8,829.0" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="365.8" y="764.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">8080/tcp · 1181</text>
+<path d="M 392.9,821.7 Q 652.4,590.3 808.7,279.8" fill="none" stroke="#627d98" stroke-width="2.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="626.6" y="570.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">21820/udp · 30 across 1 IPs</text>
+<path d="M 392.9,821.7 Q 650.8,589.1 808.7,279.8" fill="none" stroke="#627d98" stroke-width="3.6" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="625.8" y="569.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 364 across 1 IPs</text>
+<path d="M 392.9,821.7 Q 652.4,590.3 808.7,279.8" fill="none" stroke="#627d98" stroke-width="3.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="626.6" y="570.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">51820/udp · 306 across 1 IPs</text>
+<path d="M 519.4,675.5 Q 972.2,646.1 1433.3,555.2" fill="none" stroke="#c62828" stroke-width="3.2" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="974.3" y="630.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 158</text>
+<path d="M 519.4,675.5 Q 972.4,647.1 1433.3,555.2" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="974.3" y="631.2" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">5351/udp · 632</text>
+<path d="M 422.1,658.2 Q 676.0,533.0 801.2,279.1" fill="none" stroke="#c62828" stroke-width="3.5" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="643.8" y="500.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 316 across 1 IPs</text>
+<path d="M 422.1,658.2 Q 661.1,518.1 801.2,279.1" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="636.4" y="493.4" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">23104/udp · 584 across 1 IPs</text>
+<path d="M 422.1,658.2 Q 678.1,535.1 801.2,279.1" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="644.9" y="501.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">3478/udp · 1232 across 66 IPs</text>
+<path d="M 422.1,658.2 Q 669.6,526.6 801.2,279.1" fill="none" stroke="#c62828" stroke-width="4.0" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="640.6" y="497.6" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 1110 across 1 IPs</text>
+<path d="M 422.1,658.2 Q 669.6,526.6 801.2,279.1" fill="none" stroke="#627d98" stroke-width="4.0" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="640.6" y="497.6" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 972 across 4 IPs</text>
+<path d="M 422.1,658.2 Q 653.4,510.4 801.2,279.1" fill="none" stroke="#627d98" stroke-width="4.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="632.5" y="489.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 1508 across 10 IPs</text>
+<path d="M 422.1,658.2 Q 664.0,521.0 801.2,279.1" fill="none" stroke="#c62828" stroke-width="3.9" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="637.8" y="494.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">56858/udp · 716 across 1 IPs</text>
+<path d="M 422.1,658.2 Q 679.5,536.5 801.2,279.1" fill="none" stroke="#c62828" stroke-width="4.0" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="645.6" y="502.6" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">9930/udp · 1110 across 1 IPs</text>
+<path d="M 586.7,557.8 Q 1027.8,646.1 1500.6,678.1" fill="none" stroke="#627d98" stroke-width="3.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1035.7" y="632.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 158</text>
+<path d="M 586.7,557.8 Q 1027.6,647.1 1500.6,678.1" fill="none" stroke="#627d98" stroke-width="3.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="1035.7" y="632.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">5351/udp · 316</text>
+<path d="M 455.6,576.8 Q 465.5,927.4 546.7,1268.5" fill="none" stroke="#627d98" stroke-width="3.0" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="483.3" y="925.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">9696/tcp · 100</text>
+<path d="M 494.9,506.0 Q 699.3,465.2 791.7,278.3" fill="none" stroke="#627d98" stroke-width="3.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="671.3" y="428.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 158 across 1 IPs</text>
+<path d="M 494.9,506.0 Q 685.3,446.9 791.7,278.3" fill="none" stroke="#627d98" stroke-width="1.7" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="664.3" y="419.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">21002/udp · 4 across 1 IPs</text>
+<path d="M 494.9,506.0 Q 686.5,448.5 791.7,278.3" fill="none" stroke="#627d98" stroke-width="3.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="664.9" y="420.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">23104/udp · 154 across 1 IPs</text>
+<path d="M 494.9,506.0 Q 701.2,467.5 791.7,278.3" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="672.2" y="429.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">3478/udp · 1179 across 65 IPs</text>
+<path d="M 494.9,506.0 Q 693.9,458.0 791.7,278.3" fill="none" stroke="#c62828" stroke-width="4.1" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="668.6" y="425.1" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 1210 across 1 IPs</text>
+<path d="M 494.9,506.0 Q 693.9,458.0 791.7,278.3" fill="none" stroke="#627d98" stroke-width="4.3" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="668.6" y="425.1" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 1804 across 6 IPs</text>
+<path d="M 494.9,506.0 Q 679.8,439.8 791.7,278.3" fill="none" stroke="#627d98" stroke-width="3.9" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="661.6" y="416.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 746 across 3 IPs</text>
+<path d="M 494.9,506.0 Q 678.6,438.2 791.7,278.3" fill="none" stroke="#627d98" stroke-width="1.8" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="661.0" y="415.2" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">52566/udp · 6 across 1 IPs</text>
+<path d="M 494.9,506.0 Q 684.7,446.1 791.7,278.3" fill="none" stroke="#627d98" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="664.0" y="419.1" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">56776/udp · 2 across 1 IPs</text>
+<path d="M 494.9,506.0 Q 689.0,451.7 791.7,278.3" fill="none" stroke="#627d98" stroke-width="3.3" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="666.2" y="421.9" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">56858/udp · 197 across 1 IPs</text>
+<path d="M 494.9,506.0 Q 702.4,469.1 791.7,278.3" fill="none" stroke="#627d98" stroke-width="3.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="672.8" y="430.6" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">9930/udp · 298 across 1 IPs</text>
+<path d="M 667.5,439.6 Q 1068.6,600.9 1500.8,662.9" fill="none" stroke="#c62828" stroke-width="3.2" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1076.4" y="576.1" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 158</text>
+<path d="M 667.5,439.6 Q 1068.4,601.9 1500.8,662.9" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="1076.3" y="576.6" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">5351/udp · 632</text>
+<path d="M 608.7,375.6 Q 713.2,360.3 778.7,277.4" fill="none" stroke="#627d98" stroke-width="3.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="703.5" y="343.4" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">1900/udp · 158 across 1 IPs</text>
+<path d="M 608.7,375.6 Q 740.2,407.0 778.7,277.4" fill="none" stroke="#627d98" stroke-width="3.2" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="717.0" y="366.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">23104/udp · 159 across 1 IPs</text>
+<path d="M 608.7,375.6 Q 714.7,362.9 778.7,277.4" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="704.2" y="344.7" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">3478/udp · 1168 across 66 IPs</text>
+<path d="M 608.7,375.6 Q 708.7,352.5 778.7,277.4" fill="none" stroke="#c62828" stroke-width="3.8" stroke-dasharray="8,6" marker-end="url(#arrow-denied)" opacity="0.78"/>
+<text x="701.2" y="339.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#c62828" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 618 across 1 IPs</text>
+<path d="M 608.7,375.6 Q 708.7,352.5 778.7,277.4" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="701.2" y="339.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">41641/udp · 1212 across 4 IPs</text>
+<path d="M 608.7,375.6 Q 734.7,397.5 778.7,277.4" fill="none" stroke="#627d98" stroke-width="3.9" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="714.2" y="362.0" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 795 across 4 IPs</text>
+<path d="M 608.7,375.6 Q 742.2,410.5 778.7,277.4" fill="none" stroke="#627d98" stroke-width="3.3" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="718.0" y="368.5" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">56858/udp · 197 across 1 IPs</text>
+<path d="M 608.7,375.6 Q 715.7,364.6 778.7,277.4" fill="none" stroke="#627d98" stroke-width="3.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="704.7" y="345.6" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">9930/udp · 303 across 1 IPs</text>
+<path d="M 620.9,279.8 C 558.9,177.8 806.9,177.8 744.9,279.8" fill="none" stroke="#627d98" stroke-width="4.1" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="682.9" y="214.8" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">3000/tcp · 1251</text>
+<path d="M 760.3,275.7 Q 782.7,332.5 758.5,276.5" fill="none" stroke="#627d98" stroke-width="2.5" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="771.1" y="304.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">21820/udp · 30 across 1 IPs</text>
+<path d="M 760.3,275.7 Q 782.0,330.6 758.5,276.5" fill="none" stroke="#627d98" stroke-width="3.6" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="770.7" y="303.4" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">443/tcp · 364 across 1 IPs</text>
+<path d="M 760.3,275.7 Q 782.7,332.5 758.5,276.5" fill="none" stroke="#627d98" stroke-width="3.6" marker-end="url(#arrow)" opacity="0.78"/>
+<text x="771.1" y="304.3" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#627d98" text-anchor="middle" paint-order="stroke" stroke="white" stroke-width="3">51820/udp · 426 across 1 IPs</text>
+<rect x="845.0" y="193.8" width="310" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="1000.0" y="219.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">audiobookshelf/audiobookshelf-7ffbf68d98-h5k6h</text>
+<text x="1000.0" y="236.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-1]</text>
+<rect x="1016.1" y="215.4" width="296" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="1164.1" y="241.4" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">bentopdf/bentopdf-58c84696cc-bpj8t</text>
+<text x="1164.1" y="258.4" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-2]</text>
+<rect x="1162.1" y="278.8" width="310" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="1317.1" y="304.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">changedetection/changedetection-bb8d64ff7-zt2cv</text>
+<text x="1317.1" y="321.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-2]</text>
+<rect x="1304.4" y="379.6" width="288" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="1448.4" y="405.6" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">homepage/homepage-84996664c-gpj89</text>
+<text x="1448.4" y="422.6" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-1]</text>
+<rect x="1441.2" y="510.9" width="216" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="1549.2" y="536.9" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">host/host (10.245.1.169)</text>
+<text x="1549.2" y="553.9" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-2]</text>
+<rect x="1508.6" y="663.9" width="208" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="1612.6" y="689.9" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">host/host (10.245.2.92)</text>
+<text x="1612.6" y="706.9" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-1]</text>
+<rect x="1479.2" y="828.0" width="310" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="1634.2" y="854.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">invidious/invidious-79f79999cb-m7h45</text>
+<text x="1634.2" y="871.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-1]</text>
+<rect x="1492.6" y="992.1" width="240" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="1612.6" y="1018.1" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">kiwix/kiwix-d9d58c8d4-vtcnx</text>
+<text x="1612.6" y="1035.1" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-1]</text>
+<rect x="1421.2" y="1145.1" width="256" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="1549.2" y="1171.1" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">lidarr/lidarr-7b45c964b-8xjfq</text>
+<text x="1549.2" y="1188.1" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-1]</text>
+<rect x="1293.4" y="1276.4" width="310" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="1448.4" y="1302.4" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">lubelogger/lubelogger-58d8f56f67-lgtjm</text>
+<text x="1448.4" y="1319.4" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-2]</text>
+<rect x="1185.1" y="1377.2" width="264" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="1317.1" y="1403.2" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">maloja/maloja-7b87fc7cf9-vx9m8</text>
+<text x="1317.1" y="1420.2" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-1]</text>
+<rect x="1020.1" y="1440.6" width="288" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="1164.1" y="1466.6" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">miniflux/miniflux-577f9dd8d-r9pjx</text>
+<text x="1164.1" y="1483.6" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-1]</text>
+<rect x="900.0" y="1462.2" width="200" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="1000.0" y="1488.2" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">miniflux/miniflux-db-0</text>
+<text x="1000.0" y="1505.2" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-1]</text>
+<rect x="680.9" y="1440.6" width="310" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="835.9" y="1466.6" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">navidrome/navidrome-7784c894b6-6x92z</text>
+<text x="835.9" y="1483.6" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-2]</text>
+<rect x="527.9" y="1377.2" width="310" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="682.9" y="1403.2" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">paperless-ngx/paperless-ngx-6c49ccfb5b-z96fh</text>
+<text x="682.9" y="1420.2" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-2]</text>
+<rect x="407.6" y="1276.4" width="288" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="551.6" y="1302.4" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">prowlarr/prowlarr-75d9d4b55-vk4m7</text>
+<text x="551.6" y="1319.4" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-1]</text>
+<rect x="322.8" y="1145.1" width="256" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="450.8" y="1171.1" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">radarr/radarr-55595558c-vqdmf</text>
+<text x="450.8" y="1188.1" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-1]</text>
+<rect x="271.4" y="992.1" width="232" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="387.4" y="1018.1" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">romm/romm-5d775db57f-6lsxd</text>
+<text x="387.4" y="1035.1" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-1]</text>
+<rect x="225.8" y="828.0" width="280" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="365.8" y="854.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">searxng/searxng-59cdbdd555-tn2tl</text>
+<text x="365.8" y="871.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-2]</text>
+<rect x="263.4" y="663.9" width="248" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="387.4" y="689.9" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">seerr/seerr-5bc6f4466d-t5g8x</text>
+<text x="387.4" y="706.9" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-2]</text>
+<rect x="322.8" y="510.9" width="256" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="450.8" y="536.9" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">sonarr/sonarr-cc778df89-44fjp</text>
+<text x="450.8" y="553.9" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-1]</text>
+<rect x="396.6" y="379.6" width="310" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="551.6" y="405.6" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">speedtest-tracker/speedtest-tracker-5869d7b77-p5vpb</text>
+<text x="551.6" y="422.6" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-1]</text>
+<rect x="558.9" y="278.8" width="248" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="682.9" y="304.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">umami/umami-865c4f696d-gdngv</text>
+<text x="682.9" y="321.8" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[k8s-w-1]</text>
+<rect x="739.9" y="215.4" width="192" height="58" rx="9" fill="#eef4fb" stroke="#476582"/>
+<text x="835.9" y="241.4" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10">External destinations</text>
+<text x="835.9" y="258.4" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" fill="#43596e">[external IPs]</text>
+<g transform="translate(42,78)" font-family="Helvetica,Arial,sans-serif" font-size="12"><line x1="0" y1="0" x2="38" y2="0" stroke="#627d98" stroke-width="2"/><text x="48" y="4">observed / forwarded</text><line x1="210" y1="0" x2="248" y2="0" stroke="#c62828" stroke-width="2" stroke-dasharray="8,6"/><text x="258" y="4">denied / error</text></g>
+</svg>
