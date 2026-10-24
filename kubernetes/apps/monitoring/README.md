@@ -7,18 +7,6 @@ for updates, external Secrets, and recovery. Use the tracked production values
 and Application definition for desired state. Do not run Helm mutations against
 resources owned by Argo CD.
 
-The procedures below retain bootstrap and migration context. Check ownership
-and current production configuration before using a historical install,
-cutover, adoption, or rollback command.
-
-## Bootstrap and migration reference
-
-Why this exists: Beszel's model — an agent on each host watching that
-host and its Docker containers — fades as LXCs retire. Talos cannot run
-the agent (immutable OS) and the containers are pods now. This is the
-replacement for the cluster side. Beszel keeps covering the Proxmox
-hosts, TrueNAS, and remaining LXCs until its coverage retires itself.
-
 ## Shape
 
 ```
@@ -52,10 +40,8 @@ kubelet /metrics/cadvisor --/        |
   only from the three Talos node IPs, exactly the Loki posture.
 - **Grafana stays off-cluster on purpose** (decided 2026-10-22): the
   watcher does not live on the watched. If the cluster is down, the
-  dashboards and the alert path are not. Grafana's own migration stays
-  last in the queue ("Loki last"), and nothing here depends on it.
-- **metrics-server** rides along because every migration's resource
-  sizing was guesswork without it: `kubectl top node/pod` now works.
+  dashboards and the alert path are not. Grafana remains off-cluster so monitoring and alerting stay available during cluster outages.
+- **metrics-server** rides along to inspect resource usage with: `kubectl top node/pod` now works.
   Its values carry the standard Talos flag `--kubelet-insecure-tls`.
 
 ## Files
@@ -76,9 +62,7 @@ kubelet /metrics/cadvisor --/        |
 
 1. `apply-alloy.yml` (picks up the metrics pipeline + RBAC).
 2. `monitoring.yml` (default install; cluster-side checks only).
-3. Grafana playbook (adds VictoriaMetrics + datasource + dashboard) —
-   this step changes the Grafana host's firewall, so it is gated on
-   Dave's go in the handoff.
+3. Grafana playbook (adds VictoriaMetrics + datasource + dashboard).
 4. `monitoring.yml -e monitoring_action=verify` (end-to-end: series
    from all three nodes + KSM + cAdvisor present in VictoriaMetrics).
 5. `just lint`.

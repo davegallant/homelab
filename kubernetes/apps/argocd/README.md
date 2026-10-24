@@ -46,8 +46,8 @@ ansible-playbook ansible/playbooks/talos-cluster/bentopdf-secret.yml \
 Both playbooks explicitly target `admin@homelab`; override with
 `-e talos_kube_context=...` if the kubeconfig context has been renamed.
 The Secret playbook streams base64-encoded Vault data to Kubernetes through
-stdin with Ansible logging disabled. It creates `bentopdf-newt-external`;
-the currently Helm-owned `bentopdf-newt` remains available during handoff.
+stdin with Ansible logging disabled. It creates `bentopdf-newt-external`
+for the workload.
 
 Use the tailnet URL printed by the bootstrap playbook. For local diagnostic
 access without the proxy, port-forward the HTTP server:
@@ -67,47 +67,11 @@ kubectl --context admin@homelab -n argocd get secret argocd-initial-admin-secret
 Change the admin password through the UI and remove the initial-password
 Secret after confirming the new password works. Never put credentials in Git.
 
-## Historical first application handoff
-
-This section records the original BentoPDF handoff. Production now follows
-[release management](MANAGEMENT.md); do not repeat the handoff on an owned
-application.
-
-For that initial handoff, commit and push the chart, `../bentopdf/values.production.yaml`, and
-the Argo CD definitions. Pushing requires Dave's explicit request. Verify
-remote `main` contains those files before registering the Application;
-the controller cannot read local unpushed commits.
-
-Then register the committed Application:
-
-```sh
-kubectl --context admin@homelab apply -f kubernetes/apps/argocd/bentopdf.yaml
-kubectl --context admin@homelab -n argocd get application bentopdf
-```
-
-Open BentoPDF's diff in Argo CD. Require a successful comparison against the
-intended remote commit. Expected resources are `Deployment/bentopdf`,
-`Service/bentopdf`, and `Schedule/bentopdf-daily` in `velero`. The Deployment
-keeps its current image pins and selects the external Newt Secret. The
-restricted `homelab` project permits only these resource kinds and the two
-destination namespaces; Secrets remain owned by Ansible.
-
-Approve **Sync** with pruning and force disabled. The existing Deployment
-uses Recreate, so switching the Secret reference briefly restarts BentoPDF
-and its Newt tunnel. Require Synced/Healthy and verify the existing public
-BentoPDF URL. Future updates are Git commits followed by approved syncs.
-Secrets must exist before syncing; rotating the external Secret requires
-restarting the Deployment to refresh its environment variables.
-
 ## Ownership and recovery
 
 Argo CD renders Helm templates; it does not upgrade the existing Helm release.
-Keep the historical release records during the first handoff, but never run
-`helm uninstall bentopdf`: it would delete resources now managed by Argo CD.
-The legacy `bentopdf.yml` playbook refuses mutations once the Deployment has
-an Argo CD tracking annotation; its read-only verify action remains usable.
-After the handoff is accepted, retire the migration playbook and old
-Helm-owned Secret/records in a separate explicit cleanup.
+Do not run Helm mutations against resources managed by Argo CD. Legacy
+lifecycle playbooks refuse mutations once an Argo tracking annotation exists.
 
 For a workload rollback, revert its Git configuration and approve another
 sync. Deleting the Application preserves BentoPDF because it has no deletion

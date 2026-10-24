@@ -1,4 +1,4 @@
-# Cilium CNI migration and operations
+# Cilium CNI and network operations
 
 ## Current cluster state
 
@@ -9,45 +9,10 @@ Talos machine configuration sets `cluster.network.cni.name: none`; Cilium
 reuses Talos's cgroup v2 and bpffs mounts, sets the cgroup root to
 `/sys/fs/cgroup`, and omits `SYS_MODULE`.
 
-All three nodes are Ready. The migration verified every pod-network workload
-as a Cilium endpoint; host-network pods are outside endpoint policy. Cilium
+All three nodes are Ready and every pod-network workload has a Cilium
+endpoint; host-network pods are outside endpoint policy. Cilium
 agents, operator, Relay and UI are healthy. Hubble Relay reports 3/3 connected
-nodes. The rollout and its remaining connectivity-test limitation are recorded
-below.
-
-## Live-migration sequence (completed 2026-10-23)
-
-The run followed the [Cilium live-migration guide](https://docs.cilium.io/en/stable/installation/k8s-install-migration/):
-Cilium 1.20.3 was installed first in secondary mode with cluster-pool IPAM,
-a separate pod CIDR, VXLAN UDP 8473, and policy enforcement disabled. A
-selector-based `CiliumNodeConfig` migrated one node at a time. `k8s-w-2` was
-the canary, followed by `k8s-w-1` and `k8s-cp-1`; each node was health-gated
-before proceeding. Flannel was removed only after all pod-network workloads
-had moved. Migration and steady-state values remain separate in this app.
-
-Talos v1.14's [Cilium guide](https://docs.siderolabs.com/kubernetes-guides/cni/deploying-cilium)
-uses a `KubeFlannelCNIConfig` delete patch to set CNI to `none`. The repo's
-generated control-plane and worker configs carry that change through the
-manual Talos Ansible flow. Kube-proxy replacement was not selected, so
-KubePrism-specific kube-proxy values are not used.
-Talos 1.14's [configuration changes](https://github.com/siderolabs/talos/releases/tag/v1.14.0)
-also support pinning kubelet node IP selection to `192.168.1.0/24` with
-`KubeNodeConfig`; this keeps the reachable LAN address as the Kubernetes
-InternalIP when Cilium creates its `cilium_host` interface. Secondary mode
-set `cni.exclusive: false`, leaving Flannel's CNI file in place until each
-node was explicitly selected through `CiliumNodeConfig`.
-
-## Compatibility exit gate
-
-At the time of the migration, Cilium 1.20.3's tested compatibility matrix
-listed Kubernetes 1.33 through 1.36; this cluster's Kubernetes 1.37.0 pairing
-was outside that tested range. The w-2 canary passed node health, Cilium
-endpoint, sidecar HTTPS, and Hubble checks. The full `cilium connectivity
-test` did not complete reliably: temporary echo pods failed readiness and the
-suite stalled. No failure was isolated to the Kubernetes 1.37 pairing. The
-test namespaces were cleaned up. Direct workload, DNS, Hubble flow, NFS, and
-backup checks were used for rollout gates; the full CLI suite remains
-unverified. Alloy's w-2 readiness shortfall pre-dated migration.
+nodes.
 
 ## Pod Security and resource placement
 
@@ -81,26 +46,6 @@ The current controller and node plugins use host networking, which endpoint
 policies do not isolate. These policies also do not restrict destinations
 inside userspace Tailscale/Newt tunnels. See the policy inventory in
 `kubernetes/README.md`.
-
-## Agent memory investigation and placement
-
-During pre-migration diagnostics, a 256 MiB agent limit caused reclaim
-thrashing; increasing the limit to 512 MiB restored Ready status and Hubble
-health. The steady-state chart uses that 512 MiB limit with a 192 MiB
-request. The w-2 VM was raised to 2.5 GiB through the Talos Ansible VM flow
-after the `pve-g3-2` memory gate passed. The agent and Envoy DaemonSets now
-run on all three nodes; operator, Relay, and UI remain on the control plane.
-
-## Migration and connectivity playbooks
-
-The completed node order was w-2 canary, w-1, then cp-1. The repo retains
-`cilium-migrate-node.yml`, `cilium-remove-flannel.yml`, and
-`cilium-connectivity.yml` for diagnosis and recovery. Connectivity test
-namespaces were cleaned up. The full CLI suite did not finish because its
-temporary echo pods failed readiness; it is not recorded as passing. The
-run found no failure attributable to Kubernetes 1.37. App URL checks,
-endpoint validation, NFS/PVC smoke, backups, and Hubble flow inspection
-passed their gates.
 
 ## Primary CNI, Vault ownership, and Argo CD adoption
 

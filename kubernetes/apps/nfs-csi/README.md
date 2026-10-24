@@ -7,21 +7,6 @@ for updates, external Secrets, and recovery. Use the tracked production values
 and Application definition for desired state. Do not run Helm mutations against
 resources owned by Argo CD.
 
-The procedures below retain bootstrap and migration context. Check ownership
-and current production configuration before using a historical install,
-cutover, adoption, or rollback command.
-
-## Bootstrap and migration reference
-
-Why this exists: several workloads keep their data on the TrueNAS and
-only need it *mounted* — Kiwix's ZIM library first, then the media tier
-(Navidrome's music, RomM's ROMs, Audiobookshelf). The LXC pattern was a
-Proxmox-host NFS mount bind-mounted into the guest. Kubernetes on
-Talos cannot do that: Talos ships no NFS client tooling in the host OS
-for the kubelet to call. The upstream `csi-driver-nfs` carries the
-tooling inside its own node-plugin pods, which is why it is the
-standard answer on Talos.
-
 ## Facts this rests on (verified 2026-10-22)
 
 - TrueNAS is 192.168.1.16 and already exports the relevant paths over

@@ -4,6 +4,9 @@ Talos runs application and platform workloads on three VMs across two Proxmox
 hosts. Argo CD manages application resources from the tracked chart templates
 and production values. Ansible manages infrastructure, external Secrets from
 Vault, and selected ConfigMaps. Application syncs require manual approval.
+All LXC-to-Kubernetes application migrations are complete. App READMEs cover
+current configuration and service-specific operations; this directory holds
+shared cluster operations and recovery guidance.
 
 ## Start here
 
@@ -42,9 +45,8 @@ and context. Read the cluster recovery constraints before restoring any VM.
 
 ## Applications
 
-These directories contain configuration and operating or migration notes.
-Application definitions are under [Argo CD](apps/argocd/); a directory alone
-does not establish live deployment status.
+These directories contain configuration and current operating notes.
+Application definitions are under [Argo CD](apps/argocd/).
 
 | Application | Documentation |
 |---|---|

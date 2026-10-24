@@ -60,10 +60,10 @@ ansible-playbook playbooks/talos-cluster/verify-cutover.yml \
   -i inventory --vault-password-file .vault_pass
 ```
 
-The Homepage playbook defaults to read-only verification. Its historical
-adoption action refuses mutations when Argo CD owns production. Rehearsal
-targets a separate drill namespace; review the restore runbook before using it.
-Use Argo CD for normal updates and rollback. The former Homepage LXC is retired.
+The Homepage playbook defaults to read-only verification. Its adoption action
+refuses mutations when Argo CD owns production. Rehearsal targets a separate
+drill namespace; review the restore runbook before using it. Use Argo CD for
+normal updates and rollback.
 
 Verify widget API calls as well as the dashboard root. Avoid running Node HTTP
 probes inside the Homepage container: its preloader changes outbound requests.
