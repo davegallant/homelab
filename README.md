@@ -243,10 +243,9 @@ configures the repository's pre-commit checks.
 
 ## Compose image index
 
-Generated from tracked `docker-compose.yml` files by
-[generate-containers-table.sh](generate-containers-table.sh). This includes
-retained Compose definitions and excludes Kubernetes images; use each
-application’s production values for Kubernetes pins.
+Generated from tracked Compose files and Kubernetes YAML by
+[generate-containers-table.sh](generate-containers-table.sh). Kubernetes image
+versions are read from image references and `repository`/`tag` values.
 
 <!-- DOCKER_SERVICES_START -->
 | Image | Version |
@@ -255,6 +254,9 @@ application’s production values for Kubernetes pins.
 | data.forgejo.org/forgejo/runner | 13 |
 | docker.io/aceberg/watchyourlan | v2 |
 | docker.io/adguard/adguardhome | v0.107.79 |
+| docker.io/caronc/apprise | 2.0.1 |
+| docker.io/deluan/navidrome | 0.64.2 |
+| docker.io/dgtlmoon/changedetection.io | 0.60.9 |
 | docker.io/docker | 29.9.2-dind |
 | docker.io/fosrl/gerbil | 1.5.2 |
 | docker.io/fosrl/newt | 1.19.0 |
@@ -266,15 +268,48 @@ application’s production values for Kubernetes pins.
 | docker.io/henrygd/beszel | 0.21.1 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.10.1 |
 | docker.io/jellyfin/jellyfin | 12.3 |
+| docker.io/krateng/maloja | 3.2.9 |
+| docker.io/library/busybox | 1.37 |
+| docker.io/library/postgres | 18.6 |
+| docker.io/library/redis | 8 |
+| docker.io/library/redis | 8.10.2-alpine |
+| docker.io/linuxserver/lidarr | 3.1.0 |
+| docker.io/linuxserver/prowlarr | 2.6.5 |
 | docker.io/linuxserver/qbittorrent | 5.3.0 |
+| docker.io/linuxserver/radarr | 6.4.4 |
+| docker.io/linuxserver/sonarr | 4.0.20 |
+| docker.io/linuxserver/speedtest-tracker | 1.15.1 |
+| docker.io/mariadb | 13.0.2 |
+| docker.io/miniflux/miniflux | 2.3.4 |
+| docker.io/paperlessngx/paperless-ngx | 3.3.3 |
+| docker.io/postgres | 18.6 |
+| docker.io/rancher/local-path-provisioner | v0.0.31 |
+| docker.io/rommapp/romm | 5.4.0 |
+| docker.io/searxng/searxng | 2026.10.23-68647d080 |
 | docker.io/traefik | v3.7 |
 | docker.io/twinproduction/gatus | v5.37.0 |
 | docker.io/valkey/valkey | 9 |
+| docker.io/velero/velero | v1.18.2 |
+| docker.io/velero/velero-plugin-for-aws | v1.14.4 |
 | docker.io/victoriametrics/victoria-metrics | v1.154.1 |
+| ghcr.io/advplyr/audiobookshelf | 2.37.1 |
+| ghcr.io/alam00000/bentopdf | 2.8.10 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.6.0.1 |
+| ghcr.io/davegallant/homelab-caddy-cloudflare | 2.11.6-a8737d0 |
 | ghcr.io/dispatcharr/dispatcharr | 0.32.0 |
+| ghcr.io/flaresolverr/flaresolverr | v3.5.2 |
+| ghcr.io/gethomepage/homepage | v2.7.0 |
+| ghcr.io/hargata/lubelogger | v1.4.5 |
 | ghcr.io/immich-app/immich-machine-learning | v3.3.5 |
 | ghcr.io/immich-app/immich-server | v3.3.5 |
 | ghcr.io/immich-app/postgres | 14-vectorchord0.4.3-pgvectors0.2.0 |
+| ghcr.io/kiwix/kiwix-serve | 3.8.2 |
+| ghcr.io/seerr-team/seerr | v3.5.1 |
 | ghcr.io/seriousm4x/upsnap | 5.7.2 |
+| ghcr.io/tailscale/tailscale | v1.104.1 |
+| ghcr.io/tailscale/tailscale | v1.104.2 |
+| ghcr.io/umami-software/umami | 3.4.0 |
+| quay.io/invidious/invidious | 2026.10.23-4a271da |
+| quay.io/invidious/invidious-companion | 2026.10.18-fcb0456 |
+| registry.k8s.io/kubectl | v1.37.0 |
 <!-- DOCKER_SERVICES_END -->
