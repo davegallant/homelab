@@ -221,7 +221,7 @@ groups:
         data:
           - refId: A
             relativeTimeRange:
-              from: 900
+              from: 300
               to: 0
             datasourceUid: victoriametrics
             model:
@@ -229,7 +229,7 @@ groups:
                 type: prometheus
                 uid: victoriametrics
               editorMode: code
-              expr: sum by (namespace, pod, container) (increase(kube_pod_container_status_restarts_total{cluster="homelab"}[15m]))
+              expr: sum by (namespace, pod, container) (increase(kube_pod_container_status_restarts_total{cluster="homelab"}[5m]))
               instant: true
               intervalMs: 1000
               maxDataPoints: 43200
@@ -273,12 +273,12 @@ groups:
               type: threshold
         noDataState: OK
         execErrState: Error
-        for: 0s
+        for: 5m
         annotations:
-          summary: A Kubernetes container restarted at least three times in 15 minutes.
+          summary: A Kubernetes container keeps restarting.
           description: >-
             {{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} restarted more
-            than twice in the last 15 minutes.
+            than twice in five minutes and kept doing so for five minutes.
         labels:
           severity: critical
           service: kubernetes
