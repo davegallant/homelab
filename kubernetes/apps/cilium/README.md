@@ -14,6 +14,11 @@ endpoint; host-network pods are outside endpoint policy. Cilium
 agents, operator, Relay and UI are healthy. Hubble Relay reports 3/3 connected
 nodes.
 
+The post-restart test of the unexpected qBittorrent peer traffic found that a
+new Lidarr pod still forwards UDP to `192.168.1.152:41641`, despite the tracked
+LAN egress deny. This is a real policy hole under the test criteria; no policy
+was changed. See the [traffic map test evidence](traffic-map/TRAFFIC-MAP.md#post-restart-established-flow-test).
+
 ## Pod Security and resource placement
 
 The `cilium-system` namespace has privileged Pod Security enforcement for the

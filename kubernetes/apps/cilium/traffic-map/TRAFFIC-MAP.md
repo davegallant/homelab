@@ -200,3 +200,34 @@ Verdicts: `DROPPED` 25,460, `FORWARDED` 268,792.
 Workload pod-to-pod placement: `same-node` 14,543.
 
 Platform-only events: 76,805; workload-to-platform/host events: 217,447.
+
+## Post-restart established-flow test
+
+On 2026-10-24, only the `lidarr` Deployment was rollout-restarted to determine
+whether its previously observed forwarded traffic to the qBittorrent host was
+limited to a pre-existing conntrack entry. The rollout succeeded. The old pod
+was `lidarr-7b45c964b-8xjfq` (`10.245.2.225`); its replacement was
+`lidarr-999c9d958-mxmlp` (`10.245.2.204`) on `k8s-w-1`. Hubble Relay was healthy
+with 3/3 nodes connected. Observation followed only new events from the
+replacement pod to `192.168.1.152:41641/UDP`.
+
+Four consecutive matching events arrived between
+`2026-10-24T23:35:49.537346156Z` and `2026-10-24T23:36:07.539884330Z`, all
+with the same tuple and verdict. The first event was:
+
+- Verdict: `FORWARDED`
+- Five-tuple: `10.245.2.204:44518` → `192.168.1.152:41641/UDP`
+- Source: `lidarr/lidarr-999c9d958-mxmlp`, egress on `k8s-w-1`
+- Hubble fields: `traffic_direction=EGRESS`, `is_reply=false`,
+  `trace_observation_point=TO_STACK`, `trace_reason=ESTABLISHED`
+- Event UUID: `f56d1b2f-ca31-420d-a315-5ba76a4c65ef`
+
+The new pod IP and source port differ from the pre-restart pod's tuple, so
+these forwarded events cannot be explained solely by the old pod's conntrack
+entry.
+The tracked Lidarr policy still has an `egressDeny` for `192.168.1.0/24`
+([policy values](../lidarr/values.production.yaml)). This test therefore found
+a real policy hole: traffic from the replacement pod is still forwarded. The
+observation stopped as soon as the first streamed batch showed the forwarded
+verdict. Sonarr and Radarr were not restarted; no policy was changed. No
+remediation was attempted, per the test contract.
