@@ -1,119 +1,81 @@
 ---
 name: new-service
-description: "Use when adding a new self-hosted service to this homelab (a new ansible/playbooks/<service> directory). Ensures the service is wired into homepage and gatus in addition to the base Ansible scaffolding, so nothing new goes unmonitored or missing from the dashboard."
+description: "Use when adding a self-hosted service to this homelab, either Docker Compose on a Proxmox LXC or a Kubernetes application managed by Argo CD."
 ---
 
-Add a new service to this homelab so it shows up in **both** homepage
-(the dashboard) and gatus (uptime monitoring), not just its own playbook.
-This repo shares URL variables between the two -- see
-`ansible/playbooks/gatus/config/config.yaml` and
-`ansible/playbooks/homepage/config/services.yaml` for the existing pattern.
+# Add a service
 
-## Steps
+Complete the selected platform scaffolding, Homepage entry, and Gatus
+monitoring together. Paths below are relative to the repository root.
 
-1. **Scaffold the service playbook** following `AGENTS.md` → "Adding a New
-   Service": inventory entry, `main.yml`, `docker-compose.yml`, import line
-   in `ansible/playbooks/main.yml`.
+## Choose the deployment target
 
-   Two conventions are enforced by `just lint` (and by the `Lint` workflow),
-   so getting them wrong fails CI:
-   - In map-form `environment:` blocks, **quote** Jinja values:
-     `APP_SECRET: "{{ service_secret }}"`. Bare `KEY: {{ var }}` is a YAML
-     flow mapping -- the file does not parse, and the rendered value breaks
-     if the secret contains `:` or `#`.
-   - `ansible.builtin.file` with `state: directory` needs an explicit
-     `mode:` (`"0755"`).
+Use the target specified in the request or established in the conversation.
+If it is unclear, ask whether the service should run on LXC or Kubernetes
+before creating platform files.
 
-2. **Add (or reuse) a shared URL secret.**
-   - Decrypt the vault to a scratch file, edit, re-encrypt -- do not try to
-     hand-edit the encrypted file:
-     ```sh
-     cd ansible
-     ansible-vault view group_vars/all/secrets.yaml \
-       --vault-password-file .vault_pass > /tmp/secrets_plain.yaml
-     # edit /tmp/secrets_plain.yaml
-     ansible-vault encrypt /tmp/secrets_plain.yaml \
-       --vault-password-file .vault_pass \
-       --output group_vars/all/secrets.yaml
-     rm /tmp/secrets_plain.yaml
-     ```
-   - Add a bare `<service>_url: "https://<service>.snake-cloud.ts.net"` (or
-     the public `davegallant.ca` hostname, matching whatever the service's
-     own docker-compose/Tailscale config uses). No `homepage_` prefix --
-     this var is shared, not homepage-only.
-   - If the var already exists (reused from another playbook, e.g.
-     `forgejo_root_url`), don't create a duplicate -- reference the
-     existing one from both homepage and gatus instead.
-   - Any service-specific credential the *dashboard* needs (API key,
-     username/password for a homepage widget) stays homepage-only and keeps
-     the `homepage_` prefix, since gatus doesn't need it.
+| Target | Required reference |
+| --- | --- |
+| LXC with Docker Compose | [LXC service](lxc.md) |
+| Kubernetes with Argo CD | [Argo CD application](argocd.md) |
 
-3. **Add the service to homepage**
-   (`ansible/playbooks/homepage/config/services.yaml` and
-   `ansible/playbooks/homepage/docker-compose.yml`):
-   - In `docker-compose.yml`, add
-     `- "HOMEPAGE_VAR_<SERVICE>_URL={{ <service>_url }}"` to the
-     `environment:` list (keep it alphabetically near related entries, not
-     necessarily sorted -- match the existing loose grouping).
-   - In `services.yaml`, add an entry under the appropriate group
-     (`Stats` for services with a homepage widget type, `Quick Links` for a
-     plain link) using
-     `{% raw %}{{HOMEPAGE_VAR_<SERVICE>_URL}}{% endraw %}` for `href`, plus
-     an `icon:` and `description:`.
+Read and follow the selected reference, then complete the shared steps below.
+For a migration, also define data transfer, verification, identity handoff,
+and rollback before changing the running service.
 
-4. **Add the service to gatus**
-   (`ansible/playbooks/gatus/config/config.yaml`):
-   - Append an endpoint entry:
-     ```yaml
-     - name: <service>
-       url: "{{ <service>_url }}"
-       <<: *defaults
-     ```
-   - If the service needs a specific health path (e.g. `/health`,
-     `/admin/login`), append it to the URL var inline --
-     `url: "{{ <service>_url }}health"` -- matching how `prowlarr` and
-     `speedtest-tracker` do it (mind trailing slashes on the var value).
-   - If the service uses a self-signed cert or otherwise fails TLS
-     verification, override the client block on that endpoint only
-     (see the `truenas` entry for the pattern) -- never loosen
-     `endpoint-defaults`.
+## Shared integration
 
-5. **Verify by rendering, not by guessing.** Ansible vars/templates fail
-   silently wrong if a var name is off. Render both templates against the
-   real vault and inspect the output:
-   ```sh
-   cd ansible
-   cat > /tmp/render_check.yml <<'EOF'
-   ---
-   - name: render check
-     hosts: localhost
-     connection: local
-     gather_facts: false
-     vars_files:
-       - group_vars/all/secrets.yaml
-     tasks:
-       - ansible.builtin.template:
-           src: playbooks/gatus/config/config.yaml
-           dest: /tmp/rendered_gatus_config.yaml
-       - ansible.builtin.template:
-           src: playbooks/homepage/docker-compose.yml
-           dest: /tmp/rendered_homepage_compose.yaml
-   EOF
-   ansible-playbook /tmp/render_check.yml --vault-password-file .vault_pass
-   python3 -c "import yaml; yaml.safe_load(open('/tmp/rendered_gatus_config.yaml'))"
-   grep "<SERVICE>" /tmp/rendered_homepage_compose.yaml /tmp/rendered_gatus_config.yaml
-   rm /tmp/render_check.yml /tmp/rendered_gatus_config.yaml /tmp/rendered_homepage_compose.yaml
+1. **Add or reuse the shared URL variable.** Check
+   `ansible/group_vars/all/vars.yaml` and the Vault-backed
+   `ansible/group_vars/all/secrets.yaml` for an existing variable first.
+   Use a shared `<service>_url` name without a `homepage_` prefix, matching
+   the service's actual tailnet or public hostname. Follow the existing
+   variable's storage convention; new non-secret shared values belong in
+   `vars.yaml`. Edit secrets with `just edit-secrets` from `ansible/`;
+   keep plaintext secrets out of command output and unprotected files.
+   Homepage widget credentials retain the `homepage_` prefix.
+
+2. **Add the service to Homepage on Talos.** Read
+   `kubernetes/apps/homepage/README.md` before editing its configuration.
+   The former Homepage LXC is retired.
+   - Add `HOMEPAGE_VAR_<SERVICE>_URL: {{ <service>_url | to_json }}` under
+     the existing environment mapping in
+     `kubernetes/apps/homepage/values.ansible.yaml.j2`.
+   - Add an entry to
+     `kubernetes/apps/homepage/config/services.yaml` under the appropriate
+     existing group, with an icon and description. Use
+     `"{% raw %}{{HOMEPAGE_VAR_<SERVICE>_URL}}{% endraw %}"` for `href`.
+     Follow a comparable entry for widget configuration and credentials.
+   - Homepage configuration and Secrets are rendered by
+     `ansible/playbooks/talos-cluster/gitops-secrets.yml`. Follow the
+     Homepage runbook for applying them and restarting the Deployment to
+     refresh subPath mounts; changes to the tracked checksum require an
+     approved Argo CD sync.
+
+3. **Add Gatus monitoring** in
+   `ansible/playbooks/gatus/config/config.yaml`:
+   ```yaml
+   - name: <service>
+     url: "{{ <service>_url }}"
+     <<: *defaults
    ```
-   Confirm both files show the real resolved URL, not a literal `{{ }}` or
-   an empty string (which means the var name is wrong or undefined).
-   Then run `ansible-playbook playbooks/gatus/main.yml --syntax-check
-   --vault-password-file .vault_pass` and the same for `homepage/main.yml`.
+   Choose a useful health path and account for the URL variable's trailing
+   slash. If TLS verification needs an exception, scope it to this endpoint
+   using the existing TrueNAS entry as a reference.
 
-6. **Lint before opening a PR.** From the repo root, `just lint` runs
-   yamllint, ansible-lint (production profile) and shellcheck. The `Lint`
-   workflow runs the same three on every pull request.
+## Validation and delivery
 
-7. **Sandbox note.** If `ansible-vault`/`ansible-playbook` fail with
-   `DEFAULT_LOCAL_TMP` permission errors, set
-   `ANSIBLE_LOCAL_TEMP`/`ANSIBLE_REMOTE_TEMP` to a writable scratch dir
-   before invoking them.
+Run the selected platform's validation and `just lint` from the repo root,
+using the protected Vault password helper required by `AGENTS.md`.
+Render the Gatus template and Homepage Ansible values bridge with the real
+inventory and Vault variables. Parse the rendered YAML and confirm the new
+URL resolves in both consumers. Homepage's intentional runtime
+`{{HOMEPAGE_VAR_...}}` placeholders must survive in services YAML.
+Keep secret-bearing renders in protected temporary files with cleanup;
+report results without credentials. Syntax-check the Gatus playbook with
+the Vault password file.
+
+Work on local `main`; push only on explicit request. Report changed files,
+validation results, and remaining deployment steps. Apply live changes only
+within the authorized deployment scope. Homepage external resources and its
+Deployment restart are separate from the new service's deployment.
