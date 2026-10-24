@@ -37,7 +37,7 @@
 
     # Provisioning is copied, never templated: dashboard JSON is full of
     # braces that Jinja would eat.
-    - name: Copy Grafana provisioning (datasources and dashboards)
+    - name: Copy Grafana provisioning (datasources, dashboards, and alerting)
       ansible.builtin.copy:
         src: provisioning/
         dest: "~/provisioning/"
