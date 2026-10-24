@@ -25,6 +25,7 @@ controllers:
     type: deployment
     strategy: Recreate
     pod:
+      automountServiceAccountToken: false
       annotations:
         # Opt-in filesystem backup of the file volumes (Redis broker
         # state excluded by omission). The pre-backup hook writes a
@@ -37,6 +38,8 @@ controllers:
           d=sqlite3.connect(\"/usr/src/paperless/data/db-backup.sqlite3\"); s.backup(d)"]'
     containers:
       app:
+        securityContext:
+          allowPrivilegeEscalation: false
         image:
           repository: docker.io/paperlessngx/paperless-ngx
           tag: 3.3.3
@@ -88,6 +91,11 @@ controllers:
             cpu: 4000m
             memory: 2Gi
       redis:
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          allowPrivilegeEscalation: false
         image:
           repository: docker.io/library/redis
           tag: "8"
@@ -125,6 +133,11 @@ controllers:
             cpu: 500m
             memory: 512Mi
       newt:
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          allowPrivilegeEscalation: false
         image:
           repository: docker.io/fosrl/newt
           tag: 1.19.0

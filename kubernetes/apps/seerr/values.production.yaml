@@ -15,6 +15,7 @@ controllers:
     type: deployment
     strategy: Recreate
     pod:
+      automountServiceAccountToken: false
       annotations:
         # Opt-in filesystem backup of the app config volume only;
         # the sidecar volumes are excluded by omission (the Schedule
@@ -26,6 +27,8 @@ controllers:
         fsGroupChangePolicy: OnRootMismatch
     containers:
       app:
+        securityContext:
+          allowPrivilegeEscalation: false
         image:
           repository: ghcr.io/seerr-team/seerr
           tag: v3.5.1
@@ -69,6 +72,11 @@ controllers:
             cpu: 1000m
             memory: 1Gi
       tailscale:
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          allowPrivilegeEscalation: false
         image:
           repository: ghcr.io/tailscale/tailscale
           tag: v1.104.1
@@ -98,6 +106,11 @@ controllers:
             cpu: 200m
             memory: 192Mi
       caddy:
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          allowPrivilegeEscalation: false
         image:
           repository: ghcr.io/davegallant/homelab-caddy-cloudflare
           tag: 2.11.6-a8737d0
