@@ -19,6 +19,13 @@ spec:
               protocol: TCP
             - port: "8081"
               protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: alloy
+      toPorts:
+        - ports:
+            - port: "9965"
+              protocol: TCP
   egress:
     - toEndpoints:
         - matchLabels:
