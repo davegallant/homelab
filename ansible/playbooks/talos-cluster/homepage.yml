@@ -1,6 +1,6 @@
 ---
 # One playbook for Homepage on Talos. The Helm chart
-# (ansible/kubernetes/apps/homepage/chart) owns the in-cluster packaging;
+# (kubernetes/apps/homepage/chart) owns the in-cluster packaging;
 # this playbook owns what Helm cannot: the Vault-rendered values bridge,
 # the icons ConfigMap (too large for Helm values), the one-use Headscale
 # preauth-key lifecycle, adoption of the pre-Helm objects without
@@ -24,10 +24,10 @@
   vars_files:
     - ../../group_vars/all/vars.yaml
     - ../../group_vars/all/secrets.yaml
-    - ../../kubernetes/apps/homepage/vars.yaml
+    - ../../../kubernetes/apps/homepage/vars.yaml
   vars:
     homepage_action: verify
-    homepage_chart_dir: "{{ playbook_dir }}/../../kubernetes/apps/homepage/chart"
+    homepage_chart_dir: "{{ playbook_dir }}/../../../kubernetes/apps/homepage/chart"
     homepage_drill_namespace: homepage-drill
     homepage_tailscale_authkey: ""
     homepage_restart_timestamp: ""
@@ -175,13 +175,13 @@
         - name: Read custom icons as binary data
           ansible.builtin.slurp:
             src: "{{ item }}"
-          loop: "{{ query('ansible.builtin.fileglob', playbook_dir + '/../../kubernetes/apps/homepage/config/icons/*') | sort }}"
+          loop: "{{ query('ansible.builtin.fileglob', playbook_dir + '/../../../kubernetes/apps/homepage/config/icons/*') | sort }}"
           register: homepage_icon_files
           no_log: true
 
         - name: Render the icons ConfigMap
           ansible.builtin.template:
-            src: "{{ playbook_dir }}/../../kubernetes/apps/homepage/icons-configmap.yaml.j2"
+            src: "{{ playbook_dir }}/../../../kubernetes/apps/homepage/icons-configmap.yaml.j2"
             dest: "{{ homepage_render_dir.path }}/icons-configmap.yaml"
             mode: "0600"
           no_log: true
@@ -195,7 +195,7 @@
 
         - name: Render the Ansible-to-Helm values bridge
           ansible.builtin.template:
-            src: "{{ playbook_dir }}/../../kubernetes/apps/homepage/values.ansible.yaml.j2"
+            src: "{{ playbook_dir }}/../../../kubernetes/apps/homepage/values.ansible.yaml.j2"
             dest: "{{ homepage_render_dir.path }}/values.ansible.yaml"
             mode: "0600"
           no_log: true
@@ -292,7 +292,7 @@
 
             - name: Render the one-use Tailscale auth Secret
               ansible.builtin.template:
-                src: "{{ playbook_dir }}/../../kubernetes/apps/homepage/tailscale-auth-secret.yaml.j2"
+                src: "{{ playbook_dir }}/../../../kubernetes/apps/homepage/tailscale-auth-secret.yaml.j2"
                 dest: "{{ homepage_render_dir.path }}/tailscale-auth-secret.yaml"
                 mode: "0600"
               when: homepage_tailscale_authkey | length > 0

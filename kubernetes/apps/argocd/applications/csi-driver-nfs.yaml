@@ -1,0 +1,26 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: csi-driver-nfs
+  namespace: argocd
+spec:
+  project: homelab-platform
+  sources:
+    - repoURL: https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
+      chart: csi-driver-nfs
+      targetRevision: "v4.9.0"
+      helm:
+        releaseName: csi-driver-nfs
+        valueFiles:
+          - $values/kubernetes/apps/nfs-csi/values.yaml
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true

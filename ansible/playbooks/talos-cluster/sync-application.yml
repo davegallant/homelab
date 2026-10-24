@@ -21,7 +21,7 @@
           - "{{ talos_kube_context }}"
           - apply
           - -f
-          - "{{ playbook_dir }}/../../kubernetes/apps/argocd/applications/{{ talos_application }}.yaml"
+          - "{{ playbook_dir }}/../../../kubernetes/apps/argocd/applications/{{ talos_application }}.yaml"
       changed_when: true
 
     - name: Request a manual Argo CD sync without pruning

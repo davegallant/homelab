@@ -4,7 +4,7 @@
   connection: local
   gather_facts: false
   vars_files:
-    - ../../kubernetes/cluster/vars.yaml
+    - ../../../kubernetes/cluster/vars.yaml
   vars:
     talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
     talos_private_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.local/share/homelab-talos"
@@ -45,13 +45,13 @@
 
     - name: Render control plane patch
       ansible.builtin.template:
-        src: ../../kubernetes/cluster/controlplane.patch.yaml.j2
+        src: ../../../kubernetes/cluster/controlplane.patch.yaml.j2
         dest: "{{ talos_private_dir }}/controlplane.patch.yaml"
         mode: "0600"
 
     - name: Render worker patches
       ansible.builtin.template:
-        src: ../../kubernetes/cluster/worker.patch.yaml.j2
+        src: ../../../kubernetes/cluster/worker.patch.yaml.j2
         dest: "{{ talos_private_dir }}/{{ item.name }}.patch.yaml"
         mode: "0600"
       vars:

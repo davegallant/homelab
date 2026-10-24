@@ -25,7 +25,7 @@ jobs:
         run: ansible-galaxy collection install -r ansible/requirements.yml
 
       - name: Run yamllint
-        run: yamllint -c .yamllint.yaml ansible/ .forgejo/ .github/
+        run: yamllint -c .yamllint.yaml ansible/ kubernetes/ .forgejo/ .github/
 
       - name: Run ansible-lint
         working-directory: ansible

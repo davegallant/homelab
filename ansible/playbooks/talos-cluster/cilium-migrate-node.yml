@@ -4,7 +4,7 @@
   connection: local
   gather_facts: false
   vars_files:
-    - ../../kubernetes/cluster/vars.yaml
+    - ../../../kubernetes/cluster/vars.yaml
   vars:
     talos_kube_context: ""
     talos_private_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.local/share/homelab-talos"

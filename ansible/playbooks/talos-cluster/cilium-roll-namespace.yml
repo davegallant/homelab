@@ -77,7 +77,7 @@
       ansible.builtin.command:
         argv:
           - python3
-          - "{{ playbook_dir }}/../../kubernetes/apps/cilium/verify-endpoints.py"
+          - "{{ playbook_dir }}/../../../kubernetes/apps/cilium/verify-endpoints.py"
           - --context
           - "{{ talos_kube_context }}"
           - --namespace

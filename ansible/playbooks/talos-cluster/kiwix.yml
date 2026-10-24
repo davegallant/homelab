@@ -27,13 +27,13 @@
   gather_facts: false
   vars_files:
     - ../../group_vars/all/secrets.yaml
-    - ../../kubernetes/apps/kiwix/vars.yaml
+    - ../../../kubernetes/apps/kiwix/vars.yaml
   vars:
     kiwix_action: stage
     talos_kube_context: ""
     kiwix_namespace: kiwix
-    kiwix_apps_dir: "{{ playbook_dir }}/../../kubernetes/apps/kiwix"
-    kiwix_chart_dir: "{{ playbook_dir }}/../../kubernetes/apps/kiwix/chart"
+    kiwix_apps_dir: "{{ playbook_dir }}/../../../kubernetes/apps/kiwix"
+    kiwix_chart_dir: "{{ playbook_dir }}/../../../kubernetes/apps/kiwix/chart"
     kiwix_tailscale_authkey: ""
   tasks:
     - name: Check that Helm is still the release manager

@@ -4,7 +4,7 @@
   connection: local
   gather_facts: false
   vars_files:
-    - ../../kubernetes/apps/alloy/vars.yaml
+    - ../../../kubernetes/apps/alloy/vars.yaml
   vars_prompt:
     - name: talos_kube_context
       prompt: Enter the expected kubectl context for the Talos cluster
@@ -58,31 +58,31 @@
 
         - name: Copy Alloy namespace manifest
           ansible.builtin.copy:
-            src: "{{ playbook_dir }}/../../kubernetes/apps/alloy/namespace.yaml"
+            src: "{{ playbook_dir }}/../../../kubernetes/apps/alloy/namespace.yaml"
             dest: "{{ alloy_render_dir.path }}/namespace.yaml"
             mode: "0600"
 
         - name: Copy Alloy ServiceAccount manifest
           ansible.builtin.copy:
-            src: "{{ playbook_dir }}/../../kubernetes/apps/alloy/serviceaccount.yaml"
+            src: "{{ playbook_dir }}/../../../kubernetes/apps/alloy/serviceaccount.yaml"
             dest: "{{ alloy_render_dir.path }}/serviceaccount.yaml"
             mode: "0600"
 
         - name: Copy Alloy RBAC manifest
           ansible.builtin.copy:
-            src: "{{ playbook_dir }}/../../kubernetes/apps/alloy/rbac.yaml"
+            src: "{{ playbook_dir }}/../../../kubernetes/apps/alloy/rbac.yaml"
             dest: "{{ alloy_render_dir.path }}/rbac.yaml"
             mode: "0600"
 
         - name: Render Alloy ConfigMap
           ansible.builtin.template:
-            src: "{{ playbook_dir }}/../../kubernetes/apps/alloy/configmap.yaml.j2"
+            src: "{{ playbook_dir }}/../../../kubernetes/apps/alloy/configmap.yaml.j2"
             dest: "{{ alloy_render_dir.path }}/configmap.yaml"
             mode: "0600"
 
         - name: Render Alloy DaemonSet
           ansible.builtin.template:
-            src: "{{ playbook_dir }}/../../kubernetes/apps/alloy/daemonset.yaml.j2"
+            src: "{{ playbook_dir }}/../../../kubernetes/apps/alloy/daemonset.yaml.j2"
             dest: "{{ alloy_render_dir.path }}/daemonset.yaml"
             mode: "0600"
 

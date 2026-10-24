@@ -4,7 +4,7 @@
   connection: local
   gather_facts: false
   vars_files:
-    - ../../kubernetes/cluster/vars.yaml
+    - ../../../kubernetes/cluster/vars.yaml
   vars:
     talos_kube_context: ""
     talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
@@ -37,7 +37,7 @@
 
     - name: Render the Talos kubelet node IP patch
       ansible.builtin.template:
-        src: ../../kubernetes/cluster/cilium-node-ip.patch.yaml.j2
+        src: ../../../kubernetes/cluster/cilium-node-ip.patch.yaml.j2
         dest: "{{ talos_private_dir }}/cilium-node-ip.patch.yaml"
         mode: "0600"
 

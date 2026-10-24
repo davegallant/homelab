@@ -1,7 +1,7 @@
 ---
 # Cluster vitals: node-exporter + kube-state-metrics + metrics-server,
 # each from its official Helm chart (versions/repos pinned in
-# ../../kubernetes/apps/monitoring/vars.yaml). Alloy (apply-alloy.yml)
+# ../../../kubernetes/apps/monitoring/vars.yaml). Alloy (apply-alloy.yml)
 # scrapes them and remote-writes to VictoriaMetrics on the Grafana host.
 #
 # Actions (monitoring_action):
@@ -16,12 +16,12 @@
   connection: local
   gather_facts: false
   vars_files:
-    - ../../kubernetes/cluster/vars.yaml
-    - ../../kubernetes/apps/monitoring/vars.yaml
+    - ../../../kubernetes/cluster/vars.yaml
+    - ../../../kubernetes/apps/monitoring/vars.yaml
   vars:
     monitoring_action: install
     talos_kube_context: ""
-    monitoring_apps_dir: "{{ playbook_dir }}/../../kubernetes/apps/monitoring"
+    monitoring_apps_dir: "{{ playbook_dir }}/../../../kubernetes/apps/monitoring"
   tasks:
     - name: Check that Helm is still the release manager
       ansible.builtin.include_tasks:

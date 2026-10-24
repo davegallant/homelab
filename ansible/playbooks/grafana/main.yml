@@ -2,7 +2,7 @@
 - name: Install grafana
   hosts: grafana
   vars_files:
-    - ../../kubernetes/cluster/vars.yaml
+    - ../../../kubernetes/cluster/vars.yaml
   vars:
     # Loki and VictoriaMetrics are unauthenticated. Admit only the three
     # Talos node IPs to their ports (Loki push 3100, metrics remote-write

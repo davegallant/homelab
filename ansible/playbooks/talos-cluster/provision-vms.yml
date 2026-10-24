@@ -3,7 +3,7 @@
   hosts: pve-g3-1
   gather_facts: false
   vars_files:
-    - ../../kubernetes/cluster/vars.yaml
+    - ../../../kubernetes/cluster/vars.yaml
   tasks:
     - name: Check Talos ISO
       ansible.builtin.stat:
@@ -55,7 +55,7 @@
   gather_facts: false
   serial: 1
   vars_files:
-    - ../../kubernetes/cluster/vars.yaml
+    - ../../../kubernetes/cluster/vars.yaml
   tasks:
     - name: Select VMs for this Proxmox host
       ansible.builtin.set_fact:

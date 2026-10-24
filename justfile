@@ -9,7 +9,7 @@ default:
 
 # Lint YAML, Ansible content and shell scripts
 lint:
-    yamllint -c .yamllint.yaml ansible/ .forgejo/ .github/
+    yamllint -c .yamllint.yaml ansible/ kubernetes/ .forgejo/ .github/
     cd ansible && ANSIBLE_VAULT_PASSWORD_FILE="${ANSIBLE_VAULT_PASSWORD_FILE:-$PWD/.vault_pass}" ansible-lint
     shellcheck generate-containers-table.sh scripts/*.sh
 

@@ -4,7 +4,7 @@
   connection: local
   gather_facts: false
   vars_files:
-    - ../../kubernetes/cluster/vars.yaml
+    - ../../../kubernetes/cluster/vars.yaml
   vars:
     talos_kube_context: ""
     talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
