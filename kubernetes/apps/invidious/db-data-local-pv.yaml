@@ -1,5 +1,5 @@
 ---
-# Cutover PV points at the directory provisioned by the initial local-path
+# Static PV points at the directory provisioned by the initial local-path
 # claim; keep that original claim mounted read-only for rollback.
 apiVersion: v1
 kind: PersistentVolume

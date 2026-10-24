@@ -10,12 +10,12 @@
 # Lidarr on 127.0.0.1:8686, replacing the LXC's host Caddy role.
 # The tailnet URL is unchanged.
 #
-# Batch D design note: qBittorrent stays on its LXC, with its static
+# qBittorrent remains on its LXC, with its static
 # LAN IP and OPNsense → Mullvad policy route. The saved client endpoint
 # remains qbittorrent.tail.davegallant.ca:443. This app uses its own
 # userspace Tailscale sidecar's HTTP proxy for tailnet HTTP(S); cluster
 # service traffic bypasses that proxy. The policy below retains the
-# narrow LAN exception recorded during cutover.
+# narrow LAN exception described below.
 #
 # The media tree stays on TrueNAS (static NFS claim lidarr-media,
 # see storage.yaml), mounted at /mnt — the identical path the LXC
@@ -31,8 +31,7 @@
 # credentials live in its config.xml, which arrives with the copied
 # /config.
 #
-# CUTOVER SUBSTITUTION (README step 0): both qBittorrent policy
-# entries use its static LAN IP, 192.168.1.152/32.
+# qBittorrent's static LAN IP is 192.168.1.152/32.
 controllers:
   lidarr:
     type: deployment
@@ -321,8 +320,7 @@ rawResources:
           - toEndpoints:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: lidarr
-          # The apps poll Prowlarr's Torznab feeds; at cutover each
-          # app's Prowlarr indexer URL is repointed to the Service.
+          # The apps poll Prowlarr's Torznab feeds through this Service.
           - toEndpoints:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: prowlarr
@@ -330,7 +328,7 @@ rawResources:
               - ports:
                   - port: "9696"
                     protocol: TCP
-          # Narrow LAN exception retained from cutover. The saved
+          # Narrow LAN exception for the qBittorrent API. The saved
           # download-client endpoint uses the Tailscale sidecar proxy.
           - toCIDRSet:
               - cidr: 192.168.1.152/32

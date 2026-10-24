@@ -25,9 +25,8 @@ valkey:
       cpu: 250m
       memory: 256Mi
 
-# The Newt sidecar owns the Pangolin site identity. Keep this false while
-# staging: the identity must never have two owners. The searxng.yml playbook
-# flips it during its cutover action, after the LXC stack is stopped.
+# The Newt sidecar owns the Pangolin site identity. The production values
+# enable it; keep this default disabled for chart rendering without secrets.
 newt:
   # Existing Secret keys: PANGOLIN_ENDPOINT, NEWT_ID, NEWT_SECRET.
   existingSecret: ""
@@ -45,8 +44,7 @@ newt:
       memory: 128Mi
 
 # Non-secret SearXNG settings (rendered into the settings Secret alongside
-# secretKey). Reconcile against the live LXC settings before first deploy --
-# see ../README.md.
+# secretKey). The production values contain the active settings.
 settings:
   # Existing Secret must contain the complete settings.yml file.
   existingSecret: ""

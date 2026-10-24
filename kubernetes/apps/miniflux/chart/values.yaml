@@ -12,7 +12,7 @@
 existingSecret: ""
 
 miniflux:
-  # Source of truth: playbooks/miniflux/docker-compose.yml on the LXC.
+  # Application image and runtime settings are managed in this chart.
   image: docker.io/miniflux/miniflux:2.3.4@sha256:72e49f513a63104506aab98ba8cfc3a409d4fde23550a583dec07ec941f1e94e
   resources:
     requests:
@@ -33,9 +33,8 @@ db:
       cpu: 500m
       memory: 512Mi
 
-# Public exposure via Pangolin, same sidecar pattern as SearXNG and
-# BentoPDF. Disabled while staging; cutover flips it on as the LXC's
-# Newt stops (one owner for the Pangolin identity).
+# Public exposure via Pangolin. The production values enable this
+# sidecar with its Vault-managed identity.
 newt:
   enabled: false
   image: docker.io/fosrl/newt:1.19.0@sha256:0189c8287058b800cca825590e4c39946b3815344ca48678dd0b96616d639319

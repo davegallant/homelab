@@ -1,7 +1,7 @@
 ---
 # Maloja — Argo CD production values (bjw-s app-template 5.3.0).
-# Source of truth for the workload: playbooks/maloja/docker-compose.yml
-# (image docker.io/krateng/maloja 3.2.9, port 42010, $PWD/data:/data).
+# Application configuration: this file. Maloja uses
+# docker.io/krateng/maloja 3.2.9 on port 42010.
 # Tailnet-only: exposure mirrors the Kiwix pod — userspace Tailscale
 # sidecar TCP-forwarding 443 to an in-pod Caddy (8443), which
 # terminates a real certificate (Cloudflare DNS-01) and proxies to
@@ -14,8 +14,6 @@ controllers:
   maloja:
     type: deployment
     strategy: Recreate
-    # STAGING: 0 until the LXC config has been copied into the PVC
-    # (see README.md). The cutover commit removes this line.
     pod:
       annotations:
         # Opt-in filesystem backup of the app config volume only;

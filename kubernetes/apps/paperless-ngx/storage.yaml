@@ -1,16 +1,13 @@
 ---
-# Storage for paperless-ngx, applied once by hand (see README.md) and
+# Storage for paperless-ngx, applied once by hand and
 # deliberately NOT managed by Argo CD: the homelab AppProject allows
 # namespace-scoped resources only, so namespaces and static volumes
 # stay an Ansible / kubectl concern.
 #
-# Paperless has no static volumes at staging: data, media, consume,
-# export and the Redis data are chart-managed local-path PVCs
-# declared in values.production.yaml. The documents (media) stay on
-# a local volume on purpose — NFS data is never Velero-backed-up,
-# and the document store is exactly what the backup must cover.
-# This file creates just the namespace; the static local-PV binds
-# happen at cutover (README).
+# Paperless state volumes are chart-managed local-path PVCs declared
+# in values.production.yaml. The document store remains on local disk
+# because Velero does not back up NFS data. This file creates the
+# namespace; local PV bindings are in the *-local-pv.yaml files.
 apiVersion: v1
 kind: Namespace
 metadata:

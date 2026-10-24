@@ -1,9 +1,7 @@
 ---
 # RomM — Argo CD production values (bjw-s app-template 5.3.0).
-# Source of truth for the workload: playbooks/romm/docker-compose.yml
-# (app docker.io/rommapp/romm 5.4.0, port 8080; database
-# docker.io/mariadb 13.0.2 as a second container in the same pod,
-# the Miniflux in-pod database pattern).
+# Application configuration: this file. RomM uses docker.io/rommapp/romm
+# 5.4.0 and MariaDB 13.0.2 in the same pod.
 # Tailnet-only: exposure mirrors the Kiwix pod — userspace Tailscale
 # sidecar TCP-forwarding 443 to an in-pod Caddy (8443), which
 # terminates a real certificate (Cloudflare DNS-01) and proxies to

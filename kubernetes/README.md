@@ -4,8 +4,8 @@ Talos runs application and platform workloads on three VMs across two Proxmox
 hosts. Argo CD manages application resources from the tracked chart templates
 and production values. Ansible manages infrastructure, external Secrets from
 Vault, and selected ConfigMaps. Application syncs require manual approval.
-All LXC-to-Kubernetes application migrations are complete. App READMEs cover
-current configuration and service-specific operations; this directory holds
+All LXC-to-Kubernetes application migrations are complete. Application
+configuration lives beside each Argo CD definition; this directory holds
 shared cluster operations and recovery guidance.
 
 ## Start here
@@ -45,31 +45,9 @@ and context. Read the cluster recovery constraints before restoring any VM.
 
 ## Applications
 
-These directories contain configuration and current operating notes.
-Application definitions are under [Argo CD](apps/argocd/).
-
-| Application | Documentation |
-|---|---|
-| audiobookshelf | [Runbook](apps/audiobookshelf/README.md) |
-| bentopdf | [Runbook](apps/bentopdf/README.md) |
-| changedetection | [Runbook](apps/changedetection/README.md) |
-| homepage | [Runbook](apps/homepage/README.md) |
-| invidious | [Runbook](apps/invidious/README.md) |
-| kiwix | [Runbook](apps/kiwix/README.md) |
-| lidarr | [Runbook](apps/lidarr/README.md) |
-| lubelogger | [Runbook](apps/lubelogger/README.md) |
-| maloja | [Runbook](apps/maloja/README.md) |
-| miniflux | [Runbook](apps/miniflux/README.md) |
-| navidrome | [Runbook](apps/navidrome/README.md) |
-| paperless-ngx | [Runbook](apps/paperless-ngx/README.md) |
-| prowlarr | [Runbook](apps/prowlarr/README.md) |
-| radarr | [Runbook](apps/radarr/README.md) |
-| romm | [Runbook](apps/romm/README.md) |
-| searxng | [Runbook](apps/searxng/README.md) |
-| seerr | [Runbook](apps/seerr/README.md) |
-| sonarr | [Runbook](apps/sonarr/README.md) |
-| speedtest-tracker | [Runbook](apps/speedtest-tracker/README.md) |
-| umami | [Runbook](apps/umami/README.md) |
+Application definitions are under [Argo CD](apps/argocd/applications/).
+Each application directory contains its chart, production values, storage,
+and policy resources.
 
 ## Platform
 

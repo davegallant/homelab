@@ -8,13 +8,10 @@
 # Pangolin route and public URL carry over unchanged. Do not rewrite
 # this app as tailnet-only.
 #
-# The compose sets no PAPERLESS_DBHOST, so Paperless uses its SQLite
-# database in the data volume — there is deliberately no Postgres
-# here. State is four file volumes (data, media, consume, export),
-# all chart-managed local-path PVCs; media holds the actual documents
-# and stays local on purpose, because NFS data is never
-# Velero-backed-up. Redis data is broker state only and is NOT
-# copied at cutover; the broker starts empty.
+# Paperless uses SQLite in the data volume; there is no Postgres.
+# State is four chart-managed local-path PVCs (data, media, consume,
+# export). Media stays local because Velero does not back up NFS data.
+# Redis data is disposable broker state.
 #
 # Secrets stay outside Git and outside Argo's ownership:
 #   paperless-newt-external  (PANGOLIN_ENDPOINT, NEWT_ID, NEWT_SECRET)

@@ -10,14 +10,10 @@
 # Prowlarr on 127.0.0.1:9696, replacing the LXC's host Caddy role.
 # The tailnet URL is unchanged.
 #
-# Flaresolverr moves in-pod as a second app container, reachable at
-# 127.0.0.1:8191 exactly as the compose's service-name networking
-# presented it; at cutover Prowlarr's Flaresolverr URL is repointed
-# from http://flaresolverr:8191 to http://127.0.0.1:8191 (README).
-# Prowlarr has no media mounts and never talks to qBittorrent — the
-# *arr apps poll its Torznab feeds, and it syncs app profiles over
-# the apps' APIs; at cutover those connections are repointed to the
-# cluster Services (README), which the network policy below allows.
+# Flaresolverr runs in-pod as a second app container at 127.0.0.1:8191.
+# Prowlarr has no media mounts and never talks to qBittorrent. The *arr
+# apps poll its Torznab feeds and Prowlarr syncs profiles through their
+# cluster Services, which the network policy below allows.
 #
 # Secrets stay outside Git and outside Argo's ownership:
 #   prowlarr-caddy-external  (key cloudflare_api_token) — gitops-secrets.yml
@@ -339,9 +335,7 @@ rawResources:
           - toEndpoints:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: prowlarr
-          # App-profile sync and connection tests target the apps'
-          # APIs; their base URLs are repointed to these Services
-          # at cutover (README).
+          # App-profile sync and connection tests use the app Services.
           - toEndpoints:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: sonarr

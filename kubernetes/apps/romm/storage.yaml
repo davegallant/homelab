@@ -1,5 +1,5 @@
 ---
-# Storage for romm, applied once by hand (see README.md) and
+# Storage for romm, applied once by hand and
 # deliberately NOT managed by Argo CD: the homelab AppProject allows
 # namespace-scoped resources only, so namespaces and static volumes
 # stay an Ansible / kubectl concern.

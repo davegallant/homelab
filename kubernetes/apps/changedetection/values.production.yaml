@@ -1,10 +1,8 @@
 ---
 # ChangeDetection — Argo CD production values (bjw-s app-template 5.3.0).
-# Source of truth for the workload:
-# playbooks/changedetection/docker-compose.yml
-# (image docker.io/dgtlmoon/changedetection.io 0.60.9, port 5000,
-# ./changedetection:/datastore). The LXC runs without the optional
-# browser sidecar; parity is kept — none here either.
+# Application configuration: this file. The workload uses
+# docker.io/dgtlmoon/changedetection.io 0.60.9 on port 5000 with no
+# browser sidecar.
 # Tailnet-only: exposure mirrors the Kiwix pod — userspace Tailscale
 # sidecar TCP-forwarding 443 to an in-pod Caddy (8443), which
 # terminates a real certificate (Cloudflare DNS-01) and proxies to

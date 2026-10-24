@@ -52,7 +52,7 @@
           - searxng_newt_id is defined
           - searxng_newt_secret is defined
           - pangolin_endpoint is defined
-        fail_msg: "Missing Vault variables. searxng_secret_key must be added to group_vars/all/secrets.yaml (see kubernetes/apps/searxng/README.md)."
+        fail_msg: "Missing Vault variables. Add searxng_secret_key to group_vars/all/secrets.yaml."
       when: searxng_action != 'verify'
 
     - name: Require the public URL for cutover and rollback

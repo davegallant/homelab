@@ -8,7 +8,7 @@
 # missing AND the tailnet sidecars are enabled.
 
 kiwix:
-  # Source of truth: playbooks/kiwix/docker-compose.yml on the LXC.
+  # Application image and runtime settings are managed in this chart.
   image: ghcr.io/kiwix/kiwix-serve:3.8.2@sha256:e478554a9920412eeb5ce1d73f24e4b28445ebed233187cdd03c623c32be46a5
   resources:
     requests:
@@ -22,8 +22,8 @@ kiwix:
 # sidecar TCP-forwarding 443 to an in-pod Caddy, which terminates a
 # real Let's Encrypt certificate (Cloudflare DNS-01) for
 # kiwix.<magicDnsDomain> and proxies to kiwix-serve on 127.0.0.1:8080.
-# Disabled while staging so the kiwix LXC keeps sole ownership of the
-# tailnet identity; cutover flips it on.
+# The production values enable the sidecar with its Vault-managed
+# identity.
 tailscale:
   enabled: false
   image: ghcr.io/tailscale/tailscale:v1.104.2@sha256:b11583ad2e93e4671128538c88cf11f460444a5d7e449311dd1933a400ab849d

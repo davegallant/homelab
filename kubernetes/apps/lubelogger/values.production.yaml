@@ -1,9 +1,8 @@
 ---
 # LubeLogger — Argo CD production values (bjw-s app-template 5.3.0).
-# Source of truth for the workload: playbooks/lubelogger/docker-compose.yml
-# (image ghcr.io/hargata/lubelogger v1.4.5, port 8080, eight named
-# volumes — consolidated here into ONE local-path PVC mounted by
-# subPath, see the persistence section).
+# Application configuration: this file. The app uses
+# ghcr.io/hargata/lubelogger v1.4.5 on port 8080. Its state uses one
+# local-path PVC mounted by subPath, as defined below.
 # Tailnet-only: exposure mirrors the Kiwix pod — userspace Tailscale
 # sidecar TCP-forwarding 443 to an in-pod Caddy (8443), which
 # terminates a real certificate (Cloudflare DNS-01) and proxies to

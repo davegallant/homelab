@@ -624,8 +624,8 @@
                   Adoption complete: Helm owns the Homepage release, every pre-existing
                   object kept its UID, the tailnet identity is unchanged, and a fresh
                   Velero backup verified. Keep the old apply path until one scheduled
-                  homepage-daily backup completes under Helm ownership; then retire it
-                  as described in apps/homepage/README.md.
+                  homepage-daily backup completes under Helm ownership; then retire
+                  the legacy apply path.
       always:
         - name: Remove temporary rendered files
           ansible.builtin.file:

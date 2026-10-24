@@ -1,5 +1,5 @@
 ---
-# Cutover PV for the restored Speedtest Tracker database on k8s-w-1.
+# Static PV for the Speedtest Tracker database on k8s-w-1.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
