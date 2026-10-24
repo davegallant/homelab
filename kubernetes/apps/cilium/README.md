@@ -129,3 +129,36 @@ The four-panel dashboard is in Grafana's Homelab folder at
 <https://grafana.tail.davegallant.ca/d/hubble/hubble>. The drop alert remains
 deferred pending several days of baseline observation; no alert rule was
 added in this rollout.
+
+### Hubble metric attribution follow-up
+
+VictoriaMetrics reports these labels for `hubble_flows_processed_total`:
+`cluster`, `instance`, `job`, `namespace`, `node`, `protocol`, `subtype`,
+`type`, and `verdict`. `subtype` is present on Trace series. For
+`hubble_drop_total`, the labels are `cluster`, `instance`, `job`, `namespace`,
+`node`, `protocol`, and `reason`. Neither family includes source or
+destination pod, namespace, workload, or IP labels. The `namespace` on the
+`job="hubble"` series is the scrape target namespace `cilium-system`, not a
+flow endpoint namespace.
+
+The former unfiltered dashboard queries combined two Alloy scrape jobs:
+`hubble` and `prometheus.scrape.annotated_services`, which both scrape the
+Hubble metrics service. At the observed five-minute rate, the `hubble` job
+reported about 167 forwarded events/s and 11.9 drops/s; the annotation-driven
+job reported a similar rate. This explains the earlier roughly 340/s forwarded
+and 22/s drop totals: they counted both scrape jobs. Forwarded events were
+dominated by TCP Trace events (about 114/s per job) and UDP Trace events (about
+39/s per job); PolicyVerdict events contributed about 14/s per job. Drops were
+UDP policy denials, about 6.3/s with reason `POLICY_DENIED` and 5.5/s with reason
+`POLICY_DENY`, mainly on `k8s-w-1` and `k8s-w-2`. The metrics do not identify
+the endpoint pods or destinations, so they cannot establish whether these are
+retries or name the affected workloads. No policy was widened.
+
+The dashboard now filters on `job="hubble"` to avoid doubling its displayed
+rates and attributes its panels by the labels that exist: node, protocol, flow
+type, verdict, and drop reason. The namespace panels were removed because the
+available namespace label describes the scrape target, not flow endpoints.
+Source/destination pod panels remain unavailable until Hubble is configured to
+emit endpoint context labels. The dashboard's top drops table consequently
+breaks down by node, protocol, and reason rather than claiming endpoint
+attribution.
