@@ -19,6 +19,11 @@
   shared `kube-system`. The NFS CSI node plugin uses host networking, so its
   node-side NFS mount is verified with a fresh PVC smoke test rather than
   treated as pod egress.
+- **Retired duplicate policy (2026-10-24).** Deleted the untracked
+  `changedetection/default-deny` CiliumNetworkPolicy after confirming its full
+  spec matched the Argo-tracked
+  `changedetection/changedetection-defaultdenynetworkpolicy`. Keep the
+  Argo-tracked policy as the namespace's canonical default-deny policy.
 - **Hubble access.** Hubble Relay is a ClusterIP in `cilium-system`. For the
   CLI, port-forward `service/hubble-relay` from `4245:80`; `hubble status`
   then reports the connected agents and `hubble observe` shows flows. The UI
