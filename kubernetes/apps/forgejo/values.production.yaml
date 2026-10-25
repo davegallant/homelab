@@ -124,7 +124,7 @@ extraDeploy:
               imagePullPolicy: IfNotPresent
               envFrom:
                 - secretRef:
-                    name: forgejo-external
+                    name: forgejo-newt-external
               securityContext:
                 allowPrivilegeEscalation: false
                 capabilities:
