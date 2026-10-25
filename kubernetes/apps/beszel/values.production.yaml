@@ -1,0 +1,299 @@
+---
+# Beszel 0.21.1, app-template 5.3.0. Agents remain on their hosts.
+# LXC preflight: 37,186,748 bytes across 6 files; UID/GID 0:0;
+# image USER unset, running process 0:0; GET / returns 200.
+# 1Gi provides growth headroom. Data is local-path + volumeType: local.
+# Tailnet exposure follows Prowlarr: userspace Tailscale -> localhost Caddy.
+# Bootstrap identity uses beszel-k8s; Headscale given_name becomes beszel
+# during cutover. External Secrets: beszel-caddy-external and one-use
+# beszel-tailscale-auth. Never back up or clone the tailnet identity.
+controllers:
+  beszel:
+    type: deployment
+    strategy: Recreate
+    pod:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: k8s-w-1
+      annotations:
+        backup.velero.io/backup-volumes: data,caddy-state
+      securityContext:
+        fsGroup: 0
+        fsGroupChangePolicy: OnRootMismatch
+    containers:
+      app:
+        image:
+          repository: docker.io/henrygd/beszel
+          tag: 0.21.1
+          digest: sha256:8514a69d9bbbcb74f371a3205561ee231fc0289739cea64e8131f341d695b770
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+        env:
+          APP_URL: https://beszel.tail.davegallant.ca
+        probes:
+          startup:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8090
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 24
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8090
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8090
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 15m
+            memory: 64Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+
+      tailscale:
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          allowPrivilegeEscalation: false
+        image:
+          repository: ghcr.io/tailscale/tailscale
+          tag: v1.104.1
+          digest: sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
+        envFrom:
+          # The bootstrap-created Secret holds exactly one key
+          # (TS_AUTHKEY), imported here as the env var of that name.
+          # Optional: once the identity persists in tailscale-state,
+          # the Secret is deleted and the sidecar runs without it.
+          - secretRef:
+              name: beszel-tailscale-auth
+              optional: true
+        env:
+          TS_AUTH_ONCE: "true"
+          TS_HOSTNAME: beszel-k8s
+          TS_STATE_DIR: /var/lib/tailscale
+          # State lives on the local PVC, so disable Kubernetes Secret storage.
+          TS_KUBE_SECRET: ""
+          TS_USERSPACE: "true"
+          TS_EXTRA_ARGS: --login-server=https://hs.davegallant.ca --accept-dns=false
+          TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 192Mi
+      caddy:
+        securityContext:
+          allowPrivilegeEscalation: false
+        image:
+          repository: ghcr.io/davegallant/homelab-caddy-cloudflare
+          tag: 2.11.6-a8737d0
+          digest: sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
+        command:
+          - caddy
+        args:
+          - run
+          - --config
+          - /etc/caddy/Caddyfile
+          - --adapter
+          - caddyfile
+        resources:
+          requests:
+            cpu: 25m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+
+service:
+  beszel:
+    controller: beszel
+    ports:
+      http:
+        port: 8090
+
+configMaps:
+  # Keys are short on purpose: bjw-s names the rendered ConfigMaps
+  # <release>-<key>, and the persistence entries below reference the
+  # resulting beszel-tailscale / beszel-caddy names.
+  tailscale:
+    data:
+      serve-config.json: |
+        {
+          "TCP": {
+            "443": {
+              "TCPForward": "127.0.0.1:8443"
+            }
+          }
+        }
+  caddy:
+    data:
+      Caddyfile: |
+        {
+          auto_https disable_redirects
+          https_port 8443
+          tls_resolvers 1.1.1.1
+          servers {
+            protocols h1 h2
+          }
+        }
+
+        beszel.tail.davegallant.ca {
+          bind 127.0.0.1
+
+          tls {
+            dns cloudflare {file./run/secrets/cloudflare_api_token}
+            propagation_delay 30s
+            propagation_timeout -1
+          }
+
+          reverse_proxy 127.0.0.1:8090
+        }
+
+persistence:
+  data:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    annotations:
+      volumeType: local
+    advancedMounts:
+      beszel:
+        app:
+          - path: /beszel_data
+
+  tailscale-state:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    advancedMounts:
+      beszel:
+        tailscale:
+          - path: /var/lib/tailscale
+  tailscale-config:
+    type: configMap
+    name: beszel-tailscale
+    advancedMounts:
+      beszel:
+        tailscale:
+          - path: /etc/tailscale/serve-config.json
+            subPath: serve-config.json
+            readOnly: true
+  caddy-config:
+    type: configMap
+    name: beszel-caddy
+    advancedMounts:
+      beszel:
+        caddy:
+          - path: /etc/caddy/Caddyfile
+            subPath: Caddyfile
+            readOnly: true
+  caddy-state:
+    annotations:
+      volumeType: local
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 256Mi
+    advancedMounts:
+      beszel:
+        caddy:
+          - path: /data
+  caddy-runtime:
+    type: emptyDir
+    advancedMounts:
+      beszel:
+        caddy:
+          - path: /config
+  caddy-secret:
+    type: secret
+    name: beszel-caddy-external
+    advancedMounts:
+      beszel:
+        caddy:
+          - path: /run/secrets/cloudflare_api_token
+            subPath: cloudflare_api_token
+            readOnly: true
+
+rawResources:
+  daily:
+    enabled: true
+    manifest:
+      apiVersion: velero.io/v1
+      kind: Schedule
+      metadata:
+        name: beszel-daily
+        namespace: velero
+      spec:
+        schedule: "35 4 * * *"
+        template:
+          ttl: 336h
+          includedNamespaces:
+            - beszel
+          excludedResources:
+            - secrets
+          defaultVolumesToFsBackup: false
+          snapshotVolumes: false
+          storageLocation: default
+
+  defaultDenyNetworkPolicy:
+    enabled: true
+    manifest:
+      apiVersion: cilium.io/v2
+      kind: CiliumNetworkPolicy
+      metadata:
+        name: default-deny
+        namespace: beszel
+      spec:
+        description: Default deny with cluster DNS and tailnet sidecar egress.
+        endpointSelector: {}
+        ingress:
+          - fromEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: beszel
+        egress:
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: kube-system
+                  k8s:k8s-app: kube-dns
+            toPorts:
+              - ports:
+                  - port: "53"
+                    protocol: UDP
+                  - port: "53"
+                    protocol: TCP
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: beszel
+          - toEntities:
+              - world
+        egressDeny:
+          - toCIDR:
+              - 192.168.1.0/24
+              - 10.96.0.0/12
+              - 10.245.0.0/16

@@ -1,0 +1,15 @@
+---
+# Beszel namespace, applied once by hand and deliberately NOT managed by
+# Argo CD: the homelab AppProject allows namespace-scoped resources only,
+# so namespaces stay a kubectl concern (see navidrome/storage.yaml).
+# The data PVC is chart-managed (annotated dynamic local-path, see
+# values.production.yaml), NOT a static PV — no data-local-pv.yaml here.
+# Codex: apply this namespace by hand before the first Argo sync.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: beszel
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
