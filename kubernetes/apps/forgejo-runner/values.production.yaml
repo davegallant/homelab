@@ -105,7 +105,7 @@ runner:
         # runs-on: docker needs an executor image; this includes Node for
         # actions/checkout and git/curl for both scheduled workflows.
         labels:
-          - "docker:docker://node:20-bookworm"
+          - "docker:docker://node:22-bookworm"
       container:
         # Job containers stay unprivileged; the DinD pod sidecar is privileged.
         privileged: false
