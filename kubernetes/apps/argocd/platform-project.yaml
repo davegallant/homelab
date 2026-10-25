@@ -14,6 +14,7 @@ spec:
     - ghcr.io/vmware-tanzu/charts
     - https://argoproj.github.io/argo-helm
     - https://helm.cilium.io/
+    - oci://code.forgejo.org/forgejo-helm
   destinations:
     - server: https://kubernetes.default.svc
       namespace: kube-system
@@ -27,6 +28,8 @@ spec:
       namespace: cilium-system
     - server: https://kubernetes.default.svc
       namespace: cilium-secrets
+    - server: https://kubernetes.default.svc
+      namespace: forgejo
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
@@ -89,3 +92,5 @@ spec:
       kind: BackupStorageLocation
     - group: velero.io
       kind: VolumeSnapshotLocation
+    - group: ""
+      kind: PersistentVolumeClaim
