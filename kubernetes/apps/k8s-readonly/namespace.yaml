@@ -1,0 +1,14 @@
+---
+# k8s-readonly namespace. Applied by hand BEFORE the Argo CD sync:
+# the homelab AppProject has an empty clusterResourceWhitelist, so
+# Argo CD cannot create Namespaces (or ClusterRoles) for this app.
+# Same split as Forgejo's namespace.yaml and Homepage's hand-applied
+# storage: namespace + RBAC by hand, workload via Argo CD only.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: k8s-readonly
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline

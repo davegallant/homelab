@@ -59,6 +59,11 @@ spec:
       namespace: radarr
     - server: https://kubernetes.default.svc
       namespace: lidarr
+    # k8s-readonly proxy (2026-10-24): tailnet-only read-only API
+    # proxy for Tux's Velero/PV audit. Workload only via Argo;
+    # namespace + RBAC are hand-applied (see apps/k8s-readonly/README.md).
+    - server: https://kubernetes.default.svc
+      namespace: k8s-readonly
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
     - group: apps
