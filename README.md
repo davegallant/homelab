@@ -250,14 +250,11 @@ versions are read from image references and `repository`/`tag` values.
 <!-- DOCKER_SERVICES_START -->
 | Image | Version |
 |-------|---------|
-| codeberg.org/forgejo/forgejo | 17.0.0 |
-| data.forgejo.org/forgejo/runner | 13 |
 | docker.io/aceberg/watchyourlan | v2 |
 | docker.io/adguard/adguardhome | v0.107.79 |
 | docker.io/caronc/apprise | 2.0.1 |
 | docker.io/deluan/navidrome | 0.64.2 |
 | docker.io/dgtlmoon/changedetection.io | 0.60.9 |
-| docker.io/docker | 29.9.2-dind |
 | docker.io/fosrl/gerbil | 1.5.2 |
 | docker.io/fosrl/newt | 1.19.0 |
 | docker.io/fosrl/pangolin | 1.25.3 |
@@ -292,6 +289,7 @@ versions are read from image references and `repository`/`tag` values.
 | docker.io/velero/velero | v1.18.2 |
 | docker.io/velero/velero-plugin-for-aws | v1.14.4 |
 | docker.io/victoriametrics/victoria-metrics | v1.154.1 |
+| forgejo/forgejo | 17.0.0 |
 | ghcr.io/advplyr/audiobookshelf | 2.37.1 |
 | ghcr.io/alam00000/bentopdf | 2.8.10 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.6.0.1 |
