@@ -116,7 +116,7 @@ extraDeploy:
         app.kubernetes.io/name: forgejo-newt
         app.kubernetes.io/instance: forgejo
     spec:
-      replicas: 0
+      replicas: 1
       selector:
         matchLabels:
           app.kubernetes.io/name: forgejo-newt
@@ -175,8 +175,11 @@ extraDeploy:
                 - port: "53"
                   protocol: TCP
         # Ingress already allowed same-namespace traffic, but egress did not.
-        # Hubble proved the egress denial. The Service CIDR deny interaction
-        # is untested (see step 3).
+        # Hubble proved the egress denial (2026-10-24 cutover 503).
+        # Hubble proved the fix (2026-10-25): Pod IP and Service ClusterIP
+        # both 200, EGRESS ALLOWED BY forgejo-default-deny. Service traffic
+        # is translated to the Pod, so the Service CIDR egressDeny below
+        # does NOT block this path - no deny revision or headless switch needed.
         - toEndpoints:
             - matchLabels:
                 k8s:io.kubernetes.pod.namespace: forgejo
