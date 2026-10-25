@@ -35,7 +35,6 @@
       audiobookshelf: [tag:monitored, tag:pangolin]
       bento-pdf: [tag:monitored, tag:pangolin]
       beszel: [tag:beszel, tag:monitored]
-      dispatcharr: [tag:monitored, tag:pangolin]
       forgejo: [tag:monitored, tag:pangolin]
       gotify: [tag:monitored, tag:pangolin]
       grafana: [tag:loki, tag:monitored]

@@ -112,10 +112,6 @@ endpoints:
     url: "{{ umami_url }}"
     <<: *defaults
 
-  - name: dispatcharr
-    url: "{{ dispatcharr_url }}"
-    <<: *defaults
-
   - name: jellyfin
     url: "{{ jellyfin_url }}"
     <<: *defaults
