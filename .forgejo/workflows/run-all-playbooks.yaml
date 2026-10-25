@@ -9,9 +9,13 @@ on:
     - cron: "@daily"
   workflow_dispatch:
 
+# Ansible subprocesses require a POSIX shell on the persistent host runner.
+env:
+  SHELL: /bin/sh
+
 jobs:
   discover:
-    runs-on: host
+    runs-on: tailscale
     outputs:
       playbooks: ${{ steps.list.outputs.playbooks }}
     steps:
@@ -28,7 +32,7 @@ jobs:
 
   run-ansible:
     needs: discover
-    runs-on: host
+    runs-on: tailscale
     strategy:
       matrix:
         playbook: ${{ fromJson(needs.discover.outputs.playbooks) }}
