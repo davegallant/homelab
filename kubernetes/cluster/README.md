@@ -9,7 +9,7 @@ backups. The Talos credentials and kubeconfig live outside Git under
 | VM | Proxmox host | Role | vCPU | RAM | Disk | Storage |
 |---|---|---|---:|---:|---:|---|
 | `k8s-cp-1` | `pve-g3-1` | control plane | 2 | 6 GiB | 25 GiB | `moredata` |
-| `k8s-w-1` | `pve-g3-1` | worker | 2 | 8 GiB | 25 GiB | `moredata` |
+| `k8s-w-1` | `pve-g3-1` | worker | 3 | 8 GiB | 25 GiB | `moredata` |
 | `k8s-w-2` | `pve-g3-2` | worker | 2 | 4.5 GiB | 25 GiB | `local-lvm` |
 
 Sizing in the table follows [vars.yaml](vars.yaml). Resize workers through
