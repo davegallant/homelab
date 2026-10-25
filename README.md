@@ -261,7 +261,7 @@ versions are read from image references and `repository`/`tag` values.
 | docker.io/gotify/server | 3.1.1 |
 | docker.io/grafana/grafana | 13.2.4 |
 | docker.io/grafana/loki | 3.7.9 |
-| docker.io/headscale/headscale | v0.29.5 |
+| docker.io/headscale/headscale | v0.29.6 |
 | docker.io/henrygd/beszel | 0.21.1 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.10.1 |
 | docker.io/jellyfin/jellyfin | 12.3 |
