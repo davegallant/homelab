@@ -174,6 +174,17 @@ extraDeploy:
                   protocol: UDP
                 - port: "53"
                   protocol: TCP
+        # Ingress already allowed same-namespace traffic, but egress did not.
+        # Hubble proved the egress denial. The Service CIDR deny interaction
+        # is untested (see step 3).
+        - toEndpoints:
+            - matchLabels:
+                k8s:io.kubernetes.pod.namespace: forgejo
+                k8s:app: forgejo
+          toPorts:
+            - ports:
+                - port: "3000"
+                  protocol: TCP
         - toEntities:
             - world
       egressDeny:
