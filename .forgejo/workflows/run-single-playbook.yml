@@ -8,9 +8,13 @@ on:
         default: ""
         type: string
 
+# Ansible subprocesses require a POSIX shell on the persistent host runner.
+env:
+  SHELL: /bin/sh
+
 jobs:
   run-ansible:
-    runs-on: host
+    runs-on: tailscale
     if: ${{ github.event.inputs.host != '' }}
     steps:
       - name: Check out repository code
