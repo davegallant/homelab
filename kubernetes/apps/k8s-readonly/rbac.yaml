@@ -1,0 +1,62 @@
+---
+# Read-only RBAC for the k8s-readonly proxy. Applied by hand, NOT via
+# Argo CD (same reason as namespace.yaml: homelab project cannot create
+# ClusterRoles/ClusterRoleBindings). Review this file in full before
+# applying - it is the security boundary for the whole proxy.
+#
+# ALLOWED: get/list/watch only, on the resources needed for a Velero/PV
+# audit. NOT allowed, deliberately: secrets, serviceaccounts, pods/exec,
+# pods/log, pods/attach, pods/proxy, nodes/proxy, and any create, update,
+# patch, delete, or watch on anything else. A token leak therefore gives
+# read-only cluster state, never secrets and never a write.
+#
+# Defense in depth, in order: (1) this RBAC, (2) kubectl proxy's default
+# filter (no --disable-filter, so writes are rejected by the proxy
+# itself before they reach the API server), (3) tailnet-only access
+# (no public URL, no Pangolin resource), (4) no Headscale ACL change
+# needed because the sidecar joins untagged (member-owned).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8s-readonly
+  namespace: k8s-readonly
+  labels:
+    app.kubernetes.io/name: k8s-readonly
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8s-readonly
+  labels:
+    app.kubernetes.io/name: k8s-readonly
+rules:
+  # Core: PVs, PVCs, namespaces, pods, services, nodes, events.
+  - apiGroups: [""]
+    resources: [persistentvolumes, persistentvolumeclaims, namespaces, pods, services, nodes, events]
+    verbs: [get, list, watch]
+  # Workloads: read-only, for the audit's pod/deployment context.
+  - apiGroups: [apps]
+    resources: [deployments, statefulsets, daemonsets, replicasets]
+    verbs: [get, list, watch]
+  - apiGroups: [batch]
+    resources: [jobs, cronjobs]
+    verbs: [get, list, watch]
+  # Velero: backups, schedules, PVBs, restores - the audit's core.
+  - apiGroups: [velero.io]
+    resources: [backups, schedules, podvolumebackups, podvolumerestores, restores, backupstoragelocations]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8s-readonly
+  labels:
+    app.kubernetes.io/name: k8s-readonly
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8s-readonly
+subjects:
+  - kind: ServiceAccount
+    name: k8s-readonly
+    namespace: k8s-readonly
