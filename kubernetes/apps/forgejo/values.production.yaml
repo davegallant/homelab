@@ -170,6 +170,13 @@ extraDeploy:
         - fromEndpoints:
             - matchLabels:
                 k8s:io.kubernetes.pod.namespace: forgejo
+        - fromEndpoints:
+            - matchLabels:
+                k8s:io.kubernetes.pod.namespace: forgejo-runner
+          toPorts:
+            - ports:
+                - port: "3000"
+                  protocol: TCP
       egress:
         - toEndpoints:
             - matchLabels:
