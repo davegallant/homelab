@@ -15,6 +15,7 @@ shared cluster operations and recovery guidance.
 | Inspect VM sizing, networking, and recovery constraints | [Cluster](cluster/README.md) |
 | Update applications or recover Argo CD | [Release management](apps/argocd/MANAGEMENT.md), [Argo CD](apps/argocd/README.md) |
 | Restore a namespace or rehearse Homepage recovery | [Backups and restore drill](BACKUPS.md) |
+| Add any volume to any app | [Storage - canonical rule, read first](STORAGE.md) |
 | Operate Alloy or diagnose Loki ingestion | [Observability](OBSERVABILITY.md) |
 | Review Cilium policies and Pod Security exceptions | [Security](SECURITY.md), [Cilium](apps/cilium/README.md) |
 
@@ -56,6 +57,7 @@ and policy resources.
 - [Monitoring](apps/monitoring/README.md): node and Kubernetes metrics.
 - [NFS CSI](apps/nfs-csi/README.md): NAS-backed volumes.
 - [Local-path provisioner](apps/local-path/README.md): dynamic node-local volumes.
+- [Storage](STORAGE.md): canonical local-storage rule and new-app checklist - read before adding any volume.
 - [Alloy](OBSERVABILITY.md): pod logs through the Kubernetes API.
 - [Velero](BACKUPS.md): namespace and volume backups to Garage.
 

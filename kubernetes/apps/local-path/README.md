@@ -1,5 +1,13 @@
 # local-path-provisioner (dynamic node-local storage)
 
+> **Before adding any volume with this provisioner, read
+> [../../STORAGE.md](../../STORAGE.md) first.** That file is the canonical
+> storage rule for this cluster. In short: a local-path PVC that must
+> be backed up by Velero MUST carry `volumeType: local` (otherwise it
+> defaults to `hostPath`, which Velero skips), and a Velero backup must
+> be proven with the pod RUNNING and PodVolumeBackups with nonzero
+> bytes. This README's install details do not override that rule.
+
 Why this exists: the static local PV pattern (hand-written PV +
 machine-config `.keep` entry per app) makes every new stateful app
 cost a node reboot, because Talos only writes `machine.files` at
