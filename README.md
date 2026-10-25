@@ -282,7 +282,7 @@ versions are read from image references and `repository`/`tag` values.
 | docker.io/postgres | 18.6 |
 | docker.io/rancher/local-path-provisioner | v0.0.31 |
 | docker.io/rommapp/romm | 5.4.0 |
-| docker.io/searxng/searxng | 2026.10.23-68647d080 |
+| docker.io/searxng/searxng | 2026.10.24-ef0ec03da |
 | docker.io/traefik | v3.7 |
 | docker.io/twinproduction/gatus | v5.37.0 |
 | docker.io/valkey/valkey | 9 |
