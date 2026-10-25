@@ -1,0 +1,45 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: forgejo-runner
+  namespace: argocd
+spec:
+  # OFFICIAL REPO CHART (Dave-approved, 2026-10-25, Option B).
+  # NOT OCI: oci://code.forgejo.org/forgejo-helm/forgejo-runner returns
+  # 404 name unknown — that OCI package does not exist, even though the
+  # git repo below does. Do NOT revert to OCI, do NOT use wrenix OCI
+  # (third-party, final-release hint) unless Dave explicitly re-opens it.
+  # Chart source is the official Forgejo git repo, linked from VSHN ADR
+  # 0054 as the 'official Forgejo runner Helm chart', structurally
+  # identical to the former wrenix upstream chart.
+  project: homelab-platform
+  sources:
+    # Official Forgejo runner chart, verified from the public Git repository.
+    # Root Chart.yaml: version 0.7.5, appVersion 12.7.3; no tags exist,
+    # so main is the verified source revision and the chart is at repo root.
+    - repoURL: https://code.forgejo.org/forgejo-helm/forgejo-runner.git
+      targetRevision: main
+      path: .
+      helm:
+        releaseName: forgejo-runner
+        valueFiles:
+          - $values/kubernetes/apps/forgejo-runner/values.production.yaml
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: forgejo-runner
+  # No automated sync or deletion finalizer: syncs require approval,
+  # and deleting this Application preserves its workloads.
+  # Namespace is hand-applied (see apps/forgejo-runner/README.md), like
+  # k8s-readonly namespace + RBAC were hand-applied.
+  # Platform project must list BOTH: (1) this git repo as a sourceRepo,
+  # and (2) forgejo-runner as a destination — see platform-project.yaml
+  # edits in the resume prompt. Do NOT use homelab project (wrong
+  # source/destination/whitelist for this chart).
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true

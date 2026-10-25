@@ -1,0 +1,126 @@
+# Forgejo Docker runner — production values. DRAFT by Tux, 2026-10-25.
+# CHART SOURCE (Dave-approved 2026-10-25, Option B): OFFICIAL GIT REPO
+# https://code.forgejo.org/forgejo-helm/forgejo-runner — NOT OCI
+# (oci://code.forgejo.org/forgejo-helm/forgejo-runner 404s, package
+# does not exist), NOT wrenix OCI (third-party, final-release hint).
+# Codex MUST verify every key below against the CLONED repo's
+# values.yaml (and Chart.yaml version/appVersion) before any sync.
+# Helm ignores unknown keys silently, so a values file with wrong keys
+# will render but do nothing — that is the failure mode to avoid.
+# Adjust keys to match the real chart, report every key change verbatim,
+# do NOT sync a values file whose keys were not verified against the
+# real chart. VSHN ADR 0054 confirms these keys in shape:
+# runner.config.existingSecret, dind.*, runner.config.file.container.
+# privileged (false), securityContext.privileged (true for DinD).
+#
+# Design, fixed by Dave 2026-10-25 (Option B, internal):
+# - Docker executor, DinD privileged, labels docker ONLY.
+# - Instance URL INTERNAL: http://forgejo.forgejo.svc.cluster.local:3000
+#   (Forgejo Service `forgejo` in namespace `forgejo`, ClusterIP
+#   10.108.114.70, port 3000, live 2026-10-25). NOT public URL.
+# - Runner pod has NO PVC, so it can schedule on w-1 or w-2. Scheduler
+#   will prefer w-2 (free CPU/mem), which is good — Docker jobs move
+#   off w-1 / LXC entirely.
+#
+# TWO TRAPS, both must be handled, not assumed away:
+#
+# 1. Cilium ingress to Forgejo (runner -> Forgejo WILL be denied without a
+#    rule change). Forgejo values.production.yaml, policy
+#    forgejo-default-deny, ingress currently allows ONLY:
+#      - fromEntities: host
+#      - fromEndpoints: namespace forgejo (same-namespace pods)
+#    A runner in namespace forgejo-runner is NEITHER, so its traffic to
+#    Forgejo pods will be DENIED by that policy, even though runner
+#    namespace itself has no policy (egress allowed by default).
+#    FIX (in forgejo values, separate commit, Codex to apply + sync Forgejo
+#    app): add an ingress entry to forgejo-default-deny:
+#      - fromEndpoints:
+#          - matchLabels:
+#              k8s:io.kubernetes.pod.namespace: forgejo-runner
+#        toPorts:
+#          - ports:
+#              - port: "3000"
+#                protocol: TCP
+#    Verify live with a diagnostic pod / Hubble AFTER the rule is applied:
+#    runner-namespace pod -> Forgejo:3000 must be ALLOWED, not DENIED.
+#    Do NOT sync the runner until this ingress rule is proven, or the
+#    runner will register-fail / poll-fail with a Cilium denial that
+#    looks like a Forgejo outage. This is the same class of bug as the
+#    attempt-2 503 (Cilium egress denial, Hubble-proven).
+#
+# 2. Job-container checkout (runner online does NOT prove jobs work).
+#    DinD job containers run on their OWN Docker bridge network, NOT the
+#    K8s pod network, so they CANNOT resolve K8s DNS names like
+#    forgejo.forgejo.svc.cluster.local, and they CANNOT reach ClusterIP
+#    by name — unless you give them a host mapping. With a public
+#    instance URL this trap does not exist (job containers reach public
+#    via internet/Pangolin, which is why LXC runners used public).
+#    With an INTERNAL instance URL, job checkout will FAIL at clone
+#    unless the runner config gives job containers a host mapping.
+#    FIX (in runner config below, Codex to verify key names against the
+#    real chart): job-container options must include:
+#      --add-host=forgejo.forgejo.svc.cluster.local:10.108.114.70
+#      --add-host=forgejo:10.108.114.70
+#    ClusterIP 10.108.114.70 is stable as long as Service `forgejo` exists
+#    (live 2026-10-25, re-verify live before sync — if ClusterIP changed,
+#    update the add-host values, do NOT sync stale IPs).
+#    GATE: Codex must run a REAL docker workflow (scratch, or next
+#    rfd-notify-cron 5-min run) and verify CHECKOUT succeeds, not just
+#    runner online. If checkout fails with add-host, fallback is
+#    container.network: host (job containers share pod network, can
+#    resolve K8s DNS, lower isolation — trusted workflows only:
+#    gaswatch + rfd-notify, Dave's own code, no untrusted PRs).
+#    Fallback needs Dave approval in that run, do NOT silently switch
+#    to host network, report the checkout failure verbatim first.
+#
+# Registration: from Vault, NEVER Git, NEVER printed. The chart supports
+# runner.config.existingSecret pointing at a pre-built `.runner` file,
+# skipping the chart's own registration job (official chart pattern).
+# TODO (Codex): if a registration token must be created in Forgejo
+# admin, STOP and report the exact Vault/secret step for Dave to
+# provide it. Do NOT reuse the host-runner token, do NOT rotate any
+# token on your own, do NOT put a token value in Git.
+
+# --- Intended settings (keys to be verified against real chart) ---
+replicaCount: 1
+
+# DinD sidecar is always rendered by chart 0.7.5; dind.enabled is not a chart key.
+# securityContext.privileged defaults to true in the official chart
+# and is required for DinD — do NOT set it to false for this pilot.
+
+securityContext:
+  privileged: true
+
+runner:
+  config:
+    # ExistingSecret skips the chart's registration Job; do not create a token-based config Secret.
+    create: false
+    # Instance URL for the runner daemon (polling). Internal, see above.
+    instance: "http://forgejo.forgejo.svc.cluster.local:3000"
+    # Prebuilt .runner file, provisioned from Vault outside Argo CD.
+    # Runner registration name: k8s-runner.
+    existingSecret: "forgejo-runner-config"
+    file:
+      runner:
+        # runs-on: docker needs an executor image; this includes Node for
+        # actions/checkout and git/curl for both scheduled workflows.
+        labels:
+          - "docker:docker://node:20-bookworm"
+      container:
+        # Job containers stay unprivileged; the DinD pod sidecar is privileged.
+        privileged: false
+        # Chart 0.7.5 uses a string for container.options.
+        options: "--add-host=forgejo.forgejo.svc.cluster.local:10.108.114.70 --add-host=forgejo:10.108.114.70"
+
+# Resources: pilot, small jobs only. Runner pod itself is light;
+# job containers run inside DinD and count against the node's actual
+# usage, NOT against K8s pod requests for the job containers (they are
+# not K8s pods). Keep runner requests small, report actual node if
+# scheduling fails.
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
