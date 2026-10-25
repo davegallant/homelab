@@ -15,6 +15,7 @@ spec:
     - https://argoproj.github.io/argo-helm
     - https://helm.cilium.io/
     - code.forgejo.org/forgejo-helm
+    - https://code.forgejo.org/forgejo-helm/forgejo-runner.git
   destinations:
     - server: https://kubernetes.default.svc
       namespace: kube-system
@@ -30,6 +31,8 @@ spec:
       namespace: cilium-secrets
     - server: https://kubernetes.default.svc
       namespace: forgejo
+    - server: https://kubernetes.default.svc
+      namespace: forgejo-runner
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
