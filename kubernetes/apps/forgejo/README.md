@@ -20,8 +20,9 @@ replicas before the staging copy and backup gates are complete.
   LXC Newt connector is stopped for the identity handoff.
 - Git-over-SSH never worked on the live LXC. This migration preserves the
   working HTTPS service and does not expose SSH.
-- `forgejo-external` is managed outside Argo CD from Vault and contains
-  `ROOT_URL`, `PANGOLIN_ENDPOINT`, `NEWT_ID`, and `NEWT_SECRET`. Do not put
+- `forgejo-external` and `forgejo-newt-external` are managed outside Argo CD
+  from Vault. They contain `ROOT_URL` and the Newt connector values
+  (`PANGOLIN_ENDPOINT`, `NEWT_ID`, `NEWT_SECRET`), respectively. Do not put
   these values in Git or print them. Reuse the existing Newt identity; do
   not rotate it.
 
