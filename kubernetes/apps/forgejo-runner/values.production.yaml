@@ -102,6 +102,7 @@ runner:
     existingSecret: "forgejo-runner-config"
     file:
       runner:
+        capacity: 2
         # runs-on: docker needs an executor image; this includes Node for
         # actions/checkout and git/curl for both scheduled workflows.
         labels:
