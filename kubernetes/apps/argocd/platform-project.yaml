@@ -14,7 +14,7 @@ spec:
     - ghcr.io/vmware-tanzu/charts
     - https://argoproj.github.io/argo-helm
     - https://helm.cilium.io/
-    - oci://code.forgejo.org/forgejo-helm
+    - code.forgejo.org/forgejo-helm
   destinations:
     - server: https://kubernetes.default.svc
       namespace: kube-system

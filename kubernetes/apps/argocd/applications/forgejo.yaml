@@ -8,7 +8,7 @@ spec:
   project: homelab-platform
   sources:
     # Pinned upstream chart, resolved through the Argo CD repo-server.
-    - repoURL: oci://code.forgejo.org/forgejo-helm
+    - repoURL: code.forgejo.org/forgejo-helm
       chart: forgejo
       targetRevision: "7.1.7"
       helm:
