@@ -2,8 +2,8 @@
 # Non-secret variables shared by every host. Secrets live in secrets.yaml
 # (ansible-vault encrypted).
 
-# Used by both tasks/install-beszel-agent.yml (agent .deb) and
-# playbooks/beszel/docker-compose.yml (hub image tag). Keep them in lockstep.
+# Host agent package version. Renovate groups updates with the Kubernetes hub
+# image in kubernetes/apps/beszel/values.production.yaml.
 # renovate: datasource=github-releases depName=henrygd/beszel
 beszel_version: "0.21.1"
 

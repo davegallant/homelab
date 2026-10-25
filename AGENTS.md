@@ -196,9 +196,9 @@ or the Beszel hub (it is covered by a Gatus endpoint instead).
 - `group_vars/all/vars.yaml` -- plaintext, non-secret values shared by every host
 - `alloy_docker_discovery` -- set `false` in a play's `vars:` for hosts without
   Docker, so `tasks/config.alloy.j2` renders a journal-only Alloy config
-- `beszel_version` -- shared by the agent `.deb` URL in
-  `tasks/install-beszel-agent.yml` and the hub image tag in
-  `playbooks/beszel/docker-compose.yml`; Renovate bumps both in one PR
+- `beszel_version` -- host agent `.deb` version in
+  `tasks/install-beszel-agent.yml`. The hub image is pinned in
+  `kubernetes/apps/beszel/values.production.yaml`; Renovate groups both updates
 - `ufw_docker_allowed_sources` -- sources allowed to reach published container
   ports, defaulting to the tailnet only. Override in a play's `vars:` for a
   service that must be reachable from the LAN (see `bedrock`, `jellyfin`)
