@@ -15,6 +15,11 @@ image:
   digest: sha256:06d38310de496a10186d952bdad5ca764c153c8023ede8dfa0944c79a1dc5412
   rootless: false
 
+deployment:
+  env:
+    - name: FORGEJO_WORK_DIR
+      value: /data/gitea
+
 # One internal Forgejo pod is running for the Velero volume-backup test.
 # The Newt Deployment remains at zero until separately approved cutover.
 replicaCount: 1
