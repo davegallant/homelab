@@ -157,7 +157,7 @@ skips Alloy and Beszel. Kubernetes uses an Alloy DaemonSet for pod logs.
 
 ## Networking
 
-Tailnet hosts run the **Tailscale client** against Headscale with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh) enabled. The off-tailnet Pangolin VPS uses ordinary SSH through the operator’s SSH configuration. The Headscale ACL source is `ansible/playbooks/pangolin/policy.headscale.hujson`. The Pangolin playbook validates it and updates Headscale's policy database when the active policy differs. Pangolin is excluded from CI, so run `just run "--limit pangolin"` from `ansible/` to apply policy changes. The Headscale server itself runs in Docker on the Pangolin VPS, which stays off the tailnet.
+Tailnet hosts run the **Tailscale client** against Headscale with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh) enabled. The off-tailnet Pangolin VPS uses ordinary SSH through the operator’s SSH configuration. The Headscale ACL source is `ansible/playbooks/pangolin/policy.headscale.hujson`. The Pangolin playbook validates it and updates Headscale's policy database when the active policy differs. Pangolin is excluded from CI, so run `just run main --limit pangolin` from the repo root to apply policy changes. The Headscale server itself runs in Docker on the Pangolin VPS, which stays off the tailnet.
 
 The remote nodes `muse` and `mcleod` use `tag:external` and can initiate tailnet DNS queries. `mcleod` also uses `tag:beszel-agent`, which allows it to send metrics to the Beszel HTTPS endpoint without granting access to Loki or other tagged services. Pangolin Newt hosts use `tag:pangolin` plus `tag:monitored`; they can reach the Beszel HTTPS endpoint and Loki ingestion port, with Navidrome separately allowed to reach Maloja over HTTPS. The Beszel, Loki, and Maloja hosts have dedicated destination tags. These tagged nodes cannot initiate SSH; tailnet member devices can SSH into tagged nodes when the destination accepts Tailscale SSH. The Pangolin playbook assigns tags by hostname from `headscale_node_tags` after nodes enroll, so re-registered nodes regain their tags on the next playbook run. Check the live policy and all managed tags with `just check-headscale-policy`.
 
@@ -201,7 +201,7 @@ Or install those tools manually.
 
 ### Running Playbooks
 
-LXC deployment commands run from `ansible/` and apply changes to live hosts.
+Deployment recipes run from the repo root and apply changes to live hosts.
 The all-host list is defined in [playbooks/main.yml](ansible/playbooks/main.yml);
 it excludes retired LXC workloads. Kubernetes follows the separate
 [Argo CD workflow](kubernetes/apps/argocd/MANAGEMENT.md).
@@ -211,13 +211,16 @@ it excludes retired LXC workloads. Kubernetes follows the separate
 just setup
 
 # Run all playbooks
-just run ""
+just run
 
 # Run a single service
-just run "--limit immich"
+just run main --limit immich
 
 # Run one playbook directly
-ansible-playbook playbooks/immich/main.yml -i inventory --vault-password-file .vault_pass
+just run immich/main
+
+# Provision Kubernetes external Secrets and Homepage config maps
+just run talos-cluster/gitops-secrets
 ```
 
 ## Maintenance
@@ -226,8 +229,7 @@ Work on local `main`; push only when explicitly requested. A push touching
 `ansible/**` triggers the Forgejo deployment matrix, and the daily schedule
 reapplies eligible playbooks. The matrix discovers service `main.yml` files
 independently of the all-host import list and skips `.no-ci` directories.
-Manual single-host dispatch also refuses `.no-ci` hosts. The local
-`just run-parallel` recipe does **not** honor those markers; inspect it before use.
+Manual single-host dispatch also refuses `.no-ci` hosts. Local `just run` applies the explicitly selected playbook, including `.no-ci` hosts.
 
 From the repository root, run `just lint` for YAML, Ansible, and shell checks.
 Talos syntax checks load Vault variables; set `ANSIBLE_VAULT_PASSWORD_FILE`
