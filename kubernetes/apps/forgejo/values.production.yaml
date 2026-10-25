@@ -153,10 +153,10 @@ extraDeploy:
               resources:
                 requests:
                   cpu: 10m
-                  memory: 32Mi
+                  memory: 64Mi
                 limits:
                   cpu: 200m
-                  memory: 128Mi
+                  memory: 512Mi
   - apiVersion: cilium.io/v2
     kind: CiliumNetworkPolicy
     metadata:
