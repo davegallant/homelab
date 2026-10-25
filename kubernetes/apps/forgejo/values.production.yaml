@@ -99,20 +99,6 @@ test:
 # Newt identity staged but inactive until cutover, and retain the current
 # target hostname (`forgejo:3000`) with a same-namespace Service alias.
 extraDeploy:
-  - apiVersion: velero.io/v1
-    kind: Schedule
-    metadata:
-      name: forgejo-daily
-      namespace: velero
-    spec:
-      schedule: "0 5 * * *"
-      template:
-        ttl: 336h
-        includedNamespaces:
-          - forgejo
-          - forgejo-runner
-        # Include Secrets so the runner registration survives recovery.
-        defaultVolumesToFsBackup: true
   - apiVersion: v1
     kind: Service
     metadata:
