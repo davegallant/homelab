@@ -65,6 +65,9 @@ controllers:
           - --address=127.0.0.1
           - --port=8001
           - --api-prefix=/
+          # Caddy preserves the original Host, while kubectl proxy defaults
+          # to localhost-only. Allow the tailnet hostname and loopback only.
+          - '--accept-hosts=^(localhost|127\.0\.0\.1|\[::1\]|k8s-readonly\.tail\.davegallant\.ca)$'
         resources:
           requests:
             cpu: 50m
