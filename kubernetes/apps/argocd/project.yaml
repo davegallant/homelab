@@ -13,6 +13,8 @@ spec:
     # unusual topologies).
     - https://bjw-s-labs.github.io/helm-charts
   destinations:
+    - namespace: beszel
+      server: https://kubernetes.default.svc
     - server: https://kubernetes.default.svc
       namespace: bentopdf
     - server: https://kubernetes.default.svc
