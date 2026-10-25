@@ -273,7 +273,7 @@ rawResources:
         name: sonarr-daily
         namespace: velero
       spec:
-        schedule: "0 3 * * *"
+        schedule: "20 4 * * *"
         template:
           ttl: 336h
           includedNamespaces:

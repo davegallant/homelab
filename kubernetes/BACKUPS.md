@@ -28,11 +28,22 @@ daylight saving time; 22:00–23:30 in winter):
 | `speedtest-tracker` | 04:05 |
 | `paperless-ngx` | 04:15 |
 | `romm` | 04:30 |
-| `prowlarr`, `sonarr`, `radarr`, `lidarr` | 03:00 |
+| `forgejo`, `forgejo-runner` | 05:00 |
+| `prowlarr` | 04:10 |
+| `sonarr` | 04:20 |
+| `radarr` | 04:25 |
+| `lidarr` | 04:50 |
 
-The newer media automation schedules also start at 03:00 UTC, so the
-schedule is not fully staggered. The earlier smaller backups start five minutes apart; Paperless and RomM have larger
-slots after their recent runs took about 3 and 15 minutes respectively.
+`forgejo-daily` includes Secrets so the runner registration is protected along
+with Forgejo data. Its production values define the schedule with the same
+14-day TTL. Its first daily run is pending for 2026-10-26 at 05:00 UTC;
+the completed one-off backup does not establish scheduled-run success.
+
+Each daily schedule now has a distinct UTC start. The media automation
+backups run at 04:10, 04:20, 04:25, and 04:50; their latest runs on
+2026-10-25 took 12–30 seconds. Paperless remains at 04:15, RomM at 04:30,
+and Forgejo at 05:00. Lidarr starts 20 minutes after RomM to allow for
+its previously observed longer runs.
 This leaves a buffer before the NAS 01:00 Toronto offsite sync and Proxmox
 02:00 Toronto backup job at the observed durations. Staggering is not a
 global concurrency lock: longer runs or manual backups can still overlap.

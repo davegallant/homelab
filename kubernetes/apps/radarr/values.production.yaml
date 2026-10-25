@@ -273,7 +273,7 @@ rawResources:
         name: radarr-daily
         namespace: velero
       spec:
-        schedule: "0 3 * * *"
+        schedule: "25 4 * * *"
         template:
           ttl: 336h
           includedNamespaces:

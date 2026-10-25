@@ -60,6 +60,18 @@ material until cutover passes - do NOT delete them to make room).
 
 ## Checklist - every new stateful app MUST pass all of these before sync
 
+- [ ] Daily backup coverage is defined in the app's tracked chart or production
+      values, including every namespace holding required state (including a
+      companion runner's registration Secret when it cannot be recreated from
+      Vault). Copy the existing `336h` TTL and choose a UTC slot after checking
+      current schedules and backup durations. Record any Secrets inclusion
+      explicitly: Velero resource archives are not encrypted. For data protected
+      outside Velero, document the protection and recovery path instead.
+- [ ] After deployment, verify the schedule is Enabled, unpaused, covers the
+      intended namespaces and resources, and has a sane next UTC run. Record
+      the first scheduled backup as pending until it completes; verify its
+      required data volumes have Completed PodVolumeBackups with nonzero bytes.
+      A successful one-off backup proves volume support, not daily coverage.
 - [ ] Volume shape is (1) static local OR (2) local-path + `volumeType: local`.
       If it is neither, STOP - do not sync, do not work around it with a waiver.
 - [ ] If static local: host directory under /var/mnt/<app>/ exists on the
