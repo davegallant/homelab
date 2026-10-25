@@ -1,0 +1,169 @@
+# Forgejo production values for forgejo-helm/forgejo 7.1.7.
+# Staging is deliberately at zero replicas until the frozen /data copy and
+# Velero restore drill have passed. SSH remains internal; production cutover
+# is HTTPS-only because the live instance did not expose Git-over-SSH.
+
+image:
+  registry: codeberg.org
+  repository: forgejo/forgejo
+  tag: "17.0.0"
+  digest: sha256:06d38310de496a10186d952bdad5ca764c153c8023ede8dfa0944c79a1dc5412
+  rootless: false
+
+replicaCount: 0
+
+nodeSelector:
+  kubernetes.io/hostname: k8s-w-1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+persistence:
+  enabled: true
+  create: true
+  mount: true
+  claimName: forgejo-data
+  size: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClass: local-path
+
+service:
+  http:
+    type: ClusterIP
+    port: 3000
+  ssh:
+    type: ClusterIP
+    port: 22
+
+ingress:
+  enabled: false
+
+serviceAccount:
+  automountServiceAccountToken: false
+
+gitea:
+  config:
+    server:
+      HTTP_PORT: 3000
+      SSH_PORT: 22
+      SSH_LISTEN_PORT: 22
+    database:
+      DB_TYPE: sqlite3
+      PATH: /data/gitea/gitea.db
+  additionalConfigFromEnvs:
+    - name: FORGEJO__server__ROOT_URL
+      valueFrom:
+        secretKeyRef:
+          name: forgejo-external
+          key: ROOT_URL
+
+postgresql:
+  enabled: false
+
+postgresql-ha:
+  enabled: false
+
+redis-cluster:
+  enabled: false
+
+test:
+  enabled: false
+
+# The upstream chart has no extra-container hook. Keep the existing Pangolin
+# Newt identity staged but inactive until cutover, and retain the current
+# target hostname (`forgejo:3000`) with a same-namespace Service alias.
+extraDeploy:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: forgejo
+      labels:
+        app.kubernetes.io/name: forgejo
+        app.kubernetes.io/instance: forgejo
+    spec:
+      type: ClusterIP
+      selector:
+        app: forgejo
+      ports:
+        - name: http
+          port: 3000
+          targetPort: http
+          protocol: TCP
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: forgejo-newt
+      labels:
+        app.kubernetes.io/name: forgejo-newt
+        app.kubernetes.io/instance: forgejo
+    spec:
+      replicas: 0
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: forgejo-newt
+          app.kubernetes.io/instance: forgejo
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: forgejo-newt
+            app.kubernetes.io/instance: forgejo
+        spec:
+          automountServiceAccountToken: false
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: newt
+              image: docker.io/fosrl/newt:1.19.0@sha256:0189c8287058b800cca825590e4c39946b3815344ca48678dd0b96616d639319
+              imagePullPolicy: IfNotPresent
+              envFrom:
+                - secretRef:
+                    name: forgejo-external
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+  - apiVersion: cilium.io/v2
+    kind: CiliumNetworkPolicy
+    metadata:
+      name: forgejo-default-deny
+    spec:
+      description: Default deny with same-namespace access, cluster DNS, and internet egress.
+      endpointSelector: {}
+      ingress:
+        - fromEntities:
+            - host
+        - fromEndpoints:
+            - matchLabels:
+                k8s:io.kubernetes.pod.namespace: forgejo
+      egress:
+        - toEndpoints:
+            - matchLabels:
+                k8s:k8s-app: kube-dns
+                k8s:io.kubernetes.pod.namespace: kube-system
+          toPorts:
+            - ports:
+                - port: "53"
+                  protocol: UDP
+                - port: "53"
+                  protocol: TCP
+        - toEntities:
+            - world
+      egressDeny:
+        - toCIDR:
+            - 192.168.1.0/24
+            - 10.96.0.0/12
