@@ -2,6 +2,11 @@
 # Staging is deliberately at zero replicas until the frozen /data copy and
 # Velero restore drill have passed. SSH remains internal; production cutover
 # is HTTPS-only because the live instance did not expose Git-over-SSH.
+#
+# STORAGE TEST (2026-10-24): persistence uses the manually created
+# forgejo-data-local PVC, annotated with volumeType: local before
+# local-path provisioning. If this Velero test fails, the static local
+# PV in storage.yaml is the fallback; it requires its Talos host path.
 
 image:
   registry: codeberg.org
@@ -25,9 +30,13 @@ resources:
 
 persistence:
   enabled: true
-  create: true
+  # This PVC was manually created with metadata annotation
+  # volumeType: local before provisioning, so its PV uses spec.local and
+  # Velero can back up the mounted volume. The static storage.yaml PV is
+  # the fallback if the annotation test fails.
+  create: false
   mount: true
-  claimName: forgejo-data
+  claimName: forgejo-data-local
   size: 5Gi
   accessModes:
     - ReadWriteOnce
