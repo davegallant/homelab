@@ -34,7 +34,6 @@
     headscale_node_tags:
       audiobookshelf: [tag:monitored, tag:pangolin]
       bento-pdf: [tag:monitored, tag:pangolin]
-      beszel: [tag:beszel, tag:monitored]
       beszel-k8s: [tag:beszel]
       forgejo: [tag:monitored, tag:pangolin]
       gotify: [tag:monitored, tag:pangolin]

@@ -33,7 +33,6 @@ graph TD
         end
         subgraph N2["Node 2"]
             grafana["grafana + loki"]
-            beszel["beszel"]
             jellyfin["jellyfin"]
             qbittorrent["qbittorrent"]
             n2etc["..."]
@@ -42,6 +41,7 @@ graph TD
     end
 
     subgraph Talos["Talos Kubernetes on Proxmox VMs"]
+        beszel["Beszel hub"]
         apps["Homepage + application workloads"]
         argocd["Argo CD (manual sync)"]
         argocd --> apps
