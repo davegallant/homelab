@@ -50,10 +50,11 @@ prune or force. Apply definitions only after the new source paths are available.
 Secrets stay in Ansible Vault, never in Git values. From the repo root:
 
 ```sh
-KUBECONFIG="$HOME/.local/share/homelab-talos/kubeconfig" \
-  ansible-playbook ansible/playbooks/talos-cluster/gitops-secrets.yml \
-  -i ansible/inventory --vault-password-file ansible/.vault_pass
+just run talos-cluster/gitops-secrets
 ```
+
+The recipe defaults to the protected Talos kubeconfig and `ansible/.vault_pass`.
+Set `KUBECONFIG` or `ANSIBLE_VAULT_PASSWORD_FILE` to override those paths.
 
 This provisions the external resources declared in the playbook, including
 application Secrets, the Velero Garage credential, Argo CD’s Cloudflare

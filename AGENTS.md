@@ -7,15 +7,16 @@ centralized via Grafana Alloy to Loki.
 
 ## Build / Run Commands
 
-All commands are run from the `ansible/` directory using [just](https://github.com/casey/just):
+Run recipes from the repository root using [just](https://github.com/casey/just):
 
 ```sh
 just setup                              # Install Ansible Galaxy collections
-just run "--limit grafana"              # Run all playbooks limited to one host
-just run-parallel                       # Run every playbook concurrently
+just run main --limit grafana              # Run all playbooks limited to one host
+just run                                # Run the all-host playbook
+just run talos-cluster/gitops-secrets     # Provision Kubernetes external resources
 just edit-secrets                       # ansible-vault edit group_vars/all/secrets.yaml
 # Run a single service playbook directly:
-ansible-playbook playbooks/grafana/main.yml -i inventory --vault-password-file .vault_pass
+just run grafana/main
 ```
 
 From the **repo root**:
@@ -29,7 +30,7 @@ just lint                               # yamllint + ansible-lint + shellcheck
 - **On push to `main` (paths `ansible/**`) and daily via cron**: every playbook
   runs in a Forgejo Actions matrix (`.forgejo/workflows/run-all-playbooks.yaml`),
   except playbooks with a `.no-ci` marker file in their directory (e.g. `pangolin`:
-  the VPS edge box only runs by hand, via `just run "--limit pangolin"`)
+  the VPS edge box only runs by hand, via `just run main --limit pangolin`)
 - **Manual dispatch**: run a single playbook by name via `run-single-playbook.yml`
   (refuses `.no-ci` hosts — those run by hand only)
 - **On compose file changes**: `update-containers-table.yml`

@@ -118,7 +118,7 @@ and update DNS for the VPS's public hostnames.
    chmod 600 ~/config/key ~/config/headscale/data/noise_private.key
    ```
 
-4. **Run the playbook** from your Mac (`cd ansible && just run "--limit pangolin"`).
+4. **Run the playbook** from your Mac (`just run main --limit pangolin`).
 It recreates directories (idempotent), templates the compose file and configs
 from git, installs Docker, and brings the stack up **with the restored state
 already in place** — and reinstalls the backup timer, so backups resume
