@@ -3,7 +3,6 @@
 - import_playbook: bedrock/main.yml
 - import_playbook: beszel/main.yml
 - import_playbook: cinema/main.yml
-- import_playbook: dispatcharr/main.yml
 - import_playbook: gatus/main.yml
 - import_playbook: gotify/main.yml
 - import_playbook: grafana/main.yml

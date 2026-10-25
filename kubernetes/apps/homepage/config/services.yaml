@@ -150,9 +150,6 @@
         icon: lidarr.png
         href: "{% raw %}{{HOMEPAGE_VAR_LIDARR_URL}}{% endraw %}"
         description: Music
-    - Dispatcharr:
-        href: "{% raw %}{{HOMEPAGE_VAR_DISPATCHARR_URL}}{% endraw %}"
-        description: TV
     - qBittorrent:
         icon: qbittorrent.jpg
         href: "{% raw %}{{HOMEPAGE_VAR_QBITTORRENT_URL}}{% endraw %}"

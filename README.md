@@ -91,7 +91,6 @@ skips Alloy and Beszel. Kubernetes uses an Alloy DaemonSet for pod logs.
 | [Jellyfin](https://jellyfin.org) | Open-source media server for movies, TV, and music |
 | [Navidrome](https://navidrome.org) | Subsonic-compatible music streaming server |
 | [Audiobookshelf](https://www.audiobookshelf.org) | Self-hosted audiobook and podcast server |
-| [Dispatcharr](https://github.com/Dispatcharr/Dispatcharr) | IPTV playlist and EPG manager |
 | [Invidious](https://invidious.io) | Privacy-respecting YouTube frontend |
 | [RomM](https://github.com/rommapp/romm) | ROM manager and game library for retro games |
 | [Minecraft Bedrock](https://www.minecraft.net) | Bedrock edition game server |
@@ -294,7 +293,6 @@ versions are read from image references and `repository`/`tag` values.
 | ghcr.io/alam00000/bentopdf | 2.8.10 |
 | ghcr.io/androidseb25/igotify-notification-assist | v1.6.0.1 |
 | ghcr.io/davegallant/homelab-caddy-cloudflare | 2.11.6-a8737d0 |
-| ghcr.io/dispatcharr/dispatcharr | 0.33.0 |
 | ghcr.io/flaresolverr/flaresolverr | v3.5.2 |
 | ghcr.io/gethomepage/homepage | v2.7.0 |
 | ghcr.io/hargata/lubelogger | v1.4.5 |
