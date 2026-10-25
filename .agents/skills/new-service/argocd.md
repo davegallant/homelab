@@ -38,7 +38,9 @@ as a reference; migration-specific rollback volumes are not new-app defaults.
    `gitops-secrets.yml` or an existing app-specific secret playbook.
    Preserve the ownership split between Argo CD workloads and external
    Ansible resources; keep rendered secrets outside Git and command output.
-6. For persistent data, configure backup schedules and volume selection,
+6. For persistent data, complete the daily coverage and volume gates in
+   `kubernetes/STORAGE.md`, including the tracked schedule and live Enabled
+   check. Configure backup schedules and volume selection,
    with database-consistent dumps/hooks where needed. Exclude Secrets and
    live Tailscale identities as required by the backup runbook. Document
    restore prerequisites. Add the app to `kubernetes/README.md`, then
