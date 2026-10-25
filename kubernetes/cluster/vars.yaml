@@ -37,7 +37,7 @@ talos_nodes:
     vcpu: 3
     memory_mib: 8192
     allowed_memory_mib: [3072, 4096, 8192]
-    disk_gib: 25
+    disk_gib: 80
     storage: moredata
   - name: k8s-w-2
     host: pve-g3-2

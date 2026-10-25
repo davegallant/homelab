@@ -9,7 +9,7 @@ backups. The Talos credentials and kubeconfig live outside Git under
 | VM | Proxmox host | Role | vCPU | RAM | Disk | Storage |
 |---|---|---|---:|---:|---:|---|
 | `k8s-cp-1` | `pve-g3-1` | control plane | 2 | 6 GiB | 25 GiB | `moredata` |
-| `k8s-w-1` | `pve-g3-1` | worker | 3 | 8 GiB | 25 GiB | `moredata` |
+| `k8s-w-1` | `pve-g3-1` | worker | 3 | 8 GiB | 80 GiB | `moredata` |
 | `k8s-w-2` | `pve-g3-2` | worker | 2 | 4.5 GiB | 25 GiB | `local-lvm` |
 
 Sizing in the table follows [vars.yaml](vars.yaml). Resize workers through
@@ -19,6 +19,13 @@ requests before adding workloads; host free memory alone does not establish
 whether a Pod fits. The control plane keeps its
 `node-role.kubernetes.io/control-plane:NoSchedule` taint. This cluster has one
 control-plane VM across two Proxmox hosts and does not provide control-plane HA.
+
+On 2026-10-25, `k8s-w-1`'s Proxmox disk was grown from 25 GiB to 80 GiB after
+repeated `DiskPressure` caused workload disruption. After reboot, Talos reported
+the ready `/dev/vda4` `EPHEMERAL` partition at 84 GB; `/var` used about 14 GB.
+The node remained Ready with `DiskPressure=False` and no disk-pressure taint
+through the post-resize observation. The resize does not relocate node-local
+PVCs; workloads using them remain tied to `k8s-w-1`.
 
 The post-resize observation on 2026-10-23 ran from 18:19 to 18:24 UTC.
 All deployments recovered, all 35 Cilium endpoints were ready, and no
