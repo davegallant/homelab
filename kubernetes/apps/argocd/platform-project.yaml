@@ -33,7 +33,23 @@ spec:
       namespace: forgejo
     - server: https://kubernetes.default.svc
       namespace: forgejo-runner
+    - server: https://kubernetes.default.svc
+      namespace: tailnet-gateway
+    - server: https://kubernetes.default.svc
+      namespace: changedetection
   clusterResourceWhitelist:
+    - group: admissionregistration.k8s.io
+      kind: ValidatingAdmissionPolicy
+    - group: admissionregistration.k8s.io
+      kind: ValidatingAdmissionPolicyBinding
+    - group: gateway.networking.k8s.io
+      kind: GatewayClass
+    - group: cilium.io
+      kind: CiliumLoadBalancerIPPool
+    - group: cilium.io
+      kind: CiliumL2AnnouncementPolicy
+    - group: cilium.io
+      kind: CiliumClusterwideNetworkPolicy
     - group: ""
       kind: Namespace
     - group: rbac.authorization.k8s.io
@@ -55,6 +71,10 @@ spec:
     - group: cilium.io
       kind: CiliumLocalRedirectPolicy
   namespaceResourceWhitelist:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
     - group: ""
       kind: ServiceAccount
     - group: ""
@@ -83,8 +103,6 @@ spec:
       kind: NetworkPolicy
     - group: cilium.io
       kind: CiliumNetworkPolicy
-    - group: cilium.io
-      kind: CiliumClusterwideNetworkPolicy
     - group: cilium.io
       kind: CiliumNodeConfig
     - group: cilium.io
