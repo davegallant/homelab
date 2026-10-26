@@ -11,9 +11,6 @@ controllers:
       annotations:
         backup.velero.io/backup-volumes: config,caddy-state
         backup.velero.io/backup-volumes-excludes: downloads,tailscale-state
-      securityContext:
-        fsGroup: 1000
-        fsGroupChangePolicy: OnRootMismatch
     containers:
       app:
         image:
