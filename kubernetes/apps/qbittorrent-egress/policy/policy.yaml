@@ -1,0 +1,27 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumEgressGatewayPolicy
+metadata:
+  name: qbittorrent
+  annotations:
+    protected: do-not-delete
+  finalizers:
+    - homelab.davegallant.ca/protect-egress
+spec:
+  selectors:
+    - podSelector:
+        matchLabels:
+          io.kubernetes.pod.namespace: qbittorrent
+          app.kubernetes.io/controller: qbittorrent
+  destinationCIDRs:
+    - 0.0.0.0/0
+  excludedCIDRs:
+    - 192.168.1.0/24
+    - 10.245.0.0/16
+    - 10.96.0.0/12
+    - 100.64.0.0/10
+  egressGateway:
+    nodeSelector:
+      matchLabels:
+        kubernetes.io/hostname: k8s-w-1
+    egressIP: 192.168.1.152

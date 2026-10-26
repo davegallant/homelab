@@ -1,0 +1,24 @@
+---
+# No workload is created with this selector. This fixture tests deletion
+# guardrails and reconciliation, never production traffic or leak behavior.
+apiVersion: cilium.io/v2
+kind: CiliumEgressGatewayPolicy
+metadata:
+  name: qbittorrent-egress-protection-test
+  annotations:
+    protected: do-not-delete
+  finalizers:
+    - homelab.davegallant.ca/protect-egress
+spec:
+  selectors:
+    - podSelector:
+        matchLabels:
+          io.kubernetes.pod.namespace: qbittorrent-egress-guard-test
+          homelab.davegallant.ca/guard-fixture: never-run
+  destinationCIDRs:
+    - 0.0.0.0/0
+  egressGateway:
+    nodeSelector:
+      matchLabels:
+        kubernetes.io/hostname: k8s-w-1
+    egressIP: 192.168.1.152

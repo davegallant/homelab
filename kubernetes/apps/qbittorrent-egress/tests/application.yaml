@@ -1,0 +1,24 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-egress-protection-test
+  namespace: argocd
+spec:
+  project: qbittorrent-egress
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/qbittorrent-egress/tests/fixture
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cilium-system
+  syncPolicy:
+    automated:
+      enabled: true
+      selfHeal: true
+      prune: false
+      allowEmpty: false
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true

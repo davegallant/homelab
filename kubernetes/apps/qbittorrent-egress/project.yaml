@@ -1,0 +1,17 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: qbittorrent-egress
+  namespace: argocd
+spec:
+  description: Self-healing qBittorrent egress policy only; no pruning
+  sourceRepos:
+    - https://github.com/davegallant/homelab.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: cilium-system
+  clusterResourceWhitelist:
+    - group: cilium.io
+      kind: CiliumEgressGatewayPolicy
+  namespaceResourceWhitelist: []
