@@ -76,7 +76,7 @@ controllers:
               optional: true
         env:
           TS_AUTH_ONCE: 'true'
-          TS_HOSTNAME: qbittorrent-k8s
+          TS_HOSTNAME: qbittorrent
           TS_STATE_DIR: /var/lib/tailscale
           TS_KUBE_SECRET: ''
           TS_USERSPACE: 'true'
@@ -172,7 +172,7 @@ configMaps:
           }
         }
 
-        qbittorrent-k8s.tail.davegallant.ca {
+        qbittorrent.tail.davegallant.ca {
           bind 127.0.0.1
 
           tls {
