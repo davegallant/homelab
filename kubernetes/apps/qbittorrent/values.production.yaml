@@ -1,0 +1,363 @@
+---
+# WebUI-only build. No peer Service or egress gateway policy is enabled.
+controllers:
+  qbittorrent:
+    type: deployment
+    strategy: Recreate
+    pod:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: k8s-w-1
+      annotations:
+        backup.velero.io/backup-volumes: config,caddy-state
+        backup.velero.io/backup-volumes-excludes: downloads,tailscale-state
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+    containers:
+      app:
+        image:
+          repository: docker.io/linuxserver/qbittorrent
+          tag: 5.3.0
+          digest: sha256:75ecbb1c89ab7b0a21c4bde40b4820e4f1649d2d56d83b91913422155e8d2a5f
+        env:
+          PUID: '1000'
+          PGID: '1000'
+          TZ: Etc/UTC
+          WEBUI_PORT: '8080'
+          QBITTORRENT_VERSION: 5.3.0
+        securityContext:
+          allowPrivilegeEscalation: false
+        resources:
+          requests:
+            cpu: 25m
+            memory: 128Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        probes:
+          startup:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8080
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8080
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8080
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+      tailscale:
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          allowPrivilegeEscalation: false
+        image:
+          repository: ghcr.io/tailscale/tailscale
+          tag: v1.104.1
+          digest: sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
+        envFrom:
+          - secretRef:
+              name: qbittorrent-tailscale-auth
+              optional: true
+        env:
+          TS_AUTH_ONCE: 'true'
+          TS_HOSTNAME: qbittorrent-k8s
+          TS_STATE_DIR: /var/lib/tailscale
+          TS_KUBE_SECRET: ''
+          TS_USERSPACE: 'true'
+          TS_EXTRA_ARGS: --login-server=https://hs.davegallant.ca --accept-dns=false
+          TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 192Mi
+      caddy:
+        securityContext:
+          allowPrivilegeEscalation: false
+        image:
+          repository: ghcr.io/davegallant/homelab-caddy-cloudflare
+          tag: 2.11.6-a8737d0
+          digest: sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
+        command:
+          - caddy
+        args:
+          - run
+          - --config
+          - /etc/caddy/Caddyfile
+          - --adapter
+          - caddyfile
+        resources:
+          requests:
+            cpu: 25m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+    initContainers:
+      bootstrap:
+        image:
+          repository: docker.io/linuxserver/qbittorrent
+          tag: 5.3.0
+          digest: sha256:75ecbb1c89ab7b0a21c4bde40b4820e4f1649d2d56d83b91913422155e8d2a5f
+        command:
+          - /bin/bash
+          - -ec
+        args:
+          - |
+            install -d -o 1000 -g 1000 /config/qBittorrent
+            if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then
+              install -o 1000 -g 1000 -m 0640 /bootstrap/qbittorrent.conf /config/qBittorrent/qBittorrent.conf
+            fi
+            if [ ! -f /config/qBittorrent/dracula/.revision ]; then
+              curl --fail --silent --show-error --location \
+                https://codeload.github.com/dracula/qbittorrent/tar.gz/9020f6eb457087270179beb86d45914d434adb6b \
+                --output /tmp/dracula.tar.gz
+              install -d /config/qBittorrent/dracula
+              tar -xzf /tmp/dracula.tar.gz -C /config/qBittorrent/dracula --strip-components=1
+              echo 9020f6eb457087270179beb86d45914d434adb6b > /config/qBittorrent/dracula/.revision
+              chown -R 1000:1000 /config/qBittorrent/dracula
+            fi
+        securityContext:
+          allowPrivilegeEscalation: false
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            memory: 128Mi
+service:
+  qbittorrent:
+    controller: qbittorrent
+    ports:
+      http:
+        port: 8080
+configMaps:
+  tailscale:
+    data:
+      serve-config.json: |
+        {
+          "TCP": {
+            "443": {
+              "TCPForward": "127.0.0.1:8443"
+            }
+          }
+        }
+  caddy:
+    data:
+      Caddyfile: |
+        {
+          auto_https disable_redirects
+          https_port 8443
+          tls_resolvers 1.1.1.1
+          servers {
+            protocols h1 h2
+          }
+        }
+
+        qbittorrent-k8s.tail.davegallant.ca {
+          bind 127.0.0.1
+
+          tls {
+            dns cloudflare {file./run/secrets/cloudflare_api_token}
+            propagation_delay 30s
+            propagation_timeout -1
+          }
+
+          reverse_proxy 127.0.0.1:8080
+        }
+persistence:
+  tailscale-state:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    advancedMounts:
+      qbittorrent:
+        tailscale:
+          - path: /var/lib/tailscale
+  tailscale-config:
+    type: configMap
+    name: qbittorrent-tailscale
+    advancedMounts:
+      qbittorrent:
+        tailscale:
+          - path: /etc/tailscale/serve-config.json
+            subPath: serve-config.json
+            readOnly: true
+  caddy-config:
+    type: configMap
+    name: qbittorrent-caddy
+    advancedMounts:
+      qbittorrent:
+        caddy:
+          - path: /etc/caddy/Caddyfile
+            subPath: Caddyfile
+            readOnly: true
+  caddy-state:
+    annotations:
+      volumeType: local
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 256Mi
+    advancedMounts:
+      qbittorrent:
+        caddy:
+          - path: /data
+  caddy-runtime:
+    type: emptyDir
+    advancedMounts:
+      qbittorrent:
+        caddy:
+          - path: /config
+  caddy-secret:
+    type: secret
+    name: qbittorrent-caddy-external
+    advancedMounts:
+      qbittorrent:
+        caddy:
+          - path: /run/secrets/cloudflare_api_token
+            subPath: cloudflare_api_token
+            readOnly: true
+  config:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    annotations:
+      volumeType: local
+    advancedMounts:
+      qbittorrent:
+        app:
+          - path: /config
+        bootstrap:
+          - path: /config
+  downloads:
+    type: persistentVolumeClaim
+    existingClaim: qbittorrent-downloads
+    advancedMounts:
+      qbittorrent:
+        app:
+          - path: /mnt/torrents
+            subPath: torrents
+  bootstrap-config:
+    type: secret
+    name: qbittorrent-config-external
+    advancedMounts:
+      qbittorrent:
+        bootstrap:
+          - path: /bootstrap
+            readOnly: true
+  scripts:
+    type: secret
+    name: qbittorrent-scripts-external
+    items:
+      - key: block-malware.sh
+        path: block-malware.sh
+        mode: 488
+      - key: notify.sh
+        path: notify.sh
+        mode: 420
+    advancedMounts:
+      qbittorrent:
+        app:
+          - path: /scripts
+            readOnly: true
+rawResources:
+  daily:
+    enabled: true
+    manifest:
+      apiVersion: velero.io/v1
+      kind: Schedule
+      metadata:
+        name: qbittorrent-daily
+        namespace: velero
+      spec:
+        schedule: 40 4 * * *
+        template:
+          ttl: 336h
+          includedNamespaces:
+            - qbittorrent
+          excludedResources:
+            - secrets
+          defaultVolumesToFsBackup: false
+          snapshotVolumes: false
+          storageLocation: default
+  defaultDenyNetworkPolicy:
+    enabled: true
+    manifest:
+      apiVersion: cilium.io/v2
+      kind: CiliumNetworkPolicy
+      metadata:
+        name: default-deny
+        namespace: qbittorrent
+      spec:
+        description: 'WebUI-only build: default deny ingress with DNS, Tailscale/Cloudflare egress. NOT a verified gateway-only or fail-closed policy.'
+        endpointSelector: {}
+        ingress:
+          - fromEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: qbittorrent
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: sonarr
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: radarr
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: lidarr
+            toPorts:
+              - ports:
+                  - port: '8080'
+                    protocol: TCP
+          - fromEntities:
+              - world
+            toPorts:
+              - ports:
+                  - port: '41641'
+                    protocol: UDP
+        egress:
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: kube-system
+                  k8s:k8s-app: kube-dns
+            toPorts:
+              - ports:
+                  - port: '53'
+                    protocol: UDP
+                  - port: '53'
+                    protocol: TCP
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: qbittorrent
+          - toCIDR:
+              - 192.168.1.0/24
+            toPorts:
+              - ports:
+                  - port: '41641'
+                    protocol: UDP
+          - toEntities:
+              - world
+        egressDeny:
+          - toCIDR:
+              - 10.96.0.0/12
+              - 10.245.0.0/16
