@@ -1,16 +1,8 @@
 ---
 # ChangeDetection — Argo CD production values (bjw-s app-template 5.3.0).
 # Application configuration: this file. The workload uses
-# docker.io/dgtlmoon/changedetection.io 0.60.9 on port 5000 with no
-# browser sidecar.
-# Tailnet-only: exposure mirrors the Kiwix pod — userspace Tailscale
-# sidecar TCP-forwarding 443 to an in-pod Caddy (8443), which
-# terminates a real certificate (Cloudflare DNS-01) and proxies to
-# ChangeDetection on 127.0.0.1:5000.
-#
-# Secrets stay outside Git and outside Argo's ownership:
-#   changedetection-caddy-external    (key cloudflare_api_token) — Ansible/Vault
-#   changedetection-tailscale-auth    (key TS_AUTHKEY, one-use)  — bootstrap only
+# docker.io/dgtlmoon/changedetection.io 0.60.9 on port 5000. HTTPS is
+# terminated by the tailnet Gateway and forwarded to the existing Service.
 controllers:
   changedetection:
     type: deployment
@@ -19,9 +11,7 @@ controllers:
       automountServiceAccountToken: false
       annotations:
         # Opt-in filesystem backup of the app config volume only;
-        # the sidecar volumes are excluded by omission (the Schedule
-        # is opt-in), and the tailscale identity must never be
-        # captured for restore.
+        # the Schedule is opt-in.
         backup.velero.io/backup-volumes: datastore-local
       securityContext:
         fsGroup: 1000
@@ -71,106 +61,12 @@ controllers:
           limits:
             cpu: 1000m
             memory: 1Gi
-      tailscale:
-        securityContext:
-          capabilities:
-            drop:
-              - ALL
-          allowPrivilegeEscalation: false
-        image:
-          repository: ghcr.io/tailscale/tailscale
-          tag: v1.104.1
-          digest: sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
-        envFrom:
-          # The bootstrap-created Secret holds exactly one key
-          # (TS_AUTHKEY), imported here as the env var of that name.
-          # Optional: once the identity persists in tailscale-state,
-          # the Secret is deleted and the sidecar runs without it.
-          - secretRef:
-              name: changedetection-tailscale-auth
-              optional: true
-        env:
-          TS_AUTH_ONCE: "true"
-          TS_HOSTNAME: changedetection
-          TS_STATE_DIR: /var/lib/tailscale
-          TS_KUBE_SECRET: ""
-          TS_USERSPACE: "true"
-          TS_EXTRA_ARGS: --login-server=https://hs.davegallant.ca --accept-dns=false
-          TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
-        resources:
-          requests:
-            cpu: 5m
-            memory: 32Mi
-          limits:
-            cpu: 200m
-            memory: 192Mi
-      caddy:
-        securityContext:
-          allowPrivilegeEscalation: false
-        image:
-          repository: ghcr.io/davegallant/homelab-caddy-cloudflare
-          tag: 2.11.6-a8737d0
-          digest: sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
-        command:
-          - caddy
-        args:
-          - run
-          - --config
-          - /etc/caddy/Caddyfile
-          - --adapter
-          - caddyfile
-        resources:
-          requests:
-            cpu: 25m
-            memory: 16Mi
-          limits:
-            cpu: 100m
-            memory: 128Mi
-
 service:
   changedetection:
     controller: changedetection
     ports:
       http:
         port: 5000
-
-configMaps:
-  # Keys are short on purpose: bjw-s names the rendered ConfigMaps
-  # <release>-<key>, and the persistence entries below reference the
-  # resulting changedetection-tailscale / changedetection-caddy names.
-  tailscale:
-    data:
-      serve-config.json: |
-        {
-          "TCP": {
-            "443": {
-              "TCPForward": "127.0.0.1:8443"
-            }
-          }
-        }
-  caddy:
-    data:
-      Caddyfile: |
-        {
-          auto_https disable_redirects
-          https_port 8443
-          tls_resolvers 1.1.1.1
-          servers {
-            protocols h1 h2
-          }
-        }
-
-        changedetection.tail.davegallant.ca {
-          bind 127.0.0.1
-
-          tls {
-            dns cloudflare {file./run/secrets/cloudflare_api_token}
-            propagation_delay 30s
-            propagation_timeout -1
-          }
-
-          reverse_proxy 127.0.0.1:5000
-        }
 
 persistence:
   # Keep the original hostPath-backed claim mounted for rollback. Velero
@@ -198,62 +94,6 @@ persistence:
       changedetection:
         app:
           - path: /datastore
-  tailscale-state:
-    type: persistentVolumeClaim
-    annotations:
-      argocd.argoproj.io/ignore-healthcheck: "true"
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 64Mi
-    advancedMounts:
-      changedetection:
-        tailscale:
-          - path: /var/lib/tailscale
-  tailscale-config:
-    type: configMap
-    name: changedetection-tailscale
-    advancedMounts:
-      changedetection:
-        tailscale:
-          - path: /etc/tailscale/serve-config.json
-            subPath: serve-config.json
-            readOnly: true
-  caddy-config:
-    type: configMap
-    name: changedetection-caddy
-    advancedMounts:
-      changedetection:
-        caddy:
-          - path: /etc/caddy/Caddyfile
-            subPath: Caddyfile
-            readOnly: true
-  caddy-state:
-    type: persistentVolumeClaim
-    annotations:
-      argocd.argoproj.io/ignore-healthcheck: "true"
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 256Mi
-    advancedMounts:
-      changedetection:
-        caddy:
-          - path: /data
-  caddy-runtime:
-    type: emptyDir
-    advancedMounts:
-      changedetection:
-        caddy:
-          - path: /config
-  caddy-secret:
-    type: secret
-    name: changedetection-caddy-external
-    advancedMounts:
-      changedetection:
-        caddy:
-          - path: /run/secrets/cloudflare_api_token
-            subPath: cloudflare_api_token
-            readOnly: true
-
 rawResources:
   backupSchedule:
     enabled: true
