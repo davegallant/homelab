@@ -34,6 +34,16 @@ operator:
       memory: 192Mi
   unmanagedPodWatcher:
     restart: true
+envoy:
+  extraVolumes:
+    - name: bpf-maps
+      hostPath:
+        path: /sys/fs/bpf
+        type: Directory
+  extraVolumeMounts:
+    - name: bpf-maps
+      mountPath: /sys/fs/bpf
+      mountPropagation: HostToContainer
 bpf:
   masquerade: true
   autoMount:
