@@ -1,0 +1,19 @@
+---
+# Fronting pod state only. Disposable local-path PVC, like the
+# per-app tailscale-state PVCs today. NOT backed up by Velero.
+# Recreating it means re-authenticating the tailnet-gateway node.
+# Only create this PVC when Gate 0 proves the fronting mechanism
+# and Dave approves the fronting pod. Do NOT sync it as part of
+# a Gateway-only test.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tailnet-gateway-tailscale
+  namespace: tailnet-gateway
+spec:
+  storageClassName: local-path
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

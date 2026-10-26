@@ -1,0 +1,22 @@
+---
+# Gate 2 staging candidate. This policy is not itself an enforcement proof.
+# Selects shared ingress identity on every node, not just this Gateway.
+# Requires review of all existing allow policies and live identity tests.
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: tailnet-gateway-entry
+spec:
+  endpointSelector:
+    matchExpressions:
+      - key: reserved:ingress
+        operator: Exists
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: tailnet-gateway
+            k8s:app.kubernetes.io/name: tailnet-gateway-fronting
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

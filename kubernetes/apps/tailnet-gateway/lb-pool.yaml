@@ -1,0 +1,13 @@
+---
+# Gate 2 staging: 192.168.1.185 confirmed unused by Dave; outside current DHCP pool.
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: tailnet-gateway
+spec:
+  blocks:
+    - start: 192.168.1.185
+      stop: 192.168.1.185
+  serviceSelector:
+    matchLabels:
+      io.kubernetes.service.namespace: tailnet-gateway

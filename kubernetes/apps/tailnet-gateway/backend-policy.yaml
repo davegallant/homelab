@@ -1,0 +1,18 @@
+---
+# Additive only; do not replace changedetection's existing policy.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: changedetection-gateway-test
+  namespace: changedetection
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: changedetection
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "5000"
+              protocol: TCP

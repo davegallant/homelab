@@ -1,0 +1,7 @@
+# No ReferenceGrant is required for this test topology.
+# Cross-namespace HTTPRoute -> Gateway attachment is authorized by
+# gateway.yaml listener.allowedRoutes, restricted to changedetection.
+# Route -> Service and Gateway -> Secret references are same-namespace.
+# The original HTTPRoute -> Gateway grant did not authorize attachment.
+# Retain this file as a design correction, with no resource to apply.
+# Source: https://gateway-api.sigs.k8s.io/reference/api-types/referencegrant/

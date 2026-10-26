@@ -1,0 +1,26 @@
+---
+# Test route ONLY. Sidecar URL changedetection.tail.davegallant.ca
+# stays live throughout the test. This route uses a distinct
+# hostname so a Gateway failure cannot break the live URL.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: changedetection-gateway-test
+  namespace: changedetection
+spec:
+  parentRefs:
+    - kind: Gateway
+      name: tailnet-gateway
+      namespace: tailnet-gateway
+      sectionName: https
+  hostnames:
+    - changedetection-gw.tail.davegallant.ca
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - kind: Service
+          name: changedetection
+          port: 5000
