@@ -1,0 +1,46 @@
+# Namespace and NFS PV/PVC are hand-applied; pending Argo adoption.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: qbittorrent
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: qbittorrent-downloads
+spec:
+  capacity:
+    storage: 1Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ''
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+    - noatime
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: truenas-qbittorrent-downloads
+    volumeAttributes:
+      server: 192.168.1.83
+      share: /mnt/pool
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qbittorrent-downloads
+  namespace: qbittorrent
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ''
+  volumeName: qbittorrent-downloads
+  resources:
+    requests:
+      storage: 1Ti
