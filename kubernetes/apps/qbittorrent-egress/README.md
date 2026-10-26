@@ -148,12 +148,12 @@ Cloudflare and Headscale Mullvad acceptance was not tested in this cutover.
 
 ## *arr and peer ingress
 
-Sonarr, Radarr and Lidarr each had an enabled qBittorrent client saved as
-`qbittorrent.tail.davegallant.ca:443` with HTTPS. Their queues were empty. Each
-app's built-in client test passed for
-`qbittorrent-k8s.tail.davegallant.ca:443`; the request used the app's HTTP
-proxy, not SOCKS5. The enabled client records were then updated to that K8s
-endpoint and post-update tests returned HTTP 200. Protected rollback records
+Sonarr, Radarr and Lidarr each have an enabled qBittorrent client saved as
+`qbittorrent.tail.davegallant.ca:443` with HTTPS. Their queues were empty.
+Each app's built-in client test passed for
+`qbittorrent-k8s.tail.davegallant.ca:443`; after the production hostname move,
+the client records were switched back to `qbittorrent.tail.davegallant.ca:443`
+and their built-in tests passed. Protected rollback records
 are stored locally in `/tmp/qbittorrent-arr-cutover-20261026/` (directory
 0700, files 0600); they are not in Git.
 
