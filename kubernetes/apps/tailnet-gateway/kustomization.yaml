@@ -6,3 +6,5 @@ resources:
   - l2-policy.yaml
   - backend-policy.yaml
   - entry-policy.yaml
+  - gateway.yaml
+  - httproute-changedetection-test.yaml
