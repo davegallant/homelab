@@ -131,20 +131,18 @@ headers only.
 
 | Mode | Result |
 | --- | --- |
-| Normal IPv4 TCP | A TCP connection carried two HTTPS requests on the same socket, both HTTP 200 with public exit Mullvad `23.234.87.92`. Pod source was `10.245.2.152`; w-1 and router LAN source was `192.168.1.152`; WireGuard carried the traffic; no clear probe traffic appeared on WAN. |
-| Normal established and fresh IPv4 UDP | Not verified. The earlier port-53 DNS probe returned responses inside the pod, but simultaneous node/router captures did not show those packets. A subsequent production-pod capture could not start because OPNsense SSH closed the connection after its agent refused the key. |
+| Normal production IPv4 TCP and UDP | Verified 2026-10-26. Two HTTPS requests on one TCP socket and one request on a fresh socket returned HTTP 200 with Mullvad exit `23.234.87.92`. Two UDP datagrams used one socket and a third used a fresh socket. Pod, node, router LAN and WireGuard captures showed both protocols; WAN had zero clear probe packets and captured encrypted WireGuard traffic. Capture counts were 48 node, 54 router LAN, 54 WireGuard, 0 plain WAN and 367 encrypted WireGuard WAN packets. Evidence: `/var/folders/n9/mbp934p92f71vd360n8_ps380000gn/T/qbittorrent-normal-proof-8o5xyidb`. |
 | New pod with init hold | Production policy map was verified before releasing init. Two TCP requests on one socket and a third on a fresh socket returned HTTP 200 and public exit `23.234.87.92`; two non-DNS UDP datagrams used the same socket and a third used a fresh socket. Pod, node, router LAN and WireGuard captures showed both protocols; WAN had zero clear probe packets and captured encrypted WireGuard traffic. This proves the controlled init-held sequence, not an unheld universal startup guarantee. |
 | Missing egress IP, isolated test policy | TCP and UDP packets were visible inside the pod and timed out; no packets appeared at node output, router LAN, tunnel or WAN. The test policy referenced unassigned `192.168.1.253`. |
 | No matching gateway, isolated test policy | The map showed egress `0.0.0.0/0`, egress IP `0.0.0.0` and gateway `Not Found`; TCP/UDP timed out and no packets appeared at node output, router LAN, tunnel or WAN. |
-| No matching gateway, isolated test policy | The map showed egress `0.0.0.0/0` and gateway `Not Found`; TCP/UDP timed out and no packets appeared at node output, router LAN, tunnel or WAN. |
 | Native IPv6 | A native public IPv6 connect from the pod failed with `errno 101`; the node had no IPv6 default route or global IPv6 address, and Cilium IPv6 is disabled. Userspace tailnet IPv6 is not native public IPv6. |
 
-The full normal-mode TCP/UDP packet gate is incomplete because the production
-pod's UDP path was not captured. The isolated drop tests do not prove
-production-policy deletion is safe or fail-closed. Explicit WAN blocking, IPv6 firewalling, production `.152`
-gateway-down and rule-removal tests, Mullvad tunnel failure, and production
-policy deletion behavior remain unproven. No active WAN leak was observed in
-the tested modes; this does not remove the known fallback risk.
+The normal-mode production TCP/UDP packet gate passed. The isolated drop tests
+do not prove production-policy deletion is safe or fail-closed. Explicit WAN
+blocking, IPv6 firewalling, production `.152` gateway-down and rule-removal
+tests, Mullvad tunnel failure, and production policy deletion behavior remain
+unproven. No active WAN leak was observed in the tested modes; this does not
+remove the known fallback risk.
 
 Cloudflare and Headscale Mullvad acceptance was not tested in this cutover.
 
