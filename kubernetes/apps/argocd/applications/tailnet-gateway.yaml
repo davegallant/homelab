@@ -1,0 +1,22 @@
+---
+# Gate 2 staging. Manual sync only. kustomization.yaml includes only the
+# namespace and entry/backend/IPAM resources until later gates add the
+# certificate-dependent Gateway and then the fronting resources.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tailnet-gateway
+  namespace: argocd
+spec:
+  project: homelab-platform
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/tailnet-gateway
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tailnet-gateway
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true

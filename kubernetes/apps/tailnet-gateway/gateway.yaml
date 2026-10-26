@@ -1,0 +1,35 @@
+---
+# GATE-0-OPEN: GatewayClass cilium and TLS Secret are unproven.
+# Do NOT sync until Gate 0 proves GatewayClass exists, Cilium
+# gatewayAPI/LB-IPAM values are set, and the wildcard Secret
+# issuance plan is approved. See README.md.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: tailnet-gateway
+  namespace: tailnet-gateway
+spec:
+  gatewayClassName: cilium
+  # Gate 2 staging address confirmed unused by Dave.
+  addresses:
+    - type: IPAddress
+      value: 192.168.1.185
+  listeners:
+    - name: https
+      port: 443
+      protocol: HTTPS
+      hostname: "*.tail.davegallant.ca"
+      allowedRoutes:
+        kinds:
+          - group: gateway.networking.k8s.io
+            kind: HTTPRoute
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: changedetection
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: tailnet-gateway-wildcard

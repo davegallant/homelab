@@ -1,0 +1,87 @@
+---
+# Gate 2 staging source only. Kustomize excludes this Deployment until
+# Gateway and route verification passes. The user-space Tailscale process
+# forwards TCP 443 to the reserved Gateway address.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tailnet-gateway-fronting
+  namespace: tailnet-gateway
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tailnet-gateway-fronting
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tailnet-gateway-fronting
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-w-1
+      automountServiceAccountToken: false
+      containers:
+        - name: tailscale
+          image: ghcr.io/tailscale/tailscale:v1.104.1@sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            allowPrivilegeEscalation: false
+          envFrom:
+            - secretRef:
+                name: tailnet-gateway-tailscale-auth
+                optional: true
+          env:
+            - name: TS_AUTH_ONCE
+              value: "true"
+            - name: TS_HOSTNAME
+              value: tailnet-gateway
+            - name: TS_STATE_DIR
+              value: /var/lib/tailscale
+            - name: TS_KUBE_SECRET
+              value: ""
+            - name: TS_USERSPACE
+              value: "true"
+            - name: TS_EXTRA_ARGS
+              value: --login-server=https://hs.davegallant.ca --accept-dns=false
+            - name: TS_SERVE_CONFIG
+              value: /etc/tailscale/serve-config.json
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 192Mi
+          volumeMounts:
+            - name: tailscale-state
+              mountPath: /var/lib/tailscale
+            - name: tailscale-config
+              mountPath: /etc/tailscale/serve-config.json
+              subPath: serve-config.json
+              readOnly: true
+      volumes:
+        - name: tailscale-state
+          persistentVolumeClaim:
+            claimName: tailnet-gateway-tailscale
+        - name: tailscale-config
+          configMap:
+            name: tailnet-gateway-tailscale
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tailnet-gateway-tailscale
+  namespace: tailnet-gateway
+data:
+  serve-config.json: |
+    {
+      "TCP": {
+        "443": {
+          "TCPForward": "192.168.1.185:443"
+        }
+      }
+    }

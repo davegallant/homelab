@@ -1,0 +1,14 @@
+---
+# Gate 2 staging: announce selected LoadBalancer IPs on ens18.
+apiVersion: cilium.io/v2alpha1
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: tailnet-gateway
+spec:
+  serviceSelector:
+    matchLabels:
+      io.kubernetes.service.namespace: tailnet-gateway
+  interfaces:
+    - ^ens18$
+  loadBalancerIPs: true
+  externalIPs: false
