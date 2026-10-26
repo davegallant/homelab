@@ -1,7 +1,7 @@
 # qBittorrent WebUI build
 
 This is a fresh, empty Kubernetes app on `k8s-w-1`, using app-template
-5.3.0 and LinuxServer qBittorrent 5.3.0. It does not replace the live LXC.
+5.3.0 and LinuxServer qBittorrent 5.3.0. It replaces the stopped LXC endpoint.
 No torrent state is copied and no torrent is added. Peers have no published
 Service; their final listening/forwarded port remains a cutover TODO. The
 source's explicit 5032 setting is omitted rather than choosing between it
@@ -10,11 +10,13 @@ Newly added torrents default to stopped as an additional build safeguard.
 
 ## Exposure and credentials
 
-Test URL: `https://qbittorrent-k8s.tail.davegallant.ca`. Userspace Tailscale
+URL: `https://qbittorrent.tail.davegallant.ca`. Userspace Tailscale
 forwards HTTPS to loopback Caddy, then WebUI port 8080. It gets its own
 one-use registration key with existing `tag:monitored`. Headscale member
 devices (including the member-owned *arr identities) can reach that tag.
-Do not rename the identity to production while the LXC is live.
+The LXC is stopped; its stale Headscale identity is renamed
+`qbittorrent-lxc-retired` so this Kubernetes identity can own the production
+MagicDNS name.
 
 `provision.yml` materializes external Secrets with `no_log: true` and stdin,
 using Ansible Vault. `qbittorrent_webui_password` remains the PBKDF2 hash;
