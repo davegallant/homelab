@@ -13,6 +13,8 @@ spec:
     # unusual topologies).
     - https://bjw-s-labs.github.io/helm-charts
   destinations:
+    - namespace: qbittorrent
+      server: https://kubernetes.default.svc
     - namespace: beszel
       server: https://kubernetes.default.svc
     - server: https://kubernetes.default.svc
