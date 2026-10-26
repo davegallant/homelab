@@ -11,7 +11,13 @@ ipam:
 routingMode: tunnel
 tunnelProtocol: vxlan
 tunnelPort: 8473
-kubeProxyReplacement: false
+kubeProxyReplacement: true
+k8sServiceHost: localhost
+k8sServicePort: 7445
+devices:
+  - ens18
+egressGateway:
+  enabled: true
 encryption:
   enabled: true
   type: wireguard
@@ -29,6 +35,7 @@ operator:
   unmanagedPodWatcher:
     restart: true
 bpf:
+  masquerade: true
   autoMount:
     enabled: false
   root: /sys/fs/bpf
