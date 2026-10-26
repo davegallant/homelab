@@ -8,6 +8,9 @@ nodeIP:
   validSubnets:
     - {{ talos_kubelet_node_ip_subnet }}
 ---
+cluster:
+  proxy:
+    disabled: true
 machine:
   network:
     interfaces:
