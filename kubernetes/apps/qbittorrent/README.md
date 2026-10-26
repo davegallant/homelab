@@ -59,7 +59,7 @@ kubectl --context homelab apply -f kubernetes/apps/argocd/applications/qbittorre
 
 Review and manually sync only `qbittorrent`, without prune or force. Verify
 PVC types, readiness, authenticated API, theme, zero torrents, *arr test-only
-connectivity through SOCKS5, and a Completed nonzero Velero PodVolumeBackup.
+connectivity through the Tailscale HTTP proxy, and a Completed nonzero Velero PodVolumeBackup.
 Provisioning does not rotate an existing Tailscale registration Secret.
 An expired unused registration key requires a separately reviewed refresh.
 Restore Secrets from Vault and preserve or deliberately re-register the
@@ -113,3 +113,31 @@ normal node NAT. Do not claim the example above plus the build policy solves
 that problem. No production node should be cordoned or rebooted to test it.
 
 Homepage/Gatus production entries stay on the live LXC during this build.
+
+## App-build verification, 2026-10-26
+
+The WebUI-only build passed: pod 3/3 Running on w-1, Argo Synced/Healthy,
+WebUI HTTP 200, authenticated API v5.3.0, Dracula active, zero torrents.
+qBittorrent 5.3.0 login returns HTTP 204 with a session cookie, not the older
+`Ok.` response body. The authenticated API is the login success check.
+Direct HTTP Service login returned 401; HTTPS through Caddy succeeded.
+
+Sonarr's port 1055 is an HTTP proxy (`TS_OUTBOUND_HTTP_PROXY_LISTEN`), not
+SOCKS5. The failed SOCKS5 probe used the wrong protocol. Sonarr's environment
+already configures HTTP_PROXY/HTTPS_PROXY correctly. Using that existing HTTP
+proxy, HTTPS returned 200, login returned 204 with a valid session, and the
+version/torrents APIs returned 200. Sonarr's test-only download-client API
+returned HTTP 200 for the test hostname. A before/after comparison confirmed
+production download-client settings unchanged. No production settings changed.
+
+Backup `qbittorrent-app-build-20261026033041` completed with zero errors and
+warnings: config PVB 18,711,706 bytes, Caddy-state PVB 6,198 bytes. The daily
+schedule is Enabled at 04:40 UTC; first scheduled-run proof remains pending.
+See BUILD-REPORT.md for gate results and the verbatim policy manifest.
+
+The pod-wide fsGroup was removed to avoid NFS ownership traversal. The config
+claim was subsequently replaced under explicit diagnostic approval; the old
+Retain PV remains preserved. Config-field text comparisons alone were not
+sufficient to identify a login failure: authenticated HTTPS API requests pass.
+Never delete a future config claim just because a legacy credential-key grep
+fails. Use the actual authenticated API before concluding credentials are bad.
