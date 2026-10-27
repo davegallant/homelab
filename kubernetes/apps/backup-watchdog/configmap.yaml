@@ -1,0 +1,261 @@
+---
+# Watchdog script + allowlist, as a ConfigMap. The script is stdlib-only
+# Python; it reads the Kubernetes API with the pod ServiceAccount token
+# (no kubectl, no jq) and posts to Gotify only on gaps or errors.
+# The Gotify token is NOT here: it is a Vault-provisioned Secret
+# (backup-watchdog-gotify, key token) mounted as env, never in Git.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-watchdog
+  namespace: velero
+  labels:
+    app.kubernetes.io/name: backup-watchdog
+data:
+  allowlist.json: |
+    {
+      "namespaces": {
+        "argocd": "Proxmox VM backup, not Velero (tailscale/caddy state PVCs)",
+        "kube-system": "system, no user PVCs",
+        "kube-public": "system, no user PVCs",
+        "kube-node-lease": "system, no user PVCs",
+        "velero": "Velero's own namespace, no user PVCs"
+      },
+      "volumes": {
+        "romm/romm-library": "TrueNAS snapshots + Drive sync, not Velero"
+      },
+      "volume_suffixes": ["-tailscale", "-caddy", "-tailscale-state", "-caddy-state"]
+    }
+  check.py: |
+    #!/usr/bin/env python3
+    """Velero backup-coverage watchdog. Stdlib only.
+    Checks: (1) every namespace with a Bound PVC is covered by an enabled
+    Velero Schedule; (2) the schedule's latest Backup is Completed and fresh
+    (within 36h); (3) for a fresh Completed backup, PodVolumeBackups are
+    Completed with nonzero bytes and every eligible PVC has a matching PVB.
+    Alert scope: no schedule, failed/missing/stale backup, failed/0-byte/missing
+    PVB. Not alerted, reported only: hostPath, NFS, allowlisted namespaces
+    and volumes. Gotify only on gaps or errors, priority 8. Exit 0 = no gaps,
+    1 = gaps, 2 = script/API error. Fixture mode: WATCHDOG_FIXTURE_DIR with
+    pvcs/pvs/pods/schedules/backups/pvbs JSON lists, for local testing.
+    """
+    import json
+    import os
+    import ssl
+    import sys
+    import urllib.request
+    import urllib.error
+    from datetime import datetime, timezone
+    STALE_HOURS = float(os.environ.get("WATCHDOG_STALE_HOURS", "36"))
+    GOTIFY_URL = os.environ.get("GOTIFY_URL", "https://gotify.davegallant.ca/message")
+    GOTIFY_TOKEN = os.environ.get("GOTIFY_TOKEN", "")
+    REPORT_PATH = os.environ.get("WATCHDOG_REPORT_PATH", "")
+    FIXTURE_DIR = os.environ.get("WATCHDOG_FIXTURE_DIR", "")
+    def parse_time(s):
+        if not s:
+            return None
+        try:
+            return datetime.fromisoformat(s.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    def age_hours(ts, now):
+        dt = parse_time(ts)
+        if dt is None:
+            return None
+        return (now - dt).total_seconds() / 3600.0
+    def api_get(path):
+        host = os.environ["KUBERNETES_SERVICE_HOST"]
+        port = os.environ["KUBERNETES_SERVICE_PORT"]
+        with open("/var/run/secrets/kubernetes.io/serviceaccount/token") as f:
+            token = f.read().strip()
+        ctx = ssl.create_default_context(cafile="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
+        req = urllib.request.Request(f"https://{host}:{port}{path}", headers={"Authorization": f"Bearer {token}", "Accept": "application/json"})
+        with urllib.request.urlopen(req, context=ctx, timeout=30) as r:
+            return json.load(r)
+    def load_live():
+        return {
+            "pvcs": api_get("/api/v1/persistentvolumeclaims?limit=500"),
+            "pvs": api_get("/api/v1/persistentvolumes?limit=500"),
+            "pods": api_get("/api/v1/pods?limit=500"),
+            "schedules": api_get("/apis/velero.io/v1/namespaces/velero/schedules?limit=500"),
+            "backups": api_get("/apis/velero.io/v1/namespaces/velero/backups?limit=500"),
+            "pvbs": api_get("/apis/velero.io/v1/namespaces/velero/podvolumebackups?limit=500"),
+        }
+    def load_fixtures():
+        out = {}
+        for name in ("pvcs", "pvs", "pods", "schedules", "backups", "pvbs"):
+            with open(os.path.join(FIXTURE_DIR, name + ".json")) as f:
+                out[name] = json.load(f)
+        return out
+    def load_allowlist():
+        path = os.environ.get("WATCHDOG_ALLOWLIST", "")
+        if not path and FIXTURE_DIR:
+            path = os.path.join(FIXTURE_DIR, "allowlist.json")
+        if not path:
+            path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "allowlist.json")
+        try:
+            with open(path) as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return {"namespaces": {}, "volumes": {}}
+    def schedule_covers(schedule, namespace):
+        spec = schedule.get("spec", {})
+        if spec.get("paused"):
+            return False
+        included = (spec.get("template", {}) or {}).get("includedNamespaces")
+        if not included:
+            return True
+        return namespace in included
+    def main():
+        now = datetime.now(timezone.utc)
+        try:
+            data = load_fixtures() if FIXTURE_DIR else load_live()
+        except Exception as exc:
+            return fail(f"failed to load cluster data: {exc}")
+        allow = load_allowlist()
+        allow_ns = allow.get("namespaces", {})
+        allow_vol = allow.get("volumes", {})
+        allow_suffixes = allow.get("volume_suffixes", [])
+        def volume_allowlisted(ns, claim):
+            if f"{ns}/{claim}" in allow_vol:
+                return allow_vol[f"{ns}/{claim}"]
+            for suf in allow_suffixes:
+                if claim.endswith(suf):
+                    return f"volume suffix {suf} (tailscale/caddy state, intentionally not Velero-backed)"
+            return None
+        pv_by_name = {p["metadata"]["name"]: p for p in data["pvs"].get("items", [])}
+        pvc_pv_type = {}
+        for pvc in data["pvcs"].get("items", []):
+            vol = pvc.get("spec", {}).get("volumeName")
+            pv = pv_by_name.get(vol, {})
+            spec = pv.get("spec", {})
+            if "hostPath" in spec:
+                pvc_pv_type[(pvc["metadata"]["namespace"], pvc["metadata"]["name"])] = "hostPath"
+            elif "nfs" in spec or (spec.get("csi", {}) or {}).get("driver", "") == "nfs.csi.k8s.io":
+                pvc_pv_type[(pvc["metadata"]["namespace"], pvc["metadata"]["name"])] = "nfs"
+            else:
+                pvc_pv_type[(pvc["metadata"]["namespace"], pvc["metadata"]["name"])] = "other"
+        bound = {}
+        for pvc in data["pvcs"].get("items", []):
+            if pvc.get("status", {}).get("phase") != "Bound":
+                continue
+            bound.setdefault(pvc["metadata"]["namespace"], []).append(pvc["metadata"]["name"])
+        pod_volumes = {}
+        pod_backup_vols = {}
+        for pod in data["pods"].get("items", []):
+            ns = pod["metadata"]["namespace"]
+            for vol in (pod.get("spec", {}) or {}).get("volumes", []) or []:
+                claim = (vol.get("persistentVolumeClaim") or {}).get("claimName")
+                if claim:
+                    pod_volumes.setdefault(ns, {})[claim] = vol["name"]
+            ann = (pod.get("metadata", {}) or {}).get("annotations", {}) or {}
+            listed = ann.get("backup.velero.io/backup-volumes")
+            if listed:
+                pod_backup_vols.setdefault(ns, set()).update(v.strip() for v in listed.split(",") if v.strip())
+        schedules = [s for s in data["schedules"].get("items", []) if not s.get("spec", {}).get("paused")]
+        backups = data["backups"].get("items", [])
+        pvbs = data["pvbs"].get("items", [])
+        gaps, warnings, covered, backups_checked = [], [], [], {}
+        for ns in sorted(bound):
+            if ns in allow_ns:
+                warnings.append(f"{ns}: allowlisted namespace ({allow_ns[ns]}), skipped")
+                continue
+            coverable = [c for c in bound[ns] if not volume_allowlisted(ns, c) and pvc_pv_type.get((ns, c), "other") not in ("hostPath", "nfs")]
+            if not coverable:
+                warnings.append(f"{ns}: only hostPath/NFS/allowlisted PVCs, no Velero coverage needed")
+                continue
+            covering = [s for s in schedules if schedule_covers(s, ns)]
+            if not covering:
+                gaps.append(f"{ns}: Bound PVCs but no enabled Velero Schedule covers it (PVCs: {', '.join(sorted(coverable))})")
+                continue
+            covered.append(ns)
+            sched_names = {s["metadata"]["name"] for s in covering}
+            cand = [b for b in backups if (b.get("metadata", {}) or {}).get("labels", {}).get("velero.io/schedule-name") in sched_names]
+            if not cand:
+                gaps.append(f"{ns}: covered by {', '.join(sorted(sched_names))} but no Backup exists yet")
+                continue
+            cand.sort(key=lambda b: b.get("status", {}).get("startTimestamp", ""), reverse=True)
+            latest = cand[0]
+            bname = latest["metadata"]["name"]
+            phase = latest.get("status", {}).get("phase")
+            start = latest.get("status", {}).get("startTimestamp")
+            backups_checked[ns] = {"backup": bname, "phase": phase, "start": start}
+            if phase != "Completed":
+                gaps.append(f"{ns}: latest backup {bname} phase is {phase} (started {start})")
+                continue
+            hours = age_hours(start, now)
+            if hours is not None and hours > STALE_HOURS:
+                gaps.append(f"{ns}: latest backup {bname} is stale ({hours:.1f}h old, limit {STALE_HOURS:.0f}h)")
+                continue
+            # PVB proof, unless NO volume is eligible: a pod backup-volumes
+            # annotation makes volumes eligible even when the schedule sets
+            # defaultVolumesToFsBackup: false (audiobookshelf: default false,
+            # annotation config-local,metadata-local, Completed PVBs exist).
+            # A schedule default of false alone is NOT manifest-only. Only
+            # skip when no annotation exists in the namespace AND no covering
+            # schedule defaults volumes to fs backup (kiwix/searxng pattern).
+            has_annotation = bool(pod_backup_vols.get(ns))
+            default_fs_any = any((s.get("spec", {}).get("template", {}) or {}).get("defaultVolumesToFsBackup") for s in covering)
+            if not has_annotation and not default_fs_any:
+                warnings.append(f"{ns}: no eligible volumes (no annotation, schedule does not default to fs backup), no PVB check (backup {bname} Completed)")
+                continue
+            mine = [p for p in pvbs if (p.get("metadata", {}) or {}).get("labels", {}).get("velero.io/backup-name") == bname and (p.get("spec", {}).get("pod", {}) or {}).get("namespace") == ns]
+            by_volume = {}
+            for p in mine:
+                vol = (p.get("spec", {}) or {}).get("volume")
+                if vol:
+                    by_volume.setdefault(vol, []).append(p)
+                pphase = p.get("status", {}).get("phase")
+                total = ((p.get("status", {}) or {}).get("progress", {}) or {}).get("totalBytes")
+                if pphase != "Completed":
+                    gaps.append(f"{ns}: PVB for volume {vol or '?'} in backup {bname} phase is {pphase}")
+                elif total == 0:
+                    gaps.append(f"{ns}: PVB for volume {vol or '?'} in backup {bname} is 0 bytes")
+            default_fs = any((s.get("spec", {}).get("template", {}) or {}).get("defaultVolumesToFsBackup") for s in covering)
+            for claim in sorted(bound[ns]):
+                reason = volume_allowlisted(ns, claim)
+                if reason:
+                    warnings.append(f"{ns}/{claim}: allowlisted volume ({reason}), skipped")
+                    continue
+                if pvc_pv_type.get((ns, claim), "other") in ("hostPath", "nfs"):
+                    warnings.append(f"{ns}/{claim}: {pvc_pv_type[(ns, claim)]} volume, not Velero-backed, skipped")
+                    continue
+                volname = pod_volumes.get(ns, {}).get(claim)
+                annotated = pod_backup_vols.get(ns, set())
+                eligible = volname in annotated if annotated else default_fs
+                if not eligible:
+                    warnings.append(f"{ns}/{claim}: no backup-volumes annotation and schedule does not default to fs backup, skipped")
+                    continue
+                matches = by_volume.get(volname, []) if volname else []
+                ok = any(p.get("status", {}).get("phase") == "Completed" and (((p.get("status", {}) or {}).get("progress", {}) or {}).get("totalBytes") or 0) > 0 for p in matches)
+                if not ok and matches and any(p.get("status", {}).get("phase") != "Completed" or (((p.get("status", {}) or {}).get("progress", {}) or {}).get("totalBytes") == 0) for p in matches):
+                    continue
+                if not ok:
+                    gaps.append(f"{ns}: PVC {claim} (volume {volname or '?'}) has no Completed nonzero PVB in backup {bname}")
+        report = {"generated_at": now.isoformat(), "gaps": gaps, "warnings": warnings, "covered_namespaces": covered, "backups_checked": backups_checked}
+        if REPORT_PATH:
+            with open(REPORT_PATH, "w") as f:
+                json.dump(report, f, indent=2)
+        print(json.dumps(report, indent=2))
+        if gaps:
+            send_gotify("Velero backup watchdog: gaps found", "\n".join(gaps) + "\n\n" + "\n".join(warnings))
+            return 1
+        return 0
+    def send_gotify(title, message):
+        if not GOTIFY_TOKEN:
+            print("GOTIFY_TOKEN absent, not sending (gaps above)", file=sys.stderr)
+            return
+        body = json.dumps({"title": title, "message": message, "priority": 8}).encode()
+        req = urllib.request.Request(f"{GOTIFY_URL}?token={GOTIFY_TOKEN}", data=body, headers={"Content-Type": "application/json"}, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                print(f"Gotify response: {r.status}")
+        except urllib.error.HTTPError as exc:
+            print(f"Gotify send failed: HTTP {exc.code}", file=sys.stderr)
+    def fail(message):
+        print(json.dumps({"error": message}), file=sys.stderr)
+        if GOTIFY_TOKEN:
+            send_gotify("Velero backup watchdog: check failed", message)
+        return 2
+    if __name__ == "__main__":
+        sys.exit(main())

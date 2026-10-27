@@ -1,0 +1,23 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backup-watchdog
+  namespace: argocd
+spec:
+  project: homelab-platform
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/backup-watchdog
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: velero
+  # Manual sync only, like every other Application except the
+  # qbittorrent-egress guardrail. No prune, no deletion finalizer:
+  # deleting this Application preserves the CronJob history, it does
+  # not delete cluster state.
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true

@@ -1,0 +1,70 @@
+---
+# Backup watchdog CronJob. Runs in the velero namespace (no new namespace,
+# no project destination change: velero is already a homelab-platform
+# destination). Schedule 12:00 UTC = 08:00 EDT: after the 03:00-05:00 UTC
+# daily backup window, with buffer for long runs, so an alert arrives in
+# the morning, not overnight. Daily, not hourly: a persistent gap pages
+# once a day until fixed, it does not spam.
+# Python image is pinned to the registry's multi-platform digest.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-watchdog
+  namespace: velero
+  labels:
+    app.kubernetes.io/name: backup-watchdog
+spec:
+  schedule: "0 12 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 86400
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: backup-watchdog
+        spec:
+          serviceAccountName: backup-watchdog
+          restartPolicy: Never
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: watchdog
+              image: docker.io/library/python:3.13.18-slim-trixie@sha256:8a7c3cd378e4e6dfa5d0ea4f6ca1a11068c951e3de3146ebc484eadf4b05a2be
+              imagePullPolicy: IfNotPresent
+              command: [python3, /app/check.py]
+              env:
+                - name: WATCHDOG_ALLOWLIST
+                  value: /app/allowlist.json
+                - name: GOTIFY_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-watchdog-gotify
+                      key: token
+                      optional: false
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 256Mi
+              securityContext:
+                runAsNonRoot: true
+                runAsUser: 1000
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: [ALL]
+              volumeMounts:
+                - name: script
+                  mountPath: /app
+                  readOnly: true
+          volumes:
+            - name: script
+              configMap:
+                name: backup-watchdog
+                defaultMode: 0o444

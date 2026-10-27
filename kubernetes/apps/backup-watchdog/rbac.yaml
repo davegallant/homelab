@@ -1,0 +1,41 @@
+---
+# Read-only RBAC. The watchdog reads cluster state and sends Gotify;
+# it creates, updates, and deletes nothing in the cluster.
+# No Secret read: the Gotify token reaches the pod via its own Secret
+# env, which the watchdog's ServiceAccount never lists.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backup-watchdog
+  namespace: velero
+  labels:
+    app.kubernetes.io/name: backup-watchdog
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backup-watchdog
+  labels:
+    app.kubernetes.io/name: backup-watchdog
+rules:
+  - apiGroups: [velero.io]
+    resources: [schedules, backups, podvolumebackups]
+    verbs: [get, list, watch]
+  - apiGroups: [""]
+    resources: [persistentvolumeclaims, persistentvolumes, pods, namespaces]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: backup-watchdog
+  labels:
+    app.kubernetes.io/name: backup-watchdog
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: backup-watchdog
+subjects:
+  - kind: ServiceAccount
+    name: backup-watchdog
+    namespace: velero
