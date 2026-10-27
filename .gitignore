@@ -3,5 +3,6 @@
 .direnv/
 logs/
 docs/
+kubernetes/receipts/
 
 ansible/playbooks/migrate-to-headscale/PROGRESS.md
