@@ -136,3 +136,23 @@ spec:
         - ports:
             - port: "8989"
               protocol: TCP
+---
+# Permit Gateway ingress to Lidarr on 8686.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: lidarr-gateway
+  namespace: lidarr
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/controller: lidarr
+      app.kubernetes.io/instance: lidarr
+      app.kubernetes.io/name: lidarr
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "8686"
+              protocol: TCP
