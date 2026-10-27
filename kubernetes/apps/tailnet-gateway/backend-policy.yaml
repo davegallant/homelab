@@ -17,7 +17,7 @@ spec:
             - port: "5000"
               protocol: TCP
 ---
-# Permit only the Gateway ingress identity to reach k8s-readonly on 8443.
+# Permit only the Gateway ingress identity to reach k8s-readonly on 8001.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -34,5 +34,5 @@ spec:
         - ingress
       toPorts:
         - ports:
-            - port: "8443"
+            - port: "8001"
               protocol: TCP

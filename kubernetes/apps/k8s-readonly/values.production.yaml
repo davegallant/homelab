@@ -62,7 +62,7 @@ controllers:
           - kubectl
         args:
           - proxy
-          - --address=127.0.0.1
+          - --address=0.0.0.0
           - --port=8001
           - --api-prefix=/
           # Caddy preserves the original Host, while kubectl proxy defaults
@@ -132,7 +132,7 @@ service:
     controller: k8s-readonly
     ports:
       https:
-        port: 8443
+        port: 8001
 
 configMaps:
   tailscale:
