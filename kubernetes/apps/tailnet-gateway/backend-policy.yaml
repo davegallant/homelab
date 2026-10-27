@@ -116,3 +116,23 @@ spec:
         - ports:
             - port: "7878"
               protocol: TCP
+---
+# Permit Gateway ingress to Sonarr on 8989.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: sonarr-gateway
+  namespace: sonarr
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/controller: sonarr
+      app.kubernetes.io/instance: sonarr
+      app.kubernetes.io/name: sonarr
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "8989"
+              protocol: TCP
