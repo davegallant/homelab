@@ -330,6 +330,26 @@ rawResources:
           - toEndpoints:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: seerr
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: radarr
+                  k8s:app.kubernetes.io/name: radarr
+                  k8s:app.kubernetes.io/instance: radarr
+                  k8s:app.kubernetes.io/controller: radarr
+            toPorts:
+              - ports:
+                  - port: "7878"
+                    protocol: TCP
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: sonarr
+                  k8s:app.kubernetes.io/name: sonarr
+                  k8s:app.kubernetes.io/instance: sonarr
+                  k8s:app.kubernetes.io/controller: sonarr
+            toPorts:
+              - ports:
+                  - port: "8989"
+                    protocol: TCP
           - toEntities:
               - world
             toPorts:
