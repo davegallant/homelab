@@ -5,6 +5,8 @@ resources:
   - lb-pool.yaml
   - l2-policy.yaml
   - backend-policy.yaml
+  - backend-policy-kiwix.yaml
   - entry-policy.yaml
   - gateway.yaml
   - httproute-changedetection-production.yaml
+  - httproute-kiwix-production.yaml
