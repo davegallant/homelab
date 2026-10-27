@@ -37,6 +37,12 @@ spec:
       namespace: tailnet-gateway
     - server: https://kubernetes.default.svc
       namespace: changedetection
+    - server: https://kubernetes.default.svc
+      namespace: k8s-readonly
+    - server: https://kubernetes.default.svc
+      namespace: prowlarr
+    - server: https://kubernetes.default.svc
+      namespace: homepage
   clusterResourceWhitelist:
     - group: admissionregistration.k8s.io
       kind: ValidatingAdmissionPolicy
