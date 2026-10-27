@@ -35,6 +35,7 @@ spec:
                   - prowlarr
                   - homepage
                   - romm
+                  - lubelogger
       tls:
         mode: Terminate
         certificateRefs:
