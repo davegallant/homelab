@@ -40,6 +40,7 @@ spec:
                   - sonarr
                   - lidarr
                   - seerr
+                  - kiwix
       tls:
         mode: Terminate
         certificateRefs:
