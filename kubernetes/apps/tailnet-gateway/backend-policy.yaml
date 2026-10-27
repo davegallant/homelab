@@ -1,5 +1,5 @@
 ---
-# Additive only; do not replace changedetection's existing policy.
+# Additive only; do not replace the existing app policies.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -15,4 +15,24 @@ spec:
       toPorts:
         - ports:
             - port: "5000"
+              protocol: TCP
+---
+# Permit only the Gateway ingress identity to reach k8s-readonly on 8443.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: k8s-readonly-gateway
+  namespace: k8s-readonly
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/controller: k8s-readonly
+      app.kubernetes.io/instance: k8s-readonly
+      app.kubernetes.io/name: k8s-readonly
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "8443"
               protocol: TCP
