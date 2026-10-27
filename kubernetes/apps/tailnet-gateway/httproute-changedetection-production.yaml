@@ -45,4 +45,4 @@ spec:
       backendRefs:
         - kind: Service
           name: k8s-readonly
-          port: 8443
+          port: 8001
