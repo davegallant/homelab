@@ -1,0 +1,10 @@
+- greeting:
+    text_size: 2xl
+    text: Dave's Homelab
+
+- openweathermap:
+    latitude: 43.034200
+    longitude: -81.241650
+    units: metric
+    provider: openweathermap
+    cache: 5

@@ -1,27 +1,13 @@
 ---
-- Quick Links:
+- Infrastructure:
     - Speedtest Tracker:
         href: "{% raw %}{{HOMEPAGE_VAR_SPEEDTEST_TRACKER_URL}}{% endraw %}"
         icon: speedtest-tracker
-    - gotify:
-        icon: gotify
-        href: "{% raw %}{{HOMEPAGE_VAR_GOTIFY_URL}}{% endraw %}"
-        description: Notifications
+        description: Internet speed tests
     - Gatus:
         href: "{% raw %}{{HOMEPAGE_VAR_GATUS_URL}}{% endraw %}"
         icon: gatus
-    - Immich:
-        icon: immich
-        href: "{% raw %}{{HOMEPAGE_VAR_IMMICH_URL}}{% endraw %}"
-        description: Photo Backup
-    - AdGuard Home:
-        href: "{% raw %}{{HOMEPAGE_VAR_ADGUARD_HOME_URL}}{% endraw %}"
-        icon: adguard-home
-        description: DNS
-    - TrueNAS:
-        href: "{% raw %}{{HOMEPAGE_VAR_TRUENAS_URL}}{% endraw %}"
-        icon: truenas
-        description: Network Storage
+        description: Service status
     - Proxmox:
         href: "{% raw %}{{HOMEPAGE_VAR_PROXMOX_URL}}{% endraw %}"
         description: Virtualization
@@ -34,14 +20,19 @@
         href: "{% raw %}{{HOMEPAGE_VAR_PROXMENUX_G3_2_URL}}{% endraw %}"
         description: ProxMenux Monitor
         icon: proxmox
-    - OPNsense:
-        href: "{% raw %}{{HOMEPAGE_VAR_OPNSENSE_URL}}{% endraw %}"
-        icon: opnsense
-        description: Network Firewall
-    - HomeAssistant:
-        href: "{% raw %}{{HOMEPAGE_VAR_HOMEASSISTANT_URL}}{% endraw %}"
-        description: Home Automation
-        icon: home-assistant
+    - Forgejo:
+        icon: forgejo
+        href: "{% raw %}{{HOMEPAGE_VAR_FORGEJO_URL}}{% endraw %}"
+        description: Git server
+    - Grafana:
+        icon: grafana
+        href: "{% raw %}{{HOMEPAGE_VAR_GRAFANA_URL}}{% endraw %}"
+        description: Visualization
+    - Beszel:
+        icon: beszel
+        href: "{% raw %}{{HOMEPAGE_VAR_BESZEL_URL}}{% endraw %}"
+        description: Server Monitoring
+- Media:
     - Jellyfin:
         icon: jellyfin
         href: "{% raw %}{{HOMEPAGE_VAR_JELLYFIN_URL}}{% endraw %}"
@@ -54,10 +45,6 @@
         icon: maloja
         href: "{% raw %}{{HOMEPAGE_VAR_MALOJA_URL}}{% endraw %}"
         description: Scrobbles
-    - Forgejo:
-        icon: forgejo
-        href: "{% raw %}{{HOMEPAGE_VAR_FORGEJO_URL}}{% endraw %}"
-        description: Git server
     - Navidrome:
         icon: navidrome
         href: "{% raw %}{{HOMEPAGE_VAR_NAVIDROME_URL}}{% endraw %}"
@@ -66,50 +53,10 @@
         icon: invidious
         href: "{% raw %}{{HOMEPAGE_VAR_INVIDIOUS_URL}}{% endraw %}"
         description: YouTube
-    - Changedetection:
-        icon: /icons/changedetection.png
-        href: "{% raw %}{{HOMEPAGE_VAR_CHANGEDETECTION_URL}}{% endraw %}"
-        description: Diff detection
-    - BentoPDF:
-        icon: bentopdf
-        href: "{% raw %}{{HOMEPAGE_VAR_BENTOPDF_URL}}{% endraw %}"
-        description: PDF tools
-    - Arca:
-        icon: archivebox
-        href: "https://arca.{{ headscale_magic_dns_domain }}/"
-        description: Website archive
-    - Lubelogger:
-        icon: lubelogger
-        href: "{% raw %}{{HOMEPAGE_VAR_LUBELOGGER_URL}}{% endraw %}"
-        description: Vehicle maintenance tracker
-    - Grafana:
-        icon: grafana
-        href: "{% raw %}{{HOMEPAGE_VAR_GRAFANA_URL}}{% endraw %}"
-        description: Visualization
-    - WatchYourLAN:
-        icon: watchyourlan
-        href: "{% raw %}{{HOMEPAGE_VAR_WATCHYOURLAN_URL}}{% endraw %}"
-        description: Network IP scanner
-    - Beszel:
-        icon: beszel
-        href: "{% raw %}{{HOMEPAGE_VAR_BESZEL_URL}}{% endraw %}"
-        description: Server Monitoring
-    - Prowlarr:
-        icon: prowlarr
-        href: "{% raw %}{{HOMEPAGE_VAR_PROWLARR_URL}}{% endraw %}"
-        description: Index manager
-    - Umami:
-        icon: umami
-        href: "{% raw %}{{HOMEPAGE_VAR_UMAMI_URL}}{% endraw %}"
-        description: Analytics
     - Romm:
         icon: romm
         href: "{% raw %}{{HOMEPAGE_VAR_ROMM_URL}}{% endraw %}"
         description: Emulation
-    - Miniflux:
-        href: "{% raw %}{{HOMEPAGE_VAR_MINIFLUX_URL}}{% endraw %}"
-        description: RSS
-        icon: miniflux
     - Sonarr:
         icon: sonarr.png
         href: "{% raw %}{{HOMEPAGE_VAR_SONARR_URL}}{% endraw %}"
@@ -130,10 +77,31 @@
         icon: seerr
         href: "{% raw %}{{HOMEPAGE_VAR_SEERR_URL}}{% endraw %}"
         description: Media Management
-    - paperless-ngx:
-        icon: paperless-ngx
-        href: "{% raw %}{{HOMEPAGE_VAR_PAPERLESS_NGX_URL}}{% endraw %}"
-        description: document management
+- Home:
+    - Immich:
+        icon: immich
+        href: "{% raw %}{{HOMEPAGE_VAR_IMMICH_URL}}{% endraw %}"
+        description: Photo Backup
+    - AdGuard Home:
+        href: "{% raw %}{{HOMEPAGE_VAR_ADGUARD_HOME_URL}}{% endraw %}"
+        icon: adguard-home
+        description: DNS
+    - TrueNAS:
+        href: "{% raw %}{{HOMEPAGE_VAR_TRUENAS_URL}}{% endraw %}"
+        icon: truenas
+        description: Network Storage
+    - OPNsense:
+        href: "{% raw %}{{HOMEPAGE_VAR_OPNSENSE_URL}}{% endraw %}"
+        icon: opnsense
+        description: Network Firewall
+    - HomeAssistant:
+        href: "{% raw %}{{HOMEPAGE_VAR_HOMEASSISTANT_URL}}{% endraw %}"
+        description: Home Automation
+        icon: home-assistant
+    - WatchYourLAN:
+        icon: watchyourlan
+        href: "{% raw %}{{HOMEPAGE_VAR_WATCHYOURLAN_URL}}{% endraw %}"
+        description: Network IP scanner
     - upsnap:
         icon: upsnap
         href: "{% raw %}{{HOMEPAGE_VAR_UPSNAP_URL}}{% endraw %}"
@@ -142,3 +110,40 @@
         icon: router
         href: "{% raw %}{{HOMEPAGE_VAR_GL_MT3000_URL}}{% endraw %}"
         description: GL.iNet Admin Panel
+- Utilities:
+    - gotify:
+        icon: gotify
+        href: "{% raw %}{{HOMEPAGE_VAR_GOTIFY_URL}}{% endraw %}"
+        description: Notifications
+    - Changedetection:
+        icon: /icons/changedetection.png
+        href: "{% raw %}{{HOMEPAGE_VAR_CHANGEDETECTION_URL}}{% endraw %}"
+        description: Diff detection
+    - BentoPDF:
+        icon: bentopdf
+        href: "{% raw %}{{HOMEPAGE_VAR_BENTOPDF_URL}}{% endraw %}"
+        description: PDF tools
+    - Arca:
+        icon: archivebox
+        href: "https://arca.{{ headscale_magic_dns_domain }}/"
+        description: Website archive
+    - Lubelogger:
+        icon: lubelogger
+        href: "{% raw %}{{HOMEPAGE_VAR_LUBELOGGER_URL}}{% endraw %}"
+        description: Vehicle maintenance tracker
+    - Prowlarr:
+        icon: prowlarr
+        href: "{% raw %}{{HOMEPAGE_VAR_PROWLARR_URL}}{% endraw %}"
+        description: Index manager
+    - Umami:
+        icon: umami
+        href: "{% raw %}{{HOMEPAGE_VAR_UMAMI_URL}}{% endraw %}"
+        description: Analytics
+    - Miniflux:
+        href: "{% raw %}{{HOMEPAGE_VAR_MINIFLUX_URL}}{% endraw %}"
+        description: RSS
+        icon: miniflux
+    - paperless-ngx:
+        icon: paperless-ngx
+        href: "{% raw %}{{HOMEPAGE_VAR_PAPERLESS_NGX_URL}}{% endraw %}"
+        description: document management

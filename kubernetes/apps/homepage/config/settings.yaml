@@ -1,7 +1,7 @@
 # For configuration options and examples, please see:
 # https://gethomepage.dev/latest/configs/settings
 
-title: DG's homepage
+title: Dave's Homelab
 
 cardBlur: sm
 
@@ -14,9 +14,15 @@ providers:
   openweathermap: "{% raw %}{{HOMEPAGE_VAR_OPENWEATHERMAP_API_KEY}}{% endraw %}"
 
 layout:
-  Stats:
+  Infrastructure:
     style: row
-    columns: 3
-  Quick Links:
+    columns: 4
+  Media:
+    style: row
+    columns: 4
+  Home:
+    style: row
+    columns: 4
+  Utilities:
     style: row
     columns: 4

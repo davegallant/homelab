@@ -97,6 +97,10 @@ spec:
               mountPath: /app/config/settings.yaml
               subPath: settings.yaml
               readOnly: true
+            - name: managed-config
+              mountPath: /app/config/widgets.yaml
+              subPath: widgets.yaml
+              readOnly: true
             - name: custom-icons
               mountPath: /app/public/icons
               readOnly: true
