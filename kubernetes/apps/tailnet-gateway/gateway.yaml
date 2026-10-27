@@ -37,6 +37,7 @@ spec:
                   - romm
                   - lubelogger
                   - radarr
+                  - sonarr
       tls:
         mode: Terminate
         certificateRefs:
