@@ -1,0 +1,19 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: intel-gpu
+  namespace: argocd
+spec:
+  project: homelab-platform
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/intel-gpu
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: intel-gpu
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true
