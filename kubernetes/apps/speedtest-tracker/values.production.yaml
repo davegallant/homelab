@@ -431,14 +431,6 @@ rawResources:
           - fromEndpoints:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: speedtest-tracker
-          - fromEndpoints:
-              - matchLabels:
-                  k8s:io.kubernetes.pod.namespace: homepage
-                  k8s:app.kubernetes.io/name: homepage
-            toPorts:
-              - ports:
-                  - port: "80"
-                    protocol: TCP
         egress:
           - toEndpoints:
               - matchLabels:
