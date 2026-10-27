@@ -14,7 +14,7 @@ caddy:
       cpu: 5m
       memory: 16Mi
 tailscale:
-  enabled: true
+  enabled: false
   resources:
     requests:
       cpu: 5m
