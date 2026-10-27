@@ -45,6 +45,8 @@ spec:
       namespace: homepage
     - server: https://kubernetes.default.svc
       namespace: romm
+    - server: https://kubernetes.default.svc
+      namespace: lubelogger
   clusterResourceWhitelist:
     - group: admissionregistration.k8s.io
       kind: ValidatingAdmissionPolicy
