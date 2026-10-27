@@ -163,3 +163,27 @@ spec:
         - kind: Service
           name: sonarr
           port: 8989
+---
+# Production Lidarr hostname. Sidecars remain live until transport is proven.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: lidarr-gateway-production
+  namespace: lidarr
+spec:
+  parentRefs:
+    - kind: Gateway
+      name: tailnet-gateway
+      namespace: tailnet-gateway
+      sectionName: https
+  hostnames:
+    - lidarr.tail.davegallant.ca
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - kind: Service
+          name: lidarr
+          port: 8686
