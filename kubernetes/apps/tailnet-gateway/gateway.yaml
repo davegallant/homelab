@@ -36,6 +36,7 @@ spec:
                   - homepage
                   - romm
                   - lubelogger
+                  - radarr
       tls:
         mode: Terminate
         certificateRefs:
