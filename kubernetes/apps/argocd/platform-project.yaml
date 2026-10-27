@@ -47,6 +47,8 @@ spec:
       namespace: romm
     - server: https://kubernetes.default.svc
       namespace: lubelogger
+    - server: https://kubernetes.default.svc
+      namespace: radarr
   clusterResourceWhitelist:
     - group: admissionregistration.k8s.io
       kind: ValidatingAdmissionPolicy
