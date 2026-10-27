@@ -44,7 +44,7 @@
 		{
 			"action": "accept",
 			"src":    ["100.100.0.48"],
-			"dst":    ["100.100.0.1:443"],
+			"dst":    ["100.100.0.8:443"],
 		},
 		// Match tailnet IPs for user-owned member devices. (On Headscale
 		// >= 0.28 "*" only covers 100.64.0.0/10 — internet-bound traffic
@@ -121,7 +121,7 @@
 		{
 			"src":    "100.100.0.48",
 			"proto":  "tcp",
-			"accept": ["100.100.0.11:443", "100.100.0.1:443"],
+			"accept": ["100.100.0.11:443", "100.100.0.8:443"],
 			"deny":   ["tag:beszel:443", "tag:loki:3100", "tag:maloja:443", "tag:pangolin:443"],
 		},
 		{
