@@ -8,6 +8,13 @@
 # named changedetection-gateway-test. Renaming it is a separate, explicitly
 # approved step, not part of this DRY start.
 apps:
+  - name: immich
+    hostname: immich-k8s.tail.davegallant.ca
+    port: 2283
+    selectorLabels:
+      app.kubernetes.io/controller: immich
+      app.kubernetes.io/instance: immich
+      app.kubernetes.io/name: immich
   - name: changedetection
     port: 5000
     policyName: changedetection-gateway-test
