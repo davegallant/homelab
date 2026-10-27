@@ -2,17 +2,13 @@
 - Stats:
     - Gatus:
         href: "{% raw %}{{HOMEPAGE_VAR_GATUS_URL}}{% endraw %}"
-        widget:
-          type: gatus
-          icon: gatus
-          url: "{% raw %}{{HOMEPAGE_VAR_GATUS_URL}}{% endraw %}"
-          slug: default
+        icon: gatus
     - Speedtest Tracker:
         href: "{% raw %}{{HOMEPAGE_VAR_SPEEDTEST_TRACKER_URL}}{% endraw %}"
         widget:
           type: speedtest
           icon: speedtest
-          url: "{% raw %}{{HOMEPAGE_VAR_SPEEDTEST_TRACKER_URL}}{% endraw %}"
+          url: "{% raw %}{{HOMEPAGE_VAR_SPEEDTEST_TRACKER_WIDGET_URL}}{% endraw %}"
     - gotify:
         icon: gotify
         href: "{% raw %}{{HOMEPAGE_VAR_GOTIFY_URL}}{% endraw %}"
@@ -25,30 +21,14 @@
         icon: immich
         href: "{% raw %}{{HOMEPAGE_VAR_IMMICH_URL}}{% endraw %}"
         description: Photo Backup
-        widget:
-          type: immich
-          version: 2
-          url: "{% raw %}{{HOMEPAGE_VAR_IMMICH_URL}}{% endraw %}"
-          key: "{% raw %}{{HOMEPAGE_VAR_IMMICH_API_KEY}}{% endraw %}"
     - AdGuard Home:
         href: "{% raw %}{{HOMEPAGE_VAR_ADGUARD_HOME_URL}}{% endraw %}"
         icon: adguard-home
         description: DNS
-        widget:
-          type: adguard
-          url: "{% raw %}{{HOMEPAGE_VAR_ADGUARD_HOME_URL}}{% endraw %}"
-          username: "{% raw %}{{HOMEPAGE_VAR_ADGUARD_HOME_USERNAME}}{% endraw %}"
-          password: "{% raw %}{{HOMEPAGE_VAR_ADGUARD_HOME_PASSWORD}}{% endraw %}"
     - TrueNAS:
         href: "{% raw %}{{HOMEPAGE_VAR_TRUENAS_URL}}{% endraw %}"
         icon: truenas
         description: Network Storage
-        widget:
-          type: truenas
-          url: "{% raw %}{{HOMEPAGE_VAR_TRUENAS_URL}}{% endraw %}"
-          version: 2
-          key: "{% raw %}{{HOMEPAGE_VAR_TRUENAS_API_KEY}}{% endraw %}"
-          enablePools: true
 - Quick Links:
     - Proxmox:
         href: "{% raw %}{{HOMEPAGE_VAR_PROXMOX_URL}}{% endraw %}"
