@@ -36,3 +36,23 @@ spec:
         - ports:
             - port: "8001"
               protocol: TCP
+---
+# Permit only the Gateway ingress identity to reach Prowlarr on 9696.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: prowlarr-gateway
+  namespace: prowlarr
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/controller: prowlarr
+      app.kubernetes.io/instance: prowlarr
+      app.kubernetes.io/name: prowlarr
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "9696"
+              protocol: TCP
