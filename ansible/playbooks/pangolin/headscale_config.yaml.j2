@@ -35,6 +35,16 @@ dns:
   magic_dns: true
   base_domain: "{{ headscale_magic_dns_domain }}"
   override_local_dns: true
+  extra_records:
+    - name: "changedetection.{{ headscale_magic_dns_domain }}"
+      type: A
+      value: "100.100.0.8"
+    - name: "changedetection-gw.{{ headscale_magic_dns_domain }}"
+      type: A
+      value: "100.100.0.8"
+    - name: "k8s-readonly.{{ headscale_magic_dns_domain }}"
+      type: A
+      value: "100.100.0.8"
   nameservers:
     global:
       - 100.100.0.24
