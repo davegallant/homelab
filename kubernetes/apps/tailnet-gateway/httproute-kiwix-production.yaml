@@ -5,12 +5,21 @@ metadata:
   namespace: kiwix
 spec:
   parentRefs:
-    - name: tailnet-gateway
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet-gateway
       namespace: tailnet-gateway
       sectionName: https
   hostnames:
     - kiwix.tail.davegallant.ca
   rules:
-    - backendRefs:
-        - name: kiwix
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: kiwix
           port: 8080
+          weight: 1
