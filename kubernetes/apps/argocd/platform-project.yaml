@@ -55,6 +55,8 @@ spec:
       namespace: lidarr
     - server: https://kubernetes.default.svc
       namespace: seerr
+    - server: https://kubernetes.default.svc
+      namespace: kiwix
   clusterResourceWhitelist:
     - group: admissionregistration.k8s.io
       kind: ValidatingAdmissionPolicy
