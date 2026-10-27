@@ -7,5 +7,4 @@ resources:
   - backend-policy.yaml
   - entry-policy.yaml
   - gateway.yaml
-  - httproute-changedetection-test.yaml
   - httproute-changedetection-production.yaml
