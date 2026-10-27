@@ -49,6 +49,8 @@ spec:
       namespace: lubelogger
     - server: https://kubernetes.default.svc
       namespace: radarr
+    - server: https://kubernetes.default.svc
+      namespace: sonarr
   clusterResourceWhitelist:
     - group: admissionregistration.k8s.io
       kind: ValidatingAdmissionPolicy
