@@ -56,3 +56,23 @@ spec:
         - ports:
             - port: "9696"
               protocol: TCP
+---
+# Permit only the Gateway ingress identity to reach RomM on 8080.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: romm-gateway
+  namespace: romm
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/controller: romm
+      app.kubernetes.io/instance: romm
+      app.kubernetes.io/name: romm
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
