@@ -1,0 +1,71 @@
+# One entry per Gateway app. Namespace, Service, and hostname are derived
+# from name: namespace == service == name, hostname == <name>.tail.davegallant.ca
+# Selector labels are explicit per app because they come in two shapes:
+# name-only (changedetection, homepage, kiwix) and controller+instance+name
+# (the app-template apps). Do not assume one shape.
+#
+# policyName is only overridden for changedetection: its live policy is
+# named changedetection-gateway-test. Renaming it is a separate, explicitly
+# approved step, not part of this DRY start.
+apps:
+  - name: changedetection
+    port: 5000
+    policyName: changedetection-gateway-test
+    selectorLabels:
+      app.kubernetes.io/name: changedetection
+  - name: seerr
+    port: 5055
+    selectorLabels:
+      app.kubernetes.io/controller: seerr
+      app.kubernetes.io/instance: seerr
+      app.kubernetes.io/name: seerr
+  - name: k8s-readonly
+    port: 8001
+    selectorLabels:
+      app.kubernetes.io/controller: k8s-readonly
+      app.kubernetes.io/instance: k8s-readonly
+      app.kubernetes.io/name: k8s-readonly
+  - name: prowlarr
+    port: 9696
+    selectorLabels:
+      app.kubernetes.io/controller: prowlarr
+      app.kubernetes.io/instance: prowlarr
+      app.kubernetes.io/name: prowlarr
+  - name: romm
+    port: 8080
+    selectorLabels:
+      app.kubernetes.io/controller: romm
+      app.kubernetes.io/instance: romm
+      app.kubernetes.io/name: romm
+  - name: lubelogger
+    port: 8080
+    selectorLabels:
+      app.kubernetes.io/controller: lubelogger
+      app.kubernetes.io/instance: lubelogger
+      app.kubernetes.io/name: lubelogger
+  - name: radarr
+    port: 7878
+    selectorLabels:
+      app.kubernetes.io/controller: radarr
+      app.kubernetes.io/instance: radarr
+      app.kubernetes.io/name: radarr
+  - name: sonarr
+    port: 8989
+    selectorLabels:
+      app.kubernetes.io/controller: sonarr
+      app.kubernetes.io/instance: sonarr
+      app.kubernetes.io/name: sonarr
+  - name: lidarr
+    port: 8686
+    selectorLabels:
+      app.kubernetes.io/controller: lidarr
+      app.kubernetes.io/instance: lidarr
+      app.kubernetes.io/name: lidarr
+  - name: homepage
+    port: 3000
+    selectorLabels:
+      app.kubernetes.io/name: homepage
+  - name: kiwix
+    port: 8080
+    selectorLabels:
+      app.kubernetes.io/name: kiwix

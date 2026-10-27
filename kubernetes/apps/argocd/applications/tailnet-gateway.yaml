@@ -1,7 +1,6 @@
 ---
-# Gate 2 staging. Manual sync only. kustomization.yaml includes only the
-# namespace and entry/backend/IPAM resources until later gates add the
-# certificate-dependent Gateway and then the fronting resources.
+# Manual sync only. Helm owns the generated application routes and policies;
+# Kustomize keeps the tailnet gateway platform resources in the same Application.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -9,10 +8,14 @@ metadata:
   namespace: argocd
 spec:
   project: homelab-platform
-  source:
-    repoURL: https://github.com/davegallant/homelab.git
-    targetRevision: main
-    path: kubernetes/apps/tailnet-gateway
+  sources:
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/tailnet-gateway/chart
+      helm: {}
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/tailnet-gateway
   destination:
     server: https://kubernetes.default.svc
     namespace: tailnet-gateway
