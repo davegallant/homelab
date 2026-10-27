@@ -22,6 +22,31 @@ spec:
           name: changedetection
           port: 5000
 ---
+# Production Seerr hostname. The inbound sidecars remain live until
+# Gateway transport and application connectivity are proven.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: seerr-gateway-production
+  namespace: seerr
+spec:
+  parentRefs:
+    - kind: Gateway
+      name: tailnet-gateway
+      namespace: tailnet-gateway
+      sectionName: https
+  hostnames:
+    - seerr.tail.davegallant.ca
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - kind: Service
+          name: seerr
+          port: 5055
+---
 # Production k8s-readonly hostname. The sidecar remains live until transport
 # through the Gateway has been proven.
 apiVersion: gateway.networking.k8s.io/v1
