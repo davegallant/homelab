@@ -96,3 +96,23 @@ spec:
         - ports:
             - port: "8080"
               protocol: TCP
+---
+# Permit Gateway ingress to Radarr on 7878.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: radarr-gateway
+  namespace: radarr
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/controller: radarr
+      app.kubernetes.io/instance: radarr
+      app.kubernetes.io/name: radarr
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "7878"
+              protocol: TCP
