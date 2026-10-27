@@ -2,14 +2,7 @@
 # Seerr — Argo CD production values (bjw-s app-template 5.3.0).
 # Application configuration: this file. Seerr uses
 # ghcr.io/seerr-team/seerr v3.5.1 on port 5055.
-# Tailnet-only, per Dave's standing decision: exposure mirrors the
-# Kiwix pod — userspace Tailscale sidecar TCP-forwarding 443 to an
-# in-pod Caddy (8443), which terminates a real certificate
-# (Cloudflare DNS-01) and proxies to Seerr on 127.0.0.1:5055.
-#
-# Secrets stay outside Git and outside Argo's ownership:
-#   seerr-caddy-external    (key cloudflare_api_token) — Ansible/Vault
-#   seerr-tailscale-auth    (key TS_AUTHKEY, one-use)  — bootstrap only
+# Tailnet access is provided by the shared Gateway.
 controllers:
   seerr:
     type: deployment
@@ -17,10 +10,7 @@ controllers:
     pod:
       automountServiceAccountToken: false
       annotations:
-        # Opt-in filesystem backup of the app config volume only;
-        # the sidecar volumes are excluded by omission (the Schedule
-        # is opt-in), and the tailscale identity must never be
-        # captured for restore.
+        # Opt-in filesystem backup of the app config volume only.
         backup.velero.io/backup-volumes: config-local
       securityContext:
         fsGroup: 1000
@@ -39,7 +29,6 @@ controllers:
         env:
           LOG_LEVEL: debug
           TZ: America/Toronto
-          NODE_OPTIONS: --require=/opt/seerr-proxy/proxy-agent.cjs
         probes:
           startup:
             enabled: true
@@ -74,62 +63,6 @@ controllers:
           limits:
             cpu: 1000m
             memory: 1Gi
-      tailscale:
-        securityContext:
-          capabilities:
-            drop:
-              - ALL
-          allowPrivilegeEscalation: false
-        image:
-          repository: ghcr.io/tailscale/tailscale
-          tag: v1.104.1
-          digest: sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
-        envFrom:
-          # The bootstrap-created Secret holds exactly one key
-          # (TS_AUTHKEY), imported here as the env var of that name.
-          # Optional: once the identity persists in tailscale-state,
-          # the Secret is deleted and the sidecar runs without it.
-          - secretRef:
-              name: seerr-tailscale-auth
-              optional: true
-        env:
-          TS_AUTH_ONCE: "true"
-          TS_HOSTNAME: seerr
-          TS_STATE_DIR: /var/lib/tailscale
-          TS_KUBE_SECRET: ""
-          TS_USERSPACE: "true"
-          TS_OUTBOUND_HTTP_PROXY_LISTEN: 127.0.0.1:1055
-          TS_EXTRA_ARGS: --login-server=https://hs.davegallant.ca --accept-dns=false
-          TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
-        resources:
-          requests:
-            cpu: 10m
-            memory: 32Mi
-          limits:
-            cpu: 200m
-            memory: 192Mi
-      caddy:
-        securityContext:
-          allowPrivilegeEscalation: false
-        image:
-          repository: ghcr.io/davegallant/homelab-caddy-cloudflare
-          tag: 2.11.6-a8737d0
-          digest: sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
-        command:
-          - caddy
-        args:
-          - run
-          - --config
-          - /etc/caddy/Caddyfile
-          - --adapter
-          - caddyfile
-        resources:
-          requests:
-            cpu: 5m
-            memory: 16Mi
-          limits:
-            cpu: 100m
-            memory: 128Mi
 
 service:
   seerr:
@@ -137,77 +70,6 @@ service:
     ports:
       http:
         port: 5055
-
-configMaps:
-  # Keys are short on purpose: bjw-s names the rendered ConfigMaps
-  # <release>-<key>, and the persistence entries below reference the
-  # resulting seerr-tailscale / seerr-caddy names.
-  tailscale:
-    data:
-      serve-config.json: |
-        {
-          "TCP": {
-            "443": {
-              "TCPForward": "127.0.0.1:8443"
-            }
-          }
-        }
-  caddy:
-    data:
-      Caddyfile: |
-        {
-          auto_https disable_redirects
-          https_port 8443
-          tls_resolvers 1.1.1.1
-          servers {
-            protocols h1 h2
-          }
-        }
-
-        seerr.tail.davegallant.ca {
-          bind 127.0.0.1
-
-          tls {
-            dns cloudflare {file./run/secrets/cloudflare_api_token}
-            propagation_delay 30s
-            propagation_timeout -1
-          }
-
-          reverse_proxy 127.0.0.1:5055
-        }
-  proxyAgent:
-    data:
-      proxy-agent.cjs: |
-        "use strict";
-
-        const http = require("node:http");
-        const https = require("node:https");
-        const { syncBuiltinESMExports } = require("node:module");
-
-        const proxyEnv = {
-          HTTP_PROXY: "http://127.0.0.1:1055",
-          HTTPS_PROXY: "http://127.0.0.1:1055",
-          NO_PROXY: "",
-        };
-        const tailnetDomain = "tail.davegallant.ca";
-
-        for (const transport of [http, https]) {
-          const request = transport.request;
-          transport.request = function tailnetRequest(options, ...args) {
-            const hostname = (options.hostname ?? options.host ?? "")
-              .toLowerCase()
-              .replace(/\.$/, "");
-            if (hostname === tailnetDomain || hostname.endsWith(`.${tailnetDomain}`)) {
-              return request.call(this, {
-                ...options,
-                agent: new transport.Agent({ proxyEnv }),
-              }, ...args);
-            }
-            return request.call(this, options, ...args);
-          };
-        }
-
-        syncBuiltinESMExports();
 
 persistence:
   # Keep the original hostPath-backed claim present for rollback. It is
@@ -235,70 +97,6 @@ persistence:
       seerr:
         app:
           - path: /app/config
-  tailscale-state:
-    type: persistentVolumeClaim
-    annotations:
-      argocd.argoproj.io/ignore-healthcheck: "true"
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 64Mi
-    advancedMounts:
-      seerr:
-        tailscale:
-          - path: /var/lib/tailscale
-  tailscale-config:
-    type: configMap
-    name: seerr-tailscale
-    advancedMounts:
-      seerr:
-        tailscale:
-          - path: /etc/tailscale/serve-config.json
-            subPath: serve-config.json
-            readOnly: true
-  caddy-config:
-    type: configMap
-    name: seerr-caddy
-    advancedMounts:
-      seerr:
-        caddy:
-          - path: /etc/caddy/Caddyfile
-            subPath: Caddyfile
-            readOnly: true
-  proxy-agent:
-    type: configMap
-    name: seerr-proxyagent
-    advancedMounts:
-      seerr:
-        app:
-          - path: /opt/seerr-proxy/proxy-agent.cjs
-            subPath: proxy-agent.cjs
-            readOnly: true
-  caddy-state:
-    type: persistentVolumeClaim
-    annotations:
-      argocd.argoproj.io/ignore-healthcheck: "true"
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 256Mi
-    advancedMounts:
-      seerr:
-        caddy:
-          - path: /data
-  caddy-runtime:
-    type: emptyDir
-    advancedMounts:
-      seerr:
-        caddy:
-          - path: /config
-  caddy-secret:
-    type: secret
-    name: seerr-caddy-external
-    advancedMounts:
-      seerr:
-        caddy:
-          - path: /run/secrets/cloudflare_api_token
-            subPath: cloudflare_api_token
-            readOnly: true
 
 rawResources:
   defaultDenyNetworkPolicy:
