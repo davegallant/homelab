@@ -16,7 +16,6 @@ spec:
         app.kubernetes.io/name: homepage
       annotations:
         checksum/config: {{ .Values.configChecksum | default (printf "%s%s%s" .Values.configFiles.servicesYaml .Values.configFiles.settingsYaml .Values.configFiles.proxyAgentCjs | sha256sum) | quote }}
-        backup.velero.io/backup-volumes-excludes: tailscale-state,caddy-runtime
         {{- with .Values.restartTimestamp }}
         kubectl.kubernetes.io/restartedAt: {{ . | quote }}
         {{- end }}
@@ -48,10 +47,6 @@ spec:
               value: {{ .Values.homepage.pgid | quote }}
             - name: HOMEPAGE_ALLOWED_HOSTS
               value: "homepage.{{ required "magicDnsDomain must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.magicDnsDomain }}"
-            - name: HOMEPAGE_TAILNET_PROXY
-              value: http://127.0.0.1:1055
-            - name: NODE_OPTIONS
-              value: --require=/opt/homepage-proxy/proxy-agent.cjs
           envFrom:
             - secretRef:
                 name: {{ .Values.homepage.existingSecret | default "homepage-environment" | quote }}
@@ -108,108 +103,14 @@ spec:
             - name: custom-icons
               mountPath: /app/config/icons
               readOnly: true
-            - name: node-proxy
-              mountPath: /opt/homepage-proxy
-              readOnly: true
 
-        - name: tailscale
-          image: {{ .Values.tailscale.image }}
-          imagePullPolicy: IfNotPresent
-          securityContext:
-            capabilities:
-              drop:
-                - ALL
-            allowPrivilegeEscalation: false
-          env:
-            - name: TS_AUTHKEY
-              valueFrom:
-                secretKeyRef:
-                  name: homepage-tailscale-auth
-                  key: TS_AUTHKEY
-                  optional: true
-            - name: TS_AUTH_ONCE
-              value: "true"
-            - name: TS_HOSTNAME
-              value: {{ required "tailscaleHostname must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.tailscaleHostname | quote }}
-            - name: TS_STATE_DIR
-              value: /var/lib/tailscale
-            - name: TS_KUBE_SECRET
-              value: ""
-            - name: TS_USERSPACE
-              value: "true"
-            - name: TS_OUTBOUND_HTTP_PROXY_LISTEN
-              value: 127.0.0.1:1055
-            - name: TS_EXTRA_ARGS
-              value: >-
-                --login-server=https://{{ required "headscaleDomain must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.headscaleDomain }}
-                --accept-dns=false
-            - name: TS_SERVE_CONFIG
-              value: /etc/tailscale/serve-config.json
-          resources:
-            {{- toYaml .Values.tailscale.resources | nindent 12 }}
-          volumeMounts:
-            - name: tailscale-state
-              mountPath: /var/lib/tailscale
-            - name: tailscale-config
-              mountPath: /etc/tailscale/serve-config.json
-              subPath: serve-config.json
-              readOnly: true
-
-        - name: caddy
-          image: {{ .Values.caddy.image }}
-          imagePullPolicy: IfNotPresent
-          securityContext:
-            allowPrivilegeEscalation: false
-          command:
-            - caddy
-          args:
-            - run
-            - --config
-            - /etc/caddy/Caddyfile
-            - --adapter
-            - caddyfile
-          resources:
-            {{- toYaml .Values.caddy.resources | nindent 12 }}
-          volumeMounts:
-            - name: caddy-config
-              mountPath: /etc/caddy/Caddyfile
-              subPath: Caddyfile
-              readOnly: true
-            - name: caddy-state
-              mountPath: /data
-            - name: caddy-runtime
-              mountPath: /config
-            - name: caddy-secret
-              mountPath: /run/secrets/cloudflare_api_token
-              subPath: cloudflare_api_token
-              readOnly: true
       volumes:
         - name: homepage-config
           persistentVolumeClaim:
             claimName: homepage-config
-        - name: tailscale-state
-          persistentVolumeClaim:
-            claimName: homepage-tailscale
-        - name: caddy-state
-          persistentVolumeClaim:
-            claimName: homepage-caddy
-        - name: caddy-runtime
-          emptyDir: {}
         - name: managed-config
           configMap:
             name: {{ .Values.configFiles.existingConfigMap | default "homepage-config" | quote }}
         - name: custom-icons
           configMap:
             name: homepage-icons
-        - name: node-proxy
-          configMap:
-            name: {{ .Values.configFiles.proxyExistingConfigMap | default "homepage-node-proxy" | quote }}
-        - name: tailscale-config
-          configMap:
-            name: homepage-tailscale
-        - name: caddy-config
-          configMap:
-            name: homepage-caddy
-        - name: caddy-secret
-          secret:
-            secretName: {{ .Values.caddy.existingSecret | default "homepage-caddy" | quote }}
