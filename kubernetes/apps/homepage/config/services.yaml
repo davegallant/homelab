@@ -1,8 +1,5 @@
 ---
 - Stats:
-    - Gatus:
-        href: "{% raw %}{{HOMEPAGE_VAR_GATUS_URL}}{% endraw %}"
-        icon: gatus
     - Speedtest Tracker:
         href: "{% raw %}{{HOMEPAGE_VAR_SPEEDTEST_TRACKER_URL}}{% endraw %}"
         widget:
@@ -18,6 +15,9 @@
           url: "{% raw %}{{HOMEPAGE_VAR_GOTIFY_URL}}{% endraw %}"
           key: "{% raw %}{{HOMEPAGE_VAR_GOTIFY_API_KEY}}{% endraw %}"
 - Quick Links:
+    - Gatus:
+        href: "{% raw %}{{HOMEPAGE_VAR_GATUS_URL}}{% endraw %}"
+        icon: gatus
     - Immich:
         icon: immich
         href: "{% raw %}{{HOMEPAGE_VAR_IMMICH_URL}}{% endraw %}"
