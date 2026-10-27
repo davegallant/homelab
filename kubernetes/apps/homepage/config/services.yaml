@@ -2,7 +2,7 @@
 - Quick Links:
     - Speedtest Tracker:
         href: "{% raw %}{{HOMEPAGE_VAR_SPEEDTEST_TRACKER_URL}}{% endraw %}"
-        icon: speedtest
+        icon: speedtest-tracker
     - gotify:
         icon: gotify
         href: "{% raw %}{{HOMEPAGE_VAR_GOTIFY_URL}}{% endraw %}"
