@@ -14,7 +14,44 @@ dex:
 applicationSet:
   replicas: 0
 notifications:
-  enabled: false
+  enabled: true
+  argocdUrl: https://argocd.tail.davegallant.ca
+  secret:
+    create: false
+  notifiers:
+    service.webhook.gotify: |
+      url: https://gotify.davegallant.ca
+      headers:
+        - name: Content-Type
+          value: application/json
+        - name: X-Gotify-Key
+          value: $gotify-token
+  subscriptions:
+    - recipients: [gotify]
+      triggers: [on-sync-failed, on-health-degraded]
+  templates:
+    template.gotify-failure: |
+      webhook:
+        gotify:
+          method: POST
+          path: /message
+          body: |
+            {{ $operation := "none" }}{{ if .app.status.operationState }}{{ $operation = .app.status.operationState.message }}{{ end }}
+            {{ $details := printf "Application: %s\nHealth: %s\nSync: %s" .app.metadata.name .app.status.health.status .app.status.sync.status }}
+            {{ $details = printf "%s\nOperation: %s" $details $operation }}
+            {{ $link := printf "%s/applications/%s" .context.argocdUrl .app.metadata.name }}
+            {
+              "title": {{ printf "%q" (printf "Argo CD failure: %s" .app.metadata.name) }},
+              "message": {{ printf "%q" (printf "%s\n%s" $details $link) }},
+              "priority": 8
+            }
+  triggers:
+    trigger.on-sync-failed: |
+      - when: app.status.operationState.phase in ['Error', 'Failed']
+        send: [gotify-failure]
+    trigger.on-health-degraded: |
+      - when: app.status.health.status == 'Degraded'
+        send: [gotify-failure]
 controller:
   replicas: 1
   resources:
