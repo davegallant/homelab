@@ -43,6 +43,8 @@ spec:
       namespace: prowlarr
     - server: https://kubernetes.default.svc
       namespace: homepage
+    - server: https://kubernetes.default.svc
+      namespace: romm
   clusterResourceWhitelist:
     - group: admissionregistration.k8s.io
       kind: ValidatingAdmissionPolicy
