@@ -1,0 +1,33 @@
+---
+# Immich — initial test deployment, NOT applied, NOT committed by Tux.
+# Mirrors kubernetes/apps/argocd/applications/paperless-ngx.yaml:
+# bjw-s app-template 5.3.0, multi-source ($values ref), project homelab,
+# manual sync only, ServerSideApply + FailOnSharedResource, no prune,
+# no auto-sync, no deletion finalizer.
+#
+# The namespace and its baseline labels are provisioned separately.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: immich
+  namespace: argocd
+spec:
+  project: homelab
+  sources:
+    - repoURL: https://bjw-s-labs.github.io/helm-charts
+      chart: app-template
+      targetRevision: "5.3.0"
+      helm:
+        releaseName: immich
+        valueFiles:
+          - $values/kubernetes/apps/immich/values.production.yaml
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: immich
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true

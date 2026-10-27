@@ -1,0 +1,347 @@
+---
+# Immich — initial test deployment, NOT synced, NOT committed by Tux.
+# Repo path: kubernetes/apps/immich/values.production.yaml
+# bjw-s app-template 5.3.0, single Deployment, strategy Recreate.
+# CPU-only transcoding and CPU ML. No GPU, no passthrough, no device
+# plugin, no tailnet Gateway route in this deployment.
+#
+# ROUTE TRADEOFF (read before using this file):
+# This is NOT the official immich-charts topology. Officially Immich
+# runs as separate Deployments for server and machine-learning, with
+# an external Postgres (CloudNativePG operator + CNPG Cluster CRD) and
+# a ReadWriteMany library PVC shared by server and ML. That route needs
+# a new operator, new CRDs, and a PersistentVolume kind — none of which
+# are in the homelab Argo project whitelist.
+# This deployment instead copies the repo-native Umami/Paperless pattern:
+# one pod, four containers (server + machine-learning + valkey +
+# postgres-vectorchord), so server and ML share the pod and do NOT
+# need RWX. Cost: a single pod is a single failure domain, Postgres
+# and Valkey are in-pod (not operator-managed), and scaling server/ML
+# independently is impossible. That is acceptable for an initial test
+# deployment and NOT a production endorsement. A cutover decision must
+# re-decide the official topology, Postgres management, and
+# backup/restore story. Until that decision, the production Immich LXC
+# remains authoritative and this deployment's data is disposable test
+# data only.
+#
+# DATA SAFETY:
+# Library and Postgres data are chart-managed local-path PVCs with the
+# STORAGE.md shape-2 annotation (volumeType: local). They are test-only,
+# disposable, and MUST NOT point at production /mnt/tank/immich.
+# Postgres data is NEVER on NFS.
+# No Velero Schedule is in this deployment: test data is disposable,
+# and a schedule for it is a separate decision.
+#
+# IMAGE PINS:
+# Server and machine-learning are pinned to v3.3.5 registry digests.
+# Postgres and Valkey digests are from the v3.3.5 release compose.
+controllers:
+  immich:
+    type: deployment
+    strategy: Recreate
+    replicas: 1
+    pod:
+      automountServiceAccountToken: false
+      # Pin: k8s-w-2, with written reason per STORAGE.md's w-2 rule.
+      # Live capacity 2026-10-27 17:50 EDT (read-only proxy, requests
+      # only): pod requests 875m/1856Mi. w-1 free: 825m CPU / 1708Mi
+      # mem — CPU does NOT fit. w-2 free: 1650m CPU / 5962Mi mem —
+      # fits with headroom. Test data is disposable, so w-2 placement
+      # is acceptable for this deployment; production placement must be
+      # re-decided at cutover. Re-check live capacity again before
+      # sync; if w-2 no longer fits, HALT.
+      nodeSelector:
+        kubernetes.io/hostname: k8s-w-2
+      annotations:
+        backup.velero.io/backup-volumes: library-local,postgres-data-local
+    containers:
+      server:
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          allowPrivilegeEscalation: false
+        image:
+          repository: ghcr.io/immich-app/immich-server
+          tag: v3.3.5
+          digest: sha256:485d546a2e31d6a8b4db8423fcba5c109de8c218d93410af115fd1ccfc4352a6
+        envFrom:
+          - secretRef:
+              name: immich-external
+        env:
+          TZ: UTC
+          NODE_ENV: production
+          DB_HOSTNAME: 127.0.0.1
+          DB_PORT: "5432"
+          DB_USERNAME: postgres
+          DB_DATABASE_NAME: immich
+          REDIS_HOSTNAME: 127.0.0.1
+          REDIS_PORT: "6379"
+          IMMICH_MACHINE_LEARNING_URL: http://127.0.0.1:3003
+        probes:
+          startup:
+            enabled: true
+            type: HTTP
+            path: /api/server/ping
+            port: 2283
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /api/server/ping
+            port: 2283
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: HTTP
+            path: /api/server/ping
+            port: 2283
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+      machine-learning:
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          allowPrivilegeEscalation: false
+        image:
+          repository: ghcr.io/immich-app/immich-machine-learning
+          tag: v3.3.5
+          digest: sha256:5b28c9352c8374b8a1ed96fbdd8d6755fea6e43510ec43fdf6538aa02ea40f56
+        env:
+          TZ: UTC
+          MACHINE_LEARNING_HOST: 127.0.0.1
+          MACHINE_LEARNING_PORT: "3003"
+        probes:
+          startup:
+            enabled: true
+            type: TCP
+            port: 3003
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: TCP
+            port: 3003
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: TCP
+            port: 3003
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 3Gi
+      valkey:
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          allowPrivilegeEscalation: false
+        image:
+          repository: docker.io/valkey/valkey
+          tag: "9"
+          digest: sha256:c123e3715db63d06d4ad6964884037aa0d5d4d703939b9929954112889708e1d
+        probes:
+          startup:
+            enabled: true
+            type: TCP
+            port: 6379
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: TCP
+            port: 6379
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: TCP
+            port: 6379
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+      postgres:
+        securityContext:
+          allowPrivilegeEscalation: false
+        image:
+          repository: ghcr.io/immich-app/postgres
+          # RESOLVED from the v3.3.5 release compose
+          # (docker/docker-compose.yml): tag is 14-, not 16-.
+          tag: 14-vectorchord0.4.3-pgvectors0.2.0
+          digest: sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+        envFrom:
+          - secretRef:
+              name: immich-external
+        env:
+          POSTGRES_DB: immich
+          POSTGRES_USER: postgres
+          POSTGRES_INITDB_ARGS: "--data-checksums"
+        # NOTE for Terra: the v3.3.5 compose sets shm_size: 128mb for
+        # the database container. If Postgres fails with shared-memory
+        # errors, add a /dev/shm emptyDir (Memory medium, 128Mi) mount
+        # as a reported values change — do not silently edit at sync.
+        probes:
+          startup:
+            enabled: true
+            type: TCP
+            port: 5432
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 36
+          readiness:
+            enabled: true
+            type: TCP
+            port: 5432
+            spec:
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+          liveness:
+            enabled: true
+            type: TCP
+            port: 5432
+            spec:
+              periodSeconds: 30
+              timeoutSeconds: 3
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+
+service:
+  immich:
+    controller: immich
+    ports:
+      http:
+        port: 2283
+
+persistence:
+  # STORAGE.md shape 2: dynamic local-path PVC WITH volumeType: local.
+  # Without the annotation the provisioner defaults to hostPath, which
+  # Velero does NOT back up. Terra MUST verify, after the server-side
+  # dry-run and after first provision, that the rendered PVC carries
+  # the annotation and the provisioned PV type is `local`, not
+  # hostPath, before any test data is treated as backed-up.
+  library-local:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    annotations:
+      volumeType: local
+    advancedMounts:
+      immich:
+        server:
+          - path: /data
+  postgres-data-local:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    annotations:
+      volumeType: local
+    advancedMounts:
+      immich:
+        postgres:
+          - path: /var/lib/postgresql/data
+  model-cache-local:
+    type: persistentVolumeClaim
+    storageClass: local-path
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    annotations:
+      volumeType: local
+    advancedMounts:
+      immich:
+        machine-learning:
+          - path: /cache
+  valkey-data:
+    type: emptyDir
+    advancedMounts:
+      immich:
+        valkey:
+          - path: /data
+
+rawResources:
+  defaultDenyNetworkPolicy:
+    enabled: true
+    manifest:
+      apiVersion: cilium.io/v2
+      kind: CiliumNetworkPolicy
+      metadata:
+        name: default-deny
+        namespace: immich
+      spec:
+        description: Default deny with internet fetch access, cluster DNS, and explicit internal-range denies.
+        endpointSelector: {}
+        ingress:
+          - fromEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: immich
+        egress:
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: kube-system
+                  k8s:k8s-app: kube-dns
+            toPorts:
+              - ports:
+                  - port: "53"
+                    protocol: UDP
+                  - port: "53"
+                    protocol: TCP
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: immich
+          - toEntities:
+              - world
+        egressDeny:
+          - toCIDR:
+              - 192.168.1.0/24
+              - 10.96.0.0/12
+              - 10.245.0.0/16
