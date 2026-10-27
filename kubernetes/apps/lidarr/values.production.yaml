@@ -4,18 +4,13 @@
 # (app docker.io/linuxserver/lidarr 3.1.0, port 8686; config on a
 # local volume, the shared media tree at /mnt, plus the LXC's
 # separate /music mount as a second static claim — storage.yaml).
-# Tailnet-only: exposure mirrors the RomM pod — userspace Tailscale
-# sidecar TCP-forwarding 443 to an in-pod Caddy (8443), which
-# terminates a real certificate (Cloudflare DNS-01) and proxies to
-# Lidarr on 127.0.0.1:8686, replacing the LXC's host Caddy role.
-# The tailnet URL is unchanged.
+# Tailnet-only: the central Cilium Gateway routes the existing
+# tailnet hostname to the Lidarr Service on port 8686.
 #
 # qBittorrent remains on its LXC, with its static
 # LAN IP and OPNsense → Mullvad policy route. The saved client endpoint
-# remains qbittorrent.tail.davegallant.ca:443. This app uses its own
-# userspace Tailscale sidecar's HTTP proxy for tailnet HTTP(S); cluster
-# service traffic bypasses that proxy. The policy allows the sidecar's
-# outbound connection without a direct LAN exception.
+# uses its Kubernetes Service DNS name on port 8080. Cluster Service
+# traffic does not use an HTTP proxy.
 #
 # The media tree stays on TrueNAS (static NFS claim lidarr-media,
 # see storage.yaml), mounted at /mnt — the identical path the LXC
@@ -24,9 +19,6 @@
 # export). It never moves and is never Velero-backed-up (TrueNAS
 # snapshots + Drive sync).
 #
-# Secrets stay outside Git and outside Argo's ownership:
-#   lidarr-caddy-external    (key cloudflare_api_token) — gitops-secrets.yml
-#   lidarr-tailscale-auth    (key TS_AUTHKEY, one-use)  — bootstrap only
 # There is deliberately no app Secret: Lidarr's API key and qBittorrent
 # credentials live in its config.xml, which arrives with the copied
 # /config.
@@ -57,8 +49,6 @@ controllers:
           PGID: "1000"
           UMASK: "002"
           TZ: Etc/UTC
-          HTTP_PROXY: http://127.0.0.1:1055
-          HTTPS_PROXY: http://127.0.0.1:1055
           NO_PROXY: localhost,127.0.0.1,.svc,.cluster.local
         probes:
           startup:
@@ -94,108 +84,12 @@ controllers:
           limits:
             cpu: 1000m
             memory: 1Gi
-      tailscale:
-        securityContext:
-          capabilities:
-            drop:
-              - ALL
-          allowPrivilegeEscalation: false
-        image:
-          repository: ghcr.io/tailscale/tailscale
-          tag: v1.104.1
-          digest: sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
-        envFrom:
-          # The bootstrap-created Secret holds exactly one key
-          # (TS_AUTHKEY), imported here as the env var of that name.
-          # Optional: once the identity persists in tailscale-state,
-          # the Secret is deleted and the sidecar runs without it.
-          - secretRef:
-              name: lidarr-tailscale-auth
-              optional: true
-        env:
-          TS_AUTH_ONCE: "true"
-          TS_HOSTNAME: lidarr
-          TS_STATE_DIR: /var/lib/tailscale
-          # State lives on the local PVC, so disable Kubernetes Secret storage.
-          TS_KUBE_SECRET: ""
-          TS_USERSPACE: "true"
-          TS_OUTBOUND_HTTP_PROXY_LISTEN: 127.0.0.1:1055
-          TS_EXTRA_ARGS: --login-server=https://hs.davegallant.ca --accept-dns=false
-          TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
-        resources:
-          requests:
-            cpu: 10m
-            memory: 64Mi
-          limits:
-            cpu: 200m
-            memory: 192Mi
-      caddy:
-        securityContext:
-          allowPrivilegeEscalation: false
-        image:
-          repository: ghcr.io/davegallant/homelab-caddy-cloudflare
-          tag: 2.11.6-a8737d0
-          digest: sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
-        command:
-          - caddy
-        args:
-          - run
-          - --config
-          - /etc/caddy/Caddyfile
-          - --adapter
-          - caddyfile
-        resources:
-          requests:
-            cpu: 10m
-            memory: 32Mi
-          limits:
-            cpu: 100m
-            memory: 128Mi
-
 service:
   lidarr:
     controller: lidarr
     ports:
       http:
         port: 8686
-
-configMaps:
-  # Keys are short on purpose: bjw-s names the rendered ConfigMaps
-  # <release>-<key>, and the persistence entries below reference the
-  # resulting lidarr-tailscale / lidarr-caddy names.
-  tailscale:
-    data:
-      serve-config.json: |
-        {
-          "TCP": {
-            "443": {
-              "TCPForward": "127.0.0.1:8443"
-            }
-          }
-        }
-  caddy:
-    data:
-      Caddyfile: |
-        {
-          auto_https disable_redirects
-          https_port 8443
-          tls_resolvers 1.1.1.1
-          servers {
-            protocols h1 h2
-          }
-        }
-
-        lidarr.tail.davegallant.ca {
-          bind 127.0.0.1
-
-          tls {
-            dns cloudflare {file./run/secrets/cloudflare_api_token}
-            propagation_delay 30s
-            propagation_timeout -1
-          }
-
-          reverse_proxy 127.0.0.1:8686
-        }
 
 persistence:
   config-local:
@@ -219,58 +113,6 @@ persistence:
       lidarr:
         app:
           - path: /music
-  tailscale-state:
-    type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 1Gi
-    advancedMounts:
-      lidarr:
-        tailscale:
-          - path: /var/lib/tailscale
-  tailscale-config:
-    type: configMap
-    name: lidarr-tailscale
-    advancedMounts:
-      lidarr:
-        tailscale:
-          - path: /etc/tailscale/serve-config.json
-            subPath: serve-config.json
-            readOnly: true
-  caddy-config:
-    type: configMap
-    name: lidarr-caddy
-    advancedMounts:
-      lidarr:
-        caddy:
-          - path: /etc/caddy/Caddyfile
-            subPath: Caddyfile
-            readOnly: true
-  caddy-state:
-    type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 256Mi
-    advancedMounts:
-      lidarr:
-        caddy:
-          - path: /data
-  caddy-runtime:
-    type: emptyDir
-    advancedMounts:
-      lidarr:
-        caddy:
-          - path: /config
-  caddy-secret:
-    type: secret
-    name: lidarr-caddy-external
-    advancedMounts:
-      lidarr:
-        caddy:
-          - path: /run/secrets/cloudflare_api_token
-            subPath: cloudflare_api_token
-            readOnly: true
-
 rawResources:
   daily:
     enabled: true
@@ -301,7 +143,7 @@ rawResources:
         name: default-deny
         namespace: lidarr
       spec:
-        description: Default deny with metadata-fetch egress, cluster DNS, Prowlarr access, and the Tailscale HTTP proxy.
+        description: Default deny with metadata-fetch egress, cluster DNS, and Prowlarr access.
         endpointSelector: {}
         ingress:
           - fromEndpoints:
