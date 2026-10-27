@@ -75,6 +75,7 @@ configFiles:
   proxyExistingConfigMap: ""
   servicesYaml: ""
   settingsYaml: ""
+  widgetsYaml: ""
   proxyAgentCjs: ""
 
 # Preserve the existing rollout marker during in-place Helm adoption. The

@@ -9,6 +9,8 @@ data:
 {{- .Values.configFiles.servicesYaml | nindent 4 }}
   settings.yaml: |
 {{- .Values.configFiles.settingsYaml | nindent 4 }}
+  widgets.yaml: |
+{{- .Values.configFiles.widgetsYaml | nindent 4 }}
 {{- end }}
 
 {{- if not .Values.configFiles.proxyExistingConfigMap }}

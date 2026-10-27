@@ -12,6 +12,7 @@ cloudflareApiToken: {{ cloudflare_dns_api_token | to_json }}
 configFiles:
   servicesYaml: {{ lookup('ansible.builtin.template', playbook_dir + '/../../../kubernetes/apps/homepage/config/services.yaml') | to_json }}
   settingsYaml: {{ lookup('ansible.builtin.template', playbook_dir + '/../../../kubernetes/apps/homepage/config/settings.yaml') | to_json }}
+  widgetsYaml: {{ lookup('ansible.builtin.file', playbook_dir + '/../../../kubernetes/apps/homepage/config/widgets.yaml') | to_json }}
   proxyAgentCjs: {{ lookup('ansible.builtin.file', playbook_dir + '/../../../kubernetes/apps/homepage/proxy-agent.cjs') | to_json }}
 homepageEnv:
   HOMEPAGE_VAR_GOTIFY_API_KEY: {{ homepage_gotify_api_key | to_json }}
