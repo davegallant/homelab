@@ -38,6 +38,7 @@ spec:
                   - lubelogger
                   - radarr
                   - sonarr
+                  - lidarr
       tls:
         mode: Terminate
         certificateRefs:
