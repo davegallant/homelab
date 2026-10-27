@@ -17,6 +17,7 @@
           type: gotify
           url: "{% raw %}{{HOMEPAGE_VAR_GOTIFY_URL}}{% endraw %}"
           key: "{% raw %}{{HOMEPAGE_VAR_GOTIFY_API_KEY}}{% endraw %}"
+- Quick Links:
     - Immich:
         icon: immich
         href: "{% raw %}{{HOMEPAGE_VAR_IMMICH_URL}}{% endraw %}"
@@ -29,7 +30,6 @@
         href: "{% raw %}{{HOMEPAGE_VAR_TRUENAS_URL}}{% endraw %}"
         icon: truenas
         description: Network Storage
-- Quick Links:
     - Proxmox:
         href: "{% raw %}{{HOMEPAGE_VAR_PROXMOX_URL}}{% endraw %}"
         description: Virtualization
