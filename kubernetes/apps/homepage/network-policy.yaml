@@ -31,6 +31,14 @@ spec:
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: homepage
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: speedtest-tracker
+            k8s:app.kubernetes.io/name: speedtest-tracker
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
     - toEntities:
         - world
       toPorts:
