@@ -13,7 +13,7 @@ spec:
       namespace: tailnet-gateway
       sectionName: https
   hostnames:
-    - {{ .name }}.tail.davegallant.ca
+    - {{ .hostname | default (printf "%s.tail.davegallant.ca" .name) }}
   rules:
     - matches:
         - path:
