@@ -137,6 +137,26 @@ spec:
             - port: "8989"
               protocol: TCP
 ---
+# Permit only Gateway ingress to Seerr on 5055.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: seerr-gateway
+  namespace: seerr
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/controller: seerr
+      app.kubernetes.io/instance: seerr
+      app.kubernetes.io/name: seerr
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "5055"
+              protocol: TCP
+---
 # Permit Gateway ingress to Lidarr on 8686.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
