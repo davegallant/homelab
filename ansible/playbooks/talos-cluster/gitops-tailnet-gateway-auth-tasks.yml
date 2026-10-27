@@ -1,0 +1,65 @@
+# Select with --tags tailnet-gateway-auth and explicit opt-in.
+- name: Provision the tailnet Gateway fronting auth Secret
+  when: tailnet_gateway_provision_auth | default(false) | bool
+  tags:
+    - never
+    - tailnet-gateway-auth
+  block:
+    - name: Verify the intended Kubernetes API server
+      ansible.builtin.command:
+        argv: [kubectl, config, view, --minify, -o, "jsonpath={.clusters[0].cluster.server}"]
+      register: tailnet_gateway_auth_api
+      changed_when: false
+
+    - name: Read the intended Kubernetes nodes
+      ansible.builtin.command:
+        argv: [kubectl, get, nodes, -o, json]
+      register: tailnet_gateway_auth_nodes
+      changed_when: false
+
+    - name: Require the intended cluster
+      ansible.builtin.assert:
+        that:
+          - tailnet_gateway_auth_api.stdout == 'https://192.168.1.210:6443'
+          - >-
+            (tailnet_gateway_auth_nodes.stdout | from_json)['items']
+            | map(attribute='metadata.name') | sort | list
+            == ['k8s-cp-1', 'k8s-w-1', 'k8s-w-2']
+
+    - name: Require the Vault fronting auth key
+      ansible.builtin.assert:
+        that:
+          - tailnet_gateway_tailscale_authkey is defined
+          - tailnet_gateway_tailscale_authkey | length > 0
+      no_log: true
+
+    - name: Render and apply the protected fronting auth Secret
+      no_log: true
+      block:
+        - name: Allocate a protected auth manifest file
+          ansible.builtin.tempfile:
+            state: file
+            prefix: tailnet-gateway-auth-
+          register: tailnet_gateway_auth_temp
+
+        - name: Write the fronting auth Secret manifest
+          ansible.builtin.copy:
+            dest: "{{ tailnet_gateway_auth_temp.path }}"
+            mode: "0600"
+            content: >-
+              {{ {'apiVersion': 'v1', 'kind': 'Secret',
+                  'metadata': {'name': 'tailnet-gateway-tailscale-auth', 'namespace': 'tailnet-gateway'},
+                  'type': 'Opaque',
+                  'stringData': {'TS_AUTHKEY': tailnet_gateway_tailscale_authkey}} | to_json }}
+
+        - name: Apply the fronting auth Secret outside Argo ownership
+          ansible.builtin.command:
+            argv: [kubectl, apply, --server-side, --field-manager=ansible-vault, -f, "{{ tailnet_gateway_auth_temp.path }}"]
+          changed_when: true
+      always:
+        - name: Remove the protected auth manifest file
+          ansible.builtin.file:
+            path: "{{ tailnet_gateway_auth_temp.path }}"
+            state: absent
+          when: tailnet_gateway_auth_temp is defined and tailnet_gateway_auth_temp.path is defined
+          no_log: true

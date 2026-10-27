@@ -266,3 +266,15 @@ node identities. The current workstation kubeconfig has only the `homelab`
 context and resolves to the same expected control-plane endpoint and nodes.
 Update the playbook's context check in a separate reviewed change; this run
 used the default kubeconfig and made no playbook edit.
+
+## Enabling Gateway API
+
+When first enabling `gatewayAPI.enabled`, install the version-matched Gateway
+API CRDs and review every rendered chart kind against the Argo project.
+Cilium 1.20.3 also renders ValidatingAdmissionPolicy and its binding for the
+GatewayClass. A ConfigMap-only values change rolls agents with
+`rollOutCiliumPods`, but may leave the operator process unchanged. After the
+new config is applied, the pinned installation instructions require an
+operator rollout restart so it initializes the Gateway controller and Envoy
+CRDs. Verify those CRDs and GatewayClass acceptance before calling the rollout
+complete. See the [Gate 1 retry evidence](../../receipts/tailnet-gateway-gate-1-retry-20261026/RECEIPT.md).

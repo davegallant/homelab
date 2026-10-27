@@ -135,3 +135,15 @@ hubble:
       - flow
       - dns
       - http
+gatewayAPI:
+  enabled: true
+  gatewayClass:
+    create: true
+  externalTrafficPolicy: Cluster
+  secretsNamespace:
+    name: cilium-secrets
+l2announcements:
+  enabled: true
+k8sClientRateLimit:
+  qps: 10
+  burst: 20
