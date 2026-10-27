@@ -76,3 +76,23 @@ spec:
         - ports:
             - port: "8080"
               protocol: TCP
+---
+# Permit only Gateway ingress to LubeLogger on 8080.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: lubelogger-gateway
+  namespace: lubelogger
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/controller: lubelogger
+      app.kubernetes.io/instance: lubelogger
+      app.kubernetes.io/name: lubelogger
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
