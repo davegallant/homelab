@@ -113,6 +113,7 @@ controllers:
           limits:
             cpu: 2000m
             memory: 2Gi
+            gpu.intel.com/i915: 1
       machine-learning:
         securityContext:
           capabilities:

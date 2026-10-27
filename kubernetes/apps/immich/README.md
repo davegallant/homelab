@@ -1,8 +1,9 @@
 # Immich CPU test deployment
 
 Disposable test data only. The production Immich LXC remains authoritative.
-There is no gateway route, GPU access, production library mount, or backup
-schedule. Do not use this deployment for production data.
+The test instance is reachable through the tailnet Gateway and requests the
+Intel GPU on k8s-w-2. It has no production library mount or backup schedule.
+Do not use this deployment for production data.
 
 The app-template 5.3.0 deployment runs server, machine learning, Valkey,
 and Postgres together in a single pod. It requests 875m CPU and 1856Mi
