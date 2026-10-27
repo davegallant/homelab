@@ -46,3 +46,28 @@ spec:
         - kind: Service
           name: k8s-readonly
           port: 8001
+---
+# Production Prowlarr hostname. The Tailscale and Caddy sidecars remain live
+# until Gateway transport is proven.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: prowlarr-gateway-production
+  namespace: prowlarr
+spec:
+  parentRefs:
+    - kind: Gateway
+      name: tailnet-gateway
+      namespace: tailnet-gateway
+      sectionName: https
+  hostnames:
+    - prowlarr.tail.davegallant.ca
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - kind: Service
+          name: prowlarr
+          port: 9696
