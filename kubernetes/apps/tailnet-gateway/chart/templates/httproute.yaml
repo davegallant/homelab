@@ -1,0 +1,28 @@
+{{- range .Values.apps }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .name }}-gateway-production
+  namespace: {{ .name }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet-gateway
+      namespace: tailnet-gateway
+      sectionName: https
+  hostnames:
+    - {{ .name }}.tail.davegallant.ca
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: {{ .name }}
+          port: {{ .port }}
+          weight: 1
+{{- end }}

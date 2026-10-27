@@ -1,0 +1,21 @@
+{{- range .Values.apps }}
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: {{ .policyName | default (printf "%s-gateway" .name) }}
+  namespace: {{ .name }}
+spec:
+  endpointSelector:
+    matchLabels:
+{{- range $k, $v := .selectorLabels }}
+      {{ $k }}: {{ $v }}
+{{- end }}
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "{{ .port }}"
+              protocol: TCP
+{{- end }}

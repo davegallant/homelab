@@ -1,0 +1,5 @@
+apiVersion: v2
+name: tailnet-gateway-routes
+description: Shared HTTPRoute + CiliumNetworkPolicy wiring for tailnet Gateway apps
+type: application
+version: 0.1.0

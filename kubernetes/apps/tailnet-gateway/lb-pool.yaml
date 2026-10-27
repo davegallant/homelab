@@ -5,6 +5,7 @@ kind: CiliumLoadBalancerIPPool
 metadata:
   name: tailnet-gateway
 spec:
+  disabled: false
   blocks:
     - start: 192.168.1.185
       stop: 192.168.1.185
