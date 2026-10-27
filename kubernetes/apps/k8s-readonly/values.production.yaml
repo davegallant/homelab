@@ -157,15 +157,8 @@ configMaps:
           }
         }
 
-        k8s-readonly.tail.davegallant.ca {
-          bind 127.0.0.1
-
-          tls {
-            dns cloudflare {file./run/secrets/cloudflare_api_token}
-            propagation_delay 30s
-            propagation_timeout -1
-          }
-
+        http://k8s-readonly.tail.davegallant.ca:8443 {
+          bind 0.0.0.0
           reverse_proxy 127.0.0.1:8001
         }
 
