@@ -2,30 +2,19 @@
 # k8s-readonly — Argo CD production values (bjw-s app-template 5.3.0).
 # Tailnet-only read-only Kubernetes API proxy, for Tux's Velero/PV audit.
 #
-# Chain: Tux (tailnet, via tunnel proxy, approval on first connect)
-#   -> Tailscale sidecar TCPForward 443 -> in-pod Caddy 8443 (TLS,
-#      Cloudflare DNS-01 for k8s-readonly.tail.davegallant.ca)
-#   -> kubectl proxy on 127.0.0.1:8001 (default filter, NO
+# Chain: Tux (tailnet, via tunnel proxy)
+#   -> tailnet-gateway at 100.100.0.8 -> Gateway TLS termination
+#   -> Service port 8001 -> kubectl proxy on 0.0.0.0:8001 (default filter, NO
 #      --disable-filter, so writes are rejected by the proxy itself)
 #   -> https://kubernetes.default.svc with the pod's ServiceAccount
 #      token, whose RBAC is rbac.yaml (get/list/watch only, no secrets).
 #
-# Access control is tailnet membership, by design - same as Homepage
-# and Prowlarr: any tailnet member device can read cluster state via
-# this proxy. There is NO public URL and NO Pangolin resource.
-# No main data volume: tailscale-state and caddy-state are disposable
-# local-path PVCs (like Prowlarr's sidecars), NOT backed up by Velero,
-# recreatable on re-auth / re-issue. No new PV that needs a backup,
-# no reboot, no storage change.
+# Access remains tailnet-only. There is NO public URL and NO Pangolin
+# resource. The inbound Tailscale and Caddy sidecars have been removed.
 #
 # kubectl is pinned to the Kubernetes 1.37.0 client (matching the
 # cluster minor) and its verified linux/amd64 manifest digest.
 #
-# Secrets stay outside Git and outside Argo's ownership:
-#   k8s-readonly-tailscale-auth (key TS_AUTHKEY, one-use, UNTAGGED
-#     user auth key - tagging would require a Headscale ACL update,
-#     see README.md) - gitops-secrets.yml, bootstrap only
-#   k8s-readonly-caddy-external (key cloudflare_api_token) - gitops-secrets.yml
 # There is deliberately no app Secret: the API auth is the pod's
 # ServiceAccount token (rbac.yaml), mounted by Kubernetes itself.
 controllers:
@@ -39,16 +28,13 @@ controllers:
       # serviceAccount.name above (controllers.k8s-readonly.serviceAccount.name,
       # fixed by the 2026-10-24 Codex render check - pod.serviceAccountName
       # is rejected by app-template 5.3.0) selects the SA; automount here
-      # mounts it into the pod. Tailscale and caddy containers in the
-      # same pod also see the token mount, but they do not use it, and
-      # the token's RBAC is read-only with no secrets access, so a leak
-      # from those containers still cannot read secrets or write anything.
+      # mounts it into the pod. The token's RBAC is read-only and has no
+      # secrets access or write permissions.
       automountServiceAccountToken: true
       nodeSelector:
         kubernetes.io/hostname: k8s-w-1
       annotations:
-        # No backup annotation: this pod holds no backed-up data.
-        # tailscale-state and caddy-state are disposable by design.
+        # This pod holds no backed-up data.
         backup.velero.io/backup-volumes: ""
     containers:
       proxy:
@@ -65,8 +51,8 @@ controllers:
           - --address=0.0.0.0
           - --port=8001
           - --api-prefix=/
-          # Caddy preserves the original Host, while kubectl proxy defaults
-          # to localhost-only. Allow the tailnet hostname and loopback only.
+          # The Gateway preserves the original Host, while kubectl proxy
+          # defaults to localhost-only. Allow the app hostname and loopback.
           - '--accept-hosts=^(localhost|127\.0\.0\.1|\[::1\]|k8s-readonly\.tail\.davegallant\.ca)$'
         resources:
           requests:
@@ -75,152 +61,12 @@ controllers:
           limits:
             cpu: 500m
             memory: 512Mi
-      tailscale:
-        securityContext:
-          capabilities:
-            drop:
-              - ALL
-          allowPrivilegeEscalation: false
-        image:
-          repository: ghcr.io/tailscale/tailscale
-          tag: v1.104.1
-          digest: sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
-        envFrom:
-          - secretRef:
-              name: k8s-readonly-tailscale-auth
-              optional: true
-        env:
-          TS_AUTH_ONCE: "true"
-          TS_HOSTNAME: k8s-readonly
-          TS_STATE_DIR: /var/lib/tailscale
-          TS_KUBE_SECRET: ""
-          TS_USERSPACE: "true"
-          TS_EXTRA_ARGS: --login-server=https://hs.davegallant.ca --accept-dns=false
-          TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
-        resources:
-          requests:
-            cpu: 25m
-            memory: 64Mi
-          limits:
-            cpu: 200m
-            memory: 192Mi
-      caddy:
-        securityContext:
-          allowPrivilegeEscalation: false
-        image:
-          repository: ghcr.io/davegallant/homelab-caddy-cloudflare
-          tag: 2.11.6-a8737d0
-          digest: sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
-        command:
-          - caddy
-        args:
-          - run
-          - --config
-          - /etc/caddy/Caddyfile
-          - --adapter
-          - caddyfile
-        resources:
-          requests:
-            cpu: 25m
-            memory: 32Mi
-          limits:
-            cpu: 100m
-            memory: 128Mi
-
 service:
   k8s-readonly:
     controller: k8s-readonly
     ports:
       https:
         port: 8001
-
-configMaps:
-  tailscale:
-    data:
-      serve-config.json: |
-        {
-          "TCP": {
-            "443": {
-              "TCPForward": "127.0.0.1:8443"
-            }
-          }
-        }
-  caddy:
-    data:
-      Caddyfile: |
-        {
-          auto_https disable_redirects
-          https_port 8443
-          tls_resolvers 1.1.1.1
-          servers {
-            protocols h1 h2
-          }
-        }
-
-        k8s-readonly.tail.davegallant.ca {
-          bind 127.0.0.1
-
-          tls {
-            dns cloudflare {file./run/secrets/cloudflare_api_token}
-            propagation_delay 30s
-            propagation_timeout -1
-          }
-
-          reverse_proxy 127.0.0.1:8001
-        }
-
-persistence:
-  tailscale-state:
-    type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 1Gi
-    advancedMounts:
-      k8s-readonly:
-        tailscale:
-          - path: /var/lib/tailscale
-  tailscale-config:
-    type: configMap
-    name: k8s-readonly-tailscale
-    advancedMounts:
-      k8s-readonly:
-        tailscale:
-          - path: /etc/tailscale/serve-config.json
-            subPath: serve-config.json
-            readOnly: true
-  caddy-config:
-    type: configMap
-    name: k8s-readonly-caddy
-    advancedMounts:
-      k8s-readonly:
-        caddy:
-          - path: /etc/caddy/Caddyfile
-            subPath: Caddyfile
-            readOnly: true
-  caddy-state:
-    type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 256Mi
-    advancedMounts:
-      k8s-readonly:
-        caddy:
-          - path: /data
-  caddy-runtime:
-    type: emptyDir
-    advancedMounts:
-      k8s-readonly:
-        caddy:
-          - path: /config
-  caddy-secret:
-    type: secret
-    name: k8s-readonly-caddy-external
-    advancedMounts:
-      k8s-readonly:
-        caddy:
-          - path: /run/secrets/cloudflare_api_token
-            subPath: cloudflare_api_token
-            readOnly: true
 
 rawResources:
   defaultDenyNetworkPolicy:
