@@ -39,6 +39,7 @@ spec:
                   - radarr
                   - sonarr
                   - lidarr
+                  - seerr
       tls:
         mode: Terminate
         certificateRefs:
