@@ -161,6 +161,8 @@ controllers:
             memory: 3Gi
       valkey:
         securityContext:
+          runAsUser: 999
+          runAsGroup: 999
           capabilities:
             drop:
               - ALL
