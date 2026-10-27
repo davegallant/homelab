@@ -26,8 +26,14 @@ spec:
         namespaces:
           from: Selector
           selector:
-            matchLabels:
-              kubernetes.io/metadata.name: changedetection
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - changedetection
+                  - k8s-readonly
+                  - prowlarr
+                  - homepage
       tls:
         mode: Terminate
         certificateRefs:
