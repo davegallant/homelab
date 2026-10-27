@@ -51,6 +51,8 @@ spec:
       namespace: radarr
     - server: https://kubernetes.default.svc
       namespace: sonarr
+    - server: https://kubernetes.default.svc
+      namespace: lidarr
   clusterResourceWhitelist:
     - group: admissionregistration.k8s.io
       kind: ValidatingAdmissionPolicy
