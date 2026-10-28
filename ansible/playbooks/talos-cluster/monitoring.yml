@@ -217,77 +217,57 @@
       when: monitoring_action == 'verify'
       block:
         - name: Wait for node-exporter series from all three nodes
-          ansible.builtin.uri:
-            url: "http://127.0.0.1:8428/api/v1/query?query=count(node_uname_info)"
-            method: GET
-            return_content: true
-          delegate_to: grafana
-          connection: ssh
-          remote_user: root
+          ansible.builtin.command:
+            argv: [kubectl, -n, grafana, exec, deployment/grafana, -c, grafana, --, curl, -fsS, "http://victoriametrics.monitoring.svc.cluster.local:8428/api/v1/query?query=count(node_uname_info)"]
           register: monitoring_vm_nodes
           changed_when: false
           until: >-
-            monitoring_vm_nodes.status == 200 and
-            (monitoring_vm_nodes.json.data.result | default([]) | length) > 0 and
-            (monitoring_vm_nodes.json.data.result[0].value[1] | int) == 3
+            monitoring_vm_nodes.rc == 0 and
+            ((monitoring_vm_nodes.stdout | from_json).data.result | default([]) | length) > 0 and
+            (((monitoring_vm_nodes.stdout | from_json).data.result[0].value[1] | int) == 3)
           retries: 18
           delay: 10
 
         - name: Wait for kube-state-metrics series
-          ansible.builtin.uri:
-            url: "http://127.0.0.1:8428/api/v1/query?query=count(kube_pod_info)"
-            method: GET
-            return_content: true
-          delegate_to: grafana
-          connection: ssh
-          remote_user: root
+          ansible.builtin.command:
+            argv: [kubectl, -n, grafana, exec, deployment/grafana, -c, grafana, --, curl, -fsS, "http://victoriametrics.monitoring.svc.cluster.local:8428/api/v1/query?query=count(kube_pod_info)"]
           register: monitoring_vm_ksm
           changed_when: false
           until: >-
-            monitoring_vm_ksm.status == 200 and
-            (monitoring_vm_ksm.json.data.result | default([]) | length) > 0 and
-            (monitoring_vm_ksm.json.data.result[0].value[1] | int) > 0
+            monitoring_vm_ksm.rc == 0 and
+            ((monitoring_vm_ksm.stdout | from_json).data.result | default([]) | length) > 0 and
+            (((monitoring_vm_ksm.stdout | from_json).data.result[0].value[1] | int) > 0)
           retries: 18
           delay: 10
 
         - name: Wait for kubelet series from all three nodes
-          ansible.builtin.uri:
-            url: "http://127.0.0.1:8428/api/v1/query?query=count(kubelet_running_pods)"
-            method: GET
-            return_content: true
-          delegate_to: grafana
-          connection: ssh
-          remote_user: root
+          ansible.builtin.command:
+            argv: [kubectl, -n, grafana, exec, deployment/grafana, -c, grafana, --, curl, -fsS, "http://victoriametrics.monitoring.svc.cluster.local:8428/api/v1/query?query=count(kubelet_running_pods)"]
           register: monitoring_vm_kubelet
           changed_when: false
           until: >-
-            monitoring_vm_kubelet.status == 200 and
-            (monitoring_vm_kubelet.json.data.result | default([]) | length) > 0 and
-            (monitoring_vm_kubelet.json.data.result[0].value[1] | int) == 3
+            monitoring_vm_kubelet.rc == 0 and
+            ((monitoring_vm_kubelet.stdout | from_json).data.result | default([]) | length) > 0 and
+            (((monitoring_vm_kubelet.stdout | from_json).data.result[0].value[1] | int) == 3)
           retries: 18
           delay: 10
 
         - name: Wait for cAdvisor container series
-          ansible.builtin.uri:
-            url: "http://127.0.0.1:8428/api/v1/query?query=count(container_cpu_usage_seconds_total)"
-            method: GET
-            return_content: true
-          delegate_to: grafana
-          connection: ssh
-          remote_user: root
+          ansible.builtin.command:
+            argv: [kubectl, -n, grafana, exec, deployment/grafana, -c, grafana, --, curl, -fsS, "http://victoriametrics.monitoring.svc.cluster.local:8428/api/v1/query?query=count(container_cpu_usage_seconds_total)"]
           register: monitoring_vm_cadvisor
           changed_when: false
           until: >-
-            monitoring_vm_cadvisor.status == 200 and
-            (monitoring_vm_cadvisor.json.data.result | default([]) | length) > 0 and
-            (monitoring_vm_cadvisor.json.data.result[0].value[1] | int) > 0
+            monitoring_vm_cadvisor.rc == 0 and
+            ((monitoring_vm_cadvisor.stdout | from_json).data.result | default([]) | length) > 0 and
+            (((monitoring_vm_cadvisor.stdout | from_json).data.result[0].value[1] | int) > 0)
           retries: 18
           delay: 10
 
         - name: Report the verified series counts
           ansible.builtin.debug:
             msg:
-              - "node_uname_info series: {{ monitoring_vm_nodes.json.data.result[0].value[1] }}"
-              - "kube_pod_info series: {{ monitoring_vm_ksm.json.data.result[0].value[1] }}"
-              - "kubelet_running_pods series: {{ monitoring_vm_kubelet.json.data.result[0].value[1] }}"
-              - "container_cpu_usage_seconds_total series: {{ monitoring_vm_cadvisor.json.data.result[0].value[1] }}"
+              - "node_uname_info series: {{ (monitoring_vm_nodes.stdout | from_json).data.result[0].value[1] }}"
+              - "kube_pod_info series: {{ (monitoring_vm_ksm.stdout | from_json).data.result[0].value[1] }}"
+              - "kubelet_running_pods series: {{ (monitoring_vm_kubelet.stdout | from_json).data.result[0].value[1] }}"
+              - "container_cpu_usage_seconds_total series: {{ (monitoring_vm_cadvisor.stdout | from_json).data.result[0].value[1] }}"

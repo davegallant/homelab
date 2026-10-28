@@ -56,13 +56,12 @@ data:
     }
 
     // ---- Metrics -----------------------------------------------------
-    // Scraped in-cluster, remote-written to VictoriaMetrics on the
-    // Grafana host (unauthenticated; that host's firewall admits 8428
-    // only from the Talos node IPs — same posture as Loki on 3100).
+    // Scraped in-cluster and remote-written to VictoriaMetrics in the
+    // monitoring namespace. Cilium allows only Alloy and Grafana.
 
     prometheus.remote_write "victoriametrics" {
       endpoint {
-        url = "http://{{ alloy_metrics_lan_ip }}:8428/api/v1/write"
+        url = "{{ alloy_metrics_remote_write_url }}"
       }
     }
 

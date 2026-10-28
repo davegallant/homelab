@@ -16,6 +16,8 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: loki
     - server: https://kubernetes.default.svc
+      namespace: monitoring
+    - server: https://kubernetes.default.svc
       namespace: grafana
     - namespace: immich
       server: https://kubernetes.default.svc

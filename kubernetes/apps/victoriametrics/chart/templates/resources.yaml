@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: victoriametrics-data
+  annotations:
+    volumeType: local
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 8Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: victoriametrics
+spec:
+  selector:
+    app.kubernetes.io/name: victoriametrics
+  ports:
+    - name: http
+      port: 8428
+      targetPort: 8428
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: victoriametrics
+spec:
+  replicas: {{ .Values.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: victoriametrics
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: victoriametrics
+      annotations:
+        backup.velero.io/backup-volumes: data
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: k8s-w-1
+      containers:
+        - name: victoriametrics
+          image: docker.io/victoriametrics/victoria-metrics:v1.154.1@sha256:c7884f32920dd45a9d86542a717227e63af03e060e53bbf8031e6e6fd0e1e05d
+          imagePullPolicy: IfNotPresent
+          args: [-storageDataPath=/victoria-metrics-data, -retentionPeriod=12]
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests: {cpu: 200m, memory: 512Mi}
+            limits: {cpu: "2", memory: 2Gi}
+          ports:
+            - containerPort: 8428
+          startupProbe:
+            httpGet: {path: /health, port: 8428}
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            httpGet: {path: /health, port: 8428}
+          livenessProbe:
+            httpGet: {path: /health, port: 8428}
+          volumeMounts:
+            - {name: data, mountPath: /victoria-metrics-data}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: victoriametrics-data}
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: victoriametrics-default-deny
+spec:
+  description: Allow only Alloy remote-write and Grafana queries to VictoriaMetrics.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: victoriametrics
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: alloy
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: grafana
+      toPorts:
+        - ports:
+            - port: "8428"
+              protocol: TCP
