@@ -1,0 +1,26 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jellyfin
+  namespace: argocd
+spec:
+  project: homelab
+  sources:
+    - repoURL: https://bjw-s-labs.github.io/helm-charts
+      chart: app-template
+      targetRevision: "5.3.0"
+      helm:
+        releaseName: jellyfin
+        valueFiles:
+          - $values/kubernetes/apps/jellyfin/values.production.yaml
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: jellyfin
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true
