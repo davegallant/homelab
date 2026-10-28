@@ -210,12 +210,6 @@ just setup
 # Run all playbooks
 just run
 
-# Run a single service
-just run main --limit grafana
-
-# Run one playbook directly
-just run grafana/main
-
 # Provision Kubernetes external Secrets and Homepage config maps
 just run talos-cluster/gitops-secrets
 ```
