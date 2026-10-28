@@ -1,1 +1,0 @@
-# The production workload is moving to Kubernetes; never restart the LXC in CI.
