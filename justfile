@@ -40,6 +40,15 @@ edit-secrets:
 check-headscale-policy:
     python3 scripts/check-headscale-policy.py
 
+# Build and publish the tailnet Caddy image to GitHub Container Registry
+publish-tailnet-caddy:
+    docker buildx build \
+        --platform linux/amd64 \
+        --push \
+        --tag ghcr.io/davegallant/homelab-caddy-cloudflare:2.11.6-a8737d0 \
+        --label org.opencontainers.image.source=https://github.com/davegallant/homelab \
+        docker/tailnet-caddy
+
 # Backup vps config from remote host and pull locally
 backup-vps:
     #!/usr/bin/env bash
