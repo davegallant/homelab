@@ -25,4 +25,7 @@ server:
               service: application.ApplicationService
           - method:
               type: Exact
+              service: cluster.SettingsService
+          - method:
+              type: Exact
               service: session.SessionService
