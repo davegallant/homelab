@@ -1,61 +1,60 @@
-# Immich production migration
+# Immich on Kubernetes
 
-The production LXC remains authoritative until the migration gates pass. The
-Kubernetes test instance at `immich-k8s.tail.davegallant.ca` has verified Intel
-VAAPI transcoding, and its disposable database and library PVCs are retained.
-Do not sync the production values before restoring the fresh database and
-stopping the LXC server and ML containers.
+Production runs on `k8s-w-2` at the tailnet-only URL
+`https://immich-k8s.tail.davegallant.ca`, through the shared tailnet Gateway
+to the `immich` Service on port 2283. The LXC (104 on `pve-g3-1`) is stopped
+and its Proxmox `onboot` setting is disabled. The requested eventual handoff
+of `immich.tail.davegallant.ca` remains pending.
+Homepage and Gatus still use the old hostname until that handoff.
 
-The tailnet-only URL is `https://immich-k8s.tail.davegallant.ca`, routed by
-the shared tailnet Gateway to the `immich` Service on port 2283. Production
-will take over that endpoint when the app is synced. The existing
-`https://immich.tail.davegallant.ca` LXC endpoint remains available for
-rollback; switch Homepage and Gatus to the Kubernetes URL after the cutover
-has passed its health checks.
-
-The planned deployment uses one Recreate pod on k8s-w-2 with Immich server,
-CPU ML, Valkey, and Postgres. Its server requests the worker's Intel GPU. This
-is a single failure domain; Postgres is in-pod and server/ML cannot scale
-independently. Jellyfin uses a different host GPU.
+One Recreate pod contains Immich server, CPU machine learning, Valkey, and
+Postgres. The server requests the worker's Intel GPU, and the restored
+production configuration uses QSV. This is a single failure domain; Postgres
+is in-pod and server/ML cannot scale independently. Jellyfin uses a different
+host GPU. Machine learning reuses the local model-cache claim from the test.
 
 `production-storage.yaml` defines a retained NFS PV for the existing TrueNAS
-library and a new annotated local-path PostgreSQL PVC. The NAS export must
-allow k8s-w-2 and preserve its existing client, ownership mapping and snapshot
-protection. The original LXC and its NFS library must have no running writer
-when the Kubernetes server is started. The original library path inside the
-container is retained. Postgres never lives on NFS. The local DB PV is tied to
-k8s-w-2; losing the node requires recovery from backup. Machine learning reuses
-the existing local model-cache claim from the test deployment.
+library and an annotated local-path PostgreSQL PVC. The NAS export allows the
+original client and `k8s-w-2`; its mapall identity owns the library files.
+The original library path inside the server container is retained. Postgres
+is local to `k8s-w-2`, not NFS; losing that node requires database recovery.
+`immich-production-secret.yml` provisions the production database credentials
+from Ansible Vault as the `immich-production-external` Secret.
 
-`immich-production-secret.yml` provisions credentials from Ansible Vault.
-`production-restore-pod.yaml` starts only a new empty PostgreSQL against the
-production claim. `production-nfs-check.yaml` mounts the NAS library read-only
-for the preflight gate; `production-nfs-permission-check.yaml` checks write
-permission bits with the pod identity without creating files. These resources
-are applied separately from Argo.
-The app references only `immich-production-external`; the Secret supplies
-`DB_USERNAME`, `DB_PASSWORD`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` without
-placing their values in Git.
+The 2026-10-28 cutover restored a frozen database dump into a fresh claim.
+All 73 public table counts matched the source, including 16,921 asset rows.
+The app verified its library mounts and five original photos were read from
+the server container; Dave uploaded a photo and confirmed it appeared. A
+synthetic QSV encode passed in the production pod.
+The previous disposable test PVCs and network policy are retained; their
+prune-skipped state makes Argo report `OutOfSync`. Do not prune them as part
+of a normal sync.
 
 The production values include a daily 05:10 UTC Velero schedule with a
-PostgreSQL logical dump hook and the database volume; Secrets are excluded.
-It starts ten minutes after the existing 05:00 UTC Forgejo schedule, whose
-latest backup completed in about two minutes. The NAS
-library is excluded and depends on its separate snapshot and off-host backup
-path. Validate a successful one-off backup, its hook and nonzero completed
-PodVolumeBackup before treating the deployment as protected. Confirm the daily
-schedule is enabled and verify its first scheduled run separately.
+PostgreSQL logical dump hook and its local database volume; Secrets are
+excluded. The one-off `immich-migration-20261028` backup completed with one
+successful hook and an 833,210,457-byte completed PodVolumeBackup. The first
+scheduled run still needs verification. Velero writes to Garage on TrueNAS;
+the Garage cloud sync last reported a Google Drive rate-limit failure, so
+off-host protection of that backup is not confirmed.
 
-Before cutover, prevent automated LXC reapplication, capture a verified fresh
-off-host database backup and NAS snapshot, stop the LXC writers, capture a
-final database dump and source counts, restore to the empty target, and
-compare exact table counts and source file paths. Stop the restore pod's
-PostgreSQL before starting the production deployment. Review the server-side
-Argo diff and dry run, sync without prune or force, then verify database,
-media, uploads, GPU video processing, backups, and URL identity. Do not delete
-any LXC, PVC, data, test resources or registration without separate approval.
+The NFS library is excluded from Velero. TrueNAS has an enabled daily
+recursive snapshot of `tank`, and the frozen cutover snapshot is
+`tank/immich@immich-cutover-20261028T025001Z`. No configured TrueNAS cloud
+sync was found for `tank/immich`; an off-host library copy has not been
+verified. The protected final database dump and table counts are under
+`~/.local/share/immich-migration-20261027/` on the operator's machine.
 
-If any cutover gate fails, freeze at that step, preserve evidence, and wait for
-direction. Do not reverse the writer handoff or restart the LXC writers after
-Kubernetes has started without explicit approval. Keep the Kubernetes PVCs
-and all backups for diagnosis; do not delete either deployment's data.
+The staging manifests `production-nfs-check.yaml` and
+`production-nfs-permission-check.yaml` performed the NFS checks. The completed
+`production-restore-pod.yaml` was used for the database restore. Do not start
+that restore pod against the production claim while the application is running:
+it would start a second PostgreSQL on the same data. Use an isolated claim for
+future restore rehearsals.
+
+The stopped LXC database is a pre-cutover copy and becomes stale as soon as
+Kubernetes accepts changes. Do not restart its writers against the shared
+library without an explicitly approved recovery plan and a current database
+handoff. Preserve the LXC, PVCs, snapshots, and backup evidence. If a recovery
+gate fails, freeze that step and wait for direction; do not reverse the writer
+handoff without explicit approval.
