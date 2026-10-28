@@ -7,10 +7,9 @@
 # Tailnet-only: the central Cilium Gateway routes the existing
 # tailnet hostname to the Lidarr Service on port 8686.
 #
-# qBittorrent remains on its LXC, with its static
-# LAN IP and OPNsense → Mullvad policy route. The saved client endpoint
-# uses its Kubernetes Service DNS name on port 8080. Cluster Service
-# traffic does not use an HTTP proxy.
+# qBittorrent runs in Kubernetes. The saved client endpoint uses its
+# Kubernetes Service DNS name on port 8080. Cluster Service traffic
+# does not use an HTTP proxy.
 #
 # The media tree stays on TrueNAS (static NFS claim lidarr-media,
 # see storage.yaml), mounted at /mnt — the identical path the LXC
