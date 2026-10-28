@@ -65,6 +65,12 @@
             dest: "{{ alloy_render_dir.path }}/serviceaccount.yaml"
             mode: "0600"
 
+        - name: Copy Alloy Cilium network policy manifest
+          ansible.builtin.copy:
+            src: "{{ playbook_dir }}/../../../kubernetes/apps/alloy/network-policy.yaml"
+            dest: "{{ alloy_render_dir.path }}/network-policy.yaml"
+            mode: "0600"
+
         - name: Copy Alloy RBAC manifest
           ansible.builtin.copy:
             src: "{{ playbook_dir }}/../../../kubernetes/apps/alloy/rbac.yaml"
@@ -94,6 +100,12 @@
             argv: [kubectl, apply, -f, "{{ alloy_render_dir.path }}/serviceaccount.yaml"]
           register: alloy_apply_serviceaccount
           changed_when: "'created' in alloy_apply_serviceaccount.stdout or 'configured' in alloy_apply_serviceaccount.stdout"
+
+        - name: Apply Alloy Cilium network policy
+          ansible.builtin.command:
+            argv: [kubectl, apply, -f, "{{ alloy_render_dir.path }}/network-policy.yaml"]
+          register: alloy_apply_network_policy
+          changed_when: "'created' in alloy_apply_network_policy.stdout or 'configured' in alloy_apply_network_policy.stdout"
 
         - name: Apply Alloy RBAC
           ansible.builtin.command:
