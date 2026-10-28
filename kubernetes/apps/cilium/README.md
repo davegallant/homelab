@@ -2,7 +2,7 @@
 
 ## Current cluster state
 
-The Talos cluster runs Kubernetes `1.37.0` with Cilium chart `1.20.3` as its
+The Talos cluster runs Kubernetes `1.37.0` with Cilium chart `1.20.4` as its
 primary CNI. Cluster-pool IPAM assigns `10.245.0.0/16` (`/24` per node) and
 VXLAN uses UDP `8473`. Flannel has been removed and kube-proxy remains enabled.
 Talos machine configuration sets `cluster.network.cni.name: none`; Cilium
@@ -63,12 +63,12 @@ The certificates were imported intact; no private key or certificate data
 was printed. Certificate renewal must update Vault and rematerialize these
 Secrets before expiration; Helm/Argo no longer regenerates them.
 
-`cilium-adopt.yml` applied the platform permissions and rendered Cilium
-Application, then requested one manual sync without pruning. The Application
-template embeds the repository values as valuesObject, so adoption does
-not require pushing unreviewed main changes to the live-host CI pipeline.
-The chart version still comes from vars.yaml. Future Cilium value changes
-use the adoption playbook to update the Application and manually sync it.
+Cilium is a plain multi-source Argo CD Application, like Velero: the pinned
+upstream chart plus `values.yaml` from Git `main`. Future Cilium chart and
+value changes are a normal Git change to `applications/cilium.yaml` and/or
+`values.yaml`, followed by a manual Argo CD sync without pruning or force.
+`vars.yaml` keeps a recovery-only chart pin for `cilium.yml` and
+`cilium-primary.yml` when Argo CD is unavailable; it is not the live pin.
 
 The bootstrap remains the recovery path: use `cilium.yml` with
 `cilium_bootstrap_mode=steady` and `cilium_recovery=true` only for explicit
@@ -137,8 +137,8 @@ backup was the agreed representative heavy activity.
 ## Hubble UI
 
 The steady-state values enable Hubble UI on `k8s-cp-1`, with a ClusterIP
-service. Apply changes with `cilium-adopt.yml`; it requests a manual Argo CD
-sync without pruning. The chart pins both UI images by version and digest.
+service. Apply changes with a manual Argo CD sync without pruning or force.
+The chart pins both UI images by version and digest.
 
 Access it locally:
 
