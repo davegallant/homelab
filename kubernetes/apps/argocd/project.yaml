@@ -46,7 +46,7 @@ spec:
       namespace: audiobookshelf
     - server: https://kubernetes.default.svc
       namespace: romm
-    # Jellyfin migration (2026-10-28): test instance, media tier.
+    # Jellyfin production application (2026-10-28), media tier.
     - server: https://kubernetes.default.svc
       namespace: jellyfin
     # Batch C: the Postgres-pattern batch (authored 2026-10-23).
@@ -58,8 +58,7 @@ spec:
       namespace: invidious
     - server: https://kubernetes.default.svc
       namespace: speedtest-tracker
-    # Batch D: the *arr suite (authored 2026-10-23). qBittorrent
-    # deliberately stays on its LXC — no namespace for it.
+    # Batch D: the *arr suite (authored 2026-10-23).
     - server: https://kubernetes.default.svc
       namespace: prowlarr
     - server: https://kubernetes.default.svc
