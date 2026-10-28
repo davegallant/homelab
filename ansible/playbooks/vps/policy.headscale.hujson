@@ -32,6 +32,13 @@
 			"src":    ["tag:beszel-agent"],
 			"dst":    ["tag:beszel:443"],
 		},
+		// Beszel agents on the tagged gotify hosts and the beszel-agent tag use the Gateway after sidecar retirement.
+		{
+			"action": "accept",
+			"proto":  "tcp",
+			"src":    ["100.100.0.33", "100.100.0.34", "tag:beszel-agent"],
+			"dst":    ["100.100.0.8:443"],
+		},
 		// Muse can read Gatus health status over its tailnet HTTPS endpoint.
 		{
 			"action": "accept",
@@ -114,8 +121,35 @@
 		{
 			"src":    "tag:beszel-agent",
 			"proto":  "tcp",
-			"accept": ["tag:beszel:443", "100.100.0.11:53", "100.100.0.24:53"],
-			"deny":   ["dave@:443", "tag:loki:3100", "tag:maloja:443", "tag:pangolin:443"],
+			"accept": ["tag:beszel:443", "100.100.0.8:443", "100.100.0.11:53", "100.100.0.24:53"],
+			"deny":   ["dave@:443", "100.100.0.8:80", "100.100.0.8:444", "tag:loki:3100", "tag:maloja:443", "tag:pangolin:443"],
+		},
+		{
+			"src":    "100.100.0.33",
+			"proto":  "tcp",
+			"accept": ["100.100.0.8:443"],
+			"deny":   ["100.100.0.8:80", "100.100.0.8:444", "100.100.0.22:443", "100.100.0.11:443", "100.100.0.1:443"],
+		},
+		{
+			"src":    "100.100.0.34",
+			"proto":  "tcp",
+			"accept": ["100.100.0.8:443"],
+			"deny":   ["100.100.0.8:80", "100.100.0.8:444", "100.100.0.22:443", "100.100.0.11:443", "100.100.0.1:443"],
+		},
+		{
+			"src":   "100.100.0.33",
+			"proto": "udp",
+			"deny":  ["100.100.0.8:443"],
+		},
+		{
+			"src":   "100.100.0.34",
+			"proto": "udp",
+			"deny":  ["100.100.0.8:443"],
+		},
+		{
+			"src":    "tag:beszel-agent",
+			"proto":  "udp",
+			"deny":   ["100.100.0.8:443"],
 		},
 		// Muse may query Gatus but has no access to Beszel or other tagged services.
 		{
