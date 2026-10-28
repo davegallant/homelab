@@ -104,3 +104,9 @@ apps:
       app.kubernetes.io/controller: maloja
       app.kubernetes.io/instance: maloja
       app.kubernetes.io/name: maloja
+  - name: speedtest-tracker
+    port: 80
+    selectorLabels:
+      app.kubernetes.io/controller: speedtest-tracker
+      app.kubernetes.io/instance: speedtest-tracker
+      app.kubernetes.io/name: speedtest-tracker
