@@ -4,8 +4,8 @@ Talos runs application and platform workloads on three VMs across two Proxmox
 hosts. Argo CD manages application resources from the tracked chart templates
 and production values. Ansible manages infrastructure, external Secrets from
 Vault, and selected ConfigMaps. Application syncs require manual approval.
-Immich now runs on Kubernetes with its original LXC stopped; the final DNS
-identity handoff remains pending. Application configuration lives beside each
+Immich now runs on Kubernetes with its original LXC stopped and its original
+DNS name routed to the cluster. Application configuration lives beside each
 Argo CD definition; this directory holds shared cluster operations and
 recovery guidance.
 

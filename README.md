@@ -27,7 +27,6 @@ graph TD
 
     subgraph Proxmox["Proxmox Cluster (tailnet mesh, 100.100.0.0/16)"]
         subgraph N1["Node 1"]
-            immich["immich"]
             forgejo["forgejo"]
             n1etc["..."]
         end
@@ -42,7 +41,7 @@ graph TD
 
     subgraph Talos["Talos Kubernetes on Proxmox VMs"]
         beszel["Beszel hub"]
-        apps["Homepage + application workloads"]
+        apps["Homepage, Immich + application workloads"]
         argocd["Argo CD (manual sync)"]
         argocd --> apps
     end
@@ -214,10 +213,10 @@ just setup
 just run
 
 # Run a single service
-just run main --limit immich
+just run main --limit grafana
 
 # Run one playbook directly
-just run immich/main
+just run grafana/main
 
 # Provision Kubernetes external Secrets and Homepage config maps
 just run talos-cluster/gitops-secrets
@@ -264,11 +263,13 @@ versions are read from image references and `repository`/`tag` values.
 | docker.io/grafana/loki | 3.7.9 |
 | docker.io/headscale/headscale | v0.29.6 |
 | docker.io/henrygd/beszel | 0.21.1 |
+| docker.io/intel/intel-gpu-plugin | 0.37.1 |
 | docker.io/itzg/minecraft-bedrock-server | 2026.10.1 |
 | docker.io/jellyfin/jellyfin | 12.3 |
 | docker.io/krateng/maloja | 3.2.9 |
 | docker.io/library/busybox | 1.37 |
 | docker.io/library/postgres | 18.6 |
+| docker.io/library/python | 3.13.18-slim-trixie |
 | docker.io/library/redis | 8 |
 | docker.io/library/redis | 8.10.2-alpine |
 | docker.io/linuxserver/lidarr | 3.1.0 |
