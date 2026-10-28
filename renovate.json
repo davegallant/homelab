@@ -20,8 +20,50 @@
       ],
       "versioningTemplate": "semver",
       "extractVersionTemplate": "^v?(?<version>.*)$"
+    },
+    {
+      "customType": "regex",
+      "description": "Argo CD image tag and digest",
+      "managerFilePatterns": [
+        "/^kubernetes/apps/argocd/values\\.yaml$/"
+      ],
+      "matchStrings": [
+        "tag: (?<currentValue>v[0-9]+\\.[0-9]+\\.[0-9]+)@(?<currentDigest>sha256:[a-f0-9]+)"
+      ],
+      "autoReplaceStringTemplate": "tag: {{{newValue}}}@{{{newDigest}}}",
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "quay.io/argoproj/argocd"
+    },
+    {
+      "customType": "regex",
+      "description": "Cilium chart version in Ansible-rendered Application",
+      "managerFilePatterns": [
+        "/^kubernetes/apps/cilium/vars\\.yaml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=helm depName=cilium registryUrl=https://helm\\.cilium\\.io/\\n\\s*cilium_chart_version: \\\"(?<currentValue>[^\\\"\\s]+)\\\""
+      ],
+      "datasourceTemplate": "helm",
+      "depNameTemplate": "cilium",
+      "registryUrlTemplate": "https://helm.cilium.io/",
+      "versioningTemplate": "semver"
     }
   ],
+  "argocd": {
+    "managerFilePatterns": [
+      "/^kubernetes/apps/argocd/.+\\.ya?ml$/"
+    ]
+  },
+  "helm-values": {
+    "managerFilePatterns": [
+      "/^kubernetes/apps/.+/values[^/]*\\.ya?ml$/"
+    ]
+  },
+  "kubernetes": {
+    "managerFilePatterns": [
+      "/^kubernetes/apps/.+\\.ya?ml$/"
+    ]
+  },
   "packageRules": [
     {
       "description": "Nothing auto-merges: a merge to main applies to live hosts",
