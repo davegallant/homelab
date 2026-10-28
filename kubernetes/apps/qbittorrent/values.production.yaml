@@ -102,11 +102,6 @@ persistence:
   config:
     type: persistentVolumeClaim
     existingClaim: qbittorrent-config
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 1Gi
-    annotations:
-      volumeType: local
     advancedMounts:
       qbittorrent:
         app:
