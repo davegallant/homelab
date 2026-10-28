@@ -14,6 +14,9 @@ spec:
       sectionName: https
   hostnames:
     - {{ .hostname | default (printf "%s.tail.davegallant.ca" .name) }}
+    {{- range .additionalHostnames }}
+    - {{ . | quote }}
+    {{- end }}
   rules:
     - matches:
         - path:
