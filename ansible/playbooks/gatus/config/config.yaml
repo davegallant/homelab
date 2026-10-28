@@ -148,6 +148,10 @@ endpoints:
     url: "{{ grafana_url }}"
     <<: *defaults
 
+  - name: loki
+    url: "http://loki.{{ headscale_magic_dns_domain }}:3100/ready"
+    <<: *defaults
+
   - name: romm
     url: "{{ romm_url }}"
     <<: *defaults

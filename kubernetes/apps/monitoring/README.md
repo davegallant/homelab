@@ -38,9 +38,8 @@ kubelet /metrics/cadvisor --/        |
   stack as Loki and Grafana (`playbooks/grafana/`). Single-binary store,
   12-month retention, unauthenticated — the host firewall admits 8428
   only from the three Talos node IPs, exactly the Loki posture.
-- **Grafana stays off-cluster on purpose** (decided 2026-10-22): the
-  watcher does not live on the watched. If the cluster is down, the
-  dashboards and the alert path are not. Grafana remains off-cluster so monitoring and alerting stay available during cluster outages.
+- **Grafana runs on Kubernetes.** Gatus monitors its tailnet endpoint.
+  VictoriaMetrics remains on the Grafana LXC during the staged migration.
 - **metrics-server** rides along to inspect resource usage with: `kubectl top node/pod` now works.
   Its values carry the standard Talos flag `--kubelet-insecure-tls`.
 

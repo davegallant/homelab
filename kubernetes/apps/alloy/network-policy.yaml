@@ -62,12 +62,18 @@ spec:
         - ports:
             - port: "9153"
               protocol: TCP
-    - toCIDR:
-        - 192.168.1.56/32
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: loki
+            k8s:app.kubernetes.io/name: loki
       toPorts:
         - ports:
             - port: "3100"
               protocol: TCP
+    - toCIDR:
+        - 192.168.1.56/32
+      toPorts:
+        - ports:
             - port: "8428"
               protocol: TCP
     - toEndpoints:

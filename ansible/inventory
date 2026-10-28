@@ -4,7 +4,7 @@ bedrock
 cinema
 gatus
 gotify
-grafana
+grafana ansible_host=100.100.0.14 ansible_ssh_common_args="-o HostKeyAlias=grafana"
 igotify
 invidious
 lidarr

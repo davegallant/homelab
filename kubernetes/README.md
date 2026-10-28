@@ -60,6 +60,8 @@ and policy resources.
 - [Local-path provisioner](apps/local-path/README.md): dynamic node-local volumes.
 - [Storage](STORAGE.md): canonical local-storage rule and new-app checklist - read before adding any volume.
 - [Alloy](OBSERVABILITY.md): pod logs through the Kubernetes API.
+- [Grafana](apps/grafana/README.md): dashboards and alerts.
+- [Loki](apps/loki/README.md): log storage and ingestion.
 - [Velero](BACKUPS.md): namespace and volume backups to Garage.
 
 Node-local storage binds workloads to a worker. VM backups capture local

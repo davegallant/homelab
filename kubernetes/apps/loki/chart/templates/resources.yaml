@@ -162,6 +162,10 @@ spec:
       toPorts:
         - ports:
             - {port: "3100", protocol: TCP}
+    - fromEntities: [world]
+      toPorts:
+        - ports:
+            - {port: "41641", protocol: UDP}
   egress:
     - toEndpoints:
         - matchLabels:

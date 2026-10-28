@@ -1,20 +1,7 @@
 services:
-  loki:
-    image: docker.io/grafana/loki:3.7.9@sha256:0db216b630ae1f348a1584c67f3cead8b4c1fc839169a39501db664744158e28
-    container_name: loki
-    user: "0"
-    restart: always
-    ports:
-      - "3100:3100"
-    volumes:
-      - ./data/loki:/loki
-      - ./loki-config.yaml:/etc/loki/local-config.yaml
-    command: -config.file=/etc/loki/local-config.yaml
-
   # Metrics store for the Talos cluster. Alloy remote-writes to it from
-  # the cluster; like Loki it is unauthenticated, and the host firewall
-  # admits 8428 only from the three Talos node IPs (see main.yml). The
-  # Keep the image pinned by tag and manifest-list digest. Verify both
+  # the cluster; it is unauthenticated, and the host firewall admits 8428
+  # only from the three Talos node IPs (see main.yml). Keep the image pinned by tag and manifest-list digest. Verify both
   # before changing the version (repo convention — never invent a digest).
   victoriametrics:
     image: docker.io/victoriametrics/victoria-metrics:v1.154.1@sha256:c7884f32920dd45a9d86542a717227e63af03e060e53bbf8031e6e6fd0e1e05d
@@ -26,19 +13,3 @@ services:
     volumes:
       - ./data/victoriametrics:/victoria-metrics-data
     command: -storageDataPath=/victoria-metrics-data -retentionPeriod=12
-
-  grafana:
-    image: docker.io/grafana/grafana:13.2.4@sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f
-    container_name: grafana
-    environment:
-      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
-      - GF_FEATURE_TOGGLES_ENABLE=alertingSimplifiedRouting,alertingQueryAndExpressionsStepMode
-      - GF_AUTH_ANONYMOUS_ENABLED=false
-      - GF_SECURITY_ADMIN_PASSWORD={{ grafana_admin_password }}
-    restart: always
-    ports:
-      - "127.0.0.1:3000:3000"
-    user: "0"
-    volumes:
-      - "./data/grafana:/var/lib/grafana"
-      - "./provisioning:/etc/grafana/provisioning"
