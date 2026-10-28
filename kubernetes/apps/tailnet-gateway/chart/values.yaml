@@ -10,6 +10,8 @@
 apps:
   - name: immich
     hostname: immich-k8s.tail.davegallant.ca
+    additionalHostnames:
+      - immich.tail.davegallant.ca
     port: 2283
     selectorLabels:
       app.kubernetes.io/controller: immich
