@@ -1,6 +1,3 @@
 configs:
   cm:
     url: "https://argocd.{{ headscale_magic_dns_domain }}"
-server:
-  podAnnotations:
-    checksum/tailnet: {{ lookup('ansible.builtin.template', argocd_apps_dir + '/tailnet-config.yaml.j2') | hash('sha256') | to_json }}
