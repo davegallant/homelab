@@ -257,8 +257,6 @@ versions are read from image references and `repository`/`tag` values.
 | docker.io/fosrl/newt | 1.19.0 |
 | docker.io/fosrl/pangolin | 1.25.3 |
 | docker.io/gotify/server | 3.1.1 |
-| docker.io/grafana/grafana | 13.2.4 |
-| docker.io/grafana/loki | 3.7.9 |
 | docker.io/headscale/headscale | v0.29.6 |
 | docker.io/henrygd/beszel | 0.21.1 |
 | docker.io/intel/intel-gpu-plugin | 0.37.1 |
