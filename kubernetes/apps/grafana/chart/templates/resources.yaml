@@ -39,6 +39,7 @@ spec:
       labels:
         app.kubernetes.io/name: grafana
       annotations:
+        checksum/datasources: {{ .Files.Get "provisioning/datasources/ds.yaml" | sha256sum }}
         backup.velero.io/backup-volumes: data
         pre.hook.backup.velero.io/container: sqlite-backup
         pre.hook.backup.velero.io/command: "[\"python3\",\"-c\",\"import sqlite3; s=sqlite3.connect('/data/grafana.db'); d=sqlite3.connect('/data/grafana-backup.db'); s.backup(d)\"]"
@@ -149,3 +150,7 @@ spec:
         - ports:
             - {port: "3100", protocol: TCP}
             - {port: "8428", protocol: TCP}
+    - toCIDR: [192.168.1.44/32]
+      toPorts:
+        - ports:
+            - {port: "8086", protocol: TCP}
