@@ -32,6 +32,8 @@ spec:
                 values:
                   - immich
                   - changedetection
+                  - argocd
+                  - beszel
                   - k8s-readonly
                   - prowlarr
                   - homepage
