@@ -82,6 +82,13 @@
       "pinDigests": true
     },
     {
+      "description": "Keep Helm values image digests in their separate digest fields",
+      "matchManagers": [
+        "helm-values"
+      ],
+      "pinDigests": false
+    },
+    {
       "description": "Keep the beszel agent .deb and the beszel hub image in lockstep",
       "matchPackageNames": [
         "henrygd/beszel",
