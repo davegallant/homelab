@@ -14,8 +14,10 @@ The installation is a single controller, repo server, API server and Redis.
 Dex and notifications are disabled; ApplicationSet has zero replicas.
 All images have version and digest pins. The server remains a ClusterIP
 Service and runs with `--insecure`; the central Cilium Gateway terminates
-trusted HTTPS and routes `argocd.tail.davegallant.ca` to `argocd-server:80`.
-The server pod listens on port 8080. There is no Tailscale sidecar,
+trusted HTTPS and routes browser HTTP through an HTTPRoute to `argocd-server:80`.
+CLI gRPC uses a GRPCRoute to the Service's separate h2c port 8080, with Cilium
+Gateway ALPN enabled for HTTP/2 negotiation. Both ports target the server pod's
+8080 listener. There is no Tailscale sidecar,
 Pangolin/Newt tunnel, public ingress, NodePort or LoadBalancer.
 
 The URL is `https://argocd.tail.davegallant.ca`. The old `argocd-tailscale`
