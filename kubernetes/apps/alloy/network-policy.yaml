@@ -70,8 +70,10 @@ spec:
         - ports:
             - port: "3100"
               protocol: TCP
-    - toCIDR:
-        - 192.168.1.56/32
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: monitoring
+            k8s:app.kubernetes.io/name: victoriametrics
       toPorts:
         - ports:
             - port: "8428"

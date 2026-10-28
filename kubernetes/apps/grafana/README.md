@@ -3,7 +3,8 @@
 Grafana runs on `k8s-w-1` and is exposed through the shared tailnet gateway at
 `https://grafana.tail.davegallant.ca/`. Homepage and Gatus retain this URL.
 The original Grafana data remains on the Grafana LXC as cutover rollback
-material. VictoriaMetrics remains on that LXC. Loki migration is in progress.
+material. VictoriaMetrics runs in the `monitoring` namespace and Grafana uses
+its ClusterIP Service at `victoriametrics.monitoring.svc.cluster.local:8428`.
 
 Grafana's SQLite database and plugin directory use an annotated local-path
 PVC, pinned to w-1. Provisioned dashboards, datasources and alert rules are

@@ -27,20 +27,17 @@
         argv: [kubectl, wait, --for=condition=Ready, --timeout=120s, node/k8s-cp-1, node/k8s-w-1, node/k8s-w-2]
       changed_when: false
 
-    - name: Read Grafana LXC LAN addresses
+    - name: Read the VictoriaMetrics Service endpoints
       ansible.builtin.command:
-        argv: [hostname, -I]
-      delegate_to: grafana
-      connection: ssh
-      remote_user: root
-      register: alloy_grafana_addresses
+        argv: [kubectl, -n, monitoring, get, endpoints, victoriametrics, -o, json]
+      register: alloy_victoriametrics_endpoints
       changed_when: false
 
-    - name: Require the configured VictoriaMetrics LAN address on Grafana
+    - name: Require a ready VictoriaMetrics endpoint before applying Alloy
       ansible.builtin.assert:
         that:
-          - alloy_metrics_lan_ip in alloy_grafana_addresses.stdout.split()
-        fail_msg: "The configured VictoriaMetrics LAN address is not on Grafana; refusing the Alloy apply."
+          - (alloy_victoriametrics_endpoints.stdout | from_json).subsets | default([]) | length > 0
+        fail_msg: "VictoriaMetrics has no ready Service endpoint; refusing the Alloy apply."
 
     - name: Create a protected temporary render directory
       ansible.builtin.tempfile:

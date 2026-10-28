@@ -20,7 +20,7 @@ datasources:
     type: prometheus
     access: proxy
     orgId: 1
-    url: http://192.168.1.56:8428
+    url: http://victoriametrics.monitoring.svc.cluster.local:8428
     isDefault: false
     version: 5
     editable: false
