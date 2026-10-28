@@ -105,6 +105,8 @@ spec:
     - group: cilium.io
       kind: CiliumLocalRedirectPolicy
   namespaceResourceWhitelist:
+    - group: argoproj.io
+      kind: Application
     - group: gateway.networking.k8s.io
       kind: Gateway
     - group: gateway.networking.k8s.io

@@ -8,16 +8,19 @@ release records are retained for reference; `helm list` is not an ownership
 inventory. Do not run `helm upgrade`, `helm rollback`, or `helm uninstall`
 against these releases.
 
-Application definitions live in `applications/`, except the first BentoPDF
-definition at `bentopdf.yaml`. The `homelab` project owns service applications. `homelab-platform` permits
+Application definitions live in `applications/`. The `argocd` Application
+renders this directory as a Git source, so syncing `argocd` reconciles all
+Application definitions from `main`. The `homelab` project owns service applications. `homelab-platform` permits
 the pinned upstream repositories and
 the cluster resource kinds required by infrastructure charts. All Applications
 require manual sync; none has automated sync, pruning, or a deletion finalizer.
 Upstream charts use multiple sources: a pinned chart plus values from GitHub
 `main`. Custom charts read their sibling `values.production.yaml`.
 
-Edit values and chart templates in Git, push, review the Argo CD diff, then
-approve Sync without prune or force. Storage objects outside the charts are
+Edit values, chart templates, and Application definitions in Git, push, review
+the Argo CD diff, then approve Sync without prune or force. Syncing `argocd`
+updates Application definitions; sync each changed workload separately.
+Storage objects outside the charts are
 not adopted or recreated. Namespace Pod Security labels are preserved.
 Use server-side apply for the platform charts, including their large CRDs.
 
@@ -29,20 +32,19 @@ Existing cluster Applications retain their old source paths until explicitly
 updated and may report comparison errors after the move reaches remote `main`.
 Running workloads continue serving while those references are corrected.
 
-After confirming the move is present on remote `main`, apply the definitions
-from the repository root using the intended context:
+After confirming the move is present on remote `main`, apply the updated Argo CD
+Application once to enable Git-managed Application definitions, then sync it.
+Its source directory includes every Application definition, including Argo CD
+itself. Use the intended context:
 
 ```sh
-kubectl --context "$CTX" apply -f kubernetes/apps/argocd/bentopdf.yaml
-kubectl --context "$CTX" apply -f kubernetes/apps/argocd/applications/ \
-  --recursive=false
+kubectl --context "$CTX" apply -f kubernetes/apps/argocd/platform-project.yaml
+kubectl --context "$CTX" apply -f kubernetes/apps/argocd/applications/argocd.yaml
 ```
 
-The directory command applies the `.yaml` Application definitions, including
-Cilium's plain multi-source definition (pinned upstream chart plus values
-from Git `main`). Review each Application comparison, then approve any
-needed sync without prune or force. Apply definitions only after the new
-source paths are available.
+After this one-time bootstrap, syncing `argocd` reconciles the Application
+definitions. Review each Application comparison, then approve any workload
+sync without prune or force.
 
 ## External resources
 
