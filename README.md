@@ -286,7 +286,7 @@ versions are read from image references and `repository`/`tag` values.
 | docker.io/valkey/valkey | 9 |
 | docker.io/velero/velero | v1.18.2 |
 | docker.io/velero/velero-plugin-for-aws | v1.14.4 |
-| docker.io/victoriametrics/victoria-metrics | v1.154.1 |
+| docker.io/victoriametrics/victoria-metrics | v1.155.0 |
 | forgejo/forgejo | 17.0.0 |
 | ghcr.io/advplyr/audiobookshelf | 2.37.1 |
 | ghcr.io/alam00000/bentopdf | 2.8.10 |
