@@ -6,7 +6,6 @@
 - import_playbook: gotify/main.yml
 - import_playbook: grafana/main.yml
 - import_playbook: igotify/main.yml
-- import_playbook: jellyfin/main.yml
 - import_playbook: pangolin/main.yml
 - import_playbook: qbittorrent/main.yml
 - import_playbook: upsnap/main.yml

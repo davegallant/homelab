@@ -6,6 +6,8 @@ controllers:
     replicas: 1
     pod:
       automountServiceAccountToken: false
+      annotations:
+        backup.velero.io/backup-volumes: config
       nodeSelector:
         kubernetes.io/hostname: k8s-w-1
       securityContext:
@@ -49,6 +51,27 @@ controllers:
             cpu: 2000m
             memory: 3Gi
             gpu.intel.com/i915: 1
+      newt:
+        # Enable only after the LXC connector is stopped.
+        enabled: false
+        image:
+          repository: docker.io/fosrl/newt
+          tag: 1.19.0
+          digest: sha256:0189c8287058b800cca825590e4c39946b3815344ca48678dd0b96616d639319
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+        envFrom:
+          - secretRef:
+              name: jellyfin-newt-external
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 192Mi
 service:
   jellyfin:
     controller: jellyfin
@@ -63,19 +86,42 @@ persistence:
     size: 10Gi
     annotations:
       volumeType: local
-    globalMounts:
-      - path: /config
+    advancedMounts:
+      jellyfin:
+        server:
+          - path: /config
   cache:
     type: emptyDir
-    globalMounts:
-      - path: /cache
+    advancedMounts:
+      jellyfin:
+        server:
+          - path: /cache
   media:
     type: persistentVolumeClaim
     existingClaim: jellyfin-media
-    globalMounts:
-      - path: /mnt
-        readOnly: true
+    advancedMounts:
+      jellyfin:
+        server:
+          - path: /mnt
+            readOnly: true
 rawResources:
+  daily:
+    enabled: true
+    manifest:
+      apiVersion: velero.io/v1
+      kind: Schedule
+      metadata:
+        name: jellyfin-daily
+        namespace: velero
+      spec:
+        schedule: "30 5 * * *"
+        template:
+          ttl: 336h
+          includedNamespaces: [jellyfin]
+          excludedResources: [secrets]
+          defaultVolumesToFsBackup: false
+          snapshotVolumes: false
+          storageLocation: default
   defaultDenyNetworkPolicy:
     enabled: true
     manifest:
