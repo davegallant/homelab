@@ -52,7 +52,6 @@ controllers:
             memory: 3Gi
             gpu.intel.com/i915: 1
       newt:
-        # The LXC connector is stopped before this identity is enabled.
         enabled: true
         image:
           repository: docker.io/fosrl/newt

@@ -32,8 +32,6 @@ graph TD
         end
         subgraph N2["Node 2"]
             grafana["grafana + loki"]
-            jellyfin["jellyfin"]
-            qbittorrent["qbittorrent"]
             n2etc["..."]
         end
         N1 <-->|"direct WireGuard mesh\n(SSH + ACLs, no central hop)"| N2
@@ -41,7 +39,7 @@ graph TD
 
     subgraph Talos["Talos Kubernetes on Proxmox VMs"]
         beszel["Beszel hub"]
-        apps["Homepage, Immich + application workloads"]
+        apps["Homepage, Immich, Jellyfin, qBittorrent + application workloads"]
         argocd["Argo CD (manual sync)"]
         argocd --> apps
     end

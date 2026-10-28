@@ -51,9 +51,9 @@ Intel device plugin advertises `gpu.intel.com/i915` to pods. After a worker
 rebuild or upgrade, verify the `i915` driver, `/dev/dri/renderD128`, and the
 advertised resource before scheduling GPU workloads. On 2026-10-27, the Intel
 HD Graphics 630 on `pve-g3-1` was passed through to `k8s-w-1` (VMID 146)
-using the same Talos i915 extension. The Jellyfin LXC no longer has GPU access;
-the Intel GPU plugin must be synced to `k8s-w-1` before Kubernetes workloads can
-claim that GPU. Jellyfin has not yet been migrated.
+using the same Talos i915 extension. The Intel GPU plugin must be synced to
+`k8s-w-1` before Kubernetes workloads can claim that GPU. Jellyfin now runs on
+Kubernetes and requests the Intel GPU for hardware transcoding.
 
 The cluster's steady-state CNI is Cilium `1.20.3` on Kubernetes `1.37.0`,
 using cluster-pool pod CIDR `10.245.0.0/16` and VXLAN UDP `8473`. Talos has

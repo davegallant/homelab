@@ -201,7 +201,7 @@ or the Beszel hub (it is covered by a Gatus endpoint instead).
   `kubernetes/apps/beszel/values.production.yaml`; Renovate groups both updates
 - `ufw_docker_allowed_sources` -- sources allowed to reach published container
   ports, defaulting to the tailnet only. Override in a play's `vars:` for a
-  service that must be reachable from the LAN (see `bedrock`, `jellyfin`)
+  service that must be reachable from the LAN (see `bedrock`)
 - `ufw_docker_public_ports` -- list of `{port, proto}` published container ports
   reachable from anywhere (default `[]`). For edge hosts like `pangolin` whose
   ports are intentionally public; narrower than widening
