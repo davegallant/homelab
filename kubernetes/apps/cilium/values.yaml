@@ -137,6 +137,7 @@ hubble:
       - http
 gatewayAPI:
   enabled: true
+  enableAlpn: true
   gatewayClass:
     create: true
   externalTrafficPolicy: Cluster
