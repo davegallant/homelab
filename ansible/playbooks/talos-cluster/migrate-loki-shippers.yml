@@ -1,0 +1,20 @@
+---
+- name: Point LXC Alloy shippers at Kubernetes Loki
+  hosts: adguard-home:bedrock:cinema:gatus:gotify:grafana:igotify:upsnap:watchyourlan
+  vars:
+    alloy_docker_discovery: "{{ inventory_hostname != 'cinema' }}"
+  tasks:
+    - name: Deploy Alloy configuration
+      ansible.builtin.template:
+        src: ../../tasks/config.alloy.j2
+        dest: /etc/alloy/config.alloy
+        mode: "0644"
+        backup: true
+      no_log: true
+      register: alloy_loki_config
+
+    - name: Restart Alloy when configuration changes
+      ansible.builtin.systemd:
+        name: alloy
+        state: restarted
+      when: alloy_loki_config.changed

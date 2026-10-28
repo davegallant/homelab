@@ -36,11 +36,11 @@
       register: alloy_grafana_addresses
       changed_when: false
 
-    - name: Require the configured Loki LAN address on Grafana
+    - name: Require the configured VictoriaMetrics LAN address on Grafana
       ansible.builtin.assert:
         that:
-          - alloy_loki_lan_ip in alloy_grafana_addresses.stdout.split()
-        fail_msg: "The configured Loki LAN address is not on Grafana; refusing the Alloy apply."
+          - alloy_metrics_lan_ip in alloy_grafana_addresses.stdout.split()
+        fail_msg: "The configured VictoriaMetrics LAN address is not on Grafana; refusing the Alloy apply."
 
     - name: Create a protected temporary render directory
       ansible.builtin.tempfile:
@@ -115,6 +115,12 @@
             argv: [kubectl, apply, -f, "{{ alloy_render_dir.path }}/daemonset.yaml"]
           register: alloy_apply_daemonset
           changed_when: "'created' in alloy_apply_daemonset.stdout or 'configured' in alloy_apply_daemonset.stdout"
+
+        - name: Restart Alloy after configuration changes
+          ansible.builtin.command:
+            argv: [kubectl, -n, alloy, rollout, restart, daemonset/alloy]
+          changed_when: true
+          when: alloy_apply_configmap.changed
 
         - name: Wait for Alloy rollout
           ansible.builtin.command:

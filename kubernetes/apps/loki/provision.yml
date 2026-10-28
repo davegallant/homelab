@@ -1,0 +1,35 @@
+---
+- name: Provision Loki tailnet registration
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Check for existing registration Secret
+      ansible.builtin.command:
+        argv: [kubectl, -n, loki, get, secret, loki-tailscale-auth, --ignore-not-found, -o, name]
+      register: loki_registration
+      changed_when: false
+
+    - name: Create one-use tagged Headscale registration key
+      ansible.builtin.command:
+        argv:
+          - ssh
+          - -o
+          - BatchMode=yes
+          - root@vps
+          - docker exec headscale headscale preauthkeys create --user 1 --tags tag:loki --expiration 1h -o json
+      register: loki_auth
+      changed_when: true
+      when: loki_registration.stdout | length == 0
+      no_log: true
+
+    - name: Apply registration Secret
+      ansible.builtin.command:
+        argv: [kubectl, apply, --server-side, --field-manager=ansible-vault, -f, '-']
+        stdin: >-
+          {{ {'apiVersion': 'v1', 'kind': 'Secret',
+              'metadata': {'name': 'loki-tailscale-auth', 'namespace': 'loki'},
+              'type': 'Opaque', 'stringData': {'TS_AUTHKEY': (loki_auth.stdout | from_json).key}} | to_json }}
+      changed_when: true
+      when: loki_registration.stdout | length == 0
+      no_log: true
