@@ -11,6 +11,7 @@ ignore:
   - kubernetes/apps/homepage/chart/templates/
   - kubernetes/apps/kiwix/chart/templates/
   - kubernetes/apps/miniflux/chart/templates/
+  - kubernetes/apps/grafana/chart/templates/
 
 rules:
   # Playbook main.yml files start with ---; shared task files and

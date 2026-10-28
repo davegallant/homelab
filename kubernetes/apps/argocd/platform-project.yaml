@@ -18,6 +18,8 @@ spec:
     - https://code.forgejo.org/forgejo-helm/forgejo-runner.git
   destinations:
     - server: https://kubernetes.default.svc
+      namespace: grafana
+    - server: https://kubernetes.default.svc
       namespace: kube-system
     - server: https://kubernetes.default.svc
       namespace: monitoring

@@ -81,3 +81,7 @@ apps:
       app.kubernetes.io/controller: qbittorrent
       app.kubernetes.io/instance: qbittorrent
       app.kubernetes.io/name: qbittorrent
+  - name: grafana
+    port: 3000
+    selectorLabels:
+      app.kubernetes.io/name: grafana

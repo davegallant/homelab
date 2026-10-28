@@ -1,0 +1,12 @@
+{{- range $dir := list "datasources" "dashboards" "dashboards/files" "alerting" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-{{ $dir | replace "/" "-" }}
+data:
+{{- range $path, $_ := $.Files.Glob (printf "provisioning/%s/*" $dir) }}
+  {{ base $path }}: |-
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}
+{{- end }}
