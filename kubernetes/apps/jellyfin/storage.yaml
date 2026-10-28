@@ -1,0 +1,53 @@
+---
+# Jellyfin storage, applied once by hand and deliberately NOT managed
+# by Argo CD: the homelab AppProject allows namespace-scoped resources
+# only, so namespaces and static volumes stay a kubectl concern.
+# Media is cinema's mergerfs pool, NOT TrueNAS (discovery 2026-10-28).
+# Read-only; the data never moves and is never Velero-backed-up.
+# Config (SQLite) is a separate chart-managed local-path PVC in values
+# — never on NFS.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jellyfin
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: jellyfin-media
+spec:
+  capacity:
+    storage: 1Ti # nominal; NFS reports the export's real size
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+    - noatime
+  csi:
+    driver: nfs.csi.k8s.io
+    readOnly: true
+    volumeHandle: cinema-jellyfin-media
+    volumeAttributes:
+      server: 192.168.1.83
+      share: /mnt/pool
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-media
+  namespace: jellyfin
+spec:
+  accessModes:
+    - ReadOnlyMany
+  storageClassName: ""
+  volumeName: jellyfin-media
+  resources:
+    requests:
+      storage: 1Ti

@@ -46,6 +46,9 @@ spec:
       namespace: audiobookshelf
     - server: https://kubernetes.default.svc
       namespace: romm
+    # Jellyfin migration (2026-10-28): test instance, media tier.
+    - server: https://kubernetes.default.svc
+      namespace: jellyfin
     # Batch C: the Postgres-pattern batch (authored 2026-10-23).
     - server: https://kubernetes.default.svc
       namespace: umami
