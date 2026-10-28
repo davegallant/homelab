@@ -22,7 +22,7 @@ datasources:
     orgId: 1
     url: http://victoriametrics.monitoring.svc.cluster.local:8428
     isDefault: false
-    version: 5
+    version: 6
     editable: false
     jsonData:
       timeInterval: 60s
