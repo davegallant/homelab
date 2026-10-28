@@ -260,7 +260,7 @@ Tagged clients do not inherit `autogroup:member`; the untagged Dave-owned Mac
 was covered, while Grafana (`100.100.0.14`, tagged) was not. When a tagged client
 needs this path, use an explicitly authorized narrow TCP rule from that client
 IP to `100.100.0.8:443`. Update the tests in
-`ansible/playbooks/pangolin/policy.headscale.hujson`, validate the candidate
+`ansible/playbooks/vps/policy.headscale.hujson`, validate the candidate
 before applying, and retain denial checks for other Dave-owned destinations,
 other ports and UDP. Current explicit tests cover selected addresses; review
 other existing and new Dave-owned nodes rather than assuming future nodes are

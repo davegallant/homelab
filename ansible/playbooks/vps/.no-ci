@@ -1,4 +1,4 @@
 # This playbook is excluded from the CI matrix (see the discover step in
 # .forgejo/workflows/run-all-playbooks.yaml). The Pangolin VPS is edge
-# infrastructure: it only runs by hand via `just run "--limit pangolin"`,
+# infrastructure: it only runs by hand via `just run "--limit vps"`,
 # never on push to main or the daily cron.

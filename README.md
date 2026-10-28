@@ -66,7 +66,7 @@ Most Ansible-managed LXC containers run:
 - **Grafana Alloy** (systemd service — ships journald + Docker logs → central Loki)
 - **beszel-agent** (systemd service — reports system metrics → central Beszel)
 
-Hosts without Docker collect journal logs only. The off-tailnet Pangolin VPS
+Hosts without Docker collect journal logs only. The off-tailnet VPS
 skips Alloy and Beszel. Kubernetes uses an Alloy DaemonSet for pod logs.
 
 ---
@@ -129,7 +129,7 @@ skips Alloy and Beszel. Kubernetes uses an Alloy DaemonSet for pod logs.
 |---|---|
 | [AdGuard Home](https://adguard.com/adguard-home.html) | Network-wide DNS ad and tracker blocking |
 | [upSnap](https://github.com/seriousm4x/upSnap) | Wake-on-LAN dashboard for waking devices on the LAN |
-| [Pangolin](https://github.com/fosrl/pangolin) | Reverse proxy with WireGuard tunneling for public-facing services (runs on a VPS, managed by `playbooks/pangolin`) |
+| [Pangolin](https://github.com/fosrl/pangolin) | Reverse proxy with WireGuard tunneling for public-facing services (runs on a VPS, managed by `playbooks/vps`) |
 
 ### 🔧 Developer Tools
 
@@ -154,15 +154,15 @@ skips Alloy and Beszel. Kubernetes uses an Alloy DaemonSet for pod logs.
 
 ## Networking
 
-Tailnet hosts run the **Tailscale client** against Headscale with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh) enabled. The off-tailnet Pangolin VPS uses ordinary SSH through the operator’s SSH configuration. The Headscale ACL source is `ansible/playbooks/pangolin/policy.headscale.hujson`. The Pangolin playbook validates it and updates Headscale's policy database when the active policy differs. Pangolin is excluded from CI, so run `just run main --limit pangolin` from the repo root to apply policy changes. The Headscale server itself runs in Docker on the Pangolin VPS, which stays off the tailnet.
+Tailnet hosts run the **Tailscale client** against Headscale with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh) enabled. The off-tailnet VPS uses ordinary SSH through the operator’s SSH configuration. The Headscale ACL source is `ansible/playbooks/vps/policy.headscale.hujson`. The VPS playbook validates it and updates Headscale's policy database when the active policy differs. The VPS is excluded from CI, so run `just run main --limit vps` from the repo root to apply policy changes. The Headscale server itself runs in Docker on the VPS, which stays off the tailnet.
 
-The remote nodes `muse` and `mcleod` use `tag:external` and can initiate tailnet DNS queries. `mcleod` also uses `tag:beszel-agent`, which allows it to send metrics to the Beszel HTTPS endpoint without granting access to Loki or other tagged services. Pangolin Newt hosts use `tag:pangolin` plus `tag:monitored`; they can reach the Beszel HTTPS endpoint and Loki ingestion port, with Navidrome separately allowed to reach Maloja over HTTPS. The Beszel, Loki, and Maloja hosts have dedicated destination tags. These tagged nodes cannot initiate SSH; tailnet member devices can SSH into tagged nodes when the destination accepts Tailscale SSH. The Pangolin playbook assigns tags by hostname from `headscale_node_tags` after nodes enroll, so re-registered nodes regain their tags on the next playbook run. Check the live policy and all managed tags with `just check-headscale-policy`.
+The remote nodes `muse` and `mcleod` use `tag:external` and can initiate tailnet DNS queries. `mcleod` also uses `tag:beszel-agent`, which allows it to send metrics to the Beszel HTTPS endpoint without granting access to Loki or other tagged services. Pangolin Newt hosts use `tag:pangolin` plus `tag:monitored`; they can reach the Beszel HTTPS endpoint and Loki ingestion port, with Navidrome separately allowed to reach Maloja over HTTPS. The Beszel, Loki, and Maloja hosts have dedicated destination tags. These tagged nodes cannot initiate SSH; tailnet member devices can SSH into tagged nodes when the destination accepts Tailscale SSH. The VPS playbook assigns tags by hostname from `headscale_node_tags` after nodes enroll, so re-registered nodes regain their tags on the next playbook run. Check the live policy and all managed tags with `just check-headscale-policy`.
 
 For public-facing services, a **[Pangolin](https://github.com/fosrl/pangolin)** reverse proxy runs on the same VPS. Each service that needs public exposure runs a **Newt** sidecar container that tunnels directly from the Proxmox cluster to Pangolin, no inbound firewall rules required.
 
 For tailnet-only services on Kubernetes, the central Cilium Gateway is now the front door (see [Cluster layout](kubernetes/cluster/README.md)). Per-node **[Caddy](https://caddyserver.com)** instances remain for tailnet-only LXC services, providing HTTPS with automatic Let's Encrypt certificates (DNS-01 via Cloudflare), replacing Tailscale Serve. Their Docker UI ports bind to localhost so other tailnet nodes reach the UI through Caddy. Other ports needed by services, such as Loki ingestion and qBittorrent peer traffic, remain separately exposed.
 
-Headscale advertises the primary AdGuard Home resolver and a secondary AdGuard Home instance on the Gatus host. Deploy the Gatus playbook before manually running the Pangolin playbook so the second resolver is available when Headscale advertises it. Keep the filters and DNS rewrites in `ansible/playbooks/gatus/adguard-secondary.yaml.j2` aligned with the primary AdGuard instance.
+Headscale advertises the primary AdGuard Home resolver and a secondary AdGuard Home instance on the Gatus host. Deploy the Gatus playbook before manually running the VPS playbook so the second resolver is available when Headscale advertises it. Keep the filters and DNS rewrites in `ansible/playbooks/gatus/adguard-secondary.yaml.j2` aligned with the primary AdGuard instance.
 
 ---
 
@@ -183,7 +183,7 @@ it does not collect Talos node service logs. See the [logging runbook](kubernete
 ### Prerequisites
 
 - A Proxmox cluster with LXC containers provisioned and named to match `ansible/inventory`
-- Tailscale client registered with Headscale on tailnet containers; SSH access configured separately for Pangolin
+- Tailscale client registered with Headscale on tailnet containers; SSH access configured separately for the VPS
 - Ansible Vault password written to `ansible/.vault_pass`
 
 ### Developer Environment

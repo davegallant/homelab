@@ -1,6 +1,6 @@
 ---
-- name: Install pangolin
-  hosts: pangolin
+- name: Install vps
+  hosts: vps
   vars:
     # Reuse the project name of the manually-deployed stack on the VPS.
     docker_compose_project_name: pangolin

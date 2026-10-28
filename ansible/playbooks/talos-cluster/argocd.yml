@@ -64,7 +64,7 @@
     - name: Create a one-use Headscale registration key
       ansible.builtin.command:
         argv: [docker, exec, headscale, headscale, preauthkeys, create, --user, "1", --expiration, 1h, --output, json]
-      delegate_to: pangolin
+      delegate_to: vps
       vars:
         ansible_connection: ssh
         ansible_user: root

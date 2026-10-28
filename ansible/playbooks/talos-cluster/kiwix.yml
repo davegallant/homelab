@@ -116,7 +116,7 @@
                   - 1h
                   - --output
                   - json
-              delegate_to: pangolin
+              delegate_to: vps
               connection: ssh
               remote_user: root
               register: kiwix_new_preauthkey

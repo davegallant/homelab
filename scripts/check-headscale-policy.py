@@ -10,9 +10,9 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PLAYBOOK = ROOT / "ansible/playbooks/pangolin/main.yml"
-POLICY = ROOT / "ansible/playbooks/pangolin/policy.headscale.hujson"
-SSH = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8", "pangolin"]
+PLAYBOOK = ROOT / "ansible/playbooks/vps/main.yml"
+POLICY = ROOT / "ansible/playbooks/vps/policy.headscale.hujson"
+SSH = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8", "vps"]
 
 
 def headscale(*args: str, input_text: str | None = None) -> str:
