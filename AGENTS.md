@@ -11,12 +11,9 @@ Run recipes from the repository root using [just](https://github.com/casey/just)
 
 ```sh
 just setup                              # Install Ansible Galaxy collections
-just run main --limit grafana              # Run all playbooks limited to one host
 just run                                # Run the all-host playbook
 just run talos-cluster/gitops-secrets     # Provision Kubernetes external resources
 just edit-secrets                       # ansible-vault edit group_vars/all/secrets.yaml
-# Run a single service playbook directly:
-just run grafana/main
 ```
 
 From the **repo root**:
