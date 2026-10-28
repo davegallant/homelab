@@ -26,10 +26,12 @@
       register: talosctl_version
       changed_when: false
 
-    - name: Require matching talosctl version
+    # Patch releases within the same minor are allowed (e.g. talosctl 1.14.3
+    # for a 1.14.1 cluster); minor or major changes still fail the gate.
+    - name: Require matching Talos minor version
       ansible.builtin.assert:
         that:
-          - talos_version in talosctl_version.stdout
+          - (talos_version.split('.')[0:2] | join('.')) in talosctl_version.stdout
 
     - name: Create protected Talos private directory
       ansible.builtin.file:
@@ -57,6 +59,7 @@
       vars:
         talos_node_name: "{{ item.name }}"
         talos_node_ip: "{{ item.address }}"
+        talos_extra_addresses: "{{ item.extra_addresses | default([]) }}"
       loop: "{{ talos_nodes | selectattr('role', 'equalto', 'worker') | list }}"
       loop_control:
         label: "{{ item.name }}"
