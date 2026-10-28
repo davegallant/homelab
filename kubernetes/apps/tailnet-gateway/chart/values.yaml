@@ -19,6 +19,12 @@ apps:
     policyName: changedetection-gateway-test
     selectorLabels:
       app.kubernetes.io/name: changedetection
+  - name: beszel
+    port: 8090
+    selectorLabels:
+      app.kubernetes.io/controller: beszel
+      app.kubernetes.io/instance: beszel
+      app.kubernetes.io/name: beszel
   - name: seerr
     port: 5055
     selectorLabels:
