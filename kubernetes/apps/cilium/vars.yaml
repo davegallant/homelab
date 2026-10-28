@@ -1,4 +1,6 @@
 ---
+# Recovery-only pin for cilium.yml / cilium-primary.yml when Argo CD is
+# unavailable; the live Argo CD pin is kubernetes/apps/argocd/applications/cilium.yaml
 cilium_chart_repo: https://helm.cilium.io/
 # renovate: datasource=helm depName=cilium registryUrl=https://helm.cilium.io/
 cilium_chart_version: "1.20.4"

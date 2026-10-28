@@ -38,12 +38,11 @@ kubectl --context "$CTX" apply -f kubernetes/apps/argocd/applications/ \
   --recursive=false
 ```
 
-The directory command applies the `.yaml` Application definitions. Cilium's
-`.yaml.j2` definition is rendered separately through
-`ansible/playbooks/talos-cluster/cilium-adopt.yml`; its chart is upstream and
-its values are inline, so the move does not change its remote source path.
-Review each Application comparison, then approve any needed sync without
-prune or force. Apply definitions only after the new source paths are available.
+The directory command applies the `.yaml` Application definitions, including
+Cilium's plain multi-source definition (pinned upstream chart plus values
+from Git `main`). Review each Application comparison, then approve any
+needed sync without prune or force. Apply definitions only after the new
+source paths are available.
 
 ## External resources
 
