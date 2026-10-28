@@ -76,7 +76,7 @@ server:
     type: Recreate
   # Replace the legacy Helm-owned sidecar list on this Deployment only.
   deploymentAnnotations:
-    argocd.argoproj.io/sync-options: ServerSideApply=false
+    argocd.argoproj.io/sync-options: Replace=true
   service:
     type: ClusterIP
   resources:
