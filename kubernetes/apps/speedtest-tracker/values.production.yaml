@@ -2,25 +2,18 @@
 # Speedtest Tracker — Argo CD production values (bjw-s app-template 5.3.0).
 # Migrated from the LXC stack: Speedtest Tracker 1.15.1 (port 80),
 # PostgreSQL 18.6, and Apprise 2.0.1 run as containers in this pod.
-# Tailnet-only: exposure mirrors the RomM pod — userspace Tailscale
-# sidecar TCP-forwarding 443 to an in-pod Caddy (8443), which
-# terminates a real certificate (Cloudflare DNS-01) and proxies to
-# the app on 127.0.0.1:80, replacing the LXC's tailnet_caddy role.
-# The tailnet URL is unchanged.
+# Tailnet-only exposure is provided by the central Cilium Gateway.
+# In-cluster database and Apprise traffic remains localhost-only.
 #
 # The former compose reached the database by service name; in-pod
 # DB_HOST is 127.0.0.1. Apprise stays a separate container on
 # 127.0.0.1:8000, as the app expects a notification service URL.
 #
 # Secrets stay outside Git and outside Argo's ownership:
-#   speedtest-tracker-caddy-external  (key cloudflare_api_token)
-#                                     — gitops-secrets.yml
 #   speedtest-tracker-external        (DB_USERNAME, DB_PASSWORD,
 #                                      APP_KEY, POSTGRES_USER,
 #                                      POSTGRES_PASSWORD)
 #                        — playbooks/talos-cluster/speedtest-secret.yml
-#   speedtest-tracker-tailscale-auth  (key TS_AUTHKEY, one-use)
-#                                     — bootstrap only
 # The app and db containers both envFrom-import the one app Secret
 # (each ignores the other's keys): one Secret, no renames.
 controllers:
@@ -183,108 +176,12 @@ controllers:
           limits:
             cpu: 500m
             memory: 512Mi
-      tailscale:
-        securityContext:
-          capabilities:
-            drop:
-              - ALL
-          allowPrivilegeEscalation: false
-        image:
-          repository: ghcr.io/tailscale/tailscale
-          tag: v1.104.1
-          digest: sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
-        envFrom:
-          # The bootstrap-created Secret holds exactly one key
-          # (TS_AUTHKEY), imported here as the env var of that name.
-          # Optional: once the identity persists in tailscale-state,
-          # the Secret is deleted and the sidecar runs without it.
-          - secretRef:
-              name: speedtest-tracker-tailscale-auth
-              optional: true
-        env:
-          TS_AUTH_ONCE: "true"
-          TS_HOSTNAME: speedtest-tracker
-          TS_STATE_DIR: /var/lib/tailscale
-          # State lives on the local PVC, so disable Kubernetes Secret storage.
-          TS_KUBE_SECRET: ""
-          TS_USERSPACE: "true"
-          TS_EXTRA_ARGS: --login-server=https://hs.davegallant.ca --accept-dns=false
-          TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
-        resources:
-          requests:
-            cpu: 25m
-            memory: 64Mi
-          limits:
-            cpu: 200m
-            memory: 192Mi
-      caddy:
-        securityContext:
-          allowPrivilegeEscalation: false
-        image:
-          repository: ghcr.io/davegallant/homelab-caddy-cloudflare
-          tag: 2.11.6-a8737d0
-          digest: sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
-        command:
-          - caddy
-        args:
-          - run
-          - --config
-          - /etc/caddy/Caddyfile
-          - --adapter
-          - caddyfile
-        resources:
-          requests:
-            cpu: 25m
-            memory: 32Mi
-          limits:
-            cpu: 100m
-            memory: 128Mi
-
 service:
   speedtest-tracker:
     controller: speedtest-tracker
     ports:
       http:
         port: 80
-
-configMaps:
-  # Keys are short on purpose: bjw-s names the rendered ConfigMaps
-  # <release>-<key>, and the persistence entries below reference the
-  # resulting speedtest-tracker-tailscale / speedtest-tracker-caddy
-  # names.
-  tailscale:
-    data:
-      serve-config.json: |
-        {
-          "TCP": {
-            "443": {
-              "TCPForward": "127.0.0.1:8443"
-            }
-          }
-        }
-  caddy:
-    data:
-      Caddyfile: |
-        {
-          auto_https disable_redirects
-          https_port 8443
-          tls_resolvers 1.1.1.1
-          servers {
-            protocols h1 h2
-          }
-        }
-
-        speedtest-tracker.tail.davegallant.ca {
-          bind 127.0.0.1
-
-          tls {
-            dns cloudflare {file./run/secrets/cloudflare_api_token}
-            propagation_delay 30s
-            propagation_timeout -1
-          }
-
-          reverse_proxy 127.0.0.1:80
-        }
 
 persistence:
   config:
@@ -343,58 +240,6 @@ persistence:
             subPath: plugin
           - path: /attach
             subPath: attach
-  tailscale-state:
-    type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 64Mi
-    advancedMounts:
-      speedtest-tracker:
-        tailscale:
-          - path: /var/lib/tailscale
-  tailscale-config:
-    type: configMap
-    name: speedtest-tracker-tailscale
-    advancedMounts:
-      speedtest-tracker:
-        tailscale:
-          - path: /etc/tailscale/serve-config.json
-            subPath: serve-config.json
-            readOnly: true
-  caddy-config:
-    type: configMap
-    name: speedtest-tracker-caddy
-    advancedMounts:
-      speedtest-tracker:
-        caddy:
-          - path: /etc/caddy/Caddyfile
-            subPath: Caddyfile
-            readOnly: true
-  caddy-state:
-    type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 256Mi
-    advancedMounts:
-      speedtest-tracker:
-        caddy:
-          - path: /data
-  caddy-runtime:
-    type: emptyDir
-    advancedMounts:
-      speedtest-tracker:
-        caddy:
-          - path: /config
-  caddy-secret:
-    type: secret
-    name: speedtest-tracker-caddy-external
-    advancedMounts:
-      speedtest-tracker:
-        caddy:
-          - path: /run/secrets/cloudflare_api_token
-            subPath: cloudflare_api_token
-            readOnly: true
-
 rawResources:
   daily:
     enabled: true
