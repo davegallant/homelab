@@ -1,5 +1,5 @@
 ---
-# WebUI-only build. No peer Service or egress gateway policy is enabled.
+# WebUI-only build, Gateway-only inbound. Sidecars (tailscale + caddy) removed 2026-10-28; WebUI via central tailnet-gateway. No peer Service or egress gateway policy is enabled.
 controllers:
   qbittorrent:
     type: deployment
@@ -9,8 +9,8 @@ controllers:
       nodeSelector:
         kubernetes.io/hostname: k8s-w-1
       annotations:
-        backup.velero.io/backup-volumes: config,caddy-state
-        backup.velero.io/backup-volumes-excludes: downloads,tailscale-state
+        backup.velero.io/backup-volumes: config
+        backup.velero.io/backup-volumes-excludes: downloads
     containers:
       app:
         image:
@@ -60,57 +60,6 @@ controllers:
               periodSeconds: 30
               timeoutSeconds: 3
               failureThreshold: 3
-      tailscale:
-        securityContext:
-          capabilities:
-            drop:
-              - ALL
-          allowPrivilegeEscalation: false
-        image:
-          repository: ghcr.io/tailscale/tailscale
-          tag: v1.104.1
-          digest: sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
-        envFrom:
-          - secretRef:
-              name: qbittorrent-tailscale-auth
-              optional: true
-        env:
-          TS_AUTH_ONCE: 'true'
-          TS_HOSTNAME: qbittorrent
-          TS_STATE_DIR: /var/lib/tailscale
-          TS_KUBE_SECRET: ''
-          TS_USERSPACE: 'true'
-          TS_EXTRA_ARGS: --login-server=https://hs.davegallant.ca --accept-dns=false
-          TS_SERVE_CONFIG: /etc/tailscale/serve-config.json
-        resources:
-          requests:
-            cpu: 25m
-            memory: 64Mi
-          limits:
-            cpu: 200m
-            memory: 192Mi
-      caddy:
-        securityContext:
-          allowPrivilegeEscalation: false
-        image:
-          repository: ghcr.io/davegallant/homelab-caddy-cloudflare
-          tag: 2.11.6-a8737d0
-          digest: sha256:36cb30f2df99d3aa9d41ed3bbf4685e662c9fe42cfbb5b06b4d98173d7473f03
-        command:
-          - caddy
-        args:
-          - run
-          - --config
-          - /etc/caddy/Caddyfile
-          - --adapter
-          - caddyfile
-        resources:
-          requests:
-            cpu: 25m
-            memory: 32Mi
-          limits:
-            cpu: 100m
-            memory: 128Mi
     initContainers:
       bootstrap:
         image:
@@ -149,94 +98,7 @@ service:
     ports:
       http:
         port: 8080
-configMaps:
-  tailscale:
-    data:
-      serve-config.json: |
-        {
-          "TCP": {
-            "443": {
-              "TCPForward": "127.0.0.1:8443"
-            }
-          }
-        }
-  caddy:
-    data:
-      Caddyfile: |
-        {
-          auto_https disable_redirects
-          https_port 8443
-          tls_resolvers 1.1.1.1
-          servers {
-            protocols h1 h2
-          }
-        }
-
-        qbittorrent.tail.davegallant.ca {
-          bind 127.0.0.1
-
-          tls {
-            dns cloudflare {file./run/secrets/cloudflare_api_token}
-            propagation_delay 30s
-            propagation_timeout -1
-          }
-
-          reverse_proxy 127.0.0.1:8080
-        }
 persistence:
-  tailscale-state:
-    type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 1Gi
-    advancedMounts:
-      qbittorrent:
-        tailscale:
-          - path: /var/lib/tailscale
-  tailscale-config:
-    type: configMap
-    name: qbittorrent-tailscale
-    advancedMounts:
-      qbittorrent:
-        tailscale:
-          - path: /etc/tailscale/serve-config.json
-            subPath: serve-config.json
-            readOnly: true
-  caddy-config:
-    type: configMap
-    name: qbittorrent-caddy
-    advancedMounts:
-      qbittorrent:
-        caddy:
-          - path: /etc/caddy/Caddyfile
-            subPath: Caddyfile
-            readOnly: true
-  caddy-state:
-    annotations:
-      volumeType: local
-    type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 256Mi
-    advancedMounts:
-      qbittorrent:
-        caddy:
-          - path: /data
-  caddy-runtime:
-    type: emptyDir
-    advancedMounts:
-      qbittorrent:
-        caddy:
-          - path: /config
-  caddy-secret:
-    type: secret
-    name: qbittorrent-caddy-external
-    advancedMounts:
-      qbittorrent:
-        caddy:
-          - path: /run/secrets/cloudflare_api_token
-            subPath: cloudflare_api_token
-            readOnly: true
   config:
     type: persistentVolumeClaim
     storageClass: local-path
