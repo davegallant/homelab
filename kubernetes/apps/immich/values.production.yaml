@@ -249,11 +249,8 @@ persistence:
           - path: /var/lib/postgresql/data
   model-cache-local:
     type: persistentVolumeClaim
-    storageClass: local-path
-    accessMode: ReadWriteOnce
-    size: 5Gi
-    annotations:
-      volumeType: local
+    # Reuse the populated test cache instead of creating a second 1.7 GiB copy.
+    existingClaim: immich-model-cache-local
     advancedMounts:
       immich:
         machine-learning:

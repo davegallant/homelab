@@ -24,7 +24,8 @@ allow k8s-w-2 and preserve its existing client, ownership mapping and snapshot
 protection. The original LXC and its NFS library must have no running writer
 when the Kubernetes server is started. The original library path inside the
 container is retained. Postgres never lives on NFS. The local DB PV is tied to
-k8s-w-2; losing the node requires recovery from backup.
+k8s-w-2; losing the node requires recovery from backup. Machine learning reuses
+the existing local model-cache claim from the test deployment.
 
 `immich-production-secret.yml` provisions credentials from Ansible Vault.
 `production-restore-pod.yaml` starts only a new empty PostgreSQL against the
