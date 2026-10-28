@@ -42,6 +42,7 @@ spec:
                   - lidarr
                   - seerr
                   - kiwix
+                  - qbittorrent
       tls:
         mode: Terminate
         certificateRefs:
