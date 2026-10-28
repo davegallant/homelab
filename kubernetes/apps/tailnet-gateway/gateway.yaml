@@ -46,6 +46,8 @@ spec:
                   - kiwix
                   - qbittorrent
                   - grafana
+                  - maloja
+                  - speedtest-tracker
       tls:
         mode: Terminate
         certificateRefs:

@@ -67,6 +67,10 @@ spec:
       namespace: kiwix
     - server: https://kubernetes.default.svc
       namespace: qbittorrent
+    - server: https://kubernetes.default.svc
+      namespace: maloja
+    - server: https://kubernetes.default.svc
+      namespace: speedtest-tracker
   clusterResourceWhitelist:
     - group: admissionregistration.k8s.io
       kind: ValidatingAdmissionPolicy
