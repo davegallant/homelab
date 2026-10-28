@@ -19,4 +19,10 @@ server:
     hostnames:
       - argocd.tail.davegallant.ca
     rules:
-      - {}
+      - matches:
+          - method:
+              type: Exact
+              service: application.ApplicationService
+          - method:
+              type: Exact
+              service: session.SessionService
