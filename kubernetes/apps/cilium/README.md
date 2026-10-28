@@ -2,7 +2,7 @@
 
 ## Current cluster state
 
-The Talos cluster runs Kubernetes `1.37.0` with Cilium chart `1.20.4` as its
+The Talos cluster runs Kubernetes `1.37.0` with Cilium chart `1.20.3` as its
 primary CNI. Cluster-pool IPAM assigns `10.245.0.0/16` (`/24` per node) and
 VXLAN uses UDP `8473`. Flannel has been removed and kube-proxy remains enabled.
 Talos machine configuration sets `cluster.network.cni.name: none`; Cilium
