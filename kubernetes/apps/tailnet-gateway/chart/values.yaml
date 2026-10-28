@@ -25,6 +25,13 @@ apps:
       app.kubernetes.io/controller: beszel
       app.kubernetes.io/instance: beszel
       app.kubernetes.io/name: beszel
+  - name: argocd
+    namespace: argocd
+    serviceName: argocd-server
+    port: 80
+    policyPort: 8080
+    selectorLabels:
+      app.kubernetes.io/name: argocd-server
   - name: seerr
     port: 5055
     selectorLabels:

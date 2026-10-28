@@ -4,7 +4,7 @@ apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
   name: {{ .policyName | default (printf "%s-gateway" .name) }}
-  namespace: {{ .name }}
+  namespace: {{ .namespace | default .name }}
 spec:
   endpointSelector:
     matchLabels:
@@ -16,6 +16,6 @@ spec:
         - ingress
       toPorts:
         - ports:
-            - port: "{{ .port }}"
+            - port: "{{ .policyPort | default .port }}"
               protocol: TCP
 {{- end }}
