@@ -43,6 +43,15 @@ through AdGuard Home at `.77` with OPNsense at `.1` as fallback. The
 `previous_address` values in `vars.yaml` document the one-time move from DHCP.
 All three nodes were Ready at the static addresses after the transition.
 
+`k8s-w-2` has the Intel HD Graphics 630 at PCI `0000:00:02.0` passed through
+from `pve-g3-2` (Proxmox VMID 147). The Talos v1.14.1 installer uses the i915
+system extension schematic
+`dc8730aa8cc7bfa5ef7e2b3284248f2631135b2faf4ae11aa997a0c1987b0eee`; the
+Intel device plugin advertises `gpu.intel.com/i915` to pods. After a worker
+rebuild or upgrade, verify the `i915` driver, `/dev/dri/renderD128`, and the
+advertised resource before scheduling GPU workloads. Jellyfin's GPU is on the
+separate `pve-g3-1` host.
+
 The cluster's steady-state CNI is Cilium `1.20.3` on Kubernetes `1.37.0`,
 using cluster-pool pod CIDR `10.245.0.0/16` and VXLAN UDP `8473`. Talos has
 `cluster.network.cni.name: none`; Flannel has been removed, while kube-proxy

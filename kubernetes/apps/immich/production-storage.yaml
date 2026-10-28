@@ -1,0 +1,47 @@
+---
+# Existing TrueNAS library. Apply separately; retain the share on release.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: immich-production-library
+spec:
+  capacity:
+    storage: 1Ti
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions: [hard, nfsvers=4.1, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: truenas-immich-production-library
+    volumeAttributes:
+      server: 192.168.1.16
+      share: /mnt/tank/immich
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-production-library
+  namespace: immich
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: immich-production-library
+  resources:
+    requests:
+      storage: 1Ti
+---
+# A new claim keeps the disposable test database intact during restore.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-production-postgres
+  namespace: immich
+  annotations:
+    volumeType: local
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi

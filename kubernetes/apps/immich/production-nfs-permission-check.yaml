@@ -1,0 +1,43 @@
+---
+# Read and write permission probe only. It creates no files on the library.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: immich-production-nfs-permission-check
+  namespace: immich
+spec:
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: k8s-w-2
+  containers:
+    - name: check
+      image: docker.io/library/busybox:1.37@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e
+      command: [sh, -ec]
+      args:
+        - >-
+          for path in /library /library/upload /library/library /library/thumbs
+          /library/encoded-video /library/backups; do
+          test -d "$path" || exit 1;
+          stat -c '%n %u:%g %a' "$path";
+          test -w "$path" || { echo "Not writable: $path"; exit 1; };
+          done;
+          echo 'Production library directories are writable by the pod identity'
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: [ALL]
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+        limits:
+          cpu: 100m
+          memory: 64Mi
+      volumeMounts:
+        - name: library
+          mountPath: /library
+  volumes:
+    - name: library
+      persistentVolumeClaim:
+        claimName: immich-production-library

@@ -1,6 +1,10 @@
 ---
 - name: Install immich
   hosts: immich
+  pre_tasks:
+    - name: Refuse to restart the retired Immich LXC
+      ansible.builtin.fail:
+        msg: Immich is migrating to Kubernetes; the LXC must not be reapplied automatically.
   tasks:
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-docker.yml

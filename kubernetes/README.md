@@ -4,9 +4,11 @@ Talos runs application and platform workloads on three VMs across two Proxmox
 hosts. Argo CD manages application resources from the tracked chart templates
 and production values. Ansible manages infrastructure, external Secrets from
 Vault, and selected ConfigMaps. Application syncs require manual approval.
-All LXC-to-Kubernetes application migrations are complete. Application
-configuration lives beside each Argo CD definition; this directory holds
-shared cluster operations and recovery guidance.
+Most LXC-to-Kubernetes application migrations are complete. Immich's
+production migration is in progress; its LXC remains authoritative until the
+final cutover gates pass. Application configuration lives beside each Argo CD
+definition; this directory holds shared cluster operations and recovery
+guidance.
 
 ## Start here
 

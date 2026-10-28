@@ -1,0 +1,41 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: immich-production-nfs-check
+  namespace: immich
+spec:
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: k8s-w-2
+  containers:
+    - name: check
+      image: docker.io/library/busybox:1.37@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e
+      command: [sh, -ec]
+      args:
+        - >-
+          for path in upload library thumbs encoded-video backups; do
+          test -d "/library/$path" || exit 1; done;
+          stat -c '%u:%g %a' /library;
+          echo 'Production library directories accessible read-only'
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: [ALL]
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+        limits:
+          cpu: 100m
+          memory: 64Mi
+      volumeMounts:
+        - name: library
+          mountPath: /library
+          readOnly: true
+  volumes:
+    - name: library
+      persistentVolumeClaim:
+        claimName: immich-production-library
+        readOnly: true
