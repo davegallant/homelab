@@ -2,8 +2,7 @@
 
 Production runs on `k8s-w-2` at the tailnet-only URL
 `https://immich.tail.davegallant.ca`, through the shared tailnet Gateway to the
-`immich` Service on port 2283. The temporary
-`https://immich-k8s.tail.davegallant.ca` hostname also works. The LXC (104 on
+`immich` Service on port 2283. The LXC (104 on
 `pve-g3-1`) is stopped and its Proxmox `onboot` setting is disabled. Its
 Headscale node was renamed `immich-lxc-retired` and expired; the registration
 is retained. Homepage and Gatus use the original hostname.
