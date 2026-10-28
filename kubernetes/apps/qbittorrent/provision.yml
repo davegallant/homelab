@@ -84,7 +84,7 @@
               'type': 'Opaque',
               'data': {'notify.sh': qbittorrent_notify.stdout,
                              'block-malware.sh': lookup('ansible.builtin.file',
-                               playbook_dir + '/../../../ansible/playbooks/qbittorrent/scripts/block-malware.sh', rstrip=false) | b64encode}} | to_json }}
+                               playbook_dir + '/scripts/block-malware.sh', rstrip=false) | b64encode}} | to_json }}
       changed_when: true
       no_log: true
 
