@@ -1,1 +1,2 @@
-replicas: 1
+# Temporarily set to zero while the frozen LXC TSDB is copied into the PVC.
+replicas: 0
