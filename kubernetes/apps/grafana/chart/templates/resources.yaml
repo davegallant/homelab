@@ -41,7 +41,7 @@ spec:
       annotations:
         backup.velero.io/backup-volumes: data
         pre.hook.backup.velero.io/container: sqlite-backup
-        pre.hook.backup.velero.io/command: '["python3","-c","import sqlite3; s=sqlite3.connect("/data/grafana.db"); d=sqlite3.connect("/data/grafana-backup.db"); s.backup(d)"]'
+        pre.hook.backup.velero.io/command: "[\"python3\",\"-c\",\"import sqlite3; s=sqlite3.connect('/data/grafana.db'); d=sqlite3.connect('/data/grafana-backup.db'); s.backup(d)\"]"
         pre.hook.backup.velero.io/on-error: Fail
     spec:
       automountServiceAccountToken: false
