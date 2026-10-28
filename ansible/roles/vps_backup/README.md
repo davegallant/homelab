@@ -1,6 +1,6 @@
 # vps_backup
 
-Nightly encrypted backups of the Pangolin VPS state to Google Drive.
+Nightly encrypted backups of the VPS state to Google Drive.
 [Restic](https://restic.net) encrypts and dedups locally, then ships snapshots
 to Drive through its [rclone backend](https://restic.net/manual/040_backup.html).
 Same simple end of the spectrum (deliberately not PBS) — and the same
@@ -12,7 +12,7 @@ Everything under `~/config` that Ansible does **not** manage (i.e. not in git):
 
 | Staged as | Source | Contents |
 |---|---|---|
-| `headscale-db.sqlite` | `~/config/headscale/data/db.sqlite` | Headscale DB: nodes, routes, active policy — the whole tailnet state. The policy source is in `ansible/playbooks/pangolin/policy.headscale.hujson`. |
+| `headscale-db.sqlite` | `~/config/headscale/data/db.sqlite` | Headscale DB: nodes, routes, active policy — the whole tailnet state. The policy source is in `ansible/playbooks/vps/policy.headscale.hujson`. |
 | `pangolin-db.sqlite` | `~/config/db/db.sqlite` | Pangolin DB: sites, resources, users |
 | `files/noise_private.key` | `~/config/headscale/data/noise_private.key` | Headscale identity key (a restored Headscale needs this) |
 | `files/gerbil.key` | `~/config/key` | Gerbil WireGuard private key |
@@ -43,8 +43,8 @@ MB — Drive's 15 GB free tier is plenty.
    ```
    Set `vps_backup_gotify_url` to your public Gotify URL (e.g. in
    `group_vars/all/vars.yaml`). Leave it empty to disable failure alerts.
-5. Run the pangolin playbook (role is wired in at the end of
-   `ansible/playbooks/pangolin/main.yml`).
+5. Run the VPS playbook (role is wired in at the end of
+   `ansible/playbooks/vps/main.yml`).
 
 ## Failure alerts
 
@@ -56,8 +56,8 @@ rclone/auth, sqlite dump).
 ## Verify
 
 ```sh
-ssh pangolin "set -a; . /etc/vps-backup/restic.env; set +a; restic snapshots"
-ssh pangolin "systemctl list-timers vps-backup.timer"
+ssh vps "set -a; . /etc/vps-backup/restic.env; set +a; restic snapshots"
+ssh vps "systemctl list-timers vps-backup.timer"
 ```
 
 You should also see the `vps-backup` folder appear in Google Drive after the
@@ -68,18 +68,18 @@ first run.
 ```sh
 # 1. Restore the latest snapshot to scratch (staging dir name varies per backup;
 #    find the files after restore).
-ssh pangolin "set -a; . /etc/vps-backup/restic.env; set +a; restic restore latest --target /tmp/vps-restore && find /tmp/vps-restore -type f"
+ssh vps "set -a; . /etc/vps-backup/restic.env; set +a; restic restore latest --target /tmp/vps-restore && find /tmp/vps-restore -type f"
 
 # 2. Stop the stack (compose project 'pangolin', compose file at ~/docker-compose.yml).
-ssh pangolin "docker compose -f ~/docker-compose.yml -p pangolin down"
+ssh vps "docker compose -f ~/docker-compose.yml -p pangolin down"
 
 # 3. Copy state back into place, e.g.:
-ssh pangolin "cp /tmp/vps-restore/<staging>/headscale-db.sqlite ~/config/headscale/data/db.sqlite"
-ssh pangolin "cp /tmp/vps-restore/<staging>/pangolin-db.sqlite ~/config/db/db.sqlite"
+ssh vps "cp /tmp/vps-restore/<staging>/headscale-db.sqlite ~/config/headscale/data/db.sqlite"
+ssh vps "cp /tmp/vps-restore/<staging>/pangolin-db.sqlite ~/config/db/db.sqlite"
 # ... same pattern for files/ (noise_private.key, gerbil.key, acme.json)
 
 # 4. Start the stack again.
-ssh pangolin "docker compose -f ~/docker-compose.yml -p pangolin up -d"
+ssh vps "docker compose -f ~/docker-compose.yml -p pangolin up -d"
 ```
 
 Fix ownership/permissions to match the originals if anything looks off
@@ -91,7 +91,7 @@ If the VPS is lost entirely: the repo rebuilds the machine, the Drive backup
 restores the state.
 
 1. **New VPS + DNS.** Provision a fresh Ubuntu VPS. If the IP changed, update
-your `~/.ssh/config` `pangolin` alias (and `ssh-keygen -R` the old host key),
+your `~/.ssh/config` `vps` alias (and `ssh-keygen -R` the old host key),
 and update DNS for the VPS's public hostnames.
 
 2. **Pull the state down** (as root on the new VPS):
@@ -99,7 +99,7 @@ and update DNS for the VPS's public hostnames.
    apt update && apt install -y restic rclone
    mkdir -p /root/.config/rclone
    # from your Mac:
-   scp ~/.config/rclone/rclone.conf pangolin:/root/.config/rclone/rclone.conf
+   scp ~/.config/rclone/rclone.conf vps:/root/.config/rclone/rclone.conf
    # back on the VPS:
    export RESTIC_REPOSITORY=rclone:gdrive:vps-backup
    export RESTIC_PASSWORD='...'   # from the vault
@@ -118,7 +118,7 @@ and update DNS for the VPS's public hostnames.
    chmod 600 ~/config/key ~/config/headscale/data/noise_private.key
    ```
 
-4. **Run the playbook** from your Mac (`just run main --limit pangolin`).
+4. **Run the playbook** from your Mac (`just run main --limit vps`).
 It recreates directories (idempotent), templates the compose file and configs
 from git, installs Docker, and brings the stack up **with the restored state
 already in place** — and reinstalls the backup timer, so backups resume
@@ -126,7 +126,7 @@ automatically.
 
 5. **Verify**:
    ```sh
-   ssh pangolin "docker exec headscale headscale nodes list | head"
+   ssh vps "docker exec headscale headscale nodes list | head"
    ```
    Nodes check back in on their own (restored Noise key = same Headscale
 identity; restored policy DB included). The monitoring endpoint should go

@@ -1,5 +1,5 @@
-pangolin_host := "pangolin"
-pangolin_dir := "~"
+vps_host := "vps"
+vps_dir := "~"
 
 local_dir := "/Volumes/backups/pangolin"
 
@@ -44,10 +44,10 @@ check-headscale-policy:
 backup-vps:
     #!/usr/bin/env bash
     set -euo pipefail
-    pangolin_version="$(ssh {{pangolin_host}} 'grep -oP "fosrl/pangolin:\K[0-9]+\.[0-9]+\.[0-9]+" ~/docker-compose.yml')"
+    pangolin_version="$(ssh {{vps_host}} 'grep -oP "fosrl/pangolin:\K[0-9]+\.[0-9]+\.[0-9]+" ~/docker-compose.yml')"
     backup_file="pangolin-${pangolin_version}-$(date +%Y%m%d).tar.gz"
-    ssh {{pangolin_host}} bash -s -- "$backup_file" <<'REMOTE_SCRIPT'
-    cd {{pangolin_dir}} || exit
+    ssh {{vps_host}} bash -s -- "$backup_file" <<'REMOTE_SCRIPT'
+    cd {{vps_dir}} || exit
     backup_file=$1
     docker compose stop pangolin headscale
     stop_status=$?
@@ -66,5 +66,5 @@ backup-vps:
       exit "$start_status"
     fi
     REMOTE_SCRIPT
-    rsync -avz --progress {{pangolin_host}}:{{pangolin_dir}}/"$backup_file" {{local_dir}}
+    rsync -avz --progress {{vps_host}}:{{vps_dir}}/"$backup_file" {{local_dir}}
     echo "Backup pulled locally: $backup_file"
