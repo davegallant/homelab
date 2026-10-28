@@ -33,6 +33,9 @@ spec:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       ref: values
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/argocd/applications
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
