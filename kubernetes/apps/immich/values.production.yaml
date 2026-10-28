@@ -1,12 +1,11 @@
 ---
-# Production migration draft: do not sync until the fresh database restore
-# and single-writer gates have passed. One pod contains the server, ML,
+# Production: one pod contains the server, ML,
 # Valkey and Postgres; this is a single failure domain with no independent
 # scaling or operator-managed database. Server transcoding can use the Intel
 # GPU; ML remains CPU-only. Test PVCs are retained separately.
 # The library remains on the existing TrueNAS NFS export. Postgres is local
-# to k8s-w-2. Velero includes a consistent logical database dump; library
-# recovery relies on the separate TrueNAS snapshot and backup path.
+# to k8s-w-2. Velero includes a consistent logical database dump; the library
+# has TrueNAS snapshots but its off-host protection has not been verified.
 controllers:
   immich:
     type: deployment
