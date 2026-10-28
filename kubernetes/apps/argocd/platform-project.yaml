@@ -61,6 +61,8 @@ spec:
       namespace: seerr
     - server: https://kubernetes.default.svc
       namespace: kiwix
+    - server: https://kubernetes.default.svc
+      namespace: qbittorrent
   clusterResourceWhitelist:
     - group: admissionregistration.k8s.io
       kind: ValidatingAdmissionPolicy

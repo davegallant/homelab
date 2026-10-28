@@ -75,3 +75,9 @@ apps:
     port: 8080
     selectorLabels:
       app.kubernetes.io/name: kiwix
+  - name: qbittorrent
+    port: 8080
+    selectorLabels:
+      app.kubernetes.io/controller: qbittorrent
+      app.kubernetes.io/instance: qbittorrent
+      app.kubernetes.io/name: qbittorrent

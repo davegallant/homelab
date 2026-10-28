@@ -19,19 +19,44 @@
 
     - name: Apply namespace and NFS storage
       ansible.builtin.command:
-        argv: [kubectl, --context, "{{ talos_kube_context }}", apply, -f, "{{ playbook_dir }}/storage.yaml"]
+        argv:
+          [
+            kubectl,
+            --context,
+            "{{ talos_kube_context }}",
+            apply,
+            -f,
+            "{{ playbook_dir }}/storage.yaml",
+          ]
       changed_when: true
 
     - name: Read the existing notification script without exposing its contents
       ansible.builtin.command:
-        argv: [ssh, -o, BatchMode=yes, root@qbittorrent, base64 -w0 /root/scripts/notify.sh]
+        argv:
+          [
+            ssh,
+            -o,
+            BatchMode=yes,
+            root@qbittorrent,
+            base64 -w0 /root/scripts/notify.sh,
+          ]
       register: qbittorrent_notify
       changed_when: false
       no_log: true
 
     - name: Apply external configuration Secret from Vault
       ansible.builtin.command:
-        argv: [kubectl, --context, "{{ talos_kube_context }}", apply, --server-side, --field-manager=ansible-vault, -f, "-"]
+        argv:
+          [
+            kubectl,
+            --context,
+            "{{ talos_kube_context }}",
+            apply,
+            --server-side,
+            --field-manager=ansible-vault,
+            -f,
+            "-",
+          ]
         stdin: >-
           {{ {'apiVersion': 'v1', 'kind': 'Secret',
               'metadata': {'name': 'qbittorrent-config-external', 'namespace': 'qbittorrent'},
@@ -42,7 +67,17 @@
 
     - name: Apply external scripts Secret
       ansible.builtin.command:
-        argv: [kubectl, --context, "{{ talos_kube_context }}", apply, --server-side, --field-manager=ansible-vault, -f, "-"]
+        argv:
+          [
+            kubectl,
+            --context,
+            "{{ talos_kube_context }}",
+            apply,
+            --server-side,
+            --field-manager=ansible-vault,
+            -f,
+            "-",
+          ]
         stdin: >-
           {{ {'apiVersion': 'v1', 'kind': 'Secret',
               'metadata': {'name': 'qbittorrent-scripts-external', 'namespace': 'qbittorrent'},
@@ -55,7 +90,17 @@
 
     - name: Apply the external Caddy credential
       ansible.builtin.command:
-        argv: [kubectl, --context, "{{ talos_kube_context }}", apply, --server-side, --field-manager=ansible-vault, -f, "-"]
+        argv:
+          [
+            kubectl,
+            --context,
+            "{{ talos_kube_context }}",
+            apply,
+            --server-side,
+            --field-manager=ansible-vault,
+            -f,
+            "-",
+          ]
         stdin: >-
           {{ {'apiVersion': 'v1', 'kind': 'Secret',
               'metadata': {'name': 'qbittorrent-caddy-external', 'namespace': 'qbittorrent'},
@@ -65,7 +110,20 @@
 
     - name: Check for an existing registration Secret
       ansible.builtin.command:
-        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, qbittorrent, get, secret, qbittorrent-tailscale-auth, --ignore-not-found, -o, name]
+        argv:
+          [
+            kubectl,
+            --context,
+            "{{ talos_kube_context }}",
+            -n,
+            qbittorrent,
+            get,
+            secret,
+            qbittorrent-tailscale-auth,
+            --ignore-not-found,
+            -o,
+            name,
+          ]
       register: qbittorrent_registration
       changed_when: false
 
@@ -75,7 +133,7 @@
           - ssh
           - -o
           - BatchMode=yes
-          - root@pangolin
+          - root@vps
           - docker exec headscale headscale preauthkeys create --user 1 --tags tag:monitored --expiration 1h -o json
       register: qbittorrent_auth
       when: qbittorrent_registration.stdout | length == 0
@@ -84,7 +142,17 @@
 
     - name: Apply the one-use registration Secret
       ansible.builtin.command:
-        argv: [kubectl, --context, "{{ talos_kube_context }}", apply, --server-side, --field-manager=ansible-vault, -f, "-"]
+        argv:
+          [
+            kubectl,
+            --context,
+            "{{ talos_kube_context }}",
+            apply,
+            --server-side,
+            --field-manager=ansible-vault,
+            -f,
+            "-",
+          ]
         stdin: >-
           {{ {'apiVersion': 'v1', 'kind': 'Secret',
               'metadata': {'name': 'qbittorrent-tailscale-auth', 'namespace': 'qbittorrent'},
