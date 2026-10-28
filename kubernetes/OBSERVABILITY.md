@@ -15,9 +15,8 @@ process used about 85 MiB RSS and 0.2% CPU during inspection; the DaemonSet
 requests 128 MiB and 50m CPU per node, with 256 MiB and 200m limits. Review
 worker memory after rollout; current sizing is in [the cluster README](cluster/README.md).
 
-For reapplication, run the Grafana playbook before Alloy so Loki admits the
-Talos node IPs. The Alloy playbook is manual; the Grafana playbook also runs
-in the normal all-host CI flow. Commands below run from `ansible/`.
+The Alloy apply playbook is manual. The Grafana LXC playbook has been retired
+after the Kubernetes cutover. Commands below run from `ansible/`.
 
 On 2026-10-21, Grafana's 12 GiB LXC root filesystem exhausted its ext4 inodes
 on Loki chunks while 2.1 GiB of blocks remained free. Loki rejected WAL and
@@ -40,11 +39,9 @@ from the earlier inode outage. Check for missing log entries around that time.
 A read-only scan found 1,608 chunk files older than 35 days despite 31-day
 retention; review their lifecycle separately before widening log collection.
 
-For later reapplication, use the same playbooks:
+For later Alloy reapplication, use these playbooks:
 
 ```sh
-ansible-playbook playbooks/grafana/main.yml -i inventory \
-  --vault-password-file .vault_pass
 KUBECONFIG="$HOME/.local/share/homelab-talos/kubeconfig" \
   ansible-playbook playbooks/talos-cluster/apply-alloy.yml \
   -i inventory -e talos_kube_context=homelab
@@ -53,10 +50,10 @@ KUBECONFIG="$HOME/.local/share/homelab-talos/kubeconfig" \
 ```
 
 If Alloy causes trouble, run `remove-alloy.yml` with the same kubeconfig and
-explicit context to remove its DaemonSet while leaving Homepage running. A
-separate approved Grafana playbook run after removing the source-and-port rule
-from the repo closes the LAN path again. The Alloy RBAC and ConfigMap can stay
-for troubleshooting until their removal is separately approved.
+explicit context to remove its DaemonSet while leaving Homepage running. The
+Grafana LXC is stopped and its Ansible playbook is retired; its Compose files
+remain as rollback material. The Alloy RBAC and ConfigMap can stay for
+troubleshooting until their removal is separately approved.
 
 
 [Back to Kubernetes overview](README.md).
