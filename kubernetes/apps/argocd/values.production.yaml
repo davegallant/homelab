@@ -2,3 +2,21 @@
 configs:
   cm:
     url: https://argocd.tail.davegallant.ca
+  params:
+    server.insecure: "true"
+server:
+  extraArgs: []
+  service:
+    servicePortHttp2: 8080
+    servicePortHttp2Name: grpc
+    servicePortHttp2AppProtocol: kubernetes.io/h2c
+  grpcroute:
+    enabled: true
+    parentRefs:
+      - name: tailnet-gateway
+        namespace: tailnet-gateway
+        sectionName: https
+    hostnames:
+      - argocd.tail.davegallant.ca
+    rules:
+      - {}

@@ -23,6 +23,8 @@ spec:
         kinds:
           - group: gateway.networking.k8s.io
             kind: HTTPRoute
+          - group: gateway.networking.k8s.io
+            kind: GRPCRoute
         namespaces:
           from: Selector
           selector:
