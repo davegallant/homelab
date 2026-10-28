@@ -27,11 +27,11 @@ graph TD
 
     subgraph Proxmox["Proxmox Cluster (tailnet mesh, 100.100.0.0/16)"]
         subgraph N1["Node 1"]
-            forgejo["forgejo"]
+            lxc1["LXC services"]
             n1etc["..."]
         end
         subgraph N2["Node 2"]
-            grafana["grafana + loki"]
+            lxc2["LXC services"]
             n2etc["..."]
         end
         N1 <-->|"direct WireGuard mesh\n(SSH + ACLs, no central hop)"| N2
@@ -39,14 +39,14 @@ graph TD
 
     subgraph Talos["Talos Kubernetes on Proxmox VMs"]
         beszel["Beszel hub"]
-        apps["Homepage, Immich, Jellyfin, qBittorrent + application workloads"]
+        apps["Homepage, Immich, Jellyfin, qBittorrent, Forgejo, Grafana, Loki + application workloads"]
         argocd["Argo CD (manual sync)"]
         argocd --> apps
     end
 
     N1 -.->|"coordination"| headscale
     N2 -.->|"coordination"| headscale
-    Proxmox -->|"Newt tunnel sidecar\n(per service)"| pangolin
+    Proxmox -->|"Newt tunnel\n(public services only)"| pangolin
     pangolin -->|"HTTPS"| internet["Public Internet"]
 
     subgraph PerHost["Typical managed LXC"]
@@ -160,7 +160,7 @@ The remote nodes `muse` and `mcleod` use `tag:external` and can initiate tailnet
 
 For public-facing services, a **[Pangolin](https://github.com/fosrl/pangolin)** reverse proxy runs on the same VPS. Each service that needs public exposure runs a **Newt** sidecar container that tunnels directly from the Proxmox cluster to Pangolin, no inbound firewall rules required.
 
-For tailnet-only services, a per-node **[Caddy](https://caddyserver.com)** instance provides HTTPS with automatic Let's Encrypt certificates (DNS-01 via Cloudflare), replacing Tailscale Serve. Their Docker UI ports bind to localhost so other tailnet nodes reach the UI through Caddy. Other ports needed by services, such as Loki ingestion and qBittorrent peer traffic, remain separately exposed.
+For tailnet-only services on Kubernetes, the central Cilium Gateway is now the front door (see [Cluster layout](kubernetes/cluster/README.md)). Per-node **[Caddy](https://caddyserver.com)** instances remain for tailnet-only LXC services, providing HTTPS with automatic Let's Encrypt certificates (DNS-01 via Cloudflare), replacing Tailscale Serve. Their Docker UI ports bind to localhost so other tailnet nodes reach the UI through Caddy. Other ports needed by services, such as Loki ingestion and qBittorrent peer traffic, remain separately exposed.
 
 Headscale advertises the primary AdGuard Home resolver and a secondary AdGuard Home instance on the Gatus host. Deploy the Gatus playbook before manually running the Pangolin playbook so the second resolver is available when Headscale advertises it. Keep the filters and DNS rewrites in `ansible/playbooks/gatus/adguard-secondary.yaml.j2` aligned with the primary AdGuard instance.
 
