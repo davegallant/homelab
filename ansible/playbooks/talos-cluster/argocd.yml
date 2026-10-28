@@ -31,59 +31,10 @@
               'metadata': {'name': 'argocd'}} | to_json }}
       changed_when: true
 
-    - name: Apply persistent tailnet identity and certificate claims
+    - name: Apply retained sidecar state PVCs
       ansible.builtin.command:
         argv: [kubectl, --context, "{{ talos_kube_context }}", apply, -f, "{{ argocd_apps_dir }}/storage.yaml"]
       changed_when: true
-
-    - name: Apply the tailnet proxy configuration
-      ansible.builtin.command:
-        argv: [kubectl, --context, "{{ talos_kube_context }}", apply, -f, "-"]
-        stdin: "{{ lookup('ansible.builtin.template', argocd_apps_dir + '/tailnet-config.yaml.j2') }}"
-      changed_when: true
-
-    - name: Provision the Cloudflare DNS credential without writing it to disk
-      ansible.builtin.command:
-        argv: [kubectl, --context, "{{ talos_kube_context }}", apply, --server-side, --field-manager=ansible-vault, -f, "-"]
-        stdin: >-
-          {{ {'apiVersion': 'v1', 'kind': 'Secret',
-              'metadata': {'name': 'argocd-caddy', 'namespace': 'argocd'},
-              'type': 'Opaque',
-              'data': {'cloudflare_api_token': cloudflare_dns_api_token | b64encode}} | to_json }}
-      changed_when: true
-      no_log: true
-
-    - name: Check for an existing Argo CD tailnet identity
-      ansible.builtin.command:
-        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, argocd, exec, deployment/argocd-server, -c, tailscale, --, tailscale, ip, -4]
-      register: argocd_existing_identity
-      failed_when: false
-      changed_when: false
-      no_log: true
-
-    - name: Create a one-use Headscale registration key
-      ansible.builtin.command:
-        argv: [docker, exec, headscale, headscale, preauthkeys, create, --user, "1", --expiration, 1h, --output, json]
-      delegate_to: vps
-      vars:
-        ansible_connection: ssh
-        ansible_user: root
-      register: argocd_registration_key
-      when: argocd_existing_identity.rc != 0 or argocd_existing_identity.stdout | trim | length == 0
-      changed_when: true
-      no_log: true
-
-    - name: Provision the temporary Tailscale registration Secret
-      ansible.builtin.command:
-        argv: [kubectl, --context, "{{ talos_kube_context }}", apply, -f, "-"]
-        stdin: >-
-          {{ {'apiVersion': 'v1', 'kind': 'Secret',
-              'metadata': {'name': 'argocd-tailscale-auth', 'namespace': 'argocd'},
-              'type': 'Opaque',
-              'data': {'TS_AUTHKEY': (argocd_registration_key.stdout | from_json).key | b64encode}} | to_json }}
-      when: argocd_registration_key is not skipped
-      changed_when: true
-      no_log: true
 
     - name: Validate the pinned Argo CD chart
       ansible.builtin.command:
@@ -167,61 +118,6 @@
         stdin: "{{ lookup('ansible.builtin.template', argocd_apps_dir + '/values.ansible.yaml.j2') }}"
       changed_when: true
       no_log: true
-
-    - name: Wait for the Argo CD tailnet identity
-      ansible.builtin.command:
-        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, argocd, exec, deployment/argocd-server, -c, tailscale, --, tailscale, ip, -4]
-      register: argocd_tailnet_ip
-      until: argocd_tailnet_ip.rc == 0 and argocd_tailnet_ip.stdout | trim | length > 0
-      retries: 24
-      delay: 5
-      changed_when: false
-
-    - name: Verify the tailnet HTTPS endpoint and trusted certificate
-      ansible.builtin.command:
-        argv:
-          - curl
-          - --silent
-          - --show-error
-          - --fail
-          - --noproxy
-          - "*"
-          - --max-time
-          - "15"
-          - --resolve
-          - "argocd.{{ headscale_magic_dns_domain }}:443:{{ argocd_tailnet_ip.stdout | trim }}"
-          - "https://argocd.{{ headscale_magic_dns_domain }}/api/version"
-      register: argocd_https_check
-      until: argocd_https_check.rc == 0
-      retries: 24
-      delay: 5
-      changed_when: false
-
-    - name: Remove the one-use registration Secret after successful registration
-      ansible.builtin.command:
-        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, argocd, delete, secret, argocd-tailscale-auth, --ignore-not-found=true]
-      register: argocd_auth_secret_removal
-      changed_when: "'deleted' in argocd_auth_secret_removal.stdout"
-
-    - name: Restart the server to prove the identity persists without the auth Secret
-      ansible.builtin.command:
-        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, argocd, rollout, restart, deployment/argocd-server]
-      when: "'deleted' in argocd_auth_secret_removal.stdout"
-      changed_when: true
-
-    - name: Wait for the server after the identity persistence check
-      ansible.builtin.command:
-        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, argocd, rollout, status, deployment/argocd-server, --timeout=300s]
-      changed_when: false
-
-    - name: Verify tailnet HTTPS after the persistence check
-      ansible.builtin.command:
-        argv: "{{ argocd_https_check.cmd }}"
-      register: argocd_persistent_https_check
-      until: argocd_persistent_https_check.rc == 0
-      retries: 24
-      delay: 5
-      changed_when: false
 
     - name: Apply the restricted homelab project
       ansible.builtin.command:

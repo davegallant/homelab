@@ -56,9 +56,9 @@ The recipe defaults to the protected Talos kubeconfig and `ansible/.vault_pass`.
 Set `KUBECONFIG` or `ANSIBLE_VAULT_PASSWORD_FILE` to override those paths.
 
 This provisions the external resources declared in the playbook, including
-application Secrets, the Velero Garage credential, Argo CD’s Cloudflare
-credential, and Homepage’s ConfigMaps and icons. Check the workload runbook
-for any additional app-specific Secret provisioning. Secret-bearing chart
+application Secrets, the Velero Garage credential, and Homepage’s ConfigMaps
+and icons. Check the workload runbook for any additional app-specific Secret
+provisioning. Secret-bearing chart
 renders exist only in process memory with
 logging disabled. Homepage's `config/services.yaml`, `config/settings.yaml`,
 icons, and `proxy-agent.cjs` remain the editable source. Its production chart
@@ -69,11 +69,8 @@ Homepage's production values and approve a sync. External Secret rotations
 also require workload restarts. PostgreSQL password rotation additionally
 requires changing the database role password.
 
-The Argo CD tailnet ConfigMap remains Ansible-managed. After editing it, run
-the resource playbook, update `server.podAnnotations.checksum/tailnet` in
-Argo CD's production values to its rendered SHA-256, and approve a sync.
-The Argo CD sidecar PVCs and one-use registration workflow stay outside its
-chart. Preserve the existing PVC-backed identities during upgrades.
+The retired Argo CD sidecar PVCs stay outside the chart and remain
+unmounted. They are retained for a later per-resource audit.
 
 ## Recovery and safeguards
 
