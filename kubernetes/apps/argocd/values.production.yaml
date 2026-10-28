@@ -28,4 +28,7 @@ server:
               service: cluster.SettingsService
           - method:
               type: Exact
+              service: project.ProjectService
+          - method:
+              type: Exact
               service: session.SessionService
