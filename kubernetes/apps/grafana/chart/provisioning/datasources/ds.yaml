@@ -13,7 +13,7 @@ datasources:
     url: http://192.168.1.56:3100
     basicAuth: true
     isDefault: true
-    version: 1
+    version: 3
     editable: false
   - name: VictoriaMetrics
     uid: victoriametrics
@@ -22,7 +22,7 @@ datasources:
     orgId: 1
     url: http://192.168.1.56:8428
     isDefault: false
-    version: 1
+    version: 3
     editable: false
     jsonData:
       timeInterval: 60s
