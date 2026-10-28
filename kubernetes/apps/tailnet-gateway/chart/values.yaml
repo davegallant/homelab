@@ -98,3 +98,9 @@ apps:
     port: 3000
     selectorLabels:
       app.kubernetes.io/name: grafana
+  - name: maloja
+    port: 42010
+    selectorLabels:
+      app.kubernetes.io/controller: maloja
+      app.kubernetes.io/instance: maloja
+      app.kubernetes.io/name: maloja
