@@ -1,0 +1,151 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-data
+  annotations:
+    volumeType: local
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 3Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+spec:
+  selector:
+    app.kubernetes.io/name: grafana
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+spec:
+  replicas: {{ .Values.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: grafana
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: grafana
+      annotations:
+        backup.velero.io/backup-volumes: data
+        pre.hook.backup.velero.io/container: sqlite-backup
+        pre.hook.backup.velero.io/command: '["python3","-c","import sqlite3; s=sqlite3.connect("/data/grafana.db"); d=sqlite3.connect("/data/grafana-backup.db"); s.backup(d)"]'
+        pre.hook.backup.velero.io/on-error: Fail
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: k8s-w-1
+      containers:
+        - name: grafana
+          image: docker.io/grafana/grafana:13.2.4@sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f
+          env:
+            - name: GF_PATHS_PROVISIONING
+              value: /etc/grafana/provisioning
+            - name: GF_FEATURE_TOGGLES_ENABLE
+              value: alertingSimplifiedRouting,alertingQueryAndExpressionsStepMode
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "false"
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          ports:
+            - containerPort: 3000
+          startupProbe:
+            httpGet: {path: /api/health, port: 3000}
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            httpGet: {path: /api/health, port: 3000}
+          livenessProbe:
+            httpGet: {path: /api/health, port: 3000}
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/grafana}
+            - {name: datasources, mountPath: /etc/grafana/provisioning/datasources}
+            - {name: dashboards, mountPath: /etc/grafana/provisioning/dashboards/provider.yaml, subPath: provider.yaml}
+            - {name: dashboard-files, mountPath: /etc/grafana/provisioning/dashboards/files}
+            - {name: alerting, mountPath: /etc/grafana/provisioning/alerting}
+        - name: sqlite-backup
+          image: docker.io/paperlessngx/paperless-ngx:3.3.3@sha256:dba0242c1df1843643df4eb50ce5639f3a7900f414879088fd5bed8eaf2d456d
+          command: ["sleep", "infinity"]
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests: {cpu: 5m, memory: 32Mi}
+            limits: {cpu: 100m, memory: 128Mi}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: grafana-data}
+        - name: datasources
+          configMap: {name: grafana-datasources}
+        - name: dashboards
+          configMap: {name: grafana-dashboards}
+        - name: dashboard-files
+          configMap: {name: grafana-dashboards-files}
+        - name: alerting
+          configMap: {name: grafana-alerting}
+---
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: grafana-daily
+  namespace: velero
+spec:
+  schedule: "40 5 * * *"
+  template:
+    ttl: 336h
+    includedNamespaces: [grafana]
+    excludedResources: [secrets]
+    defaultVolumesToFsBackup: false
+    snapshotVolumes: false
+    storageLocation: default
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: grafana-default-deny
+spec:
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: grafana
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - {port: "53", protocol: UDP}
+            - {port: "53", protocol: TCP}
+    - toCIDR: [192.168.1.56/32]
+      toPorts:
+        - ports:
+            - {port: "3100", protocol: TCP}
+            - {port: "8428", protocol: TCP}

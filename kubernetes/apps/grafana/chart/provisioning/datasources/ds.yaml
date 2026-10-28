@@ -1,0 +1,28 @@
+---
+# Grafana datasources. The Loki entry is the one the grafana container's
+# old entrypoint heredoc used to write; it moved to a real file when
+# VictoriaMetrics joined (dashboard JSON cannot ride a Jinja-templated
+# compose heredoc safely). Keep the Loki block's fields unchanged apart
+# from the added uid.
+apiVersion: 1
+datasources:
+  - name: Loki
+    type: loki
+    access: proxy
+    orgId: 1
+    url: http://192.168.1.56:3100
+    basicAuth: true
+    isDefault: true
+    version: 1
+    editable: false
+  - name: VictoriaMetrics
+    uid: victoriametrics
+    type: prometheus
+    access: proxy
+    orgId: 1
+    url: http://192.168.1.56:8428
+    isDefault: false
+    version: 1
+    editable: false
+    jsonData:
+      timeInterval: 60s

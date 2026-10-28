@@ -1,0 +1,356 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: cluster-critical
+    folder: Homelab
+    interval: 1m
+    rules:
+      - uid: k8s_node_exporter_missing
+        title: Kubernetes node exporter missing
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: victoriametrics
+            model:
+              datasource:
+                type: prometheus
+                uid: victoriametrics
+              editorMode: code
+              expr: (3 - sum(up{job="node-exporter", cluster="homelab"})) or absent(up{job="node-exporter", cluster="homelab"})
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: false
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: Alerting
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: One or more Kubernetes nodes are missing from node-exporter metrics.
+          description: Expected metrics from all three nodes (k8s-cp-1, k8s-w-1, k8s-w-2). Check node-exporter, Alloy scraping, and VictoriaMetrics ingestion.
+        labels:
+          severity: critical
+          service: kubernetes
+        isPaused: false
+
+      - uid: k8s_node_memory_low
+        title: Kubernetes node memory low
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: victoriametrics
+            model:
+              datasource:
+                type: prometheus
+                uid: victoriametrics
+              editorMode: code
+              expr: >-
+                100 * (1 - (node_memory_MemAvailable_bytes{job="node-exporter",
+                cluster="homelab"} / node_memory_MemTotal_bytes{job="node-exporter",
+                cluster="homelab"}))
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: false
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 85
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: A Kubernetes node has less than 15% memory available.
+          description: >-
+            {{ $labels.node }} ({{ $labels.instance }}) has less than 15% memory available for at least
+            five minutes. Check the Cluster Vitals dashboard and node memory pressure.
+        labels:
+          severity: critical
+          service: kubernetes
+        isPaused: false
+
+      - uid: k8s_node_var_filesystem_low
+        title: Kubernetes node /var nearly full
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: victoriametrics
+            model:
+              datasource:
+                type: prometheus
+                uid: victoriametrics
+              editorMode: code
+              expr: >-
+                100 * (1 - (node_filesystem_avail_bytes{job="node-exporter", cluster="homelab",
+                mountpoint="/var", fstype!="rootfs"} / node_filesystem_size_bytes{job="node-exporter",
+                cluster="homelab", mountpoint="/var", fstype!="rootfs"}))
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: false
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 90
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: A Kubernetes node /var filesystem is over 90% full.
+          description: '{{ $labels.node }} ({{ $labels.instance }}) /var usage has been above 90% for at least five minutes.'
+        labels:
+          severity: critical
+          service: kubernetes
+        isPaused: false
+
+      - uid: k8s_container_restart_burst
+        title: Kubernetes container restart burst
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: victoriametrics
+            model:
+              datasource:
+                type: prometheus
+                uid: victoriametrics
+              editorMode: code
+              expr: sum by (namespace, pod, container) (increase(kube_pod_container_status_restarts_total{cluster="homelab"}[5m]))
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: false
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 2
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: A Kubernetes container keeps restarting.
+          description: >-
+            {{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} restarted more
+            than twice in five minutes and kept doing so for five minutes.
+        labels:
+          severity: critical
+          service: kubernetes
+        isPaused: false
+
+      - uid: k8s_container_crash_loop
+        title: Kubernetes container crash loop
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: victoriametrics
+            model:
+              datasource:
+                type: prometheus
+                uid: victoriametrics
+              editorMode: code
+              expr: >-
+                max by (namespace, pod, container) (max_over_time(
+                kube_pod_container_status_waiting_reason{cluster="homelab", reason="CrashLoopBackOff"}[5m]))
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: false
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 10m
+        annotations:
+          summary: A Kubernetes container is stuck in a crash loop.
+          description: >-
+            {{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} has repeatedly
+            been in CrashLoopBackOff over the last ten minutes.
+        labels:
+          severity: critical
+          service: kubernetes
+        isPaused: false
