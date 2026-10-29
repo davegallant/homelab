@@ -46,7 +46,7 @@ controllers:
           allowPrivilegeEscalation: false
         image:
           repository: quay.io/invidious/invidious
-          tag: 2026.10.23-4a271da
+          tag: 2026.10.26-1c4b41f@sha256:318829041f3f334e13bfe72f650960a5fcd0a675932ebfa1da93cb4a4ceb9452
           digest: sha256:385e0ae4cd79e1bf3fe37fa97a02dca758754a58dc3b34f1a13b7bc0e15b2721
         envFrom:
           - secretRef:
