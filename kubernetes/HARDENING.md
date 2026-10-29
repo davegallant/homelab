@@ -1,10 +1,11 @@
 # Prioritized homelab hardening guide
 
 Reviewed 2026-10-28. Scope: repository configuration, primarily Talos Kubernetes,
-with shared LXC/network controls. No live cluster audit or infrastructure changes
-were performed. A checked-in value establishes intent, not live enforcement.
-Ranking weighs potential compromise impact, exposure, and effort; it is not a
-claim that an exploit or credential leak has occurred.
+with shared LXC/network controls. A limited, read-only check of the Forgejo
+runner's live Kubernetes state was performed; no live changes were made. Other
+items have not had a live audit. A checked-in value establishes intent, not live
+enforcement. Ranking weighs potential compromise impact, exposure, and effort;
+it is not a claim that an exploit or credential leak has occurred.
 
 ## Existing strengths
 
@@ -17,10 +18,17 @@ or establish that an image is trustworthy.
 
 ## 1. Isolate privileged CI execution — highest priority
 
-**Evidence:** `apps/forgejo-runner/values.production.yaml` sets the chart security
-context to privileged and job containers to `network: host`. Its namespace labels
-set enforce, audit, and warn all to privileged. Its README still describes a
-not-yet-deployed draft and different networking, so deployment status needs checking.
+**Evidence:** a read-only check on 2026-10-28 found the runner Application Synced
+and Healthy, with its two-container pod Running on `k8s-w-2`. Both runner and
+DinD containers are privileged; the upstream chart applies the same security
+context to both. The pod itself does not use Kubernetes `hostNetwork`, while
+Docker job containers use `network: host` to share the pod network namespace.
+The live namespace enforces, audits, and warns at `privileged`. The runner
+service account cannot read Secrets, list Pods, or create Pods, but its token is
+mounted automatically. There is no Cilium policy selecting runner pods, so
+egress is unrestricted. The registration Secret exists, but its contents and
+Forgejo registration scope were not inspected. Workflow files are not present in
+this repository, so triggers and job secrets remain unreviewed.
 
 **Risk:** workflow code executes alongside production data on shared workers.
 Privileged DinD substantially weakens the pod boundary; Docker host networking
@@ -31,9 +39,12 @@ Unprivileged job containers do not remove the privileged daemon's attack surface
 then, restrict registration and workflow triggers to trusted repositories and
 maintainers, prevent untrusted PR jobs receiving secrets, use short-lived job
 credentials, cap concurrency and daemon resources, and inventory runner egress.
-A dedicated tainted worker reduces sharing but is not a separate cluster boundary.
-Keep necessary privileged enforcement scoped; use baseline/restricted audit and
-warn to expose deviations rather than silencing them.
+The current repository changes propose a one-job concurrency cap, explicit
+DinD resources, no service-account token mount, restricted audit/warn labels,
+and an egress policy for DNS, Forgejo, and public web ports with private ranges
+excluded. These changes have not been synced. A dedicated tainted worker reduces
+sharing but is not a separate cluster boundary. Verify the policy and workload
+against real trusted jobs before applying it.
 
 **Acceptance:** inspect rendered and live runner pods, prove a real checkout/job
 works, and demonstrate jobs cannot reach unrelated APIs, NAS exports, or production
