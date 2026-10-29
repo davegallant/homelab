@@ -45,7 +45,7 @@ endpoints:
     <<: *defaults
 
   - name: lidarr
-    url: "{{ lidarr_url }}"
+    url: "https://lidarr.{{ headscale_magic_dns_domain }}/ping"
     <<: *defaults
 
   - name: qbittorrent
