@@ -206,3 +206,32 @@ extraDeploy:
         - toCIDR:
             - 192.168.1.0/24
             - 10.96.0.0/12
+  - apiVersion: cilium.io/v2
+    kind: CiliumNetworkPolicy
+    metadata:
+      name: forgejo-newt-egress
+    spec:
+      description: Allow the Forgejo Newt pod to reach the observed Pangolin VPS endpoints.
+      endpointSelector:
+        matchLabels:
+          k8s:app.kubernetes.io/instance: forgejo
+          k8s:app.kubernetes.io/name: forgejo-newt
+      egress:
+        - toCIDR:
+            - 72.11.149.242/32
+          toPorts:
+            - ports:
+                - port: "443"
+                  protocol: TCP
+        - toCIDR:
+            - 72.11.149.242/32
+          toPorts:
+            - ports:
+                - port: "21820"
+                  protocol: UDP
+        - toCIDR:
+            - 72.11.149.242/32
+          toPorts:
+            - ports:
+                - port: "51820"
+                  protocol: UDP
