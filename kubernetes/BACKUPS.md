@@ -1,127 +1,18 @@
 # Kubernetes backups and Homepage restore drill
 
-The Kubernetes layer is backed up by Velero with Kopia filesystem backups:
-Talos cluster → Velero/node-agent → Garage on TrueNAS → covered by Dave's
-existing TrueNAS-to-Drive sync. The `homepage-daily` schedule runs at 03:15 UTC,
-keeps backups for 14 days, includes only `homepage`, and excludes Secrets.
-Secrets are intentionally excluded because Velero's resource archive is not
-encrypted. Recreate them from Vault before judging restored workloads.
+Backup scope, UTC schedules, retention, and Secret inclusion are declared in
+[velero-schedules](apps/velero-schedules/) and the Forgejo chart. Inspect those
+sources and live Schedule objects before relying on coverage. A schedule is
+not evidence that a backup or restore succeeded.
 
-Daily namespace backup start times are in UTC (23:00–00:30 Toronto during
-daylight saving time; 22:00–23:30 in winter):
+Velero resource archives are not encrypted. Restrict Garage and off-site
+copies, especially backups including Secrets. Recreate external Secrets from
+Ansible Vault. Verify off-site encryption and deletion retention independently.
 
-| Namespace | Start (UTC) |
-|---|---|
-| `bentopdf` | 03:00 |
-| `searxng` | 03:05 |
-| `kiwix` | 03:10 |
-| `homepage` | 03:15 |
-| `changedetection` | 03:20 |
-| `lubelogger` | 03:25 |
-| `maloja` | 03:30 |
-| `seerr` | 03:35 |
-| `miniflux` | 03:40 |
-| `navidrome` | 03:45 |
-| `audiobookshelf` | 03:50 |
-| `invidious` | 03:55 |
-| `umami` | 04:00 |
-| `speedtest-tracker` | 04:05 |
-| `paperless-ngx` | 04:15 |
-| `romm` | 04:30 |
-| `forgejo`, `forgejo-runner` | 05:00 |
-| `prowlarr` | 04:10 |
-| `sonarr` | 04:20 |
-| `radarr` | 04:25 |
-| `lidarr` | 04:50 |
-
-`forgejo-daily` includes `forgejo` and `forgejo-runner` with the same 14-day
-TTL and currently includes Secrets. Forgejo's database and data are in the
-Kopia-encrypted volume backup, but its Kubernetes resource archive is not
-encrypted. The 2026-10-26 through 2026-10-28 scheduled backups completed under
-this policy.
-
-The Forgejo URL and Newt Secrets can be recreated from Ansible Vault with
-`just run talos-cluster/gitops-secrets --tags forgejo-secrets`; this was applied
-to the live cluster on 2026-10-29 without displaying credential data. The ten
-Newt app Secrets were also reapplied and verified by name, key names, and
-workload readiness.
-
-Forgejo Runner recovery will use a fresh registration after restoring Forgejo,
-so the current runner identity is not stored in Ansible Vault. Forgejo's
-registration UI creates a UUID and token, while the deployed runner chart 0.7.5
-uses `runner.config.existingSecret` with a `.runner` file. The documented
-registration-to-chart handoff has not yet been tested, so `forgejo-daily`
-continues to include Secrets. Do not exclude them until a fresh registration is
-proven to work with the deployed chart. Forgejo's official [runner registration
-guide](https://forgejo.org/docs/latest/admin/actions/registration/) documents
-the new UUID/token registration flow.
-
-The completed backup `forgejo-daily-20261029050007` expires on 2026-11-12 at
-05:00 UTC under its 14-day TTL. Its seven Secret resources were restored into
-isolated scratch namespaces; all seven restored data maps matched their live
-counterparts in memory. The source backup was not modified. Preserve existing
-Secret-bearing backups and their TTLs; manual backups may have a 30-day TTL.
-The Velero Kubernetes resource archive in Garage is not encrypted. Keep Garage
-and off-site copies restricted for the full retention period; retention of
-deleted objects in the Drive copy has not been verified.
-
-Velero has 26 Ready Kopia repositories, one per namespace with filesystem
-backups. The `velero-repo-credentials` Secret currently contains Velero's
-static default repository password; that password is not in Ansible Vault.
-Kopia encrypts the volume data, but the current key is not private. Do not
-replace the Secret directly: Velero warns that repositories created with the
-old password will become inaccessible. Migrate and verify all repositories
-with Kopia's password-change procedure before updating the Secret, and retain
-the new password in Vault for disaster recovery. Secret encryption in the
-Kubernetes API is enabled with Talos `secretbox`; the etcd and VM snapshots
-still require the separately protected Talos cluster credentials to restore.
-
-On 2026-10-29, a copy rehearsal used the completed Homepage backup
-`homepage-daily-20261029031507`, snapshot
-`7bce6c6ceb53c352986b2f89a38bdfa4`, and namespace repository
-`kopia/homepage/`. The protected Garage copy contained 235 objects totaling
-1,199,289 bytes. Kopia v0.16.0 connected to the isolated copy as
-`default@default`; after changing only the copy to the Vault-held password, it
-listed the same 29 snapshots and restored the selected snapshot to encrypted
-Mac scratch storage. The restore matched Kopia's metadata: 17 files and
-287,717 bytes. The temporary Garage access pods and local copy, credentials,
-Kopia binary, config, cache, and restored files were removed. The source
-repository and live Velero credential were unchanged. Garage object names need
-the filesystem backend's `.f` suffix and flat layout when represented as a
-local Kopia filesystem repository; the object contents were preserved. This
-validates the password-change and restore path on one copied namespace only;
-the live repositories still require their separate preflight and migration.
-
-The live Kopia rotation preflight on 2026-10-29 found 26/26 repositories Ready,
-no active Velero Backup, Restore, PodVolumeBackup, or Kopia maintenance job,
-and an Available Garage location. Kopia v0.16.0 captured a read-only manifest
-count for each repository namespace as the rotation validation baseline.
-
-Before pausing writers, the off-host etcd snapshot
-`etcd-homelab-20261029T122913Z.snap` was created with mode `0600` and its
-checksum was verified against the protected local copy. All 26 repositories
-were rotated and verified with the new password, and their snapshot counts
-remain unchanged. The Vault-backed Velero Secret is updated and all 26
-`BackupRepository` objects are Ready. The post-rotation Homepage restore and
-fresh-backup checks passed, and all 27 schedules are unpaused. `kiwix` and
-`searxng` have schedules but no repository yet; the `monitoring` repository
-has no schedule. The Homepage restore verified only its 287,717-byte config
-volume; the selected backup contains no Caddy or Tailscale volume data and
-excludes Kubernetes Secrets. TrueNAS-to-Drive client-side encryption and
-deletion retention remain unverified; do not treat the Drive copy as encrypted
-or protected from deletion until the actual task settings are checked.
-
-Each daily schedule now has a distinct UTC start. The media automation
-backups run at 04:10, 04:20, 04:25, and 04:50; their latest runs on
-2026-10-25 took 12–30 seconds. Paperless remains at 04:15, RomM at 04:30,
-and Forgejo at 05:00. Lidarr starts 20 minutes after RomM to allow for
-its previously observed longer runs.
-This leaves a buffer before the NAS 01:00 Toronto offsite sync and Proxmox
-02:00 Toronto backup job at the observed durations. Staggering is not a
-global concurrency lock: longer runs or manual backups can still overlap.
-Keep schedule names stable; when a chart rename creates a replacement,
-remove the obsolete Schedule explicitly after checking equivalent coverage,
-using orphan deletion to preserve existing Backups.
+Keep the Kopia repository password in Vault. Never replace its Kubernetes
+Secret alone: existing repositories require a coordinated password change.
+Rehearse against an isolated repository copy, preserve snapshot counts, and
+verify restores and a fresh backup before resuming schedules.
 
 ## Recovery safeguards
 
@@ -129,31 +20,6 @@ Proxmox VM backups cover the Talos disks, including local PV data. Separate
 off-host etcd snapshots protect cluster state. Protect the operator's Talos
 credentials and Ansible Vault too. Isolate a full VM restore from the live
 cluster until node identity and etcd membership are reconciled.
-
-## RomM current backup
-
-The current RomM backup is `romm-current-20261024022620`. It completed on
-2026-10-24 with no Velero warnings or errors and a 14-day TTL. Its four
-annotated volumes all have completed Kopia PodVolumeBackups: config (95 bytes),
-resources (1,217,172,959 bytes), Redis (6,867,498 bytes), and MariaDB
-(191,548,412 bytes). The MariaDB pre-backup hook succeeded (`HooksFailed: 0`)
-and left a 3,206,043-byte `romm-backup.sql` in the backed-up database volume.
-
-These four claims use static Kubernetes `local` PVs on `k8s-w-1`, declared in
-`apps/romm/state-local-pv.yaml`, and point at the existing active data
-directories. Rancher's local-path provisioner defaults to `hostPath`, which
-Velero does not support for filesystem backups. The stale RomM PVC/PV objects
-on `k8s-w-2` were removed after backup verification; their directories remain
-on disk because the reclaim policy is `Retain`. The ROM library remains on
-TrueNAS and is protected by its separate NAS backup path. Verify future RomM
-backups by checking all four PodVolumeBackups and their nonzero byte counts;
-the top-level `Completed` phase by itself is insufficient.
-
-For large data transfers, use a tar stream or another length-preserving copy
-method. Piping a large SQL dump through `kubectl exec -i ... cat > file` can
-truncate it. Compare file counts and byte totals, verify dump checksums before
-restore, and compare exact per-table `COUNT(*)` results for databases rather
-than relying on `information_schema` estimates.
 
 ## Homepage restore drill
 
@@ -257,12 +123,10 @@ kubectl --context "$CTX" -n velero get podvolumerestores \
 kubectl --context "$CTX" -n homepage-drill get pvc -o wide
 ```
 
-The 2026-10-29 backup contains one completed PodVolumeBackup for
-`homepage-config` (287,717 bytes); it does not contain Caddy or Tailscale volume
-data. Its Deployment already has only the Homepage container. Require a
-completed PodVolumeRestore with the expected byte count and a Running, Ready
-pod before comparing data. Check each selected backup's own resource list and
-PodVolumeBackups; do not assume older sidecars or volumes are present:
+Require completed PodVolumeRestores matching the selected backup's volume
+inventory and expected byte counts, plus a Running, Ready pod. Inspect the
+saved Deployment before restore: remove identity-bearing sidecars and routes
+from the drill rather than cloning production identities.
 
 Compare resource inventories and `/app/config` file lists/checksums. Exclude
 logs, icons, the Velero-generated `.velero/` marker, and the ConfigMap-managed
@@ -334,7 +198,7 @@ kubectl --context "$CTX" -n homepage rollout status deployment/homepage --timeou
 ```
 
 Confirm the drill namespace and its PVs are absent, production Homepage is
-healthy, and its three production PV claims remain Bound to their original PVs.
+healthy, and production claims remain Bound to their original PVs.
 
 
 [Back to Kubernetes overview](README.md).

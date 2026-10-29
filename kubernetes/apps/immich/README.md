@@ -21,29 +21,12 @@ is local to `k8s-w-2`, not NFS; losing that node requires database recovery.
 `immich-production-secret.yml` provisions the production database credentials
 from Ansible Vault as the `immich-production-external` Secret.
 
-The 2026-10-28 cutover restored a frozen database dump into a fresh claim.
-All 73 public table counts matched the source, including 16,921 asset rows.
-The app verified its library mounts and five original photos were read from
-the server container; Dave uploaded a photo and confirmed it appeared. A
-synthetic QSV encode passed in the production pod.
-The previous disposable test PVCs and network policy are retained; their
-prune-skipped state makes Argo report `OutOfSync`. Do not prune them as part
-of a normal sync.
-
-The production values include a daily 05:10 UTC Velero schedule with a
-PostgreSQL logical dump hook and its local database volume; Secrets are
-excluded. The one-off `immich-migration-20261028` backup completed with one
-successful hook and an 833,210,457-byte completed PodVolumeBackup. The first
-scheduled run still needs verification. Velero writes to Garage on TrueNAS;
-the Garage cloud sync last reported a Google Drive rate-limit failure, so
-off-host protection of that backup is not confirmed.
-
-The NFS library is excluded from Velero. TrueNAS has an enabled daily
-recursive snapshot of `tank`, and the frozen cutover snapshot is
-`tank/immich@immich-cutover-20261028T025001Z`. No configured TrueNAS cloud
-sync was found for `tank/immich`; an off-host library copy has not been
-verified. The protected final database dump and table counts are under
-`~/.local/share/immich-migration-20261027/` on the operator's machine.
+For backup scope and timing, inspect the production chart and central
+[Schedule inventory](../velero-schedules/). Verify a successful PostgreSQL dump
+hook and completed nonzero PodVolumeBackup, then rehearse restore. A one-off
+backup does not prove scheduled or off-site coverage. Verify NAS library
+snapshots, off-site copies and cloud-sync success separately; library data is
+excluded from Velero.
 
 The staging manifests `production-nfs-check.yaml` and
 `production-nfs-permission-check.yaml` performed the NFS checks. The completed

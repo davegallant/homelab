@@ -7,45 +7,15 @@ for updates, external Secrets, and recovery. Use the tracked production values
 and Application definition for desired state. Do not run Helm mutations against
 resources owned by Argo CD.
 
-## Facts this rests on (verified 2026-10-22)
+## Mount and isolation constraints
 
-- TrueNAS is 192.168.1.16 and already exports the relevant paths over
-  NFS4 — the Proxmox host's /etc/fstab mounts them today:
-  `/mnt/tank/media/kiwix`, `/mnt/tank/media/Music`,
-  `/mnt/tank/media/romm`, `/mnt/tank/immich`, `/mnt/tank/backups`,
-  per-user shares. The cluster reuses the same exports; nothing
-  changes on the TrueNAS.
-- The driver is installed from its official Helm chart (pinned in
-  `vars.yaml`) into kube-system, which is Pod Security exempt on
-  Talos — the node plugin is privileged by design (it performs
-  mounts).
-- v1 is **static provisioning only** (values set
-  `storageClass.create: false`). Each consumer ships a static PV that
-  points at an existing export, exactly like the Homepage local PVs
-  but network-backed. Dynamic provisioning is a later decision for the
-  first consumer that needs per-PVC directories.
-- `network-policy.yaml` applies a default-deny Cilium policy to the
-  controller pods only. The chart shares `kube-system` with DNS and
-  other cluster services, so a namespace-wide deny there would be unsafe.
-  The privileged node-plugin pods use host networking; their NFS mounts
-  are node traffic and are verified with the fresh PVC smoke test below.
+Use each consumer's tracked PV for its server, export and mount options; verify
+NAS export permissions against every address the selected node may use. Driver
+installation does not prove a consumer can mount its export.
 
-## Static PV shape (per consumer)
-
-```yaml
-spec:
-  csi:
-    driver: nfs.csi.k8s.io
-    volumeHandle: <unique-per-volume>   # e.g. truenas-kiwix-media
-    volumeAttributes:
-      server: 192.168.1.16
-      share: /mnt/tank/media/kiwix
-  mountOptions: [hard, nfsvers=4.1, noatime]
-```
-
-If a mount fails at install time, reconcile this block against the
-driver's current static-provisioning example before improvising — the
-volumeAttributes spelling is the driver's contract, not ours.
+Scope controller policy narrowly in shared `kube-system`. Host-network node
+plugins perform node-side mounts outside endpoint policy. Do not treat a pod
+policy as a firewall for those mounts.
 
 ## Verification
 
@@ -57,8 +27,6 @@ reachable from a real node, mount semantics sane.
 
 ## Backup posture
 
-NFS-backed PV data is **never** Velero filesystem-backed-up: the data's
-protection is TrueNAS snapshots and its Drive sync, where it already
-lives. Velero schedules for consumers of this driver are
+NFS-backed PV data is **never** Velero filesystem-backed-up: verify NAS snapshots, off-site copies and a restore separately. Velero schedules for consumers of this driver are
 manifests-only, with the data volume named in the
 backup-volumes-excludes annotation for explicitness.

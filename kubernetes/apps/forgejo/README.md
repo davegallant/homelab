@@ -26,27 +26,11 @@ reverse the cutover without Dave's explicit authorization.
   did not migrate its runners. Ansible workflows use the `tailscale` label
   and Docker workflows use `docker`.
 
-## Cutover evidence
-
-The final frozen copy contained 67,608 files, with an empty source versus
-destination path-and-size manifest diff. Internal Service and Pod HTTP
-checks and anonymous clones passed. A unique public request appeared in
-the Kubernetes Forgejo logs, and Hubble confirmed allowed Newt traffic.
-Public anonymous clone, disposable repository push, read-only host-runner
-Ansible ping, and the Docker runner workflow all passed. Both disposable
-repositories were deleted after verification.
-
 ## Storage and recovery
 
 Read [the storage rules](../../STORAGE.md) and
 [backup recovery guidance](../../BACKUPS.md) before changing volumes.
-The annotation test produced a completed Velero data PodVolumeBackup with
-989,859,411 bytes while Forgejo was running. Future backups must likewise
-include a completed data PodVolumeBackup with nonzero bytes.
-
-The retained `forgejo-data` PVC is the earlier hostPath-backed copy; it is
-not the active claim. At cutover, Argo CD was Healthy and OutOfSync only
-because this old claim was retained. Manual syncs must preserve it rather
-than prune it. The helper Pods, source data, and migration archives are
-retained pending separately approved cleanup. The stopped source is a
-historical copy and must not overwrite newer Kubernetes writes.
+Verify a fresh backup includes a completed data PodVolumeBackup with nonzero
+bytes. Inspect active claims and retained migration objects before cleanup;
+never overwrite newer Kubernetes writes with a historical source copy.
+Do not restart a retired source service without explicit authorization.

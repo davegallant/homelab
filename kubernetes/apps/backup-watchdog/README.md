@@ -36,52 +36,14 @@ nonzero bytes for every Velero-eligible volume.
 - Success: no Gotify message on a clean run. A persistent gap pages
   once a day (12:00 UTC run) until fixed; it does not spam hourly.
 
-## Hosting (why this shape)
+## Operations and limits
 
-- CronJob in the `velero` namespace, project `homelab-platform`, manual
-  sync, ServerSideApply + FailOnSharedResource, no prune, no auto-sync.
-  No new namespace and no project change: `velero` is already a
-  homelab-platform destination, and the platform whitelist already
-  allows CronJob, ServiceAccount, Role, RoleBinding, ConfigMap,
-  CiliumNetworkPolicy, plus ClusterRole/ClusterRoleBinding (cluster).
-- The velero namespace's own default-deny blocks world:443, so the
-  watchdog carries its own label-selected CiliumNetworkPolicy adding
-  world:443 for watchdog pods only. Cilium policies union per endpoint,
-  so the Velero controller (not label-selected) stays restricted.
-- RBAC is read-only: velero.io schedules/backups/podvolumebackups and
-  core PVCs/PVs/pods/namespaces, get/list/watch only. No Secret read.
-- Gotify token: Vault-provisioned Secret `backup-watchdog-gotify`
-  (key `token`, dedicated app token, NOT the Argo token), mounted as
-  env, never in Git. The Secret is NOT Argo-managed (homelab-platform
-  allows Secret, but Vault is the source of truth, same pattern as
-  `argocd-caddy` in gitops-secrets.yml).
-- Schedule: `0 12 * * *` UTC (08:00 EDT). After the 03:00-05:00 UTC
-  backup window, with buffer for long runs, so alerts arrive in the
-  morning, not overnight.
-- Script: stdlib-only Python, in-cluster API via ServiceAccount token
-  (no kubectl, no jq). Fixture mode (`WATCHDOG_FIXTURE_DIR`) runs the
-  same logic against JSON lists for local testing.
+The tracked manifests and script own scheduling, RBAC, exclusions and alert
+routing. Provision the Gotify token from Vault. Review exclusions when storage
+or volume names change; an excluded volume is not proof of backup protection.
 
-## Known limits (executor must verify live, not assume)
-
-- Live schedules are the source of truth. Only custom charts
-  (homepage, kiwix, bentopdf, searxng, miniflux) and forgejo-backup
-  carry Schedule manifests in Git; app-template schedules are not
-  found as files in this repo, so the watchdog reads live Schedules
-  via the API. Git-managing every schedule is separate future work,
-  not this item.
-- PVB-to-PVC mapping uses pod volume names. If a pod's volume name
-  differs from its PVC claim in a way the script does not expect, the
-  first live run will show it as a missing-PVB gap — investigate that
-  gap before allowlisting it.
-- CronJob image is pinned to Python 3.13.18 and a registry digest.
-  The pinned image's standard-library imports were verified locally.
-
-## Test evidence (logic, not live)
-
-Fixture run (2026-10-27, Tux VM): 9 namespaces, expected 5 gaps
-(failed backup, stale backup, uncovered, 0-byte PVB, missing PVB)
-and 0 false positives for ok / manifest-only / allowlisted /
-hostPath-only namespaces; clean-fixture run exits 0 with no gaps.
-Live verification (schedules, PVCs, PVBs, RBAC, Gotify delivery) is
-the executor's Gate 1-3 work, not claimed here.
+Validate against live Schedules, Backups, PVCs and PodVolumeBackups, then test
+Gotify delivery. Use fixture mode to exercise failed, stale, uncovered, zero-byte
+and missing-volume backups, plus clean and deliberately excluded cases. A
+fixture pass does not prove the CronJob runs or alerts arrive. Independently
+monitor missed executions if that guarantee is required.
