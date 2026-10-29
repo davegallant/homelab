@@ -98,6 +98,7 @@
         mode: "0640"
         owner: "999"
         group: "999"
+      register: gatus_config
 
     - name: Allow secondary DNS from the tailnet
       community.general.ufw:
@@ -116,6 +117,13 @@
 
     - ansible.builtin.include_tasks:
         file: ../../tasks/docker-compose-up.yml
+
+    - name: Restart Gatus when its config changes
+      community.docker.docker_container:
+        name: gatus
+        state: started
+        restart: true
+      when: gatus_config.changed
 
     - name: Serve HTTPS over the tailnet
       ansible.builtin.include_role:

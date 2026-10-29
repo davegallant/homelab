@@ -31,7 +31,15 @@ run playbook="main" *args:
     shift
     export KUBECONFIG="${KUBECONFIG:-$HOME/.local/share/homelab-talos/kubeconfig}"
     cd ansible
-    ansible-playbook "playbooks/$PLAYBOOK.yml" -i inventory --vault-password-file "${ANSIBLE_VAULT_PASSWORD_FILE:-.vault_pass}" "$@"
+    if [[ -f "playbooks/$PLAYBOOK.yml" ]]; then
+        PLAYBOOK_PATH="playbooks/$PLAYBOOK.yml"
+    elif [[ -f "playbooks/$PLAYBOOK/main.yml" ]]; then
+        PLAYBOOK_PATH="playbooks/$PLAYBOOK/main.yml"
+    else
+        printf 'Playbook not found: %s\n' "$PLAYBOOK" >&2
+        exit 1
+    fi
+    ansible-playbook "$PLAYBOOK_PATH" -i inventory --vault-password-file "${ANSIBLE_VAULT_PASSWORD_FILE:-.vault_pass}" "$@"
 
 # Edit Ansible Vault secrets
 edit-secrets:
