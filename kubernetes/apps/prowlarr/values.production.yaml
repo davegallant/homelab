@@ -135,26 +135,6 @@ persistence:
         app:
           - path: /config
 rawResources:
-  daily:
-    enabled: true
-    manifest:
-      apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: prowlarr-daily
-        namespace: velero
-      spec:
-        schedule: "10 4 * * *"
-        template:
-          ttl: 336h
-          includedNamespaces:
-            - prowlarr
-          excludedResources:
-            - secrets
-          defaultVolumesToFsBackup: false
-          snapshotVolumes: false
-          storageLocation: default
-
   defaultDenyNetworkPolicy:
     enabled: true
     manifest:

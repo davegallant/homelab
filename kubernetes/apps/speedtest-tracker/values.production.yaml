@@ -241,26 +241,6 @@ persistence:
           - path: /attach
             subPath: attach
 rawResources:
-  daily:
-    enabled: true
-    manifest:
-      apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: speedtest-tracker-daily
-        namespace: velero
-      spec:
-        schedule: "5 4 * * *"
-        template:
-          ttl: 336h
-          includedNamespaces:
-            - speedtest-tracker
-          excludedResources:
-            - secrets
-          defaultVolumesToFsBackup: false
-          snapshotVolumes: false
-          storageLocation: default
-
   defaultDenyNetworkPolicy:
     enabled: true
     manifest:

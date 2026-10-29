@@ -1,0 +1,16 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: homepage-daily
+  namespace: velero
+spec:
+  paused: false
+  schedule: 15 3 * * *
+  skipImmediately: false
+  template:
+    defaultVolumesToFsBackup: true
+    excludedResources:
+    - secrets
+    includedNamespaces:
+    - homepage
+    ttl: 336h

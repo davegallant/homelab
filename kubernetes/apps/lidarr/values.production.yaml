@@ -113,26 +113,6 @@ persistence:
         app:
           - path: /music
 rawResources:
-  daily:
-    enabled: true
-    manifest:
-      apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: lidarr-daily
-        namespace: velero
-      spec:
-        schedule: "50 4 * * *"
-        template:
-          ttl: 336h
-          includedNamespaces:
-            - lidarr
-          excludedResources:
-            - secrets
-          defaultVolumesToFsBackup: false
-          snapshotVolumes: false
-          storageLocation: default
-
   defaultDenyNetworkPolicy:
     enabled: true
     manifest:

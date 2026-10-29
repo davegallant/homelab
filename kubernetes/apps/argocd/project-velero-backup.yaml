@@ -4,7 +4,7 @@ metadata:
   name: homelab-velero-backup
   namespace: argocd
 spec:
-  description: Forgejo backup Schedule only in the privileged Velero namespace
+  description: Velero backup Schedules only in the privileged Velero namespace
   sourceRepos:
     - https://github.com/davegallant/homelab.git
   destinations:

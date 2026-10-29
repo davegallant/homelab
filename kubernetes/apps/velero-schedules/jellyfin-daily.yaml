@@ -1,0 +1,18 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: jellyfin-daily
+  namespace: velero
+spec:
+  paused: false
+  schedule: 30 5 * * *
+  skipImmediately: false
+  template:
+    defaultVolumesToFsBackup: false
+    excludedResources:
+    - secrets
+    includedNamespaces:
+    - jellyfin
+    snapshotVolumes: false
+    storageLocation: default
+    ttl: 336h

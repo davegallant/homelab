@@ -15,8 +15,8 @@ spec:
     namespace: velero
   # No automated sync or deletion finalizer: syncs require approval,
   # and deleting this Application preserves its workloads.
-  # Raw path Application, not a Helm chart: a Velero Schedule is not a
-  # chart workload, and homelab (not homelab-platform) permits Schedule.
+  # Raw path Application, not a Helm chart: the Velero project permits only
+  # Schedule resources in this privileged namespace.
   # FailOnSharedResource is intentionally OMITTED: first sync must adopt
   # the pre-existing kubectl-created forgejo-daily Schedule (no Argo
   # tracking annotation). With FailOnSharedResource, that adoption sync

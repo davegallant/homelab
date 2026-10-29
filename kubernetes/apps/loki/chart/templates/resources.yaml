@@ -130,21 +130,6 @@ spec:
         - name: config
           configMap: {name: loki-config}
 ---
-apiVersion: velero.io/v1
-kind: Schedule
-metadata:
-  name: loki-daily
-  namespace: velero
-spec:
-  schedule: "50 5 * * *"
-  template:
-    ttl: 336h
-    includedNamespaces: [loki]
-    excludedResources: [secrets]
-    defaultVolumesToFsBackup: false
-    snapshotVolumes: false
-    storageLocation: default
----
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:

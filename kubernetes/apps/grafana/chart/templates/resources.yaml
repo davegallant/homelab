@@ -116,21 +116,6 @@ spec:
         - name: alerting
           configMap: {name: grafana-alerting}
 ---
-apiVersion: velero.io/v1
-kind: Schedule
-metadata:
-  name: grafana-daily
-  namespace: velero
-spec:
-  schedule: "40 5 * * *"
-  template:
-    ttl: 336h
-    includedNamespaces: [grafana]
-    excludedResources: [secrets]
-    defaultVolumesToFsBackup: false
-    snapshotVolumes: false
-    storageLocation: default
----
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:

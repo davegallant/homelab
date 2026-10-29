@@ -1,0 +1,20 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: velero-schedules
+  namespace: argocd
+spec:
+  project: homelab-velero-backup
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/velero-schedules
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: velero
+  # Schedules are shared backup policy objects. Syncs require approval,
+  # and omitting FailOnSharedResource lets this app adopt existing schedules.
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true

@@ -179,26 +179,6 @@ persistence:
         db:
           - path: /var/lib/mysql
 rawResources:
-  daily:
-    enabled: true
-    manifest:
-      apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: romm-daily
-        namespace: velero
-      spec:
-        schedule: "30 4 * * *"
-        template:
-          ttl: 336h
-          includedNamespaces:
-            - romm
-          excludedResources:
-            - secrets
-          defaultVolumesToFsBackup: false
-          snapshotVolumes: false
-          storageLocation: default
-
   defaultDenyNetworkPolicy:
     enabled: true
     manifest:

@@ -262,23 +262,6 @@ persistence:
           - path: /data
 
 rawResources:
-  daily:
-    enabled: true
-    manifest:
-      apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: immich-daily
-        namespace: velero
-      spec:
-        schedule: "10 5 * * *"
-        template:
-          ttl: 336h
-          includedNamespaces: [immich]
-          excludedResources: [secrets]
-          defaultVolumesToFsBackup: false
-          snapshotVolumes: false
-          storageLocation: default
   defaultDenyNetworkPolicy:
     enabled: true
     manifest:

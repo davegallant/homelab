@@ -11,9 +11,11 @@ against these releases.
 Application definitions live in `applications/`. The `argocd` Application
 renders this directory as a Git source, so syncing `argocd` reconciles all
 Application definitions from `main`. The `homelab` project owns ordinary
-service applications. VictoriaMetrics and the Forgejo backup Schedule use
+service applications. VictoriaMetrics and Velero backup Schedules use
 separate projects because their destination namespaces are privileged; each
-project permits only the resource kinds that application currently manages.
+project permits only the resource kinds those Applications manage. The
+`velero-schedules` Application owns the backup Schedules for ordinary services,
+so service Applications do not need access to the privileged `velero` namespace.
 `homelab-platform` permits the pinned upstream repositories and the cluster
 resource kinds required by infrastructure charts. All Applications require
 manual sync except the qBittorrent egress guardrail; none has pruning or a

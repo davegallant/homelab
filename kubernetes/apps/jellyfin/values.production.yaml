@@ -104,23 +104,6 @@ persistence:
           - path: /mnt
             readOnly: true
 rawResources:
-  daily:
-    enabled: true
-    manifest:
-      apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: jellyfin-daily
-        namespace: velero
-      spec:
-        schedule: "30 5 * * *"
-        template:
-          ttl: 336h
-          includedNamespaces: [jellyfin]
-          excludedResources: [secrets]
-          defaultVolumesToFsBackup: false
-          snapshotVolumes: false
-          storageLocation: default
   defaultDenyNetworkPolicy:
     enabled: true
     manifest:

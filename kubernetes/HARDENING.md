@@ -121,8 +121,11 @@ Retain tested emergency access before restricting administrators.
 **Repository change (2026-10-29):** `homelab-platform` destinations are now
 limited to namespaces used by its assigned Applications; the ordinary
 `homelab` project retains an empty cluster resource whitelist.
-`victoriametrics` and `forgejo-backup` are assigned separate projects limited
-to their resource kinds in privileged `monitoring` and `velero` namespaces.
+`victoriametrics`, `forgejo-backup`, and the centralized `velero-schedules`
+Application are assigned separate projects limited to their resource kinds in
+privileged `monitoring` and `velero` namespaces. The 26 service backup Schedules
+are source-controlled by `velero-schedules`, so ordinary app projects do not need
+a destination in `velero`.
 `homepage`, `bentopdf`, and `searxng` have tracked baseline Pod Security
 namespace definitions, applied on 2026-10-29; `gitops-secrets.yml` maintains
 them. Server-side dry-run checks rejected privileged Pods in all three
