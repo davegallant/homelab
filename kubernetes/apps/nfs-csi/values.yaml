@@ -9,9 +9,11 @@ storageClass:
   create: false
 image:
   nfs:
-    tag: v4.9.0@sha256:3cdf324ca24f0900b1f639b1177a939a3d99ba66cec3db1e2ccfb1d52f2ad7f4
+    tag: v4.13.6@sha256:40663419bac36836b8e4ef6929199e35920e28f6a74a46892e1c125ea5f0ce0b
   csiProvisioner:
     tag: v5.0.2@sha256:7b9cdb5830d01bda96111b4f138dbddcc01eed2f95aa980a404c45a042d60a10
+  csiResizer:
+    tag: v2.2.1@sha256:ea1d25e23479000c7e8eeb92d827df66258df4e482ca054c5e7ce3fc0f5c41a5
   csiSnapshotter:
     tag: v8.0.1@sha256:2e04046334baf9be425bb0fa1d04c2d1720d770825eedbdbcdb10d430da4ad8c
   livenessProbe:
