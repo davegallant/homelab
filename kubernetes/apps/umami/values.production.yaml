@@ -188,7 +188,7 @@ rawResources:
         name: default-deny
         namespace: umami
       spec:
-        description: Default deny with internet fetch access, cluster DNS, and explicit internal-range denies.
+        description: Default deny with cluster DNS, same-namespace access, and explicit internal-range denies.
         endpointSelector: {}
         ingress:
           - fromEndpoints:
@@ -208,10 +208,42 @@ rawResources:
           - toEndpoints:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: umami
-          - toEntities:
-              - world
         egressDeny:
           - toCIDR:
               - 192.168.1.0/24
               - 10.96.0.0/12
               - 10.245.0.0/16
+
+  exactHubbleEgressPolicy:
+    enabled: true
+    suffix: exacthubbleegress
+    manifest:
+      apiVersion: cilium.io/v2
+      kind: CiliumNetworkPolicy
+      metadata:
+        name: exact-hubble-egress
+        namespace: umami
+      spec:
+        description: Exact forwarded Hubble egress tuples captured on 2026-10-24.
+        endpointSelector:
+          matchLabels:
+            k8s:app.kubernetes.io/name: umami
+        egress:
+          - toCIDR:
+              - 72.11.149.242/32
+            toPorts:
+              - ports:
+                  - port: "443"
+                    protocol: TCP
+          - toCIDR:
+              - 72.11.149.242/32
+            toPorts:
+              - ports:
+                  - port: "21820"
+                    protocol: UDP
+          - toCIDR:
+              - 72.11.149.242/32
+            toPorts:
+              - ports:
+                  - port: "51820"
+                    protocol: UDP

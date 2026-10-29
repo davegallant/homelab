@@ -1,15 +1,10 @@
 Homepage release installed into namespace {{ .Release.Namespace }}.
 
 Deliberately NOT managed by this chart:
-- The namespace itself and ../storage.yaml (StorageClass, the three static
-  PVs and their PVCs). The chart adopts the existing PVCs; never let a
-  release recreate homepage-tailscale -- it holds the live tailnet identity.
+- The namespace itself and ../storage.yaml (StorageClass, static PVs and PVCs).
 - The homepage-icons ConfigMap (applied by the playbook). The icons are
   ~660 KiB of binaries; carrying them as Helm values would bloat the
   release record past the 1 MiB object limit.
-- The homepage-tailscale-auth Secret. It is a one-use Headscale preauth
-  key whose lifecycle (create only when no identity exists, delete after
-  the identity persists on the PVC) belongs to the playbook.
 {{- if not .Values.backup.enabled }}
 
 WARNING: backup.enabled=false -- the homepage-daily Velero Schedule was

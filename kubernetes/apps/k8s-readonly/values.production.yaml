@@ -82,8 +82,8 @@ rawResources:
           Default deny for the readonly API proxy. Ingress is via the
           Tailscale sidecar TCPForward to localhost Caddy, not via
           cluster networking, so no pod ingress is allowed. Egress is
-          DNS, the in-cluster API server, and the world (Headscale
-          control plane + Cloudflare DNS-01) only.
+          DNS and the in-cluster API server. No external destinations
+          are permitted without Hubble evidence.
         endpointSelector: {}
         egress:
           - toEndpoints:
@@ -98,8 +98,6 @@ rawResources:
                     protocol: TCP
           - toEntities:
               - cluster
-          - toEntities:
-              - world
         egressDeny:
           - toCIDR:
               - 192.168.1.0/24

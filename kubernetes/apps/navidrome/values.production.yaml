@@ -155,7 +155,7 @@ rawResources:
         name: default-deny
         namespace: navidrome
       spec:
-        description: Default deny with internet fetch access, cluster DNS, and explicit internal-range denies.
+        description: Default deny with cluster DNS, same-namespace access, and explicit internal-range denies.
         endpointSelector: {}
         ingress:
           - fromEndpoints:
@@ -182,9 +182,41 @@ rawResources:
               - ports:
                   - port: "42010"
                     protocol: TCP
-          - toEntities:
-              - world
         egressDeny:
           - toCIDR:
               - 192.168.1.0/24
               - 10.96.0.0/12
+
+  exactHubbleEgressPolicy:
+    enabled: true
+    suffix: exacthubbleegress
+    manifest:
+      apiVersion: cilium.io/v2
+      kind: CiliumNetworkPolicy
+      metadata:
+        name: exact-hubble-egress
+        namespace: navidrome
+      spec:
+        description: Exact forwarded Hubble egress tuples captured on 2026-10-24.
+        endpointSelector:
+          matchLabels:
+            k8s:app.kubernetes.io/name: navidrome
+        egress:
+          - toCIDR:
+              - 72.11.149.242/32
+            toPorts:
+              - ports:
+                  - port: "443"
+                    protocol: TCP
+          - toCIDR:
+              - 72.11.149.242/32
+            toPorts:
+              - ports:
+                  - port: "21820"
+                    protocol: UDP
+          - toCIDR:
+              - 72.11.149.242/32
+            toPorts:
+              - ports:
+                  - port: "51820"
+                    protocol: UDP

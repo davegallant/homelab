@@ -144,8 +144,6 @@ rawResources:
               - ports:
                   - port: "45876"
                     protocol: TCP
-          - toEntities:
-              - world
         egressDeny:
           - toCIDR:
               - 10.96.0.0/12

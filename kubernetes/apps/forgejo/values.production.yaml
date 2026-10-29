@@ -162,7 +162,7 @@ extraDeploy:
     metadata:
       name: forgejo-default-deny
     spec:
-      description: Default deny with same-namespace access, cluster DNS, and internet egress.
+      description: Default deny with same-namespace access and cluster DNS.
       endpointSelector: {}
       ingress:
         - fromEntities:
@@ -202,8 +202,6 @@ extraDeploy:
             - ports:
                 - port: "3000"
                   protocol: TCP
-        - toEntities:
-            - world
       egressDeny:
         - toCIDR:
             - 192.168.1.0/24

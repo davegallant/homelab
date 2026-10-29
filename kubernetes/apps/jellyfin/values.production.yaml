@@ -114,7 +114,7 @@ rawResources:
         name: default-deny
         namespace: jellyfin
       spec:
-        description: Default deny with internet metadata access and cluster DNS.
+        description: Default deny with cluster DNS, same-namespace access, and explicit internal-range denies.
         endpointSelector: {}
         ingress:
           - fromEndpoints:
@@ -134,7 +134,6 @@ rawResources:
           - toEndpoints:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: jellyfin
-          - toEntities: [world]
         egressDeny:
           - toCIDR:
               - 192.168.1.0/24

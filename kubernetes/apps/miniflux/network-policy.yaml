@@ -5,7 +5,7 @@ metadata:
   name: default-deny
   namespace: miniflux
 spec:
-  description: Default deny with internet fetch access, cluster DNS, and explicit internal-range denies.
+  description: Default deny with cluster DNS, same-namespace access, and explicit internal-range denies.
   endpointSelector: {}
   ingress:
     - fromEndpoints:
@@ -25,8 +25,6 @@ spec:
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: miniflux
-    - toEntities:
-        - world
   egressDeny:
     - toCIDR:
         - 192.168.1.0/24

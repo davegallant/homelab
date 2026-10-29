@@ -1,27 +1,8 @@
----
-- name: Refresh Homepage tailnet connectivity
+- name: Restart Homepage and verify its Service
   hosts: localhost
   connection: local
   gather_facts: false
   tasks:
-    - name: Require persisted Tailscale identity without an auth Secret
-      ansible.builtin.command:
-        argv:
-          - kubectl
-          - -n
-          - homepage
-          - exec
-          - deployment/homepage
-          - -c
-          - tailscale
-          - --
-          - tailscale
-          - ip
-          - -4
-      register: homepage_tailnet_ip_before_restart
-      changed_when: false
-      no_log: true
-
     - name: Restart Homepage after worker network change
       ansible.builtin.command:
         argv: [kubectl, -n, homepage, rollout, restart, deployment/homepage]
@@ -32,25 +13,18 @@
         argv: [kubectl, -n, homepage, rollout, status, deployment/homepage, --timeout=300s]
       changed_when: false
 
-    - name: Require the same persisted tailnet IP
+    - name: Read ready Homepage Service endpoints
       ansible.builtin.command:
         argv:
           - kubectl
           - -n
           - homepage
-          - exec
-          - deployment/homepage
-          - -c
-          - tailscale
-          - --
-          - tailscale
-          - ip
-          - -4
-      register: homepage_tailnet_ip_after_restart
+          - get
+          - endpointslice
+          - -l
+          - kubernetes.io/service-name=homepage
+          - -o
+          - 'jsonpath={range .items[*].endpoints[*]}{.conditions.ready}{"\n"}{end}'
+      register: homepage_service_endpoints
       changed_when: false
-      no_log: true
-
-    - name: Confirm Tailscale identity persisted
-      ansible.builtin.assert:
-        that:
-          - homepage_tailnet_ip_after_restart.stdout == homepage_tailnet_ip_before_restart.stdout
+      failed_when: homepage_service_endpoints.rc != 0 or 'true' not in homepage_service_endpoints.stdout

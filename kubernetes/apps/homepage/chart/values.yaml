@@ -55,7 +55,6 @@ fsGroup: 1000
 magicDnsDomain: ""
 headscaleDomain: ""
 
-# Tailscale hostname for the sidecar (from ../vars.yaml).
 tailscaleHostname: ""
 
 # HOMEPAGE_VAR_* environment for the homepage-environment Secret
@@ -83,12 +82,8 @@ configFiles:
 restartTimestamp: ""
 configChecksum: ""
 
-# Velero Schedule for this namespace (applied into the velero namespace).
-# fs-backup is ON (the config and caddy PVCs are the point), Secrets are
-# excluded, and tailscale-state plus the ephemeral caddy-runtime volume are
-# excluded through the Deployment pod annotation. Restoring tailscale-state
-# would clone a live tailnet identity; caddy-runtime is disposable. Disable for rehearsal installs (the drill namespace must not
-# hijack the production homepage-daily Schedule).
+# Disable backup settings for rehearsal installs so they cannot create the
+# production homepage-daily Schedule.
 backup:
   enabled: true
   schedule: "15 3 * * *"
