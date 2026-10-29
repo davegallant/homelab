@@ -127,6 +127,10 @@ resources:
     cpu: "1"
     memory: 1Gi
 
+# The runner and its nested jobs do not need Kubernetes API credentials.
+serviceAccount:
+  automount: false
+
 # Bound the privileged DinD daemon and all nested job containers to a
 # predictable share of a worker. Job concurrency is capped at one above.
 dind:

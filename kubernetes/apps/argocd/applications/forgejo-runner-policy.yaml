@@ -1,0 +1,21 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: forgejo-runner-policy
+  namespace: argocd
+spec:
+  project: homelab-platform
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/forgejo-runner
+    directory:
+      include: '{namespace.yaml,policy/network-policy.yaml}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: forgejo-runner
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true

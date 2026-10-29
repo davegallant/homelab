@@ -33,8 +33,8 @@ spec:
     namespace: forgejo-runner
   # No automated sync or deletion finalizer: syncs require approval,
   # and deleting this Application preserves its workloads.
-  # Namespace is hand-applied (see apps/forgejo-runner/README.md), like
-  # k8s-readonly namespace + RBAC were hand-applied.
+  # Namespace and runner egress policy are managed by the separate
+  # forgejo-runner-policy Application.
   # Platform project must list BOTH: (1) this git repo as a sourceRepo,
   # and (2) forgejo-runner as a destination — see platform-project.yaml
   # edits in the resume prompt. Do NOT use homelab project (wrong
