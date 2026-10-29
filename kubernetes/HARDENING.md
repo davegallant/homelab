@@ -124,11 +124,12 @@ limited to namespaces used by its assigned Applications; the ordinary
 `victoriametrics` and `forgejo-backup` are assigned separate projects limited
 to their resource kinds in privileged `monitoring` and `velero` namespaces.
 `homepage`, `bentopdf`, and `searxng` have tracked baseline Pod Security
-namespace definitions, applied by `gitops-secrets.yml`. The built-in Argo CD
-`admin` remains the only login and is enabled. No routine identity is
-configured, so the routine-identity acceptance criteria are unmet; admin
-retains full access. The project split and namespace labels still need
-deployment. The GitHub repository currently has only `davegallant` as a
+namespace definitions, applied on 2026-10-29; `gitops-secrets.yml` maintains
+them. Server-side dry-run checks rejected privileged Pods in all three
+namespaces. The built-in Argo CD `admin` remains the only login and is enabled.
+No routine identity is configured, so the routine-identity acceptance criteria
+are unmet; admin retains full access. The project split and namespace labels
+are deployed. The GitHub repository currently has only `davegallant` as a
 collaborator and `main` has no pull request review or status check protection.
 MFA enrollment and deployment account scope need confirmation in the relevant
 account settings.
