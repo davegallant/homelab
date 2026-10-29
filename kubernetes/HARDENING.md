@@ -79,16 +79,18 @@ still carry sensitive state and need the Talos cluster credentials to recover
 them.
 
 The isolated Kopia copy rehearsal passed on 2026-10-29. All 26 repositories
-were then rotated and verified with unchanged manifest counts; the Vault-backed
-Velero Secret now contains the private password, and all 26 `BackupRepository`
-objects are Ready. An off-host etcd snapshot was checksum-verified. The 27
-Velero Schedules remain paused until the post-rotation restore and fresh-backup
-checks pass. The Homepage restore is waiting on the `k8s-w-1` reboot gate:
-its scratch paths did not materialize after the no-reboot patch, so the drill
-requires rebooting only that worker after the API, node-readiness, and off-host
-snapshot checks pass. Four Applications are OutOfSync but Healthy; that drift
-is separate from the disk-expansion reboot gate. TrueNAS Drive-copy encryption
-and deletion retention remain unverified.
+were rotated and verified with unchanged snapshot counts; the Vault-backed
+Velero Secret contains the private password, and all 26 `BackupRepository`
+objects are Ready. An off-host etcd snapshot was checksum-verified. On
+2026-10-29, an isolated Homepage restore completed from the rotated repository:
+its config volume restored 287,717 bytes, the test pod became Ready, and its
+HTTP endpoint returned 200. A fresh post-rotation backup
+`homepage-post-rotation-20261029` also completed with the same config volume
+size. All 27 Velero Schedules are unpaused again. This validates Homepage
+configuration recovery only; that backup contains no Caddy or Tailscale volume
+data, and excludes Kubernetes Secrets. TrueNAS Drive-copy client-side
+encryption and deletion retention remain unverified, so backup hardening is
+still in progress. No node or control-plane reboot was needed for this drill.
 
 **Acceptance:** an isolated restore validates a migrated Kopia repository,
 Forgejo database data, and Vault-sourced credentials. Test fresh runner
