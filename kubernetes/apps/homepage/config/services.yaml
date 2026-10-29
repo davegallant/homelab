@@ -98,10 +98,6 @@
         href: "{% raw %}{{HOMEPAGE_VAR_HOMEASSISTANT_URL}}{% endraw %}"
         description: Home Automation
         icon: home-assistant
-    - WatchYourLAN:
-        icon: watchyourlan
-        href: "{% raw %}{{HOMEPAGE_VAR_WATCHYOURLAN_URL}}{% endraw %}"
-        description: Network IP scanner
     - upsnap:
         icon: upsnap
         href: "{% raw %}{{HOMEPAGE_VAR_UPSNAP_URL}}{% endraw %}"
