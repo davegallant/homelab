@@ -116,7 +116,7 @@ rawResources:
         namespace: beszel
       spec:
         description: >-
-          Default deny with cluster DNS, same-namespace, world egress, and Beszel agent access on the LAN.
+          Default deny with cluster DNS, same-namespace traffic, and explicitly allowed Beszel agents.
         endpointSelector: {}
         ingress:
           - fromEndpoints:
@@ -140,6 +140,7 @@ rawResources:
               - 192.168.1.205/32 # pve-g3-1
               - 192.168.1.206/32 # pve-g3-2
               - 192.168.1.16/32 # TrueNAS SCALE
+              - 72.11.149.242/32 # RackNerd VPS
             toPorts:
               - ports:
                   - port: "45876"
