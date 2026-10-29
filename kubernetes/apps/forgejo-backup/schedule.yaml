@@ -5,9 +5,8 @@
 # Spec matches the kubectl-created schedule it adopts on first sync:
 # 05:00 UTC (01:00 EDT), after the 03:00-04:30 UTC stagger window,
 # ttl 336h like the other daily schedules, forgejo + forgejo-runner,
-# defaultVolumesToFsBackup true, and NO excludedResources — Secrets are
-# intentionally included, so the hand-applied forgejo-runner-config Secret
-# survives recovery (unlike other apps, which exclude Secrets).
+# defaultVolumesToFsBackup true. Secrets remain included until fresh Forgejo
+# runner registration is verified with the deployed chart's `.runner` Secret.
 apiVersion: velero.io/v1
 kind: Schedule
 metadata:

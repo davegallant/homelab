@@ -237,6 +237,10 @@ container images to both a version and SHA digest.
 Use kubectl's default kubeconfig and current context when they resolve to the
 intended cluster. Before a cluster mutation, verify the API server and expected
 node names; specify `--context` only when selecting a real alternate context.
+Get Dave's explicit approval in the current conversation before rebooting any
+Kubernetes worker or control-plane node. A runbook step that says a reboot is
+required is not approval; explain the target, reason, expected workload impact,
+and recovery checks, then wait for approval.
 For gated multi-step work, verify each gate against live state. A failed gate
 freezes that step: retain evidence, report the result, and leave completed steps
 in place unless Dave explicitly authorizes a state reversal in the moment, or

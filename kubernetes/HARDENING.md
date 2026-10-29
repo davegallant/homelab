@@ -1,8 +1,8 @@
 # Prioritized homelab hardening guide
 
-Reviewed 2026-10-28. Scope: repository configuration, primarily Talos Kubernetes,
-with shared LXC/network controls. A limited, read-only check of the Forgejo
-runner's live Kubernetes state was performed; no live changes were made. Other
+Reviewed 2026-10-29. Scope: repository configuration, primarily Talos Kubernetes,
+with shared LXC/network controls. Live checks covered the Forgejo runner and
+backup state; Forgejo URL and Newt Secrets were re-applied from Vault. Other
 items have not had a live audit. A checked-in value establishes intent, not live
 enforcement. Ranking weighs potential compromise impact, exposure, and effort;
 it is not a claim that an exploit or credential leak has occurred.
@@ -39,7 +39,7 @@ Unprivileged job containers do not remove the privileged daemon's attack surface
 then, restrict registration and workflow triggers to trusted repositories and
 maintainers, prevent untrusted PR jobs receiving secrets, use short-lived job
 credentials, cap concurrency and daemon resources, and inventory runner egress.
-The current repository changes propose a one-job concurrency cap, explicit
+The current repository changes propose a two-job concurrency limit, explicit
 DinD resources, no service-account token mount, restricted audit/warn labels,
 and an egress policy for DNS, Forgejo, and public web ports with private ranges
 excluded. These changes have not been synced. A dedicated tainted worker reduces
@@ -52,24 +52,50 @@ credentials. Document the actual network mode and trust restrictions.
 
 ## 2. Protect secret-bearing backups and test credential recovery
 
-**Evidence:** `BACKUPS.md` warns that Velero resource archives are not encrypted,
-but explicitly records `forgejo-daily` including Secrets for runner registration.
-VM backups and off-host etcd snapshots also carry sensitive state.
+**Evidence:** the live `forgejo-daily` schedule includes Secrets, and a completed
+2026-10-28 backup archive contains seven Secret resources across `forgejo` and
+`forgejo-runner`. Velero resource archives are not encrypted. The Garage
+BackupStorageLocation is Available and 26 Kopia repositories report Ready, but
+the live `velero-repo-credentials` Secret contains Velero's static default
+repository password, which is not stored in Vault. Replacing that Secret alone
+would make existing repositories inaccessible. The API server's live storage
+metrics confirm Secret transformations use `secretbox`; protected etcd and VM
+snapshots still depend on the separately protected Talos cluster credentials.
+The Forgejo URL and Newt Secrets were successfully re-applied from Vault on
+2026-10-29. The obsolete runner registration token did not derive the UUID in
+the current runner Secret and has been removed from Vault. Recovery will use a
+fresh runner registration after a Forgejo restore; compatibility with the
+deployed chart's existing `.runner` Secret format has not yet been tested.
 
-**Action:** inspect the actual schedule and stored archives without printing
-Secret data. Prefer reconstructing registration/other Secrets from Vault and
-excluding them from resource archives where recovery permits. If inclusion is
-required, document and verify encryption of that archive/storage path, tightly
-scope Garage credentials, and protect offsite copies and recovery keys separately.
-Do not assume Kopia volume encryption encrypts the Kubernetes resource archive.
-Verify effective Talos etcd Secret encryption rather than assuming vanilla
-Kubernetes defaults apply. Disk encryption and backup encryption solve different
-problems; a snapshot can carry decryption material.
+**Action:** migrate each existing Kopia repository to a strong Vault-held
+password with a tested restore before updating the shared Velero credential;
+do not replace the Secret directly. Then verify the fresh-registration-to-chart
+recovery path for Forgejo Runner. Until it is proven, keep Secrets included in
+`forgejo-daily`; do not mistake Kopia volume encryption for encryption of
+Velero's Kubernetes resource archive. Verify Drive copy encryption and
+retention, Garage key permissions, and offsite recovery-key access. Talos
+`secretbox` is effective for API Secrets in etcd, but etcd and VM snapshots
+still carry sensitive state and need the Talos cluster credentials to recover
+them.
 
-**Acceptance:** an isolated restore recovers database data plus Vault-sourced
-credentials; backup readers and writers have only necessary permissions. Record
-who can decrypt each backup layer and how keys survive loss of the operator Mac.
-Rotate credentials if unauthorized backup exposure is established.
+The isolated Kopia copy rehearsal passed on 2026-10-29. All 26 repositories
+were then rotated and verified with unchanged manifest counts; the Vault-backed
+Velero Secret now contains the private password, and all 26 `BackupRepository`
+objects are Ready. An off-host etcd snapshot was checksum-verified. The 27
+Velero Schedules remain paused until the post-rotation restore and fresh-backup
+checks pass. The Homepage restore is waiting on the `k8s-w-1` reboot gate:
+its scratch paths did not materialize after the no-reboot patch, so the drill
+requires rebooting only that worker after the API, node-readiness, and off-host
+snapshot checks pass. Four Applications are OutOfSync but Healthy; that drift
+is separate from the disk-expansion reboot gate. TrueNAS Drive-copy encryption
+and deletion retention remain unverified.
+
+**Acceptance:** an isolated restore validates a migrated Kopia repository,
+Forgejo database data, and Vault-sourced credentials. Test fresh runner
+registration against the deployed chart before excluding Forgejo Secrets.
+Backup readers and writers have only necessary permissions. Record who can
+decrypt each backup layer and how keys survive loss of the operator Mac. Rotate
+credentials if unauthorized backup exposure is established.
 
 ## 3. Reduce deployment and administrator blast radius
 
