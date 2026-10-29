@@ -11,6 +11,7 @@ spec:
     targetRevision: main
     path: kubernetes/apps/forgejo-runner
     directory:
+      recurse: true
       include: '{namespace.yaml,policy/network-policy.yaml}'
   destination:
     server: https://kubernetes.default.svc
