@@ -39,6 +39,16 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
+  ignoreDifferences:
+    - group: gateway.networking.k8s.io
+      kind: GRPCRoute
+      name: argocd-server-grpc
+      namespace: argocd
+      jsonPointers:
+        - /spec/parentRefs/0/group
+        - /spec/parentRefs/0/kind
+        - /spec/rules/0/backendRefs/0/group
+        - /spec/rules/0/backendRefs/0/kind
   syncPolicy:
     syncOptions:
       - ServerSideApply=true
