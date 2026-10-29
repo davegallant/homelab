@@ -35,6 +35,11 @@ operator:
   unmanagedPodWatcher:
     restart: true
 envoy:
+  xdsMode: split
+  rollOutPods: true
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
   extraVolumes:
     - name: bpf-maps
       hostPath:

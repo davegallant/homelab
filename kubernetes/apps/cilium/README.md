@@ -83,6 +83,13 @@ agent pod template. Config changes therefore restart agents one at a time
 ConfigMap has been consumed: check the running agent's PolicyEnforcement
 value is `default` rather than `never` after a Cilium values change.
 
+Pin `envoy.xdsMode: split` explicitly. The Cilium 1.20.4 chart no longer
+renders an xDS mode when this value is unset, while older chart defaults
+rendered `ads`; a stale ConfigMap value can leave the agent and Envoy using
+different xDS modes. `envoy.rollOutPods: true` applies ConfigMap changes to
+Envoy too, with `maxUnavailable: 1` to keep a proxy available during the
+DaemonSet rollout.
+
 ## WireGuard pod encryption
 
 Cilium transparent WireGuard encryption is enabled for remote pod-to-pod
