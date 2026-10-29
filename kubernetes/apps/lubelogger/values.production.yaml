@@ -21,7 +21,7 @@ controllers:
           allowPrivilegeEscalation: false
         image:
           repository: ghcr.io/hargata/lubelogger
-          tag: v1.4.5
+          tag: v1.7.4@sha256:483a9d7582c4e6258615fd822b3de4193b4fcc4230d0a92432c6d407faf75af2
           digest: sha256:e915b53eba78349348c8a1937122d8dccc7eba6f71898eecb2af208bc213fe2e
         probes:
           startup:
