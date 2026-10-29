@@ -34,10 +34,87 @@ daylight saving time; 22:00–23:30 in winter):
 | `radarr` | 04:25 |
 | `lidarr` | 04:50 |
 
-`forgejo-daily` includes Secrets so the runner registration is protected along
-with Forgejo data. Its production values define the schedule with the same
-14-day TTL. Its first daily run is pending for 2026-10-26 at 05:00 UTC;
-the completed one-off backup does not establish scheduled-run success.
+`forgejo-daily` includes `forgejo` and `forgejo-runner` with the same 14-day
+TTL and currently includes Secrets. Forgejo's database and data are in the
+Kopia-encrypted volume backup, but its Kubernetes resource archive is not
+encrypted. The 2026-10-26 through 2026-10-28 scheduled backups completed under
+this policy.
+
+The Forgejo URL and Newt Secrets can be recreated from Ansible Vault with
+`just run talos-cluster/gitops-secrets --tags forgejo-secrets`; this was applied
+to the live cluster on 2026-10-29 without displaying credential data. The ten
+Newt app Secrets were also reapplied and verified by name, key names, and
+workload readiness.
+
+Forgejo Runner recovery will use a fresh registration after restoring Forgejo,
+so the current runner identity is not stored in Ansible Vault. Forgejo's
+registration UI creates a UUID and token, while the deployed runner chart 0.7.5
+uses `runner.config.existingSecret` with a `.runner` file. The documented
+registration-to-chart handoff has not yet been tested, so `forgejo-daily`
+continues to include Secrets. Do not exclude them until a fresh registration is
+proven to work with the deployed chart. Forgejo's official [runner registration
+guide](https://forgejo.org/docs/latest/admin/actions/registration/) documents
+the new UUID/token registration flow.
+
+The completed backup `forgejo-daily-20261029050007` expires on 2026-11-12 at
+05:00 UTC under its 14-day TTL. Its seven Secret resources were restored into
+isolated scratch namespaces; all seven restored data maps matched their live
+counterparts in memory. The source backup was not modified. Preserve existing
+Secret-bearing backups and their TTLs; manual backups may have a 30-day TTL.
+The Velero Kubernetes resource archive in Garage is not encrypted. Keep Garage
+and off-site copies restricted for the full retention period; retention of
+deleted objects in the Drive copy has not been verified.
+
+Velero has 26 Ready Kopia repositories, one per namespace with filesystem
+backups. The `velero-repo-credentials` Secret currently contains Velero's
+static default repository password; that password is not in Ansible Vault.
+Kopia encrypts the volume data, but the current key is not private. Do not
+replace the Secret directly: Velero warns that repositories created with the
+old password will become inaccessible. Migrate and verify all repositories
+with Kopia's password-change procedure before updating the Secret, and retain
+the new password in Vault for disaster recovery. Secret encryption in the
+Kubernetes API is enabled with Talos `secretbox`; the etcd and VM snapshots
+still require the separately protected Talos cluster credentials to restore.
+
+On 2026-10-29, a copy rehearsal used the completed Homepage backup
+`homepage-daily-20261029031507`, snapshot
+`7bce6c6ceb53c352986b2f89a38bdfa4`, and namespace repository
+`kopia/homepage/`. The protected Garage copy contained 235 objects totaling
+1,199,289 bytes. Kopia v0.16.0 connected to the isolated copy as
+`default@default`; after changing only the copy to the Vault-held password, it
+listed the same 29 snapshots and restored the selected snapshot to encrypted
+Mac scratch storage. The restore matched Kopia's metadata: 17 files and
+287,717 bytes. The temporary Garage access pods and local copy, credentials,
+Kopia binary, config, cache, and restored files were removed. The source
+repository and live Velero credential were unchanged. Garage object names need
+the filesystem backend's `.f` suffix and flat layout when represented as a
+local Kopia filesystem repository; the object contents were preserved. This
+validates the password-change and restore path on one copied namespace only;
+the live repositories still require their separate preflight and migration.
+
+The live Kopia rotation preflight on 2026-10-29 found 26/26 repositories Ready,
+no active Velero Backup, Restore, PodVolumeBackup, or Kopia maintenance job,
+and an Available Garage location. Kopia v0.16.0 captured a read-only manifest
+count for each repository namespace as the rotation validation baseline.
+
+Before pausing writers, the off-host etcd snapshot
+`etcd-homelab-20261029T122913Z.snap` was created with mode `0600` and its
+checksum was verified against the protected local copy. All 26 repositories
+were rotated and verified with the new password, and their snapshot counts
+remain unchanged. The Vault-backed Velero Secret is updated and all 26
+`BackupRepository` objects are Ready. All 27 Velero Schedules remain paused
+until the post-rotation restore and fresh-backup checks complete, including
+`kiwix` and `searxng` (which have Schedules but no repository yet). The
+`monitoring` repository has no Schedule.
+
+The Homepage restore drill's three scratch paths did not materialize after the
+no-reboot Talos machine-config patch, so the drill requires rebooting only
+`k8s-w-1` after its API, node-readiness, and off-host snapshot checks pass. Four
+Argo Applications (`argocd`, `immich`, `jellyfin`, and `qbittorrent`) are
+OutOfSync but Healthy; their drift is separate from the disk-expansion reboot
+gate in the cluster README. TrueNAS-to-Drive client-side encryption and
+deletion retention remain unverified; do not treat the Drive copy as encrypted
+or protected from deletion until the actual task settings are checked.
 
 Each daily schedule now has a distinct UTC start. The media automation
 backups run at 04:10, 04:20, 04:25, and 04:50; their latest runs on
