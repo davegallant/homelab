@@ -7,64 +7,17 @@ for updates, external Secrets, and recovery. Use the tracked production values
 and Application definition for desired state. Do not run Helm mutations against
 resources owned by Argo CD.
 
-## Shape
+## Configuration and verification
 
-```
-node-exporter (DaemonSet)  --\
-kube-state-metrics         ---- Alloy (existing DaemonSet) scrapes
-kubelet /metrics           ---- in-cluster, remote-writes to ClusterIP
-kubelet /metrics/cadvisor --/        |
-                                     v
-                    VictoriaMetrics in monitoring :8428
-                                     |
-                    Grafana in-cluster -> Cluster Vitals dashboard
-```
+Chart pins and overrides live beside this README. Alloy owns scrape discovery;
+[VictoriaMetrics](../victoriametrics/chart/) owns storage, and
+[Grafana provisioning](../grafana/chart/provisioning/) owns dashboards and alerts.
+Use the Argo ownership workflow for chart updates.
 
-- The three in-cluster workloads are **upstream products installed from
-  their official Helm charts**, pinned in `vars.yaml` (vendor charts —
-  the Velero exception class). This repo does not hand-maintain
-  node-exporter's DaemonSet or kube-state-metrics' RBAC; the charts do.
-  The only hand-written manifest is `namespace.yaml` (charts don't
-  manage Pod Security labels; node-exporter's hostPath mounts need the
-  scoped privileged exception, same pattern as the velero namespace).
-- **Alloy** gained a metrics pipeline alongside pod logs
-  (`apps/alloy/configmap.yaml.j2`): kubelet + cAdvisor scrapes per node
-  (HTTPS, its own ServiceAccount token, `alloy-metrics` ClusterRole),
-  node-exporter scraped via pod discovery (instance label rewritten to
-  the node name), and an annotation-driven scrape for any Service with
-  `prometheus.io/scrape=true` (kube-state-metrics today). Everything
-  remote-writes to VictoriaMetrics.
-- **VictoriaMetrics** runs as a single Deployment in `monitoring`, pinned to
-  `k8s-w-1`, with 12-month retention and local-path `volumeType: local`
-  storage. Its ClusterIP is admitted only to Alloy and Grafana by Cilium.
-- **Grafana runs on Kubernetes.** Gatus monitors its tailnet endpoint and its
-  datasource uses `victoriametrics.monitoring.svc.cluster.local:8428`.
-- **metrics-server** rides along to inspect resource usage with: `kubectl top node/pod` now works.
-  Its values carry the standard Talos flag `--kubelet-insecure-tls`.
-
-## Files
-
-- `namespace.yaml` — monitoring namespace with Pod Security labels.
-- `vars.yaml` — chart repos and pinned chart versions. Image versions
-  and registry-resolved digests are pinned in the per-chart values files.
-- `values-node-exporter.yaml`, `values-kube-state-metrics.yaml`,
-  `values-metrics-server.yaml` — per-chart overrides (naming,
-  placement, sizing, the curated KSM collector set: no secrets, no
-  configmaps).
-- `../../../ansible/playbooks/talos-cluster/monitoring.yml` — install | verify.
-- `../victoriametrics/` — the VictoriaMetrics chart, pinned image, PVC, Service,
-  and Cilium policy.
-- Grafana side: `../grafana/chart/provisioning/` (datasource, Cluster Vitals
-  dashboard, and critical cluster alerts).
-
-## Run order
-
-1. Sync the VictoriaMetrics and Grafana Applications in Argo CD.
-2. `apply-alloy.yml` (picks up the in-cluster metrics endpoint + RBAC).
-3. `monitoring.yml` (default install; cluster-side checks only).
-4. `monitoring.yml -e monitoring_action=verify` (end-to-end: series
-   from all three nodes + KSM + cAdvisor present in VictoriaMetrics).
-5. `just lint`.
+Run `monitoring.yml -e monitoring_action=verify` for end-to-end series checks.
+Verify samples from every expected node, kube-state-metrics and cAdvisor,
+then check Grafana's datasource, post-cutover samples and retained history.
+`kubectl top` is a separate metrics-server check.
 
 ## Pre-flight checklist
 
@@ -87,7 +40,7 @@ kubelet /metrics/cadvisor --/        |
 ## Watch items
 
 - Alloy's remote-write WAL lives on its 256Mi emptyDir state volume.
-  If the Grafana host is down for hours, the WAL can fill and Alloy
+  If the metrics backend is down for hours, the WAL can fill and Alloy
   will shed metrics (logs are a separate path and unaffected). If that
   ever bites, the fix is a bigger state volume, not a redesign.
 - VictoriaMetrics writes many small files like Loki does; monitor filesystem

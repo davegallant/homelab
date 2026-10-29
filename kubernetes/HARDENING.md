@@ -1,11 +1,8 @@
 # Prioritized homelab hardening guide
 
-Reviewed 2026-10-29. Scope: repository configuration, primarily Talos Kubernetes,
-with shared LXC/network controls. Live checks covered the Forgejo runner and
-backup state; Forgejo URL and Newt Secrets were re-applied from Vault. Other
-items have not had a live audit. A checked-in value establishes intent, not live
-enforcement. Ranking weighs potential compromise impact, exposure, and effort;
-it is not a claim that an exploit or credential leak has occurred.
+Use this as a review checklist, not a deployment or live-state inventory.
+Configuration establishes intent; validate enforcement and recovery before
+closing an item. Prioritize by exposure and impact in the current environment.
 
 ## Existing strengths
 
@@ -18,18 +15,6 @@ or establish that an image is trustworthy.
 
 ## 1. Isolate privileged CI execution — highest priority
 
-**Evidence:** a read-only check on 2026-10-28 found the runner Application Synced
-and Healthy, with its two-container pod Running on `k8s-w-2`. Both runner and
-DinD containers are privileged; the upstream chart applies the same security
-context to both. The pod itself does not use Kubernetes `hostNetwork`, while
-Docker job containers use `network: host` to share the pod network namespace.
-The live namespace enforces, audits, and warns at `privileged`. The runner
-service account cannot read Secrets, list Pods, or create Pods, but its token is
-mounted automatically. There is no Cilium policy selecting runner pods, so
-egress is unrestricted. The registration Secret exists, but its contents and
-Forgejo registration scope were not inspected. Workflow files are not present in
-this repository, so triggers and job secrets remain unreviewed.
-
 **Risk:** workflow code executes alongside production data on shared workers.
 Privileged DinD substantially weakens the pod boundary; Docker host networking
 here means the DinD/pod network namespace, not automatically the Talos host.
@@ -39,10 +24,7 @@ Unprivileged job containers do not remove the privileged daemon's attack surface
 then, restrict registration and workflow triggers to trusted repositories and
 maintainers, prevent untrusted PR jobs receiving secrets, use short-lived job
 credentials, cap concurrency and daemon resources, and inventory runner egress.
-The current repository changes propose a two-job concurrency limit, explicit
-DinD resources, no service-account token mount, restricted audit/warn labels,
-and an egress policy for DNS, Forgejo, and public web ports with private ranges
-excluded. These changes have not been synced. A dedicated tainted worker reduces
+Review tracked runner values and policy against live state. A dedicated tainted worker reduces
 sharing but is not a separate cluster boundary. Verify the policy and workload
 against real trusted jobs before applying it.
 
@@ -51,21 +33,6 @@ works, and demonstrate jobs cannot reach unrelated APIs, NAS exports, or product
 credentials. Document the actual network mode and trust restrictions.
 
 ## 2. Protect secret-bearing backups and test credential recovery
-
-**Evidence:** the live `forgejo-daily` schedule includes Secrets, and a completed
-2026-10-28 backup archive contains seven Secret resources across `forgejo` and
-`forgejo-runner`. Velero resource archives are not encrypted. The Garage
-BackupStorageLocation is Available and 26 Kopia repositories report Ready, but
-the live `velero-repo-credentials` Secret contains Velero's static default
-repository password, which is not stored in Vault. Replacing that Secret alone
-would make existing repositories inaccessible. The API server's live storage
-metrics confirm Secret transformations use `secretbox`; protected etcd and VM
-snapshots still depend on the separately protected Talos cluster credentials.
-The Forgejo URL and Newt Secrets were successfully re-applied from Vault on
-2026-10-29. The obsolete runner registration token did not derive the UUID in
-the current runner Secret and has been removed from Vault. Recovery will use a
-fresh runner registration after a Forgejo restore; compatibility with the
-deployed chart's existing `.runner` Secret format has not yet been tested.
 
 **Action:** migrate each existing Kopia repository to a strong Vault-held
 password with a tested restore before updating the shared Velero credential;
@@ -78,20 +45,6 @@ retention, Garage key permissions, and offsite recovery-key access. Talos
 still carry sensitive state and need the Talos cluster credentials to recover
 them.
 
-The isolated Kopia copy rehearsal passed on 2026-10-29. All 26 repositories
-were rotated and verified with unchanged snapshot counts; the Vault-backed
-Velero Secret contains the private password, and all 26 `BackupRepository`
-objects are Ready. An off-host etcd snapshot was checksum-verified. On
-2026-10-29, an isolated Homepage restore completed from the rotated repository:
-its config volume restored 287,717 bytes, the test pod became Ready, and its
-HTTP endpoint returned 200. A fresh post-rotation backup
-`homepage-post-rotation-20261029` also completed with the same config volume
-size. All 27 Velero Schedules are unpaused again. This validates Homepage
-configuration recovery only; that backup contains no Caddy or Tailscale volume
-data, and excludes Kubernetes Secrets. TrueNAS Drive-copy client-side
-encryption and deletion retention remain unverified, so backup hardening is
-still in progress. No node or control-plane reboot was needed for this drill.
-
 **Acceptance:** an isolated restore validates a migrated Kopia repository,
 Forgejo database data, and Vault-sourced credentials. Test fresh runner
 registration against the deployed chart before excluding Forgejo Secrets.
@@ -100,11 +53,6 @@ decrypt each backup layer and how keys survive loss of the operator Mac. Rotate
 credentials if unauthorized backup exposure is established.
 
 ## 3. Reduce deployment and administrator blast radius
-
-**Evidence:** `apps/argocd/platform-project.yaml` allows ClusterRoleBindings,
-admission policy, namespaces, and many application destinations. The ordinary
-`project.yaml` forbids cluster resources, which is a useful existing boundary.
-`apps/argocd/values.production.yaml` does not itself establish SSO/MFA or user RBAC.
 
 **Action:** separate narrowly scoped platform projects from application projects;
 remove unnecessary application destinations from the platform project. Review
@@ -118,34 +66,7 @@ actual verbs and resource scope, including logs and sensitive ConfigMaps.
 Secrets, create privileged workloads, bind cluster-admin, or alter admission.
 Retain tested emergency access before restricting administrators.
 
-**Repository change (2026-10-29):** `homelab-platform` destinations are now
-limited to namespaces used by its assigned Applications, including Cilium's
-`cilium-secrets` namespace. `tailnet-gateway` has a separate project limited to
-Gateway, HTTPRoute, and Cilium network policy resources in the namespaces it
-uses, plus the cluster resource kinds its chart requires. The ordinary
-`homelab` project retains an empty cluster resource whitelist.
-`victoriametrics`, `forgejo-backup`, and the centralized `velero-schedules`
-Application are assigned separate projects limited to their resource kinds in
-privileged `monitoring` and `velero` namespaces. The 26 service backup Schedules
-are source-controlled by `velero-schedules`, so ordinary app projects do not need
-a destination in `velero`.
-`homepage`, `bentopdf`, and `searxng` have tracked baseline Pod Security
-namespace definitions, applied on 2026-10-29; `gitops-secrets.yml` maintains
-them. Server-side dry-run checks rejected privileged Pods in all three
-namespaces. The built-in Argo CD `admin` remains the only login and is enabled.
-No routine identity is configured, so the routine-identity acceptance criteria
-are unmet; admin retains full access. The project split and namespace labels
-are deployed. The GitHub repository currently has only `davegallant` as a
-collaborator and `main` has no pull request review or status check protection.
-MFA enrollment and deployment account scope need confirmation in the relevant
-account settings.
-
 ## 4. Close management-plane and tailnet lateral paths
-
-**Evidence:** `cluster/README.md` places nodes on the home LAN.
-`../ansible/playbooks/vps/policy.headscale.hujson` grants member devices broad
-network access and root SSH to member/tagged nodes. Tagged services already have
-more specific ACLs and tests.
 
 **Action:** separate administrator devices from ordinary member clients; narrow
 root SSH and management destinations. Verify LAN/router/Proxmox firewall rules
@@ -161,11 +82,6 @@ management connections fail. Keep recovery console access during rollout.
 
 ## 5. Tighten Cilium policy beyond namespace isolation
 
-**Evidence:** `SECURITY.md` describes namespace default deny; Forgejo values still
-allow unrestricted `world` egress and host ingress, with specific LAN/service
-CIDR denies. This is better than no policy but permits broad internet access.
-The documented policy inventory is older than the current application inventory.
-
 **Action:** compare every live endpoint/namespace with rendered policy coverage.
 Replace broad internet permissions where feasible with required ports and
 reviewed destinations. Separate app, database, and proxy permissions instead of
@@ -179,10 +95,6 @@ internet destinations fail with Hubble evidence. Do not rely on the dashboard
 root responding or the presence of a policy object.
 
 ## 6. Move ordinary workloads toward Restricted Pod Security
-
-**Evidence:** `SECURITY.md` documents baseline enforcement and privileged platform
-exceptions. Runner audit/warn are also privileged. Existing application values
-already use capability dropping and privilege-escalation prevention in places.
 
 **Action:** inventory rendered containers and init containers. Start Restricted
 warn/audit on ordinary application namespaces, then fix violations and enforce
@@ -198,10 +110,6 @@ database startup, and restores under the new filesystem/user settings.
 
 ## 7. Make security expectations enforceable before deployment
 
-**Evidence:** `SECURITY.md` explicitly defers Kyverno on the basis of AppProject
-allowlists, baseline labels, and digests. Those controls leave gaps in pod fields,
-image provenance, and future policy omissions.
-
 **Action:** add manifest rendering and policy checks to review: required digests,
 no unintended privileged/host namespace settings, appropriate service accounts,
 resource budgets, and expected isolation. Use native admission policies where
@@ -215,11 +123,6 @@ when there is a maintained trust policy for the images actually used.
 
 ## 8. Reconcile versions, drift, and operational security records
 
-**Evidence:** `SECURITY.md` says kube-proxy is enabled and Kubernetes is 1.37.0;
-`cluster/README.md` says kube-proxy is replaced and Kubernetes is 1.37.2. The latter
-also records mixed Talos versions and a paused worker disk/reboot gate. The runner
-README disagrees with its current values.
-
 **Action:** reconcile live state with rendered configuration and update stale
 records. Verify the actual Kubernetes/Cilium/Talos support matrix against vendor
 documentation before upgrades; an observed working pairing is not proof of
@@ -231,10 +134,6 @@ exceptions, and pending gates. Upgrade one node at a time; preserve the existing
 stop-on-failure rules and local-PV recovery constraints.
 
 ## 9. Detect abuse and resource exhaustion
-
-**Evidence:** Alloy, Hubble, Grafana alerts, and backup runbooks already exist;
-`cluster/README.md` records repeated DiskPressure and single-control-plane risk.
-Pod logs are not a substitute for Kubernetes API audit evidence.
 
 **Action:** verify effective API audit policy and export useful authentication,
 Secret-access metadata, RBAC, admission, exec, and policy-change events without
@@ -249,10 +148,6 @@ investment: three control planes on only two physical hosts still share failure
 risks and require a quorum-aware placement plan.
 
 ## 10. Apply the same boundaries to remaining LXCs
-
-**Evidence:** `../ansible/tasks/install-docker.yml` already handles Docker's
-UFW bypass with DOCKER-USER rules. `../ansible/tasks/config.alloy.j2` uses the
-Docker socket; access to that socket is a high-trust capability.
 
 **Action:** preserve the Docker firewall block and test it externally after
 Docker/UFW upgrades. Prefer per-source/per-port exceptions over widening all

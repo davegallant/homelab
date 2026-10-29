@@ -1,34 +1,5 @@
 # Forgejo Docker runner
 
-## Current state
-
-The runner is active in the `forgejo-runner` namespace. A read-only check on
-2026-10-28 found its Argo CD Application Synced and Healthy, with the runner and
-DinD containers Running on `k8s-w-2`. The pod does not use Kubernetes
-`hostNetwork`; the Forgejo Runner configuration sets Docker job containers to
-`network: host`, which shares the runner pod's network namespace. This is not
-the Talos node's host network.
-
-The live namespace still has Pod Security `enforce`, `audit`, and `warn` all
-set to `privileged`. The live runner and DinD containers are both privileged:
-the upstream chart applies one `securityContext` value to both containers.
-`runner.config.file.container.privileged: false` applies to nested job
-containers and does not make the runner or DinD containers unprivileged.
-
-The live runner service account cannot read Secrets, list Pods, or create Pods.
-Its token is currently mounted automatically, though, and can be disabled with
-`serviceAccount.automount: false`. The `forgejo-runner-config` Secret exists;
-its contents have not been read. Its Forgejo registration scope (repository,
-organization, user, or instance) is therefore not established here.
-
-The Forgejo Cilium policy allows runner-namespace ingress to Forgejo on TCP
-3000. No Cilium policy currently selects runner pods, so their egress is
-unrestricted. The local policy manifest narrows egress to cluster DNS, Forgejo
-on TCP 3000, and public IPv4 TCP 80/443, excluding private, loopback,
-link-local, and shared-address ranges. The runner namespace labels, service
-account setting, resource bounds, two-job concurrency, and egress policy in Git
-are pending manual Argo CD sync; none of those edits has been applied live.
-
 ## Design and trust boundary
 
 - The official Forgejo runner chart is sourced from

@@ -156,7 +156,9 @@ skips Alloy and Beszel. Kubernetes uses an Alloy DaemonSet for pod logs.
 
 Tailnet hosts run the **Tailscale client** against Headscale with [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh) enabled. The off-tailnet VPS uses ordinary SSH through the operator’s SSH configuration. The Headscale ACL source is `ansible/playbooks/vps/policy.headscale.hujson`. The VPS playbook validates it and updates Headscale's policy database when the active policy differs. The VPS is excluded from CI, so run `just run main --limit vps` from the repo root to apply policy changes. The Headscale server itself runs in Docker on the VPS, which stays off the tailnet.
 
-The remote nodes `muse` and `mcleod` use `tag:external` and can initiate tailnet DNS queries. `mcleod` also uses `tag:beszel-agent`, which allows it to send metrics to the Beszel HTTPS endpoint without granting access to Loki or other tagged services. Pangolin Newt hosts use `tag:pangolin` plus `tag:monitored`; they can reach the Beszel HTTPS endpoint and Loki ingestion port, with Navidrome separately allowed to reach Maloja over HTTPS. The Beszel, Loki, and Maloja hosts have dedicated destination tags. These tagged nodes cannot initiate SSH; tailnet member devices can SSH into tagged nodes when the destination accepts Tailscale SSH. The VPS playbook assigns tags by hostname from `headscale_node_tags` after nodes enroll, so re-registered nodes regain their tags on the next playbook run. Check the live policy and all managed tags with `just check-headscale-policy`.
+The ACL and `headscale_node_tags` configuration define tagged-service access.
+Use `just check-headscale-policy` to compare the live policy and managed tags;
+do not infer effective permissions from a host's name or previous enrollment.
 
 For public-facing services, a **[Pangolin](https://github.com/fosrl/pangolin)** reverse proxy runs on the same VPS. Each service that needs public exposure runs a **Newt** sidecar container that tunnels directly from the Proxmox cluster to Pangolin, no inbound firewall rules required.
 
@@ -216,7 +218,6 @@ just run talos-cluster/gitops-secrets
 
 ## Maintenance
 
-[Renovate](https://docs.renovatebot.com) monitors all Docker image versions and opens PRs with updates. All images are pinned to specific versions **and** SHA digests (e.g., `image:v1.2.3@sha256:abc123`) to prevent silent supply-chain drift. Custom versioning rules handle date-versioned images like SearXNG and Invidious.
+[Renovate](https://docs.renovatebot.com) monitors all Docker image versions and opens PRs with updates. Review version pins and, for Kubernetes images, SHA digests in configuration. Custom versioning rules handle date-versioned images like SearXNG and Invidious.
 
 ---
-
