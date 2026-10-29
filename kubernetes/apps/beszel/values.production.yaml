@@ -135,7 +135,7 @@ rawResources:
         namespace: beszel
       spec:
         description: >-
-          Default deny with cluster DNS, same-namespace, and world egress. The Tailscale sidecar has been removed, so LAN egress is denied.
+          Default deny with cluster DNS, same-namespace, world egress, and Beszel agent access on the LAN.
         endpointSelector: {}
         ingress:
           - fromEndpoints:
@@ -155,10 +155,17 @@ rawResources:
           - toEndpoints:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: beszel
+          - toCIDR:
+              - 192.168.1.205/32 # pve-g3-1
+              - 192.168.1.206/32 # pve-g3-2
+              - 192.168.1.16/32 # TrueNAS SCALE
+            toPorts:
+              - ports:
+                  - port: "45876"
+                    protocol: TCP
           - toEntities:
               - world
         egressDeny:
           - toCIDR:
               - 10.96.0.0/12
               - 10.245.0.0/16
-              - 192.168.1.0/24
