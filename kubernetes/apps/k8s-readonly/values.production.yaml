@@ -12,7 +12,7 @@
 # Access remains tailnet-only. There is NO public URL and NO Pangolin
 # resource. The inbound Tailscale and Caddy sidecars have been removed.
 #
-# kubectl is pinned to the Kubernetes 1.37.0 client (matching the
+# kubectl is pinned to the Kubernetes 1.37.2 client (matching the
 # cluster minor) and its verified linux/amd64 manifest digest.
 #
 # There is deliberately no app Secret: the API auth is the pod's
@@ -42,8 +42,8 @@ controllers:
           allowPrivilegeEscalation: false
         image:
           repository: registry.k8s.io/kubectl
-          tag: v1.37.2@sha256:fe049faa65ae483ac200009a949a68fa4c9985daea12c9cb1195c9c7965301fc
-          digest: sha256:d853eef8e26a7556deb7561169706bd92d7bcb780ffa42760aeb74ecad176cbd
+          tag: v1.37.2
+          digest: sha256:fe049faa65ae483ac200009a949a68fa4c9985daea12c9cb1195c9c7965301fc
         command:
           - kubectl
         args:
