@@ -1,5 +1,5 @@
 ---
-- name: Apply the repository homelab AppProject
+- name: Apply the repository homelab AppProjects
   hosts: localhost
   connection: local
   gather_facts: false
@@ -11,7 +11,46 @@
         that:
           - talos_kube_context | length > 0
 
-    - name: Apply the repository AppProject definition
+    - name: Apply the restricted monitoring and backup projects
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - apply
+          - -f
+          - "{{ playbook_dir }}/../../../kubernetes/apps/argocd/{{ item }}"
+      loop:
+        - project-monitoring.yaml
+        - project-velero-backup.yaml
+      register: argocd_restricted_projects_apply
+      changed_when: >-
+        'created' in argocd_restricted_projects_apply.stdout or
+        'configured' in argocd_restricted_projects_apply.stdout
+
+    - name: Read the VictoriaMetrics Application project
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, argocd, get, application, victoriametrics, -o, json]
+      register: argocd_victoriametrics_application
+      changed_when: false
+
+    - name: Read the Forgejo backup Application project
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, argocd, get, application, forgejo-backup, -o, json]
+      register: argocd_forgejo_backup_application
+      changed_when: false
+
+    - name: Require privileged-namespace Applications to use their restricted projects
+      ansible.builtin.assert:
+        that:
+          - (argocd_victoriametrics_application.stdout | from_json).spec.project == 'homelab-monitoring'
+          - (argocd_forgejo_backup_application.stdout | from_json).spec.project == 'homelab-velero-backup'
+        fail_msg: >-
+          Sync the argocd Application definitions from Git first. The
+          homelab project still allows monitoring and velero until these
+          Applications use their restricted projects.
+
+    - name: Apply the narrowed homelab project after its Applications move
       ansible.builtin.command:
         argv:
           - kubectl

@@ -2,6 +2,7 @@
 configs:
   cm:
     url: https://argocd.tail.davegallant.ca
+    admin.enabled: "true"
   params:
     server.insecure: "true"
 server:

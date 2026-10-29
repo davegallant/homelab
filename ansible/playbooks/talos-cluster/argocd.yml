@@ -119,6 +119,17 @@
       changed_when: true
       no_log: true
 
+    - name: Apply the restricted monitoring and backup projects
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", apply, -f, "{{ argocd_apps_dir }}/{{ item }}"]
+      loop:
+        - project-monitoring.yaml
+        - project-velero-backup.yaml
+      register: argocd_restricted_projects_apply
+      changed_when: >-
+        'created' in argocd_restricted_projects_apply.stdout or
+        'configured' in argocd_restricted_projects_apply.stdout
+
     - name: Apply the restricted homelab project
       ansible.builtin.command:
         argv: [kubectl, --context, "{{ talos_kube_context }}", apply, -f, "{{ argocd_apps_dir }}/project.yaml"]

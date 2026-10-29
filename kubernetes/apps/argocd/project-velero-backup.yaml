@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: homelab-velero-backup
+  namespace: argocd
+spec:
+  description: Forgejo backup Schedule only in the privileged Velero namespace
+  sourceRepos:
+    - https://github.com/davegallant/homelab.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: velero
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: velero.io
+      kind: Schedule
