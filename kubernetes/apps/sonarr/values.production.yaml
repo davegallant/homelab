@@ -103,6 +103,7 @@ persistence:
 rawResources:
   defaultDenyNetworkPolicy:
     enabled: true
+    suffix: defaultdenynetworkpolicy
     manifest:
       apiVersion: cilium.io/v2
       kind: CiliumNetworkPolicy

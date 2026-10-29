@@ -119,7 +119,10 @@ Secrets, create privileged workloads, bind cluster-admin, or alter admission.
 Retain tested emergency access before restricting administrators.
 
 **Repository change (2026-10-29):** `homelab-platform` destinations are now
-limited to namespaces used by its assigned Applications; the ordinary
+limited to namespaces used by its assigned Applications, including Cilium's
+`cilium-secrets` namespace. `tailnet-gateway` has a separate project limited to
+Gateway, HTTPRoute, and Cilium network policy resources in the namespaces it
+uses, plus the cluster resource kinds its chart requires. The ordinary
 `homelab` project retains an empty cluster resource whitelist.
 `victoriametrics`, `forgejo-backup`, and the centralized `velero-schedules`
 Application are assigned separate projects limited to their resource kinds in

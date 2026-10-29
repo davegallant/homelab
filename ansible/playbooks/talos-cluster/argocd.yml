@@ -119,12 +119,14 @@
       changed_when: true
       no_log: true
 
-    - name: Apply the restricted monitoring and backup projects
+    - name: Apply the repository AppProjects
       ansible.builtin.command:
         argv: [kubectl, --context, "{{ talos_kube_context }}", apply, -f, "{{ argocd_apps_dir }}/{{ item }}"]
       loop:
         - project-monitoring.yaml
         - project-velero-backup.yaml
+        - project-tailnet-gateway.yaml
+        - platform-project.yaml
       register: argocd_restricted_projects_apply
       changed_when: >-
         'created' in argocd_restricted_projects_apply.stdout or

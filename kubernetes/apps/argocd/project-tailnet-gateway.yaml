@@ -1,0 +1,67 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: homelab-tailnet-gateway
+  namespace: argocd
+spec:
+  description: Tailnet Gateway routes and Cilium policies only
+  sourceRepos:
+    - https://github.com/davegallant/homelab.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: argocd
+    - server: https://kubernetes.default.svc
+      namespace: beszel
+    - server: https://kubernetes.default.svc
+      namespace: changedetection
+    - server: https://kubernetes.default.svc
+      namespace: grafana
+    - server: https://kubernetes.default.svc
+      namespace: homepage
+    - server: https://kubernetes.default.svc
+      namespace: immich
+    - server: https://kubernetes.default.svc
+      namespace: k8s-readonly
+    - server: https://kubernetes.default.svc
+      namespace: kiwix
+    - server: https://kubernetes.default.svc
+      namespace: lidarr
+    - server: https://kubernetes.default.svc
+      namespace: lubelogger
+    - server: https://kubernetes.default.svc
+      namespace: maloja
+    - server: https://kubernetes.default.svc
+      namespace: prowlarr
+    - server: https://kubernetes.default.svc
+      namespace: qbittorrent
+    - server: https://kubernetes.default.svc
+      namespace: radarr
+    - server: https://kubernetes.default.svc
+      namespace: romm
+    - server: https://kubernetes.default.svc
+      namespace: seerr
+    - server: https://kubernetes.default.svc
+      namespace: sonarr
+    - server: https://kubernetes.default.svc
+      namespace: speedtest-tracker
+    - server: https://kubernetes.default.svc
+      namespace: tailnet-gateway
+    - server: https://kubernetes.default.svc
+      namespace: ""
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: cilium.io
+      kind: CiliumClusterwideNetworkPolicy
+    - group: cilium.io
+      kind: CiliumL2AnnouncementPolicy
+    - group: cilium.io
+      kind: CiliumLoadBalancerIPPool
+  namespaceResourceWhitelist:
+    - group: cilium.io
+      kind: CiliumNetworkPolicy
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute

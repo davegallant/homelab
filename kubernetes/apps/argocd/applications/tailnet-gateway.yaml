@@ -7,12 +7,11 @@ metadata:
   name: tailnet-gateway
   namespace: argocd
 spec:
-  project: homelab-platform
+  project: homelab-tailnet-gateway
   sources:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       path: kubernetes/apps/tailnet-gateway/chart
-      helm: {}
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       path: kubernetes/apps/tailnet-gateway

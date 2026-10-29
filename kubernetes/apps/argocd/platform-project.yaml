@@ -23,6 +23,8 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: cilium-system
     - server: https://kubernetes.default.svc
+      namespace: cilium-secrets
+    - server: https://kubernetes.default.svc
       namespace: forgejo
     - server: https://kubernetes.default.svc
       namespace: forgejo-runner
@@ -32,8 +34,6 @@ spec:
       namespace: kube-system
     - server: https://kubernetes.default.svc
       namespace: monitoring
-    - server: https://kubernetes.default.svc
-      namespace: tailnet-gateway
     - server: https://kubernetes.default.svc
       namespace: velero
   clusterResourceWhitelist:
