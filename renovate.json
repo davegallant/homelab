@@ -4,6 +4,9 @@
     "config:recommended",
     "helpers:pinGitHubActionDigests"
   ],
+  "ignorePaths": [
+    "ansible/tasks/docker-compose-up.yml"
+  ],
   "schedule": [
     "on the 1st day of the month"
   ],
@@ -75,10 +78,10 @@
         "/^kubernetes/apps/umami/values\\.production\\.yaml$/"
       ],
       "matchStrings": [
-        "(?:(?<registryIndent>[ \\t]*)registry: (?<registry>[^ \\t\\n]+)\\n)?(?<repoIndent>[ \\t]*)repository: (?<depName>[^ \\t\\n]+)(?<repoComments>(?:\\n[ \\t]*#[^\\n]*)*)\\n(?<fieldIndent>[ \\t]+)tag: [\\\"]?(?<currentValue>[^\\\"\\s]+)[\\\"]?\\n[ \\t]+digest: (?<currentDigest>sha256:[a-f0-9]+)"
+        "(?:(?<registryIndent>[ \\t]*)registry: (?<registry>[^ \\t\\n]+)\\n)?(?<repoIndent>[ \\t]*)repository: (?<imageRepository>[^ \\t\\n]+)(?<repoComments>(?:\\n[ \\t]*#[^\\n]*)*)\\n(?<fieldIndent>[ \\t]+)tag: [\\\"]?(?<currentValue>[^\\\"\\s]+)[\\\"]?\\n[ \\t]+digest: (?<currentDigest>sha256:[a-f0-9]+)"
       ],
-      "depNameTemplate": "{{#if registry}}{{{registry}}}/{{{depName}}}{{else}}{{{depName}}}{{/if}}",
-      "autoReplaceStringTemplate": "{{#if registry}}{{{registryIndent}}}registry: {{{registry}}}\n{{/if}}{{{repoIndent}}}repository: {{{depName}}}{{{repoComments}}}\n{{{fieldIndent}}}tag: \"{{{newValue}}}\"\n{{{fieldIndent}}}digest: {{{newDigest}}}",
+      "depNameTemplate": "{{#if registry}}{{{registry}}}/{{{imageRepository}}}{{else}}{{{imageRepository}}}{{/if}}",
+      "autoReplaceStringTemplate": "{{#if registry}}{{{registryIndent}}}registry: {{{registry}}}\n{{/if}}{{{repoIndent}}}repository: {{{imageRepository}}}{{{repoComments}}}\n{{{fieldIndent}}}tag: \"{{{newValue}}}\"\n{{{fieldIndent}}}digest: {{{newDigest}}}",
       "datasourceTemplate": "docker"
     }
   ],

@@ -13,6 +13,11 @@ lint:
     python3 scripts/check-velero-backup-coverage.py
     cd ansible && ANSIBLE_VAULT_PASSWORD_FILE="${ANSIBLE_VAULT_PASSWORD_FILE:-$PWD/.vault_pass}" ansible-lint
     shellcheck generate-containers-table.sh scripts/*.sh
+    just lint-renovate
+
+# Validate the Renovate repository configuration with Renovate's own validator
+lint-renovate:
+    npx --yes --package renovate -- renovate-config-validator --no-global renovate.json
 
 # Install the repository's pre-commit checks
 install-hooks:

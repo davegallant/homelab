@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if git diff --cached --name-only --diff-filter=ACMR | rg -q '^renovate\.json$'; then
+    npx --yes --package renovate -- renovate-config-validator --no-global renovate.json
+fi
