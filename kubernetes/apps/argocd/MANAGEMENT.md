@@ -10,10 +10,14 @@ against these releases.
 
 Application definitions live in `applications/`. The `argocd` Application
 renders this directory as a Git source, so syncing `argocd` reconciles all
-Application definitions from `main`. The `homelab` project owns service applications. `homelab-platform` permits
-the pinned upstream repositories and
-the cluster resource kinds required by infrastructure charts. All Applications
-require manual sync; none has automated sync, pruning, or a deletion finalizer.
+Application definitions from `main`. The `homelab` project owns ordinary
+service applications. VictoriaMetrics and the Forgejo backup Schedule use
+separate projects because their destination namespaces are privileged; each
+project permits only the resource kinds that application currently manages.
+`homelab-platform` permits the pinned upstream repositories and the cluster
+resource kinds required by infrastructure charts. All Applications require
+manual sync except the qBittorrent egress guardrail; none has pruning or a
+deletion finalizer.
 Upstream charts use multiple sources: a pinned chart plus values from GitHub
 `main`. Custom charts read their sibling `values.production.yaml`.
 
@@ -32,13 +36,20 @@ Existing cluster Applications retain their old source paths until explicitly
 updated and may report comparison errors after the move reaches remote `main`.
 Running workloads continue serving while those references are corrected.
 
-After confirming the move is present on remote `main`, apply the updated Argo CD
-Application once to enable Git-managed Application definitions, then sync it.
-Its source directory includes every Application definition, including Argo CD
-itself. Use the intended context:
+After confirming the move is present on remote `main`, apply the restricted
+monitoring and Velero projects first. Then apply the updated Argo CD Application
+to enable Git-managed Application definitions and sync it. Its source directory
+includes every Application definition, including Argo CD itself. Once the
+`victoriametrics` and `forgejo-backup` Applications report their new projects,
+run `argocd-project.yml` to remove `monitoring` and `velero` from the ordinary
+`homelab` destinations. That playbook refuses this final step until both
+Applications have moved.
+
+Use the intended context:
 
 ```sh
-kubectl --context "$CTX" apply -f kubernetes/apps/argocd/platform-project.yaml
+kubectl --context "$CTX" apply -f kubernetes/apps/argocd/project-monitoring.yaml
+kubectl --context "$CTX" apply -f kubernetes/apps/argocd/project-velero-backup.yaml
 kubectl --context "$CTX" apply -f kubernetes/apps/argocd/applications/argocd.yaml
 ```
 
@@ -87,7 +98,7 @@ the all-host playbook list. Their stopped containers and tracked Compose
 files are historical recovery material, not current deployment targets.
 
 For a fresh cluster, bootstrap Argo CD with `argocd.yml`, provision the external
-resources and storage, apply both project definitions and the Applications,
+resources and storage, apply all project definitions and the Applications,
 then sync infrastructure before dependent workloads. Argo CD's self-managed
 Application is synced last. The bootstrap remains available if Argo CD is
 absent; it refuses to overwrite a running Argo-managed server. Deleting an

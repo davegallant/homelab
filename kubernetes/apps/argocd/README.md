@@ -20,6 +20,14 @@ Gateway ALPN enabled for HTTP/2 negotiation. Both ports target the server pod's
 8080 listener. There is no Tailscale sidecar,
 Pangolin/Newt tunnel, public ingress, NodePort or LoadBalancer.
 
+## Administrator access
+
+The built-in `admin` account remains enabled and is the only Argo CD login
+configured here. It has full Argo CD access. The Kubernetes admin kubeconfig
+and Talos credentials are separate maintenance credentials. Argo CD remains
+reachable only through the tailnet Gateway; keep its admin password unique and
+high-entropy. Repository and deployment account MFA remain separate controls.
+
 The URL is `https://argocd.tail.davegallant.ca`. The old `argocd-tailscale`
 and `argocd-caddy` Retain-policy PVCs are unmounted and retained for a later
 per-resource audit; they are not needed by the server pod.

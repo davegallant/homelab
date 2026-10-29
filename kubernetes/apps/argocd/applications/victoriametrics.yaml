@@ -4,7 +4,7 @@ metadata:
   name: victoriametrics
   namespace: argocd
 spec:
-  project: homelab
+  project: homelab-monitoring
   source:
     repoURL: https://github.com/davegallant/homelab.git
     targetRevision: main

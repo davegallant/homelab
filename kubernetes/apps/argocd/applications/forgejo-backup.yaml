@@ -5,7 +5,7 @@ metadata:
   name: forgejo-backup
   namespace: argocd
 spec:
-  project: homelab
+  project: homelab-velero-backup
   source:
     repoURL: https://github.com/davegallant/homelab.git
     targetRevision: main

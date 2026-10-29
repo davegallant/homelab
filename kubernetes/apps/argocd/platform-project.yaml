@@ -18,59 +18,24 @@ spec:
     - https://code.forgejo.org/forgejo-helm/forgejo-runner.git
   destinations:
     - server: https://kubernetes.default.svc
-      namespace: grafana
-    - server: https://kubernetes.default.svc
-      namespace: kube-system
-    - server: https://kubernetes.default.svc
-      namespace: monitoring
-    - server: https://kubernetes.default.svc
-      namespace: velero
     - server: https://kubernetes.default.svc
       namespace: argocd
     - server: https://kubernetes.default.svc
-      namespace: beszel
-    - server: https://kubernetes.default.svc
       namespace: cilium-system
-    - server: https://kubernetes.default.svc
-      namespace: cilium-secrets
     - server: https://kubernetes.default.svc
       namespace: forgejo
     - server: https://kubernetes.default.svc
       namespace: forgejo-runner
     - server: https://kubernetes.default.svc
-      namespace: tailnet-gateway
-    - server: https://kubernetes.default.svc
-      namespace: immich
-    - server: https://kubernetes.default.svc
       namespace: intel-gpu
     - server: https://kubernetes.default.svc
-      namespace: changedetection
+      namespace: kube-system
     - server: https://kubernetes.default.svc
-      namespace: k8s-readonly
+      namespace: monitoring
     - server: https://kubernetes.default.svc
-      namespace: prowlarr
+      namespace: tailnet-gateway
     - server: https://kubernetes.default.svc
-      namespace: homepage
-    - server: https://kubernetes.default.svc
-      namespace: romm
-    - server: https://kubernetes.default.svc
-      namespace: lubelogger
-    - server: https://kubernetes.default.svc
-      namespace: radarr
-    - server: https://kubernetes.default.svc
-      namespace: sonarr
-    - server: https://kubernetes.default.svc
-      namespace: lidarr
-    - server: https://kubernetes.default.svc
-      namespace: seerr
-    - server: https://kubernetes.default.svc
-      namespace: kiwix
-    - server: https://kubernetes.default.svc
-      namespace: qbittorrent
-    - server: https://kubernetes.default.svc
-      namespace: maloja
-    - server: https://kubernetes.default.svc
-      namespace: speedtest-tracker
+      namespace: velero
   clusterResourceWhitelist:
     - group: admissionregistration.k8s.io
       kind: ValidatingAdmissionPolicy

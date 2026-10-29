@@ -35,10 +35,9 @@ spec:
   # and deleting this Application preserves its workloads.
   # Namespace and runner egress policy are managed by the separate
   # forgejo-runner-policy Application.
-  # Platform project must list BOTH: (1) this git repo as a sourceRepo,
-  # and (2) forgejo-runner as a destination — see platform-project.yaml
-  # edits in the resume prompt. Do NOT use homelab project (wrong
-  # source/destination/whitelist for this chart).
+  # The platform project must list BOTH this Git repository and
+  # forgejo-runner as a destination. Do NOT use the homelab project
+  # (wrong source/destination/resource allowlist for this chart).
   syncPolicy:
     syncOptions:
       - ServerSideApply=true
