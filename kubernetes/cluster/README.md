@@ -6,148 +6,36 @@ the VMs, generate protected Talos configs, bootstrap the cluster, and maintain
 backups. The Talos credentials and kubeconfig live outside Git under
 `~/.local/share/homelab-talos/` with private permissions.
 
-| VM | Proxmox host | Role | vCPU | RAM | Disk | Storage |
-|---|---|---|---:|---:|---:|---|
-| `k8s-cp-1` | `pve-g3-1` | control plane | 2 | 6 GiB | 25 GiB | `moredata` |
-| `k8s-w-1` | `pve-g3-1` | worker | 3 | 10 GiB | 80 GiB | `moredata` |
-| `k8s-w-2` | `pve-g3-2` | worker | 2 | 8 GiB | 50 GiB | `local-lvm` |
+## Configuration and recovery constraints
 
-The table records live Proxmox VM sizes, verified 2026-10-28 (w-1 10 GiB,
-w-2 8 GiB). The worker memory values in [vars.yaml](vars.yaml) are stale
-because those VMs were resized in Proxmox outside the repo. `vars.yaml` records
-the intended disk sizes; `k8s-w-2`'s Proxmox disk is now 50 GiB, while its
-running Talos `/var` still reports the pre-resize capacity pending the reboot
-gate below. Resize worker memory through
-`resize-worker.yml` after checking Proxmox host availability and retaining the
-2 GiB host memory reserve. Compare worker allocatable memory and scheduled
-requests before adding workloads; host free memory alone does not establish
-whether a Pod fits. The control plane keeps its
-`node-role.kubernetes.io/control-plane:NoSchedule` taint. This cluster has one
-control-plane VM across two Proxmox hosts and does not provide control-plane HA.
+[vars.yaml](vars.yaml) and machine patches define rebuild configuration;
+they do not establish live VM sizing, node addresses or installed versions.
+Compare Proxmox, Talos and Kubernetes before resizing, upgrading or rebuilding.
 
-On 2026-10-25, `k8s-w-1`'s Proxmox disk was grown from 25 GiB to 80 GiB after
-repeated `DiskPressure` caused workload disruption. The node remained Ready with `DiskPressure=False` after the resize. The resize does not relocate node-local
-PVCs; workloads using them remain tied to `k8s-w-1`.
+This design has a single control plane. Its restart interrupts the API.
+Local PVs bind workloads to their worker; resizing a disk does not relocate
+them. Isolate VM restores until node identity and etcd membership are reconciled.
+Protect Talos credentials, Vault and off-host etcd snapshots separately.
 
-### Expanding the k8s-w-2 system disk
+Use the guarded resize playbooks after verifying a fresh off-host backup and
+host storage/memory headroom. A Proxmox disk expansion may require a reboot
+before Talos grows its filesystem. Never infer completion from Proxmox size
+alone. Obtain Dave's explicit approval before any node reboot. First verify
+all expected nodes Ready and Applications Synced/Healthy, then take an off-host
+etcd snapshot. Afterward verify capacity, DiskPressure, local mounts and
+workload health. On a failed gate, halt and preserve state; do not shrink disks
+or reboot another node as a workaround.
 
-`k8s-w-2`'s 25 GiB `/var` repeatedly triggered DiskPressure. On 2026-10-28,
-VM 147's `virtio0` disk on `pve-g3-2` was expanded from 25 GiB to 50 GiB by the
-guarded playbook below. Its live Kubernetes `ephemeral-storage` capacity is
-still 24,465,375,232 bytes; Talos expands its `EPHEMERAL` partition during
-boot, so a worker reboot is still required before `/var` reports the added
-capacity. Local PVs remain on `k8s-w-2`; their data is not moved by the disk
-expansion.
-
-For a future disk expansion, run from the repository root. Take a fresh
-Proxmox backup of the Talos VMs first; the playbook requires a VM 147 archive
-dated today according to `pve-g3-2`'s local clock and at least 50 GiB free in
-`local-lvm`:
-
-```sh
-just run talos-cluster/backup-now
-just run talos-cluster/resize-worker-disk
-```
-
-The resize playbook validates the VM name, VMID, storage, disk device, current
-size, backup archive, and storage headroom. It only changes the Proxmox disk;
-it does not reboot the worker. It is now complete for VM 147; rerunning it
-confirms `virtio0` is `50G` and makes no change. If the playbook refuses a
-gate on a future resize, stop and resolve the mismatch without bypassing the
-assertion.
-
-Before rebooting, verify the Kubernetes API is reachable, the expected three
-nodes are Ready, and every Argo Application is Synced and Healthy. Take and
-verify an off-host etcd snapshot:
-
-```sh
-kubectl get nodes
-kubectl get applications.argoproj.io -A
-just run talos-cluster/snapshot-etcd
-```
-
-Then reboot only `k8s-w-2` using the protected Talos config. This takes its
-scheduled workloads down temporarily; wait for the worker and its local-volume
-workloads to return before ending maintenance:
-
-```sh
-TALOSCONFIG="$HOME/.local/share/homelab-talos/base/talosconfig"
-talosctl --endpoints 192.168.1.210 --nodes 192.168.1.212 \
-  --talosconfig "$TALOSCONFIG" reboot
-kubectl wait --for=condition=Ready node/k8s-w-2 --timeout=600s
-kubectl get node k8s-w-2 -o wide
-kubectl get pods -A -o wide --field-selector spec.nodeName=k8s-w-2
-```
-
-Confirm the node reports `DiskPressure=False`, its ephemeral-storage capacity
-is close to 50 GiB, and `/var` in Grafana's Cluster Vitals is on the larger
-filesystem. Confirm the workloads and local PVC mounts on `k8s-w-2` are
-healthy. If the node fails to return or the filesystem did not grow, stop,
-preserve the expanded disk and logs, and investigate; do not shrink the disk or
-reboot another node as a workaround.
-
-The 2026-10-28 resize is paused before the reboot gate: `k8s-w-2` and all
-expected nodes were Ready, but the `argocd`, `immich`, `jellyfin`, and
-`qbittorrent` Applications were OutOfSync (all Healthy). No etcd snapshot or
-worker reboot was performed. Resolve and verify that sync state before
-continuing with the snapshot and reboot steps; do not bypass the gate.
-
-A protected, checksum-verified off-host etcd snapshot (`etcd-homelab-20261023T181653Z.snap`) was taken before the 2026-10-23 resize; that short post-resize observation does not replace validation during the next OCR, scan, and backup peaks.
-
-The node addresses are `.210`, `.211`, and `.212` on `192.168.1.0/24`, outside
-OPNsense's active `.2-.99` DHCP pool. The gateway is `.1`, and Talos resolves
-through AdGuard Home at `.77` with OPNsense at `.1` as fallback. The
-`previous_address` values in `vars.yaml` document the one-time move from DHCP.
-All three nodes were Ready at the static addresses after the transition. `k8s-w-1` also carries `192.168.1.152` (`extra_addresses` in `vars.yaml`, added for qBittorrent egress); on 2026-10-28 it was the node's reported InternalIP, and NFS exports listing only `.211` denied w-1 mounts until `.152` was added — any host-specific allowlist must include both.
-
-`k8s-w-2` has the Intel HD Graphics 630 at PCI `0000:00:02.0` passed through
-from `pve-g3-2` (Proxmox VMID 147). The Talos installer uses the i915
-system extension schematic
-`dc8730aa8cc7bfa5ef7e2b3284248f2631135b2faf4ae11aa997a0c1987b0eee`; the
-Intel device plugin advertises `gpu.intel.com/i915` to pods. After a worker
-rebuild or upgrade, verify the `i915` driver, `/dev/dri/renderD128`, and the
-advertised resource before scheduling GPU workloads. On 2026-10-27, the Intel
-HD Graphics 630 on `pve-g3-1` was passed through to `k8s-w-1` (VMID 146)
-using the same Talos i915 extension. The Intel GPU plugin runs on both workers (verified 2026-10-28). Jellyfin now runs on
-Kubernetes and requests the Intel GPU for hardware transcoding.
-
-The cluster's steady-state CNI is Cilium `1.20.3` on Kubernetes `1.37.2` (upgraded 2026-10-28; previously `1.37.0`/`1.37.1`),
-using cluster-pool pod CIDR `10.245.0.0/16` and VXLAN UDP `8473`. Talos has
-`cluster.network.cni.name: none`; Flannel has been removed, and kube-proxy is
-replaced by Cilium. See [`../apps/cilium/`](../apps/cilium/)
-for the live-migration record, policy inventory, and recovery path.
-
-The storage patches create the local volume roots on every node (Homepage, Kiwix, Miniflux, and the local-path provisioner root; see `worker.patch.yaml.j2`).
-Only `k8s-w-1` is eligible for the Homepage pod and its local PVs. If that
-worker is lost, Homepage remains down until it returns or its data is restored
-and deliberately relocated.
-
-The existing 02:00 Proxmox snapshot job now includes all three Talos VMs and
-stores them on `proxmox-backups` NFS. `backup-now.yml` takes a manual
-backup; `snapshot-etcd.yml` also stores an etcd snapshot containing cluster state
-in a protected directory on the same off-host store. VM backups include the
-Homepage local PV paths. The 02:00 `proxmox-backups` vzdump job stages
-temporary files under local `/var/tmp` on the executing Proxmox node; backup
-archives still go to NFS. Keep `/var/tmp` available on both Proxmox nodes
-because unprivileged LXC backup workers cannot write to the restricted NFS
-export. Homepage's former LXC
-playbook has been retired; keep the recovery drill current and separately
-protect the operator's Talos credentials. The Alloy
-DaemonSet is described in [the logging runbook](../OBSERVABILITY.md); it collects pod logs through
-the Kubernetes API without node filesystem mounts.
-
-Run these playbooks manually from `ansible/`, with the Ansible Vault password
-file and `TALOSCTL` pointing at a talosctl binary of the same minor version as the cluster (patch-level differences are allowed by the generate-config gate; e.g. talosctl 1.14.3 for a 1.14.1 cluster). Keep the
-credential directory, off-host etcd snapshots, and Ansible Vault protected.
+Check every node address against NFS exports and firewall allowlists; an extra
+address can become Kubernetes InternalIP. Verify GPU driver, render device and
+advertised resources after worker rebuilds or upgrades. Preserve the configured
+installer extensions.
 
 ## Updating Talos
 
-There are four different updates; do not conflate them. Talos version is
-currently MIXED, verified 2026-10-28: `k8s-w-2` is on v1.14.3 (upgraded
-2026-10-28), `k8s-cp-1` and `k8s-w-1` are still on v1.14.1. Do not bump
-`vars.yaml` to v1.14.3 until all three nodes are upgraded and verified
-(step 7). On any failure gate: halt, preserve state and logs, and do
-not proceed to the next node.
+Check installed Talos versions on every node before selecting an upgrade
+path. Configuration pins are rebuild inputs, not an upgrade completion record.
+On a failed gate, halt and preserve state and logs.
 
 ### Machine-config change only (no OS version change)
 
@@ -193,22 +81,9 @@ control-plane reboot — there is no control-plane HA.
    the control plane (as with `upgrade-k8s`, `--nodes` alone is not
    enough). Set the image once, then run one short command per
    node, in this order, verifying each node is Ready on the new
-   version before the next. This cluster's i915 schematic is
-   `dc8730aa8cc7bfa5ef7e2b3284248f2631135b2faf4ae11aa997a0c1987b0eee`;
-   the schematic ID is based on its contents, so the same ID is
-   reused with the new version tag — confirm the exact string in
-   the Image Factory before running it. Spelled out for the
-   1.14.1 to 1.14.3 upgrade (w-2 completed 2026-10-28):
-
-   ```sh
-   IMAGE=factory.talos.dev/metal-installer/dc8730aa8cc7bfa5ef7e2b3284248f2631135b2faf4ae11aa997a0c1987b0eee:v1.14.3
-   # w-2 (192.168.1.212) — done 2026-10-28, skip if already on 1.14.3
-   talosctl --endpoints 192.168.1.210 --nodes 192.168.1.212 upgrade --image "$IMAGE" --wait
-   # w-1 (192.168.1.152)
-   talosctl --endpoints 192.168.1.210 --nodes 192.168.1.152 upgrade --image "$IMAGE" --wait
-   # control plane (192.168.1.210) — last
-   talosctl --endpoints 192.168.1.210 --nodes 192.168.1.210 upgrade --image "$IMAGE" --wait
-   ```
+   version before the next. Read the schematic from reviewed configuration,
+   select the approved target image, and obtain explicit reboot approval before
+   issuing any upgrade command.
 
    Talos cordons and drains the node itself, installs to the A-B
    partition, and reboots. A failed boot rolls back to the previous
@@ -229,27 +104,14 @@ control-plane reboot — there is no control-plane HA.
 7. Only after all nodes are upgraded and verified, bump `vars.yaml`
    (`talos_version`, `talos_iso_filename`, `talos_iso_sha256`) so a
    future rebuild does not reinstall the old version, regenerate
-   configs with the new-minor talosctl, reapply, and update the
-   version lines in this README. Commit and push the vars/README
-   change as its own change.
+   configs with the new-minor talosctl, reapply, and review the resulting rebuild inputs. Push only on explicit request.
 
 ### Kubernetes upgrade (separate from Talos)
 
-A Talos OS upgrade does not upgrade Kubernetes by default. Do it in a
-separate window; it does not depend on the Talos upgrade — the 1.37.2
-upgrade was run 2026-10-28 before the Talos 1.14.3 upgrade started.
-Check the latest patch first at https://kubernetes.io/releases:
-
-```sh
-talosctl --endpoints 192.168.1.210 --nodes 192.168.1.210 upgrade-k8s --to 1.37.2 --dry-run
-```
-
-`--endpoints` must be a control-plane address; `--nodes` alone is not
-enough. Without `--endpoints`, the 2026-10-28 dry run failed with
-`PermissionDenied: no request forwarding` at the "getting server
-version" step, and adding `--endpoints 192.168.1.210` fixed it (the
-default talosconfig on the operator machine works; no `--talosconfig`
-flag was needed).
+A Talos OS upgrade does not upgrade Kubernetes by default. Use a separate
+maintenance window and review compatibility for the approved target version.
+Run `talosctl upgrade-k8s --to <approved-version> --dry-run` with an explicit
+control-plane `--endpoints` address and the intended protected Talos config.
 
 Remove `--dry-run` only after the dry run is clean. The command is sent
 to the control plane but upgrades all members.
