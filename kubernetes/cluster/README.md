@@ -10,9 +10,14 @@ backups. The Talos credentials and kubeconfig live outside Git under
 |---|---|---|---:|---:|---:|---|
 | `k8s-cp-1` | `pve-g3-1` | control plane | 2 | 6 GiB | 25 GiB | `moredata` |
 | `k8s-w-1` | `pve-g3-1` | worker | 3 | 10 GiB | 80 GiB | `moredata` |
-| `k8s-w-2` | `pve-g3-2` | worker | 2 | 8 GiB | 25 GiB | `local-lvm` |
+| `k8s-w-2` | `pve-g3-2` | worker | 2 | 8 GiB | 50 GiB | `local-lvm` |
 
-Sizing in the table is the live Proxmox VM size, verified 2026-10-28 via node capacity (w-1 10 GiB, w-2 8 GiB). It does NOT currently match [vars.yaml](vars.yaml), which still lists w-1 8192 MiB and w-2 4608 MiB — those VMs were resized in Proxmox outside the repo, so vars.yaml memory is stale until it is updated to match live. Resize workers through
+The table records live Proxmox VM sizes, verified 2026-10-28 (w-1 10 GiB,
+w-2 8 GiB). The worker memory values in [vars.yaml](vars.yaml) are stale
+because those VMs were resized in Proxmox outside the repo. `vars.yaml` records
+the intended disk sizes; `k8s-w-2`'s Proxmox disk is now 50 GiB, while its
+running Talos `/var` still reports the pre-resize capacity pending the reboot
+gate below. Resize worker memory through
 `resize-worker.yml` after checking Proxmox host availability and retaining the
 2 GiB host memory reserve. Compare worker allocatable memory and scheduled
 requests before adding workloads; host free memory alone does not establish
@@ -23,6 +28,69 @@ control-plane VM across two Proxmox hosts and does not provide control-plane HA.
 On 2026-10-25, `k8s-w-1`'s Proxmox disk was grown from 25 GiB to 80 GiB after
 repeated `DiskPressure` caused workload disruption. The node remained Ready with `DiskPressure=False` after the resize. The resize does not relocate node-local
 PVCs; workloads using them remain tied to `k8s-w-1`.
+
+### Expanding the k8s-w-2 system disk
+
+`k8s-w-2`'s 25 GiB `/var` repeatedly triggered DiskPressure. On 2026-10-28,
+VM 147's `virtio0` disk on `pve-g3-2` was expanded from 25 GiB to 50 GiB by the
+guarded playbook below. Its live Kubernetes `ephemeral-storage` capacity is
+still 24,465,375,232 bytes; Talos expands its `EPHEMERAL` partition during
+boot, so a worker reboot is still required before `/var` reports the added
+capacity. Local PVs remain on `k8s-w-2`; their data is not moved by the disk
+expansion.
+
+For a future disk expansion, run from the repository root. Take a fresh
+Proxmox backup of the Talos VMs first; the playbook requires a VM 147 archive
+dated today according to `pve-g3-2`'s local clock and at least 50 GiB free in
+`local-lvm`:
+
+```sh
+just run talos-cluster/backup-now
+just run talos-cluster/resize-worker-disk
+```
+
+The resize playbook validates the VM name, VMID, storage, disk device, current
+size, backup archive, and storage headroom. It only changes the Proxmox disk;
+it does not reboot the worker. It is now complete for VM 147; rerunning it
+confirms `virtio0` is `50G` and makes no change. If the playbook refuses a
+gate on a future resize, stop and resolve the mismatch without bypassing the
+assertion.
+
+Before rebooting, verify the Kubernetes API is reachable, the expected three
+nodes are Ready, and every Argo Application is Synced and Healthy. Take and
+verify an off-host etcd snapshot:
+
+```sh
+kubectl get nodes
+kubectl get applications.argoproj.io -A
+just run talos-cluster/snapshot-etcd
+```
+
+Then reboot only `k8s-w-2` using the protected Talos config. This takes its
+scheduled workloads down temporarily; wait for the worker and its local-volume
+workloads to return before ending maintenance:
+
+```sh
+TALOSCONFIG="$HOME/.local/share/homelab-talos/base/talosconfig"
+talosctl --endpoints 192.168.1.210 --nodes 192.168.1.212 \
+  --talosconfig "$TALOSCONFIG" reboot
+kubectl wait --for=condition=Ready node/k8s-w-2 --timeout=600s
+kubectl get node k8s-w-2 -o wide
+kubectl get pods -A -o wide --field-selector spec.nodeName=k8s-w-2
+```
+
+Confirm the node reports `DiskPressure=False`, its ephemeral-storage capacity
+is close to 50 GiB, and `/var` in Grafana's Cluster Vitals is on the larger
+filesystem. Confirm the workloads and local PVC mounts on `k8s-w-2` are
+healthy. If the node fails to return or the filesystem did not grow, stop,
+preserve the expanded disk and logs, and investigate; do not shrink the disk or
+reboot another node as a workaround.
+
+The 2026-10-28 resize is paused before the reboot gate: `k8s-w-2` and all
+expected nodes were Ready, but the `argocd`, `immich`, `jellyfin`, and
+`qbittorrent` Applications were OutOfSync (all Healthy). No etcd snapshot or
+worker reboot was performed. Resolve and verify that sync state before
+continuing with the snapshot and reboot steps; do not bypass the gate.
 
 A protected, checksum-verified off-host etcd snapshot (`etcd-homelab-20261023T181653Z.snap`) was taken before the 2026-10-23 resize; that short post-resize observation does not replace validation during the next OCR, scan, and backup peaks.
 
