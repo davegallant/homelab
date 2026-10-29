@@ -87,7 +87,7 @@ spec:
             - {name: dashboard-files, mountPath: /etc/grafana/provisioning/dashboards/files}
             - {name: alerting, mountPath: /etc/grafana/provisioning/alerting}
         - name: sqlite-backup
-          image: docker.io/paperlessngx/paperless-ngx:3.3.3@sha256:dba0242c1df1843643df4eb50ce5639f3a7900f414879088fd5bed8eaf2d456d
+          image: docker.io/paperlessngx/paperless-ngx:3.3.4@sha256:9bc6e8248891bcfa6f52fffe8b81e4ea8cae75790c3ec1b9906961a7ba55c969
           command: ["sleep", "infinity"]
           securityContext:
             runAsUser: 0
