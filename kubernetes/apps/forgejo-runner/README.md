@@ -26,7 +26,7 @@ The Forgejo Cilium policy allows runner-namespace ingress to Forgejo on TCP
 unrestricted. The local policy manifest narrows egress to cluster DNS, Forgejo
 on TCP 3000, and public IPv4 TCP 80/443, excluding private, loopback,
 link-local, and shared-address ranges. The runner namespace labels, service
-account setting, resource bounds, concurrency cap, and egress policy in Git
+account setting, resource bounds, two-job concurrency, and egress policy in Git
 are pending manual Argo CD sync; none of those edits has been applied live.
 
 ## Design and trust boundary
@@ -60,12 +60,13 @@ configured.
 After approval and sync:
 
 1. Confirm the namespace has `enforce: privileged` and `audit`/`warn: restricted`.
-2. Confirm one runner job at a time, the intended resource bounds, and no
-   mounted service-account token.
+2. Confirm capacity for two concurrent jobs, the intended resource bounds, and
+   no mounted service-account token.
 3. Use Hubble to confirm DNS, Forgejo polling, checkout, and required public
    web traffic are allowed; confirm access to the Kubernetes API, NAS, node
    management addresses, and unrelated private services is denied.
-4. Run a real trusted Docker workflow and verify checkout and job completion.
+4. Run two real trusted Docker workflows concurrently and verify both checkout
+   and complete successfully.
    Runner registration alone does not prove job networking works.
 5. Confirm in Forgejo that the runner is registered only at the intended
    trusted scope, and review all workflow triggers and job secrets before
