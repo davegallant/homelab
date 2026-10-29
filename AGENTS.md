@@ -214,7 +214,7 @@ top of `FORWARD`, both before ufw's `ufw-user-forward` chain is consulted.
 `tasks/install-docker.yml` therefore manages a `DOCKER-USER` block in
 `/etc/ufw/after.rules` that allows Docker's own bridge networks plus
 `ufw_docker_allowed_sources`, and drops everything else headed for a container
-network. Services using `network_mode: host` (adguard-home, watchyourlan) are
+network. Services using `network_mode: host` (adguard-home) are
 unaffected -- their traffic hits `INPUT`, where the ufw rules do apply.
 
 A `ufw: rule: allow` task on its own only opens a *host* port. If a service

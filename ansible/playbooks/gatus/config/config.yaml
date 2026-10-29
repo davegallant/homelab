@@ -80,10 +80,6 @@ endpoints:
     url: "https://arca.{{ headscale_magic_dns_domain }}/healthz"
     <<: *defaults
 
-  - name: watchyourlan
-    url: "{{ watchyourlan_url }}"
-    <<: *defaults
-
   - name: lubelogger
     url: "{{ lubelogger_url }}"
     <<: *defaults

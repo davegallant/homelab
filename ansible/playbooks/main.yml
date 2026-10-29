@@ -7,4 +7,3 @@
 - import_playbook: igotify/main.yml
 - import_playbook: vps/main.yml
 - import_playbook: upsnap/main.yml
-- import_playbook: watchyourlan/main.yml

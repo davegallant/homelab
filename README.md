@@ -147,7 +147,6 @@ skips Alloy and Beszel. Kubernetes uses an Alloy DaemonSet for pod logs.
 | [Gatus](https://gatus.io) | Automated service health monitoring with alerting |
 | [Beszel](https://github.com/henrygd/beszel) | Lightweight server monitoring hub |
 | [Speedtest Tracker](https://github.com/linuxserver/docker-speedtest-tracker) | Scheduled internet speed history |
-| [WatchYourLAN](https://github.com/aceberg/watchyourlan) | Network IP scanner and device tracker |
 | [ChangeDetection.io](https://changedetection.io) | Website change monitoring and alerting |
 
 ---
