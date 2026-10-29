@@ -161,3 +161,8 @@ spec:
             - {port: "53", protocol: UDP}
             - {port: "53", protocol: TCP}
     - toEntities: [world]
+      toPorts:
+        - ports:
+            - {port: "443", protocol: TCP}
+            - {port: "3478", protocol: UDP}
+            - {port: "41641", protocol: UDP}

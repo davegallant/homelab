@@ -355,9 +355,9 @@ commits must stay guide-only; receipt files must not be added to them.
   node 68 deleted, DNS `k8s-readonly A 100.100.0.8` preserving changedetection
   records, Mac + grafana (root@grafana) ordinary DNS trusted API proof
   200/200/200/403/403, root 403, prod fingerprint, changedetection still 200.
-- **Homepage:** migrate last. Keep its outbound proxy-agent at
-  `127.0.0.1:1055` and verify real widget/API calls, including the TrueNAS
-  WebSocket. Its outbound proxy is separate from inbound Gateway access.
+- **Homepage widget proxy:** its outbound path is separate from inbound
+  Gateway access. Verify real widget/API calls, including the TrueNAS
+  WebSocket, when changing that path.
 - **Audiobookshelf** stays public. **Bedrock** stays on its LXC; this L7 Gateway
   does not replace its UDP path. **Forgejo** stays public through Newt.
   **qBittorrent** remains untouched.

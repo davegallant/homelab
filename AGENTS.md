@@ -252,17 +252,16 @@ running `just lint` locally. Pass `--vault-password-file` to manual playbooks
 too: encrypted group variables load even when the play does not reference a
 secret.
 
-- A Tailscale userspace sidecar can receive tailnet traffic without giving its
-  application container outbound tailnet routing or MagicDNS. Verify real
-  application API calls, not only the dashboard root. Homepage v2.6.0 creates
-  custom Node HTTP agents, and its TrueNAS widget uses a WebSocket; both need
-  the proxy handling in `kubernetes/apps/homepage/proxy-agent.cjs`.
+- For Kubernetes behavior, use source charts, values, and policy YAML; check
+  live resources for deployed state. Keep this file to non-obvious constraints
+  instead of repeating configuration.
+- When changing Homepage networking, verify a real widget/API call and the
+  TrueNAS WebSocket; a dashboard-root request alone does not cover them.
 - Talos enforces the cluster-wide Pod Security baseline. A sidecar needing
   `NET_ADMIN`, `NET_RAW`, or `/dev/net/tun` requires a separately reviewed
-  policy exception; the Homepage pilot uses a userspace HTTP proxy instead.
+  policy exception.
 - Headscale's `given_name` controls the MagicDNS label. Homepage now runs on
-  Talos; its LXC playbook and LXC rollback path are retired. Use
-  `verify-cutover.yml` to confirm the active hostname reaches Kubernetes.
+  Talos; its LXC playbook and LXC rollback path are retired.
 - Homepage's local PVCs and Pod are pinned to `k8s-w-1`. Proxmox VM backups
   cover those disks; an off-host etcd snapshot covers cluster state. Read the
   recovery constraints in the cluster README before restoring a VM.

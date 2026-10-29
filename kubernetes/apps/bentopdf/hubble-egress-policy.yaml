@@ -1,0 +1,30 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: exact-hubble-egress
+  namespace: bentopdf
+spec:
+  description: Exact forwarded Hubble egress tuples captured on 2026-10-24.
+  endpointSelector:
+    matchLabels:
+      k8s:app.kubernetes.io/name: bentopdf
+  egress:
+    - toCIDR:
+        - 72.11.149.242/32
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    - toCIDR:
+        - 72.11.149.242/32
+      toPorts:
+        - ports:
+            - port: "21820"
+              protocol: UDP
+    - toCIDR:
+        - 72.11.149.242/32
+      toPorts:
+        - ports:
+            - port: "51820"
+              protocol: UDP

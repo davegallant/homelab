@@ -272,7 +272,7 @@ rawResources:
         name: default-deny
         namespace: immich
       spec:
-        description: Default deny with internet fetch access, cluster DNS, and explicit internal-range denies.
+        description: Default deny with cluster DNS, same-namespace access, and explicit internal-range denies.
         endpointSelector: {}
         ingress:
           - fromEndpoints:
@@ -292,8 +292,6 @@ rawResources:
           - toEndpoints:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: immich
-          - toEntities:
-              - world
         egressDeny:
           - toCIDR:
               - 192.168.1.0/24

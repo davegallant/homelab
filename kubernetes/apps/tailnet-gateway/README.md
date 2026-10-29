@@ -97,15 +97,14 @@ separate design decision for Dave, not a silent pivot.
    changedetection-gw.tail.davegallant.ca from a tailnet
    device, app responding.
 2. STOP and report. Only then, per app, on Dave's go:
-   switch real hostname to Gateway, delete that app's
-   sidecar code, update its NetworkPolicy to allow
+   switch real hostname to Gateway, remove per-app Tailscale/Caddy
+   resources where the current manifests declare them, update its NetworkPolicy to allow
    gateway -> app port (current policies allow same-
    namespace ingress only, which Gateway traffic is not).
-3. Order: changedetection, then Prowlarr, then k8s-readonly,
-   Homepage LAST. Homepage's outbound widget proxy-agent
-   (127.0.0.1:1055) is outbound, not inbound, and is NOT
-   removed by this Gateway. Homepage inbound can move;
-   its outbound sidecar stays until separately solved.
+3. Order: changedetection, then Prowlarr, then k8s-readonly.
+
+Homepage's widget proxy is separate from inbound Gateway routing. Verify real
+widget/API and WebSocket calls when changing that path.
 
 ## Out of scope, always
 
