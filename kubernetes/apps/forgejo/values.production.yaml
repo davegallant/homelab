@@ -24,6 +24,10 @@ deployment:
 # The Newt Deployment remains at zero until separately approved cutover.
 replicaCount: 1
 
+# Forgejo is not HA-ready; do not overlap pods that share its data volume.
+strategy:
+  type: Recreate
+
 nodeSelector:
   kubernetes.io/hostname: k8s-w-1
 
