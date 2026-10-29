@@ -102,17 +102,12 @@ Before pausing writers, the off-host etcd snapshot
 checksum was verified against the protected local copy. All 26 repositories
 were rotated and verified with the new password, and their snapshot counts
 remain unchanged. The Vault-backed Velero Secret is updated and all 26
-`BackupRepository` objects are Ready. All 27 Velero Schedules remain paused
-until the post-rotation restore and fresh-backup checks complete, including
-`kiwix` and `searxng` (which have Schedules but no repository yet). The
-`monitoring` repository has no Schedule.
-
-The Homepage restore drill's three scratch paths did not materialize after the
-no-reboot Talos machine-config patch, so the drill requires rebooting only
-`k8s-w-1` after its API, node-readiness, and off-host snapshot checks pass. Four
-Argo Applications (`argocd`, `immich`, `jellyfin`, and `qbittorrent`) are
-OutOfSync but Healthy; their drift is separate from the disk-expansion reboot
-gate in the cluster README. TrueNAS-to-Drive client-side encryption and
+`BackupRepository` objects are Ready. The post-rotation Homepage restore and
+fresh-backup checks passed, and all 27 schedules are unpaused. `kiwix` and
+`searxng` have schedules but no repository yet; the `monitoring` repository
+has no schedule. The Homepage restore verified only its 287,717-byte config
+volume; the selected backup contains no Caddy or Tailscale volume data and
+excludes Kubernetes Secrets. TrueNAS-to-Drive client-side encryption and
 deletion retention remain unverified; do not treat the Drive copy as encrypted
 or protected from deletion until the actual task settings are checked.
 
@@ -176,126 +171,14 @@ kubectl --context "$CTX" -n velero get backupstoragelocation default
 kubectl --context "$CTX" -n velero backup describe "$BACKUP" --details
 ```
 
-For a namespace using static local PVs, provision new scratch paths and PVs on
-the node required by that workload before restoring. Never map restored claims
-to a live production PV. For the Homepage drill, the scratch paths are
-`/var/mnt/homepage-drill/{config,caddy,tailscale}` on `k8s-w-1`; the checked-in
-PV definitions mirror production capacity, access mode, storage class, and
-node affinity. On a fresh worker, add the `.keep` paths with the Talos machine
-config patch, reboot only that worker if required to materialize them, and
-verify the directories with `talosctl list` before applying PVs:
-
-```bash
-set -euo pipefail
-CTX=homelab
-W1_ADDR="$(kubectl --context "$CTX" get node k8s-w-1 -o jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')"
-TALOSCONFIG="$HOME/.local/share/homelab-talos/base/talosconfig"
-WORK="$(mktemp -d)"
-chmod 700 "$WORK"
-trap 'rm -rf "$WORK"' EXIT
-cat >"$WORK/worker-patch.yaml" <<'YAML'
-machine:
-  files:
-    - content: Talos local Homepage restore drill storage root
-      permissions: 0o644
-      path: /var/mnt/homepage-drill/config/.keep
-      op: create
-    - content: Talos local Homepage restore drill storage root
-      permissions: 0o644
-      path: /var/mnt/homepage-drill/caddy/.keep
-      op: create
-    - content: Talos local Homepage restore drill storage root
-      permissions: 0o644
-      path: /var/mnt/homepage-drill/tailscale/.keep
-      op: create
-YAML
-talosctl patch machineconfig --nodes "$W1_ADDR" --endpoints "$W1_ADDR" \
-  --talosconfig "$TALOSCONFIG" --mode no-reboot --patch "@$WORK/worker-patch.yaml"
-PATHS_READY=true
-for path in config caddy tailscale; do
-  if ! talosctl list "/var/mnt/homepage-drill/$path" --nodes "$W1_ADDR" \
-    --endpoints "$W1_ADDR" --talosconfig "$TALOSCONFIG" >/dev/null 2>&1; then
-    PATHS_READY=false
-  fi
-done
-if [[ "$PATHS_READY" != true ]]; then
-  talosctl reboot --nodes "$W1_ADDR" --endpoints "$W1_ADDR" \
-    --talosconfig "$TALOSCONFIG"
-  kubectl --context "$CTX" wait --for=condition=Ready node/k8s-w-1 --timeout=600s
-fi
-for path in config caddy tailscale; do
-  talosctl list "/var/mnt/homepage-drill/$path" --nodes "$W1_ADDR" \
-    --endpoints "$W1_ADDR" --talosconfig "$TALOSCONFIG"
-done
-cat >"$WORK/scratch-pvs.yaml" <<'YAML'
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: homepage-drill-config
-spec:
-  capacity:
-    storage: 1Gi
-  accessModes: [ReadWriteOnce]
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: pve-g3-1-local
-  volumeMode: Filesystem
-  local:
-    path: /var/mnt/homepage-drill/config
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values: [k8s-w-1]
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: homepage-drill-caddy
-spec:
-  capacity:
-    storage: 256Mi
-  accessModes: [ReadWriteOnce]
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: pve-g3-1-local
-  volumeMode: Filesystem
-  local:
-    path: /var/mnt/homepage-drill/caddy
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values: [k8s-w-1]
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: homepage-drill-tailscale
-spec:
-  capacity:
-    storage: 64Mi
-  accessModes: [ReadWriteOnce]
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: pve-g3-1-local
-  volumeMode: Filesystem
-  local:
-    path: /var/mnt/homepage-drill/tailscale
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values: [k8s-w-1]
-YAML
-kubectl --context "$CTX" apply -f "$WORK/scratch-pvs.yaml"
-kubectl --context "$CTX" wait --for=jsonpath='{.status.phase}'=Available \
-  pv/homepage-drill-config pv/homepage-drill-caddy pv/homepage-drill-tailscale \
-  --timeout=120s
-```
+For Homepage, use the existing dynamic `local-path` provisioner. Restore its
+PVCs with the `volumeType: local` annotation and let the saved Deployment's
+required node affinity place them on `k8s-w-1`. This creates no separate host
+directories, machine-config entries, or PV manifests. Never map a restored
+claim to a live production PV. Keep both PVCs and PVs included in Velero's
+resource filters so it creates the PodVolumeRestore; use
+`--include-cluster-resources=false` to keep the cluster-scoped PV objects out of
+the restore.
 
 Create the target namespace, then recreate its Secrets before restoring. For
 an in-cluster drill where the source namespace still exists, copy Secret objects
@@ -306,18 +189,17 @@ CTX=homelab
 SOURCE_NS=homepage
 TARGET_NS=homepage-drill
 kubectl --context "$CTX" create namespace "$TARGET_NS"
-for secret in homepage-environment homepage-caddy; do
-  kubectl --context "$CTX" -n "$SOURCE_NS" get secret "$secret" -o json \
-    | jq --arg ns "$TARGET_NS" \
-      'del(.metadata.uid,.metadata.resourceVersion,.metadata.creationTimestamp,.metadata.managedFields,.metadata.ownerReferences) | .metadata.namespace=$ns' \
-    | kubectl --context "$CTX" apply -f -
-done
+kubectl --context "$CTX" label namespace "$TARGET_NS" name="$TARGET_NS"
+kubectl --context "$CTX" -n "$SOURCE_NS" get secret homepage-environment-external -o json \
+  | jq --arg ns "$TARGET_NS" \
+    'del(.metadata.uid,.metadata.resourceVersion,.metadata.creationTimestamp,.metadata.managedFields,.metadata.ownerReferences) | .metadata.namespace=$ns' \
+  | kubectl --context "$CTX" apply -f -
 ```
 
-For a recovery where the source namespace is unavailable, create the two
-Homepage Secrets from protected local files populated from the existing Vault
-values. Keep the files outside the repository with mode `0600`; the environment
-file keys are the `HOMEPAGE_VAR_*` entries supplied by Vault through
+For a recovery where the source namespace is unavailable, create
+`homepage-environment-external` from protected local files populated from the
+existing Vault values. Keep the file outside the repository with mode `0600`;
+its keys are the `HOMEPAGE_VAR_*` entries supplied by Vault through
 `apps/homepage/values.ansible.yaml.j2`:
 
 ```bash
@@ -326,19 +208,13 @@ CTX=homelab
 TARGET_NS=homepage-drill
 umask 077
 HOMEPAGE_SECRETS_ENV_FILE="$HOME/.local/share/homepage-secrets.env"
-CLOUDFLARE_TOKEN_FILE="$HOME/.local/share/homepage-cloudflare-token"
-kubectl --context "$CTX" -n "$TARGET_NS" create secret generic homepage-environment \
+kubectl --context "$CTX" -n "$TARGET_NS" create secret generic homepage-environment-external \
   --from-env-file="$HOMEPAGE_SECRETS_ENV_FILE" --dry-run=client -o yaml \
   | kubectl --context "$CTX" apply -f -
-kubectl --context "$CTX" -n "$TARGET_NS" create secret generic homepage-caddy \
-  --from-file=cloudflare_api_token="$CLOUDFLARE_TOKEN_FILE" \
-  --dry-run=client -o yaml | kubectl --context "$CTX" apply -f -
 ```
 
-The PVCs restored from the backup carry production PV names. The resource
-modifier below rewrites their `volumeName` fields to the scratch PVs; applying
-the backup's PV objects encounters the already-existing production PV names,
-while the restored claims bind only to the scratch PVs:
+Modify the restored claims to use `local-path`. The modifier removes the saved
+static PV binding and adds the Velero-supported local volume annotation:
 
 ```bash
 CTX=homelab
@@ -355,33 +231,25 @@ data:
     resourceModifierRules:
       - conditions:
           groupResource: persistentvolumeclaims
-          resourceNameRegex: '^homepage-config$'
+          resourceNameRegex: '^homepage-(config|caddy|tailscale)$'
           namespaces: [homepage]
         patches:
-          - operation: add
+          - operation: remove
             path: /spec/volumeName
-            value: homepage-drill-config
-      - conditions:
-          groupResource: persistentvolumeclaims
-          resourceNameRegex: '^homepage-caddy$'
-          namespaces: [homepage]
-        patches:
+          - operation: replace
+            path: /spec/storageClassName
+            value: local-path
           - operation: add
-            path: /spec/volumeName
-            value: homepage-drill-caddy
-      - conditions:
-          groupResource: persistentvolumeclaims
-          resourceNameRegex: '^homepage-tailscale$'
-          namespaces: [homepage]
-        patches:
-          - operation: add
-            path: /spec/volumeName
-            value: homepage-drill-tailscale
+            path: /metadata/annotations/volumeType
+            value: local
 YAML
 kubectl --context "$CTX" -n velero exec deployment/velero -- /velero restore create \
   homepage-drill-restore --from-backup "$BACKUP" \
   --namespace-mappings homepage:homepage-drill \
-  --resource-modifier-configmap homepage-drill-restore-modifiers --wait
+  --include-cluster-resources=false \
+  --resource-modifier-configmap homepage-drill-restore-modifiers \
+  --exclude-resources httproutes.gateway.networking.k8s.io,ciliumendpoints.cilium.io,endpoints,endpointslices.discovery.k8s.io \
+  --wait
 kubectl --context "$CTX" -n velero get restore homepage-drill-restore
 kubectl --context "$CTX" -n velero get podvolumerestores \
   -l velero.io/restore-name=homepage-drill-restore \
@@ -389,20 +257,12 @@ kubectl --context "$CTX" -n velero get podvolumerestores \
 kubectl --context "$CTX" -n homepage-drill get pvc -o wide
 ```
 
-For this Homepage pod, expect completed PodVolumeRestores for `homepage-config`,
-`caddy-state`, and `caddy-runtime`, with no `tailscale-state` restore. The
-Tailscale state is excluded to prevent cloning a live tailnet identity. Once
-the volume restores complete, drop the Tailscale and Caddy sidecars in the
-scratch Deployment so the Homepage container can be evaluated by itself:
-
-```bash
-CTX=homelab
-kubectl --context "$CTX" -n homepage-drill patch deployment homepage \
-  --type=json \
-  --patch='[{"op":"remove","path":"/spec/template/spec/containers/1"},{"op":"remove","path":"/spec/template/spec/containers/1"}]'
-kubectl --context "$CTX" -n homepage-drill rollout status deployment/homepage --timeout=300s
-kubectl --context "$CTX" -n homepage-drill get pods -o wide
-```
+The 2026-10-29 backup contains one completed PodVolumeBackup for
+`homepage-config` (287,717 bytes); it does not contain Caddy or Tailscale volume
+data. Its Deployment already has only the Homepage container. Require a
+completed PodVolumeRestore with the expected byte count and a Running, Ready
+pod before comparing data. Check each selected backup's own resource list and
+PodVolumeBackups; do not assume older sidecars or volumes are present:
 
 Compare resource inventories and `/app/config` file lists/checksums. Exclude
 logs, icons, the Velero-generated `.velero/` marker, and the ConfigMap-managed
@@ -435,85 +295,46 @@ kubectl --context "$CTX" -n homepage-drill exec deployment/homepage -c homepage 
 
 ## Remove a completed drill
 
-Run cleanup only after verification is finished and the drill workload is down.
-This deletes only `homepage-drill`, its three named scratch PVs, and the three
-scratch directories. The Talos baseline file must be the saved `k8s-w-1`
-configuration containing the three production `.keep` entries and no
-`homepage-drill` entries:
+Run cleanup only after verification is finished. This example deletes the
+temporary namespace and its dynamic local-path volumes. It verifies each PV is
+a `local-path` volume under `/var/mnt/local-path`, then changes only those drill
+PVs to `Delete` so the provisioner removes their directories when the claims
+are deleted:
 
 ```bash
+set -euo pipefail
 CTX=homelab
-W1_ADDR="$(kubectl --context "$CTX" get node k8s-w-1 -o jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')"
-TALOSCONFIG="$HOME/.local/share/homelab-talos/base/talosconfig"
-BASELINE="$HOME/.local/share/homelab-talos/k8s-w-1.yaml"
-if grep -q '/var/mnt/homepage-drill' "$BASELINE"; then
-  echo "Saved Talos baseline still contains drill paths; stop." >&2
-  exit 1
-fi
-for path in /var/mnt/homepage/config/.keep /var/mnt/homepage/caddy/.keep \
-  /var/mnt/homepage/tailscale/.keep; do
-  grep -qF "$path" "$BASELINE" || { echo "Production path missing from baseline: $path" >&2; exit 1; }
-done
-kubectl --context "$CTX" -n homepage-drill scale deployment/homepage --replicas=0
-kubectl --context "$CTX" -n homepage-drill wait --for=delete pod \
+TARGET_NS=homepage-drill
+kubectl --context "$CTX" -n "$TARGET_NS" scale deployment/homepage --replicas=0
+kubectl --context "$CTX" -n "$TARGET_NS" wait --for=delete pod \
   -l app.kubernetes.io/name=homepage --timeout=180s
-kubectl --context "$CTX" delete namespace homepage-drill --wait=true --timeout=300s
-kubectl --context "$CTX" delete pv homepage-drill-config homepage-drill-caddy \
-  homepage-drill-tailscale --ignore-not-found=true --wait=true
-talosctl apply-config --nodes "$W1_ADDR" --endpoints "$W1_ADDR" \
-  --talosconfig "$TALOSCONFIG" --mode no-reboot --file "$BASELINE"
-kubectl --context "$CTX" -n velero apply -f - <<'YAML'
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: homepage-drill-storage-cleanup
-spec:
-  backoffLimit: 0
-  ttlSecondsAfterFinished: 300
-  template:
-    spec:
-      nodeName: k8s-w-1
-      automountServiceAccountToken: false
-      restartPolicy: Never
-      containers:
-        - name: cleanup
-          image: docker.io/amazon/aws-cli:2.34.0@sha256:97cc5f847898f54432492c128408c62e0df2153d9ad36573be8e5a03826123b0
-          imagePullPolicy: IfNotPresent
-          command:
-            - /bin/sh
-            - -ec
-            - |
-              test "$(ls -1A /scratch | sort | tr '\n' ' ')" = "caddy config tailscale "
-              test -d /scratch/config
-              test -d /scratch/caddy
-              test -d /scratch/tailscale
-              rm -rf -- /scratch/config /scratch/caddy /scratch/tailscale
-              echo "Removed the three Homepage drill storage directories."
-          securityContext:
-            privileged: true
-            runAsUser: 0
-          volumeMounts:
-            - name: scratch-root
-              mountPath: /scratch
-      volumes:
-        - name: scratch-root
-          hostPath:
-            path: /var/mnt/homepage-drill
-            type: Directory
-YAML
-kubectl --context "$CTX" -n velero wait --for=condition=Complete \
-  job/homepage-drill-storage-cleanup --timeout=300s
-kubectl --context "$CTX" -n velero logs job/homepage-drill-storage-cleanup
-kubectl --context "$CTX" -n velero delete job/homepage-drill-storage-cleanup \
-  configmap/homepage-drill-restore-modifiers --ignore-not-found=true
+PV_NAMES="$(kubectl --context "$CTX" get pv -o json \
+  | jq -r --arg ns "$TARGET_NS" \
+    '.items[] | select(.spec.claimRef.namespace == $ns) | .metadata.name')"
+PV_ARRAY=()
+if [[ -n "$PV_NAMES" ]]; then
+  readarray -t PV_ARRAY <<< "$PV_NAMES"
+fi
+for pv in "${PV_ARRAY[@]}"; do
+  kubectl --context "$CTX" get pv "$pv" -o json \
+    | jq -e '(.spec.storageClassName == "local-path") and
+      (.spec.local.path | startswith("/var/mnt/local-path/"))' >/dev/null
+done
+if [[ "${#PV_ARRAY[@]}" -gt 0 ]]; then
+  kubectl --context "$CTX" patch pv "${PV_ARRAY[@]}" --type=merge \
+    -p '{"spec":{"persistentVolumeReclaimPolicy":"Delete"}}'
+fi
+kubectl --context "$CTX" delete namespace "$TARGET_NS" --wait=true --timeout=300s
+for pv in "${PV_ARRAY[@]}"; do
+  kubectl --context "$CTX" wait --for=delete "pv/$pv" --timeout=180s
+done
+kubectl --context "$CTX" -n velero delete configmap \
+  homepage-drill-restore-modifiers --ignore-not-found=true
 kubectl --context "$CTX" -n homepage rollout status deployment/homepage --timeout=300s
-kubectl --context "$CTX" get pv homepage-config homepage-caddy homepage-tailscale -o wide
 ```
 
-Confirm the drill namespace and PVs are absent, the scratch paths no longer
-list on `k8s-w-1`, all three production PV claims remain Bound to their original
-paths, and production Homepage is healthy. Do not run the cleanup block against
-a real restored namespace whose scratch PVs are now serving production.
+Confirm the drill namespace and its PVs are absent, production Homepage is
+healthy, and its three production PV claims remain Bound to their original PVs.
 
 
 [Back to Kubernetes overview](README.md).
