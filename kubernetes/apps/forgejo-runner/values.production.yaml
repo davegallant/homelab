@@ -102,7 +102,7 @@ runner:
     existingSecret: "forgejo-runner-config"
     file:
       runner:
-        capacity: 2
+        capacity: 1
         # runs-on: docker needs an executor image; this includes Node for
         # actions/checkout and git/curl for both scheduled workflows.
         labels:
@@ -126,3 +126,14 @@ resources:
   limits:
     cpu: "1"
     memory: 1Gi
+
+# Bound the privileged DinD daemon and all nested job containers to a
+# predictable share of a worker. Job concurrency is capped at one above.
+dind:
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
