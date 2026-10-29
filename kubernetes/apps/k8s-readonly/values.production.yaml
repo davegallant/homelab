@@ -42,7 +42,7 @@ controllers:
           allowPrivilegeEscalation: false
         image:
           repository: registry.k8s.io/kubectl
-          tag: v1.37.0
+          tag: v1.37.2@sha256:fe049faa65ae483ac200009a949a68fa4c9985daea12c9cb1195c9c7965301fc
           digest: sha256:d853eef8e26a7556deb7561169706bd92d7bcb780ffa42760aeb74ecad176cbd
         command:
           - kubectl
