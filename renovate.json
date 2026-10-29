@@ -47,6 +47,19 @@
       "depNameTemplate": "cilium",
       "registryUrlTemplate": "https://helm.cilium.io/",
       "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "Keep Jellyfin Helm image tags and digests in sync",
+      "managerFilePatterns": [
+        "/^kubernetes/apps/jellyfin/values\\.production\\.yaml$/"
+      ],
+      "matchStrings": [
+        "(?<repoIndent>[ \\t]*)repository: (?<depName>docker\\.io/jellyfin/jellyfin)\\n(?<fieldIndent>[ \\t]+)tag: \\\"(?<currentValue>[^\\\"]+)\\\"\\n[ \\t]+digest: (?<currentDigest>sha256:[a-f0-9]+)"
+      ],
+      "autoReplaceStringTemplate": "{{{repoIndent}}}repository: {{{depName}}}\n{{{fieldIndent}}}tag: \"{{{newValue}}}\"\n{{{fieldIndent}}}digest: {{{newDigest}}}",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "semver"
     }
   ],
   "argocd": {
@@ -82,13 +95,6 @@
       "pinDigests": true
     },
     {
-      "description": "Keep Helm values image digests in their separate digest fields",
-      "matchManagers": [
-        "helm-values"
-      ],
-      "pinDigests": false
-    },
-    {
       "description": "Keep the beszel agent .deb and the beszel hub image in lockstep",
       "matchPackageNames": [
         "henrygd/beszel",
@@ -108,6 +114,16 @@
         "quay.io/invidious/invidious-companion"
       ],
       "versioning": "regex:^(?<major>\\d{4})\\.(?<minor>\\d+)\\.(?<patch>\\d+)-[a-f0-9]+$"
+    },
+    {
+      "description": "Use the Jellyfin custom manager for its separate tag and digest fields",
+      "matchManagers": [
+        "helm-values"
+      ],
+      "matchDepNames": [
+        "docker.io/jellyfin/jellyfin"
+      ],
+      "enabled": false
     }
   ]
 }
