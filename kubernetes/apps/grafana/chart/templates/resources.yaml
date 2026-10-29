@@ -58,6 +58,11 @@ spec:
               value: alertingSimplifiedRouting,alertingQueryAndExpressionsStepMode
             - name: GF_AUTH_ANONYMOUS_ENABLED
               value: "false"
+            - name: GOTIFY_ALERT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-gotify
+                  key: token
           securityContext:
             runAsUser: 0
             allowPrivilegeEscalation: false
@@ -167,3 +172,8 @@ spec:
       toPorts:
         - ports:
             - {port: "8086", protocol: TCP}
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - {port: "443", protocol: TCP}

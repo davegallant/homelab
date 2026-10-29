@@ -1,0 +1,32 @@
+apiVersion: 1
+
+# Gotify contact point + notification policy for Grafana alerts.
+# Token is NOT in Git: it comes from the Grafana process environment
+# (Secret grafana-gotify, key token, mounted as GOTIFY_ALERT_TOKEN in the
+# Deployment) via Grafana's $__env{...} provisioning expansion.
+# Apply steps (not this file): create the Secret (Vault pattern, same as
+# backup-watchdog-gotify), add the env entry to the Grafana Deployment,
+# add world:443 egress to the grafana-default-deny CiliumNetworkPolicy
+# (Gotify is public: gotify.davegallant.ca), then restart Grafana or hit
+# the provisioning reload API so the new files load.
+# Note: Grafana's webhook payload carries title + message, which Gotify
+# reads; it does not set Gotify priority, so these arrive at default
+# priority (the watchdog's priority-8 posts are a separate path).
+contactPoints:
+  - orgId: 1
+    name: gotify
+    receivers:
+      - uid: gotify-webhook
+        type: webhook
+        settings:
+          url: https://gotify.davegallant.ca/message?token=$__env{GOTIFY_ALERT_TOKEN}
+          httpMethod: POST
+          maxAlerts: 10
+policies:
+  - orgId: 1
+    receiver: gotify
+    group_by:
+      - alertname
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 4h
