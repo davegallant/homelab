@@ -22,9 +22,11 @@ central Schedule inventory. When adding a service, make the decision in its
 Application definition and add its Schedule to `kubernetes/apps/velero-schedules/`
 when required.
 `homelab-platform` permits the pinned upstream repositories and the cluster
-resource kinds required by infrastructure charts. All Applications require
-manual sync except the qBittorrent egress guardrail; none has pruning or a
-deletion finalizer.
+resource kinds required by infrastructure charts. `tailnet-gateway` uses its
+own project, limited to Gateway, HTTPRoute, and Cilium network policy resources
+in the namespaces where its routes and policies live, plus the four cluster
+resource kinds it renders. All Applications require manual sync except the
+qBittorrent egress guardrail; none has pruning or a deletion finalizer.
 Upstream charts use multiple sources: a pinned chart plus values from GitHub
 `main`. Custom charts read their sibling `values.production.yaml`.
 
@@ -44,19 +46,20 @@ updated and may report comparison errors after the move reaches remote `main`.
 Running workloads continue serving while those references are corrected.
 
 After confirming the move is present on remote `main`, apply the restricted
-monitoring and Velero projects first. Then apply the updated Argo CD Application
-to enable Git-managed Application definitions and sync it. Its source directory
-includes every Application definition, including Argo CD itself. Once the
-`victoriametrics` and `forgejo-backup` Applications report their new projects,
-run `argocd-project.yml` to remove `monitoring` and `velero` from the ordinary
-`homelab` destinations. That playbook refuses this final step until both
-Applications have moved.
+monitoring, Velero, and Tailnet Gateway projects first. Then sync the Argo CD
+Application definitions. Its source directory includes every Application,
+including Argo CD itself. Once `victoriametrics`, `forgejo-backup`,
+`velero-schedules`, and `tailnet-gateway` report their restricted projects, run
+`argocd-project.yml`. It applies the narrowed platform project and ordinary
+homelab project only after those Application project assignments pass its
+assertions.
 
 Use the intended context:
 
 ```sh
 kubectl --context "$CTX" apply -f kubernetes/apps/argocd/project-monitoring.yaml
 kubectl --context "$CTX" apply -f kubernetes/apps/argocd/project-velero-backup.yaml
+kubectl --context "$CTX" apply -f kubernetes/apps/argocd/project-tailnet-gateway.yaml
 kubectl --context "$CTX" apply -f kubernetes/apps/argocd/applications/argocd.yaml
 ```
 

@@ -36,13 +36,15 @@ for path in sorted(APPLICATIONS_DIR.glob("*.yaml")):
     apps[name] = {"namespace": namespace, "policy": policy}
 
 schedule_targets = {}
+schedule_names = set()
 for path in sorted(SCHEDULES_DIR.glob("*.yaml")):
     schedule = yaml.safe_load(path.read_text())
     if schedule.get("kind") != "Schedule" or schedule.get("metadata", {}).get("namespace") != "velero":
         fail(f"{path.relative_to(ROOT)} must define a Velero Schedule")
     name = schedule["metadata"]["name"]
-    if name in schedule_targets:
+    if name in schedule_names:
         fail(f"duplicate Schedule name {name}")
+    schedule_names.add(name)
     namespaces = schedule.get("spec", {}).get("template", {}).get("includedNamespaces", [])
     if not namespaces:
         fail(f"{name} has no includedNamespaces")

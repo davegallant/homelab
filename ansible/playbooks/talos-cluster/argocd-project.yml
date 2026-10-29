@@ -11,7 +11,7 @@
         that:
           - talos_kube_context | length > 0
 
-    - name: Apply the restricted monitoring and backup projects
+    - name: Apply the restricted monitoring, backup, and Tailnet Gateway projects
       ansible.builtin.command:
         argv:
           - kubectl
@@ -23,6 +23,7 @@
       loop:
         - project-monitoring.yaml
         - project-velero-backup.yaml
+        - project-tailnet-gateway.yaml
       register: argocd_restricted_projects_apply
       changed_when: >-
         'created' in argocd_restricted_projects_apply.stdout or
@@ -46,18 +47,39 @@
       register: argocd_velero_schedules_application
       changed_when: false
 
-    - name: Require privileged-namespace Applications to use their restricted projects
+    - name: Read the Tailnet Gateway Application project
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, argocd, get, application, tailnet-gateway, -o, json]
+      register: argocd_tailnet_gateway_application
+      changed_when: false
+
+    - name: Require privileged Applications to use their restricted projects
       ansible.builtin.assert:
         that:
           - (argocd_victoriametrics_application.stdout | from_json).spec.project == 'homelab-monitoring'
           - (argocd_forgejo_backup_application.stdout | from_json).spec.project == 'homelab-velero-backup'
           - (argocd_velero_schedules_application.stdout | from_json).spec.project == 'homelab-velero-backup'
+          - (argocd_tailnet_gateway_application.stdout | from_json).spec.project == 'homelab-tailnet-gateway'
         fail_msg: >-
-          Sync the argocd Application definitions from Git first. The
-          homelab project still allows monitoring and velero until all
-          privileged-namespace Applications use their restricted projects.
+          Sync the argocd Application definitions from Git first. Keep the
+          previous platform project until tailnet-gateway uses its restricted
+          project, then apply the narrowed platform project.
 
-    - name: Apply the narrowed homelab project after its Applications move
+    - name: Apply the narrowed platform project after Tailnet Gateway moves
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - apply
+          - -f
+          - "{{ playbook_dir }}/../../../kubernetes/apps/argocd/platform-project.yaml"
+      register: argocd_platform_project_apply
+      changed_when: >-
+        'created' in argocd_platform_project_apply.stdout or
+        'configured' in argocd_platform_project_apply.stdout
+
+    - name: Apply the narrowed homelab project
       ansible.builtin.command:
         argv:
           - kubectl
@@ -66,8 +88,10 @@
           - apply
           - -f
           - "{{ playbook_dir }}/../../../kubernetes/apps/argocd/project.yaml"
-      register: argocd_project_apply
-      changed_when: "'created' in argocd_project_apply.stdout or 'configured' in argocd_project_apply.stdout"
+      register: argocd_homelab_project_apply
+      changed_when: >-
+        'created' in argocd_homelab_project_apply.stdout or
+        'configured' in argocd_homelab_project_apply.stdout
 
     - name: Verify the CiliumNetworkPolicy resource is permitted
       ansible.builtin.command:
