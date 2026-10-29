@@ -45,6 +45,7 @@
       mcleod: [tag:external, tag:beszel-agent]
       miniflux: [tag:monitored, tag:pangolin]
       muse: [tag:external]
+      nanoclaw: [tag:nanoclaw]
       paperless-ngx: [tag:monitored, tag:pangolin]
       searxng: [tag:monitored, tag:pangolin]
       umami: [tag:monitored, tag:pangolin]
