@@ -3,6 +3,11 @@ kind: Schedule
 metadata:
   name: romm-daily
   namespace: velero
+  labels:
+    app.kubernetes.io/instance: romm
+    app.kubernetes.io/managed-by: ArgoCD
+    app.kubernetes.io/name: romm
+    helm.sh/chart: app-template-5.3.0
 spec:
   paused: false
   schedule: 30 4 * * *

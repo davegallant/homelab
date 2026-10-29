@@ -3,6 +3,11 @@ kind: Schedule
 metadata:
   name: immich-daily
   namespace: velero
+  labels:
+    app.kubernetes.io/instance: immich
+    app.kubernetes.io/managed-by: ArgoCD
+    app.kubernetes.io/name: immich
+    helm.sh/chart: app-template-5.3.0
 spec:
   paused: false
   schedule: 10 5 * * *

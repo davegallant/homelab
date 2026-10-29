@@ -3,6 +3,11 @@ kind: Schedule
 metadata:
   name: maloja-backupschedule
   namespace: velero
+  labels:
+    app.kubernetes.io/instance: maloja
+    app.kubernetes.io/managed-by: ArgoCD
+    app.kubernetes.io/name: maloja
+    helm.sh/chart: app-template-5.3.0
 spec:
   paused: false
   schedule: 30 3 * * *

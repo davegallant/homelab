@@ -4,6 +4,8 @@ kind: Application
 metadata:
   name: k8s-readonly
   namespace: argocd
+  annotations:
+    homelab.davegallant.ca/backup-policy: not-required
 spec:
   project: homelab
   sources:

@@ -3,6 +3,11 @@ kind: Schedule
 metadata:
   name: lubelogger-backupschedule
   namespace: velero
+  labels:
+    app.kubernetes.io/instance: lubelogger
+    app.kubernetes.io/managed-by: ArgoCD
+    app.kubernetes.io/name: lubelogger
+    helm.sh/chart: app-template-5.3.0
 spec:
   paused: false
   schedule: 25 3 * * *
