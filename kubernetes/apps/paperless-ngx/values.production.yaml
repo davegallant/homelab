@@ -237,26 +237,6 @@ persistence:
           - path: /data
 
 rawResources:
-  daily:
-    enabled: true
-    manifest:
-      apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: paperless-ngx-daily
-        namespace: velero
-      spec:
-        schedule: "15 4 * * *"
-        template:
-          ttl: 336h
-          includedNamespaces:
-            - paperless-ngx
-          excludedResources:
-            - secrets
-          defaultVolumesToFsBackup: false
-          snapshotVolumes: false
-          storageLocation: default
-
   defaultDenyNetworkPolicy:
     enabled: true
     manifest:

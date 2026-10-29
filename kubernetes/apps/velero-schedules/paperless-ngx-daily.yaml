@@ -1,0 +1,18 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: paperless-ngx-daily
+  namespace: velero
+spec:
+  paused: false
+  schedule: 15 4 * * *
+  skipImmediately: false
+  template:
+    defaultVolumesToFsBackup: false
+    excludedResources:
+    - secrets
+    includedNamespaces:
+    - paperless-ngx
+    snapshotVolumes: false
+    storageLocation: default
+    ttl: 336h

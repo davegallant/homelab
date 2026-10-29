@@ -1,0 +1,18 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: radarr-daily
+  namespace: velero
+spec:
+  paused: false
+  schedule: 25 4 * * *
+  skipImmediately: false
+  template:
+    defaultVolumesToFsBackup: false
+    excludedResources:
+    - secrets
+    includedNamespaces:
+    - radarr
+    snapshotVolumes: false
+    storageLocation: default
+    ttl: 336h

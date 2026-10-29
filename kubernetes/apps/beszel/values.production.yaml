@@ -105,26 +105,6 @@ persistence:
     size: 256Mi
 
 rawResources:
-  daily:
-    enabled: true
-    manifest:
-      apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: beszel-daily
-        namespace: velero
-      spec:
-        schedule: "35 4 * * *"
-        template:
-          ttl: 336h
-          includedNamespaces:
-            - beszel
-          excludedResources:
-            - secrets
-          defaultVolumesToFsBackup: false
-          snapshotVolumes: false
-          storageLocation: default
-
   defaultDenyNetworkPolicy:
     enabled: true
     manifest:

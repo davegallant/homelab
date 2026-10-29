@@ -1,0 +1,18 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: maloja-backupschedule
+  namespace: velero
+spec:
+  paused: false
+  schedule: 30 3 * * *
+  skipImmediately: false
+  template:
+    defaultVolumesToFsBackup: false
+    excludedResources:
+    - secrets
+    includedNamespaces:
+    - maloja
+    snapshotVolumes: false
+    storageLocation: default
+    ttl: 336h

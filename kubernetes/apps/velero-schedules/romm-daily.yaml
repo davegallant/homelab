@@ -1,0 +1,18 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: romm-daily
+  namespace: velero
+spec:
+  paused: false
+  schedule: 30 4 * * *
+  skipImmediately: false
+  template:
+    defaultVolumesToFsBackup: false
+    excludedResources:
+    - secrets
+    includedNamespaces:
+    - romm
+    snapshotVolumes: false
+    storageLocation: default
+    ttl: 336h

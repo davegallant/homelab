@@ -1,0 +1,18 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: navidrome-daily
+  namespace: velero
+spec:
+  paused: false
+  schedule: 45 3 * * *
+  skipImmediately: false
+  template:
+    defaultVolumesToFsBackup: false
+    excludedResources:
+    - secrets
+    includedNamespaces:
+    - navidrome
+    snapshotVolumes: false
+    storageLocation: default
+    ttl: 336h

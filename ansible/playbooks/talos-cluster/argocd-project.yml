@@ -40,15 +40,22 @@
       register: argocd_forgejo_backup_application
       changed_when: false
 
+    - name: Read the Velero schedules Application project
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, argocd, get, application, velero-schedules, -o, json]
+      register: argocd_velero_schedules_application
+      changed_when: false
+
     - name: Require privileged-namespace Applications to use their restricted projects
       ansible.builtin.assert:
         that:
           - (argocd_victoriametrics_application.stdout | from_json).spec.project == 'homelab-monitoring'
           - (argocd_forgejo_backup_application.stdout | from_json).spec.project == 'homelab-velero-backup'
+          - (argocd_velero_schedules_application.stdout | from_json).spec.project == 'homelab-velero-backup'
         fail_msg: >-
           Sync the argocd Application definitions from Git first. The
-          homelab project still allows monitoring and velero until these
-          Applications use their restricted projects.
+          homelab project still allows monitoring and velero until all
+          privileged-namespace Applications use their restricted projects.
 
     - name: Apply the narrowed homelab project after its Applications move
       ansible.builtin.command:

@@ -178,26 +178,6 @@ persistence:
           - path: /var/lib/postgresql
 
 rawResources:
-  daily:
-    enabled: true
-    manifest:
-      apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: umami-daily
-        namespace: velero
-      spec:
-        schedule: "0 4 * * *"
-        template:
-          ttl: 336h
-          includedNamespaces:
-            - umami
-          excludedResources:
-            - secrets
-          defaultVolumesToFsBackup: false
-          snapshotVolumes: false
-          storageLocation: default
-
   defaultDenyNetworkPolicy:
     enabled: true
     manifest:

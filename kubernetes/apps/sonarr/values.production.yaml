@@ -101,26 +101,6 @@ persistence:
           - path: /mnt
 
 rawResources:
-  daily:
-    enabled: true
-    manifest:
-      apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: sonarr-daily
-        namespace: velero
-      spec:
-        schedule: "20 4 * * *"
-        template:
-          ttl: 336h
-          includedNamespaces:
-            - sonarr
-          excludedResources:
-            - secrets
-          defaultVolumesToFsBackup: false
-          snapshotVolumes: false
-          storageLocation: default
-
   defaultDenyNetworkPolicy:
     enabled: true
     manifest:

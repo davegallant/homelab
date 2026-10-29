@@ -1,0 +1,18 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: immich-daily
+  namespace: velero
+spec:
+  paused: false
+  schedule: 10 5 * * *
+  skipImmediately: false
+  template:
+    defaultVolumesToFsBackup: false
+    excludedResources:
+    - secrets
+    includedNamespaces:
+    - immich
+    snapshotVolumes: false
+    storageLocation: default
+    ttl: 336h

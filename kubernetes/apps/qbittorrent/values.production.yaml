@@ -140,25 +140,6 @@ persistence:
           - path: /scripts
             readOnly: true
 rawResources:
-  daily:
-    enabled: true
-    manifest:
-      apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: qbittorrent-daily
-        namespace: velero
-      spec:
-        schedule: 40 4 * * *
-        template:
-          ttl: 336h
-          includedNamespaces:
-            - qbittorrent
-          excludedResources:
-            - secrets
-          defaultVolumesToFsBackup: false
-          snapshotVolumes: false
-          storageLocation: default
   defaultDenyNetworkPolicy:
     enabled: true
     manifest:
