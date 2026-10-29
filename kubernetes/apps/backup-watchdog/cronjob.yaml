@@ -34,7 +34,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: watchdog
-              image: docker.io/library/python:3.13.18-slim-trixie@sha256:8a7c3cd378e4e6dfa5d0ea4f6ca1a11068c951e3de3146ebc484eadf4b05a2be
+              image: docker.io/library/python:3.13.18-slim-trixie@sha256:76baad6037690d6e8c4397fbcaef17bca6f19eecef822b708fe8fa3417d30bb5
               imagePullPolicy: IfNotPresent
               command: [python3, /app/check.py]
               env:
