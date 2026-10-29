@@ -50,7 +50,7 @@ talos_nodes:
     vcpu: 2
     memory_mib: 4608
     allowed_memory_mib: [2048, 2288, 2560, 3072, 3584, 4608]
-    disk_gib: 25
+    disk_gib: 50
     storage: local-lvm
 
 # Static addresses are outside OPNsense's active 192.168.1.2-99 DHCP pool.

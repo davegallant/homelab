@@ -1,0 +1,135 @@
+---
+- name: Expand the k8s-w-2 system disk
+  hosts: pve-g3-2
+  gather_facts: false
+  vars_files:
+    - ../../../kubernetes/cluster/vars.yaml
+  vars:
+    talos_disk_resize_node_name: k8s-w-2
+    talos_disk_resize_expected_gib: 25
+    talos_disk_resize_min_free_kib: 52428800
+  tasks:
+    - name: Select k8s-w-2 from the Talos inventory
+      ansible.builtin.set_fact:
+        talos_disk_resize_nodes: >-
+          {{ talos_nodes | selectattr('name', 'equalto', talos_disk_resize_node_name) | list }}
+
+    - name: Require the expected worker and target size
+      ansible.builtin.assert:
+        that:
+          - talos_disk_resize_nodes | length == 1
+          - talos_disk_resize_nodes[0].host == inventory_hostname
+          - talos_disk_resize_nodes[0].vmid | int == 147
+          - talos_disk_resize_nodes[0].disk_gib | int == 50
+          - talos_disk_resize_nodes[0].storage == 'local-lvm'
+        fail_msg: >-
+          Refusing to resize an unexpected worker, VM, storage, or target size.
+
+    - name: Read the Proxmox VM configuration
+      ansible.builtin.command:
+        argv:
+          - qm
+          - config
+          - "{{ talos_disk_resize_nodes[0].vmid }}"
+      register: talos_disk_resize_config
+      changed_when: false
+
+    - name: Require the expected VM identity and system disk
+      ansible.builtin.assert:
+        that:
+          - "('name: ' ~ talos_disk_resize_node_name) in talos_disk_resize_config.stdout"
+          - >-
+            talos_disk_resize_config.stdout is search(
+            '(?m)^virtio0: local-lvm:vm-147-disk-1,size=([0-9]+)G(?:,.*)?$')
+        fail_msg: >-
+          Refusing to resize because the VM identity or virtio0 disk does not
+          match k8s-w-2 on local-lvm.
+
+    - name: Read the current system disk size
+      ansible.builtin.set_fact:
+        talos_disk_resize_current_gib: >-
+          {{ talos_disk_resize_config.stdout
+          | regex_findall('(?m)^virtio0: local-lvm:vm-147-disk-1,size=([0-9]+)G(?:,.*)?$')
+          | first | int }}
+
+    - name: Require an expected current size and refuse any shrink
+      ansible.builtin.assert:
+        that:
+          - talos_disk_resize_current_gib | int in [talos_disk_resize_expected_gib, talos_disk_resize_nodes[0].disk_gib | int]
+          - talos_disk_resize_current_gib | int <= talos_disk_resize_nodes[0].disk_gib | int
+        fail_msg: >-
+          Refusing disk-size drift. Expected 25 GiB before resizing or 50 GiB
+          if the resize has already completed.
+
+    - name: Read the current Proxmox local date for the backup gate
+      ansible.builtin.command:
+        argv: [date, +%Y_%m_%d]
+      register: talos_disk_resize_local_date
+      changed_when: false
+      when: talos_disk_resize_current_gib | int == talos_disk_resize_expected_gib
+
+    - name: List off-host VM backups
+      ansible.builtin.command:
+        argv: [pvesm, list, proxmox-backups, --content, backup]
+      register: talos_disk_resize_backups
+      changed_when: false
+      when: talos_disk_resize_current_gib | int == talos_disk_resize_expected_gib
+
+    - name: Require a same-day off-host backup of k8s-w-2
+      ansible.builtin.assert:
+        that:
+          - >-
+            talos_disk_resize_backups.stdout is search(
+            'vzdump-qemu-147-' ~ (talos_disk_resize_local_date.stdout | trim))
+        fail_msg: >-
+          No same-day off-host backup for VM 147 was found. Run the Talos VM
+          backup playbook and verify its archive before resizing.
+      when: talos_disk_resize_current_gib | int == talos_disk_resize_expected_gib
+
+    - name: Read local-lvm capacity
+      ansible.builtin.command:
+        argv: [pvesm, status, --storage, local-lvm]
+      register: talos_disk_resize_storage
+      changed_when: false
+      when: talos_disk_resize_current_gib | int == talos_disk_resize_expected_gib
+
+    - name: Require at least 50 GiB free in local-lvm
+      ansible.builtin.assert:
+        that:
+          - >-
+            ((talos_disk_resize_storage.stdout_lines
+            | select('match', '^local-lvm') | first).split()[5] | int)
+            >= talos_disk_resize_min_free_kib | int
+        fail_msg: >-
+          Refusing resize because local-lvm has less than 50 GiB available.
+      when: talos_disk_resize_current_gib | int == talos_disk_resize_expected_gib
+
+    - name: Expand virtio0 from 25 GiB to 50 GiB
+      ansible.builtin.command:
+        argv:
+          - qm
+          - resize
+          - "{{ talos_disk_resize_nodes[0].vmid }}"
+          - virtio0
+          - "{{ talos_disk_resize_nodes[0].disk_gib }}G"
+      when: talos_disk_resize_current_gib | int == talos_disk_resize_expected_gib
+      changed_when: true
+
+    - name: Confirm the Proxmox disk now reports 50 GiB
+      ansible.builtin.command:
+        argv:
+          - qm
+          - config
+          - "{{ talos_disk_resize_nodes[0].vmid }}"
+      register: talos_disk_resize_final_config
+      changed_when: false
+
+    - name: Require the target disk size
+      ansible.builtin.assert:
+        that:
+          - >-
+            talos_disk_resize_final_config.stdout is search(
+            '(?m)^virtio0: local-lvm:vm-147-disk-1,size=50G(?:,.*)?$')
+        fail_msg: >-
+          Proxmox did not report the expected 50 GiB virtio0 disk. Stop and
+          inspect the VM before rebooting it.
