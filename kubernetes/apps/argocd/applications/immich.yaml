@@ -11,6 +11,8 @@ kind: Application
 metadata:
   name: immich
   namespace: argocd
+  annotations:
+    homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
   sources:

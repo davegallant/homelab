@@ -3,6 +3,11 @@ kind: Schedule
 metadata:
   name: paperless-ngx-daily
   namespace: velero
+  labels:
+    app.kubernetes.io/instance: paperless-ngx
+    app.kubernetes.io/managed-by: ArgoCD
+    app.kubernetes.io/name: paperless-ngx
+    helm.sh/chart: app-template-5.3.0
 spec:
   paused: false
   schedule: 15 4 * * *

@@ -3,6 +3,11 @@ kind: Schedule
 metadata:
   name: beszel-daily
   namespace: velero
+  labels:
+    app.kubernetes.io/instance: beszel
+    app.kubernetes.io/managed-by: ArgoCD
+    app.kubernetes.io/name: beszel
+    helm.sh/chart: app-template-5.3.0
 spec:
   paused: false
   schedule: 35 4 * * *

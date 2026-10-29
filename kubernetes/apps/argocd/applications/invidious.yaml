@@ -4,6 +4,8 @@ kind: Application
 metadata:
   name: invidious
   namespace: argocd
+  annotations:
+    homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
   sources:

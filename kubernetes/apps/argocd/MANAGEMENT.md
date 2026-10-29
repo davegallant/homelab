@@ -16,6 +16,11 @@ separate projects because their destination namespaces are privileged; each
 project permits only the resource kinds those Applications manage. The
 `velero-schedules` Application owns the backup Schedules for ordinary services,
 so service Applications do not need access to the privileged `velero` namespace.
+Each ordinary Application declares `homelab.davegallant.ca/backup-policy` as
+`scheduled` or `not-required`; `just lint` checks that decision against the
+central Schedule inventory. When adding a service, make the decision in its
+Application definition and add its Schedule to `kubernetes/apps/velero-schedules/`
+when required.
 `homelab-platform` permits the pinned upstream repositories and the cluster
 resource kinds required by infrastructure charts. All Applications require
 manual sync except the qBittorrent egress guardrail; none has pruning or a

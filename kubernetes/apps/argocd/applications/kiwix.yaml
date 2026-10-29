@@ -4,6 +4,8 @@ kind: Application
 metadata:
   name: kiwix
   namespace: argocd
+  annotations:
+    homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
   source:
