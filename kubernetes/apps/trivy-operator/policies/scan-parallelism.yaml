@@ -1,0 +1,56 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingAdmissionPolicy
+metadata:
+  name: trivy-scan-parallelism
+spec:
+  failurePolicy: Ignore
+  matchConstraints:
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: trivy-system
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE"]
+        resources: ["pods"]
+        scope: Namespaced
+  matchConditions:
+    - name: trivy-scan-job
+      expression: object.metadata.name.startsWith("scan-vulnerabilityreport-")
+  reinvocationPolicy: Never
+  mutations:
+    - patchType: JSONPatch
+      jsonPatch:
+        expression: >-
+          object.spec.containers.filter(c, has(c.env)).map(c,
+            JSONPatch{
+              op: "add",
+              path: "/spec/containers/" + string(object.spec.containers.indexOf(c)) + "/env/-",
+              value: Object.spec.containers.env{
+                name: "TRIVY_PARALLEL",
+                value: "1"
+              }
+            }
+          ) +
+          object.spec.containers.filter(c, !has(c.env)).map(c,
+            JSONPatch{
+              op: "add",
+              path: "/spec/containers/" + string(object.spec.containers.indexOf(c)) + "/env",
+              value: [Object.spec.containers.env{
+                name: "TRIVY_PARALLEL",
+                value: "1"
+              }]
+            }
+          )
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingAdmissionPolicyBinding
+metadata:
+  name: trivy-scan-parallelism
+spec:
+  policyName: trivy-scan-parallelism
+  matchResources:
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: trivy-system

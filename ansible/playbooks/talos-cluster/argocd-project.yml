@@ -111,3 +111,23 @@
       failed_when: >-
         'group: cilium.io' not in argocd_policy_permission.stdout or
         'kind: CiliumNetworkPolicy' not in argocd_policy_permission.stdout
+
+    - name: Verify MutatingAdmissionPolicy resources are permitted
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - -n
+          - argocd
+          - get
+          - appproject
+          - homelab-platform
+          - -o
+          - yaml
+      register: argocd_mutating_policy_permission
+      changed_when: false
+      failed_when: >-
+        'group: admissionregistration.k8s.io' not in argocd_mutating_policy_permission.stdout or
+        'kind: MutatingAdmissionPolicy' not in argocd_mutating_policy_permission.stdout or
+        'kind: MutatingAdmissionPolicyBinding' not in argocd_mutating_policy_permission.stdout
