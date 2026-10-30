@@ -17,7 +17,8 @@
 set -uo pipefail
 
 CONFIG="${HOME:-/root}/config"
-STAGING="$(mktemp -d)"
+# /tmp is a RAM-backed tmpfs on Ubuntu and can be smaller than the SQLite DBs.
+STAGING="$(mktemp -d /var/tmp/vps-backup.XXXXXX)"
 
 backup_failed() {
     if [ -n "${GOTIFY_URL:-}" ] && [ -n "${GOTIFY_TOKEN:-}" ]; then
@@ -50,9 +51,9 @@ sqlite_backup() {
 
 # Consistent SQLite copies while the services keep running.
 sqlite_backup "$CONFIG/headscale/data/db.sqlite" "$STAGING/headscale-db.sqlite" \
-    || fail "sqlite .backup of Headscale DB failed (still locked after retries) on $(hostname)"
+    || fail "sqlite .backup of Headscale DB failed after retries on $(hostname)"
 sqlite_backup "$CONFIG/db/db.sqlite" "$STAGING/pangolin-db.sqlite" \
-    || fail "sqlite .backup of Pangolin DB failed (still locked after retries) on $(hostname)"
+    || fail "sqlite .backup of Pangolin DB failed after retries on $(hostname)"
 
 # Static secrets/state.
 mkdir -p "$STAGING/files" \
