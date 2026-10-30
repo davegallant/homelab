@@ -31,6 +31,12 @@ controllers:
       # mounts it into the pod. The token's RBAC is read-only and has no
       # secrets access or write permissions.
       automountServiceAccountToken: true
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
       nodeSelector:
         kubernetes.io/hostname: k8s-w-1
       annotations:
@@ -40,6 +46,10 @@ controllers:
       proxy:
         securityContext:
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
         image:
           repository: registry.k8s.io/kubectl
           tag: v1.37.2
