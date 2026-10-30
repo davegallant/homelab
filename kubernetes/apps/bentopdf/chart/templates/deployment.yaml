@@ -68,6 +68,8 @@ spec:
         - name: newt
           image: {{ .Values.newt.image }}
           imagePullPolicy: IfNotPresent
+          args:
+            - --disable-ssh
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000
