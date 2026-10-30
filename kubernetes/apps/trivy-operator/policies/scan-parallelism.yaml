@@ -20,29 +20,22 @@ spec:
       expression: object.metadata.name.startsWith("scan-vulnerabilityreport-")
   reinvocationPolicy: Never
   mutations:
-    - patchType: JSONPatch
-      jsonPatch:
+    - patchType: ApplyConfiguration
+      applyConfiguration:
         expression: >-
-          object.spec.containers.filter(c, has(c.env)).map(c,
-            JSONPatch{
-              op: "add",
-              path: "/spec/containers/" + string(object.spec.containers.indexOf(c)) + "/env/-",
-              value: Object.spec.containers.env{
-                name: "TRIVY_PARALLEL",
-                value: "1"
-              }
+          Object{
+            spec: Object.spec{
+              containers: object.spec.containers.map(c,
+                Object.spec.containers{
+                  name: c.name,
+                  env: [Object.spec.containers.env{
+                    name: "TRIVY_PARALLEL",
+                    value: "1"
+                  }]
+                }
+              )
             }
-          ) +
-          object.spec.containers.filter(c, !has(c.env)).map(c,
-            JSONPatch{
-              op: "add",
-              path: "/spec/containers/" + string(object.spec.containers.indexOf(c)) + "/env",
-              value: [Object.spec.containers.env{
-                name: "TRIVY_PARALLEL",
-                value: "1"
-              }]
-            }
-          )
+          }
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingAdmissionPolicyBinding
