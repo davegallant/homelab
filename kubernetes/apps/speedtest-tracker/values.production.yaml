@@ -310,6 +310,21 @@ rawResources:
               - ports:
                   - port: "443"
                     protocol: TCP
+          - toFQDNs:
+              - matchName: speedtest.net
+              - matchPattern: "*.speedtest.net"
+            toPorts:
+              - ports:
+                  - port: "443"
+                    protocol: TCP
+          # Ookla's server list supplies independently operated hostnames;
+          # keep automatic server selection while limiting data traffic to TCP/8080.
+          - toFQDNs:
+              - matchPattern: "*"
+            toPorts:
+              - ports:
+                  - port: "8080"
+                    protocol: TCP
           - toCIDR:
               - 239.255.255.250/32
             toPorts:
