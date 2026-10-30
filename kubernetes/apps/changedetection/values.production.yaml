@@ -16,16 +16,26 @@ controllers:
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
     containers:
       app:
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
         image:
           repository: docker.io/dgtlmoon/changedetection.io
           tag: 0.60.10
           digest: sha256:72f97681f390e4d6ae3e6585e1e0036449910f347144b766fc23910458566a1a
         env:
           HIDE_REFERER: "true"
+          HOME: /tmp
         probes:
           startup:
             enabled: true
@@ -94,6 +104,12 @@ persistence:
       changedetection:
         app:
           - path: /datastore
+  tmp:
+    type: emptyDir
+    advancedMounts:
+      changedetection:
+        app:
+          - path: /tmp
 rawResources:
   defaultDenyNetworkPolicy:
     enabled: true
