@@ -6,6 +6,8 @@ metadata:
 spec:
   parentRefs:
     - name: tailnet-gateway
+      group: gateway.networking.k8s.io
+      kind: Gateway
       namespace: tailnet-gateway
       sectionName: https
   hostnames:
@@ -17,4 +19,7 @@ spec:
             value: /admin
       backendRefs:
         - name: headplane
+          group: ""
+          kind: Service
           port: 3000
+          weight: 1
