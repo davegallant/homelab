@@ -20,3 +20,4 @@ data:
         enabled: false
       kubernetes:
         enabled: false
+        pod_name: "headplane"
