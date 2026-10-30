@@ -304,6 +304,9 @@ rawResources:
               # fetches thumbnails from i.ytimg.com.
               - matchName: i.ytimg.com
               - matchName: www.youtube.com
+              # The Companion's PO-token validation uses YouTube's search flow,
+              # which also reaches www.google.com.
+              - matchName: www.google.com
               - matchPattern: "*.googlevideo.com"
             toPorts:
               - ports:
