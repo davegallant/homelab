@@ -8,8 +8,9 @@ and 12-month retention from the Grafana LXC.
 
 The ClusterIP Service listens on TCP 8428. Its Cilium policy admits only Alloy
 and Grafana. No Gateway route is needed. Alloy remote-writes to the Service;
-Grafana's VictoriaMetrics datasource queries it. Velero coverage is validated
-with a one-off namespace backup after cutover; no Schedule is declared here.
+Grafana's VictoriaMetrics datasource queries it. The `monitoring` namespace is
+covered by the daily `victoriametrics-daily` Velero Schedule; its pod annotation
+selects the data volume for filesystem backup.
 
 The Grafana LXC TSDB is retained unchanged as rollback material. Stop its
 VictoriaMetrics container before making a frozen copy. Preserve the old TSDB
