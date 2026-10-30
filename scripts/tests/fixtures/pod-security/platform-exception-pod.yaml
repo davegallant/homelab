@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: platform-agent
+  namespace: platform-example
+spec:
+  hostNetwork: true
+  containers:
+    - name: agent
+      image: example.invalid/agent:1
+      securityContext:
+        privileged: true
