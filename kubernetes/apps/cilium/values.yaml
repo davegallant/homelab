@@ -148,6 +148,7 @@ gatewayAPI:
   externalTrafficPolicy: Cluster
   secretsNamespace:
     name: cilium-secrets
+    sync: true
 l2announcements:
   enabled: true
 k8sClientRateLimit:

@@ -32,6 +32,10 @@ endpoints:
     url: "{{ homepage_url }}"
     <<: *defaults
 
+  - name: tailnet-gateway
+    url: "{{ homepage_url }}"
+    <<: *defaults
+
   - name: kiwix
     url: "https://kiwix.{{ headscale_magic_dns_domain }}/"
     <<: *defaults
