@@ -24,6 +24,9 @@ spec:
       securityContext:
         fsGroup: {{ .Values.fsGroup }}
         fsGroupChangePolicy: OnRootMismatch
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -38,6 +41,9 @@ spec:
           image: {{ .Values.kiwix.image }}
           imagePullPolicy: IfNotPresent
           securityContext:
+            capabilities:
+              drop:
+                - ALL
             allowPrivilegeEscalation: false
           # The LXC Compose passes command "*.zim"; in Kubernetes the
           # image entrypoint stays and the glob is the argument,
