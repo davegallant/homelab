@@ -168,6 +168,8 @@ rawResources:
       metadata:
         name: tmdb-egress
         namespace: jellyfin
+        annotations:
+          argocd.argoproj.io/sync-options: ServerSideApply=false,Force=true,Replace=true
       spec:
         description: Allow Jellyfin DNS tracking and HTTPS to TMDb and OpenSubtitles.
         endpointSelector:
