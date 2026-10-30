@@ -31,8 +31,10 @@ data:
     """Velero backup-coverage watchdog. Stdlib only.
     Checks: (1) every namespace with a Bound PVC is covered by an enabled
     Velero Schedule; (2) the schedule's latest Backup is Completed and fresh
-    (within 36h); (3) for a fresh Completed backup, PodVolumeBackups are
-    Completed with nonzero bytes and every eligible PVC has a matching PVB.
+    (within 36h); (3) for a fresh Completed backup, every eligible PVC has a
+    matching Completed PVB. Reported byte progress must be nonzero; when
+    progress is absent, a snapshot ID is accepted as a successful capture;
+    Velero can omit byte progress for empty volumes.
     Alert scope: no schedule, failed/missing/stale backup, failed/0-byte/missing
     PVB. Not alerted, reported only: hostPath, NFS, allowlisted namespaces
     and volumes. Gotify only on gaps or errors, priority 8. Exit 0 = no gaps,
@@ -227,11 +229,18 @@ data:
                     warnings.append(f"{ns}/{claim}: no backup-volumes annotation and schedule does not default to fs backup, skipped")
                     continue
                 matches = by_volume.get(volname, []) if volname else []
-                ok = any(p.get("status", {}).get("phase") == "Completed" and (((p.get("status", {}) or {}).get("progress", {}) or {}).get("totalBytes") or 0) > 0 for p in matches)
+                def proves_backup(p):
+                    status = p.get("status", {}) or {}
+                    if status.get("phase") != "Completed":
+                        return False
+                    progress = status.get("progress", {}) or {}
+                    total = progress.get("totalBytes")
+                    return total > 0 if total is not None else bool(status.get("snapshotID"))
+                ok = any(proves_backup(p) for p in matches)
                 if not ok and matches and any(p.get("status", {}).get("phase") != "Completed" or (((p.get("status", {}) or {}).get("progress", {}) or {}).get("totalBytes") == 0) for p in matches):
                     continue
                 if not ok:
-                    gaps.append(f"{ns}: PVC {claim} (volume {volname or '?'}) has no Completed nonzero PVB in backup {bname}")
+                    gaps.append(f"{ns}: PVC {claim} (volume {volname or '?'}) has no Completed PVB with bytes or snapshot ID in backup {bname}")
         report = {"generated_at": now.isoformat(), "gaps": gaps, "warnings": warnings, "covered_namespaces": covered, "backups_checked": backups_checked}
         if REPORT_PATH:
             with open(REPORT_PATH, "w") as f:

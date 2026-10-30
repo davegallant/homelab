@@ -2,8 +2,10 @@
 
 Daily Velero coverage check, alerting via Gotify. Proof, not just
 schedules: a namespace counts as covered only when its schedule's latest
-Backup is Completed and fresh AND its PodVolumeBackups are Completed with
-nonzero bytes for every Velero-eligible volume.
+Backup is Completed and fresh AND its PodVolumeBackups are Completed for every
+Velero-eligible volume. Reported byte progress must be nonzero; if progress is
+absent, a Completed PVB with a snapshot ID is accepted as a successful capture;
+Velero can omit byte progress for empty volumes.
 
 ## What it checks (in order, per namespace with a Bound PVC)
 
@@ -11,8 +13,9 @@ nonzero bytes for every Velero-eligible volume.
    schedule with no list = all namespaces; paused schedules do not count.)
 2. Latest Backup for that schedule: Completed, and started within 36h
    (schedules are daily; 36h allows long runs without false alarms).
-3. PVBs for that backup: no Failed PVB, no 0-byte PVB, and every eligible
-   PVC has a Completed nonzero PVB. Eligible = pod annotation
+3. PVBs for that backup: no Failed PVB, no explicit 0-byte PVB, and every
+   eligible PVC has a Completed PVB with nonzero bytes or, when byte progress
+   is absent, a snapshot ID. Eligible = pod annotation
    `backup.velero.io/backup-volumes` lists the volume, or the schedule
    sets `defaultVolumesToFsBackup: true`. A schedule with
    `defaultVolumesToFsBackup: false` is NOT by itself manifest-only:

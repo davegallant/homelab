@@ -1,0 +1,22 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: victoriametrics-daily
+  namespace: velero
+  labels:
+    app.kubernetes.io/instance: victoriametrics
+    app.kubernetes.io/managed-by: ArgoCD
+    app.kubernetes.io/name: victoriametrics
+spec:
+  paused: false
+  schedule: 0 6 * * *
+  skipImmediately: false
+  template:
+    defaultVolumesToFsBackup: false
+    excludedResources:
+      - secrets
+    includedNamespaces:
+      - monitoring
+    snapshotVolumes: false
+    storageLocation: default
+    ttl: 336h
