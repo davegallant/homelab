@@ -4,6 +4,25 @@ Review [Cilium values](apps/cilium/values.yaml), workload policy manifests,
 namespace labels and Argo AppProjects for intended boundaries. Inspect live
 resources to establish enforcement; a tracked deny rule alone is insufficient.
 
+## Pod Security rollout (Kubernetes v1.37)
+
+Restricted `warn` and `audit` are staged on ordinary application namespaces,
+pinned to `v1.37`; Baseline enforcement remains while rendered and running
+workloads are remediated. Headplane is the first ordinary namespace enforcing
+Restricted. Its unsafe-pod rejection and existing workload readiness were
+verified. Tailnet Gateway and Trivy also have Restricted `warn`/`audit`; their
+namespace labels are managed through their Argo applications.
+
+This rollout is not complete. Do not raise enforcement in another namespace
+until its rendered Pod shapes pass server-side admission, its running workload
+and service behavior are verified, and its storage/recovery paths are reviewed.
+Read-only root filesystems and API-token mounting remain additional hardening
+goals beyond Pod Security Admission.
+
+Keep the reviewed CNI, CSI, Intel GPU, local-path storage, monitoring, Velero,
+and privileged Forgejo runner namespaces at their existing scoped policies.
+Do not apply Restricted cluster-wide or to `kube-system`.
+
 - Cilium endpoint policies do not isolate host-network workloads or traffic
   inside userspace Tailscale/Newt tunnels. Test those paths separately.
 - Scope policies narrowly in shared platform namespaces; a namespace-wide deny
