@@ -19,6 +19,12 @@ ephemeral storage, avoiding repeated database downloads and a standalone-mode
 cache-lock issue with multi-container workloads. A server restart downloads
 the database again.
 
+Scan jobs run one at a time. A cluster-scoped MutatingAdmissionPolicy sets
+`TRIVY_PARALLEL=1` on each scanner container because the upstream chart does
+not expose Trivy's internal parallelism setting. The policy matches only
+`scan-vulnerabilityreport-*` Pods created in `trivy-system`; multi-container
+workloads still scan their images concurrently within the single Job.
+
 No persistent storage, application Secret, ingress, or external URL is
 required. The Trivy server and scanner jobs need registry access; configuration
 audit needs the upstream policy bundle. Registry egress and GitHub rate limits

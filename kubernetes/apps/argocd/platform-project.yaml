@@ -41,6 +41,10 @@ spec:
       namespace: velero
   clusterResourceWhitelist:
     - group: admissionregistration.k8s.io
+      kind: MutatingAdmissionPolicy
+    - group: admissionregistration.k8s.io
+      kind: MutatingAdmissionPolicyBinding
+    - group: admissionregistration.k8s.io
       kind: ValidatingAdmissionPolicy
     - group: admissionregistration.k8s.io
       kind: ValidatingAdmissionPolicyBinding
