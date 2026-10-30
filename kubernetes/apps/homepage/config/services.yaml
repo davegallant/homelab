@@ -34,7 +34,7 @@
         description: Server Monitoring
     - Headplane:
         icon: mdi-shield-account
-        href: "{% raw %}{{HOMEPAGE_VAR_HEADPLANE_URL}}{% endraw %}"
+        href: "{% raw %}{{HOMEPAGE_VAR_HEADPLANE_URL}}/admin{% endraw %}"
         description: Headscale administration
 - Media:
     - Jellyfin:
