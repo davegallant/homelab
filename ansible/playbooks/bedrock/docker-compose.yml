@@ -5,7 +5,9 @@ services:
     environment:
       EULA: "TRUE"
       LEVEL_NAME: "Bedrock level"
+      SERVER_UDP_PORTS: "19132"
     ports:
+      - "19132:19132/tcp"
       - "19132:19132/udp"
     volumes:
       - ./data:/data
