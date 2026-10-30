@@ -10,7 +10,7 @@ excluding `trivy-system` to avoid scanning its own operator and scan jobs. It
 enables vulnerability and configuration audit scanning only. RBAC, cluster
 infrastructure, compliance, SBOM and exposed-secret scanners are disabled.
 The node collector is disabled because the initial scope does not include
-host-level configuration scans. Scan jobs are limited to two concurrent jobs.
+host-level configuration scans. Scan jobs are limited to one concurrent job.
 The operator and Trivy images are pinned by version and SHA-256 digest.
 The controller and scanner jobs have bounded CPU and memory resources; scan
 jobs also have bounded ephemeral storage.

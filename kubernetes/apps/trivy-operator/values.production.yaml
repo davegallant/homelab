@@ -13,13 +13,13 @@ trivy:
     tag: "0.76.1@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c"
   resources:
     requests:
-      cpu: 100m
-      memory: 256Mi
-      ephemeralStorage: 2Gi
+      cpu: 25m
+      memory: 100M
+      ephemeralStorage: 256Mi
     limits:
-      cpu: 500m
-      memory: 768Mi
-      ephemeralStorage: 4Gi
+      cpu: 250m
+      memory: 512Mi
+      ephemeralStorage: 2Gi
 
 operator:
   vulnerabilityScannerEnabled: true
@@ -29,7 +29,7 @@ operator:
   clusterComplianceEnabled: false
   exposedSecretScannerEnabled: false
   sbomGenerationEnabled: false
-  scanJobsConcurrentLimit: 2
+  scanJobsConcurrentLimit: 1
   accessGlobalSecretsAndServiceAccount: false
 
 compliance:
