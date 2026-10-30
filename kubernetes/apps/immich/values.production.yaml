@@ -266,7 +266,7 @@ persistence:
 rawResources:
   defaultDenyNetworkPolicy:
     enabled: true
-    suffix: defaultdenynetworkpolicy
+    forceRename: immich-defaultdenynetworkpolicy
     manifest:
       apiVersion: cilium.io/v2
       kind: CiliumNetworkPolicy
