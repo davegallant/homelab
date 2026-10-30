@@ -12,14 +12,6 @@
         href: "{% raw %}{{HOMEPAGE_VAR_PROXMOX_URL}}{% endraw %}"
         description: Virtualization
         icon: proxmox
-    - PVE G3-1 Monitor:
-        href: "{% raw %}{{HOMEPAGE_VAR_PROXMENUX_G3_1_URL}}{% endraw %}"
-        description: ProxMenux Monitor
-        icon: proxmox
-    - PVE G3-2 Monitor:
-        href: "{% raw %}{{HOMEPAGE_VAR_PROXMENUX_G3_2_URL}}{% endraw %}"
-        description: ProxMenux Monitor
-        icon: proxmox
     - Forgejo:
         icon: forgejo
         href: "{% raw %}{{HOMEPAGE_VAR_FORGEJO_URL}}{% endraw %}"
