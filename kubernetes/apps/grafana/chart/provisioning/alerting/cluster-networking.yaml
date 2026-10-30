@@ -21,7 +21,7 @@ groups:
                 uid: victoriametrics
               editorMode: code
               expr: >-
-                sum by (source, destination, protocol, reason, instance) (
+                sum by (source) (
                   increase(hubble_drop_total{
                     job="prometheus.scrape.annotated_services",
                     reason=~"POLICY_DENIED|POLICY_DENY",
@@ -52,7 +52,7 @@ groups:
               conditions:
                 - evaluator:
                     params:
-                      - 0
+                      - 10
                     type: gt
                   operator:
                     type: and
@@ -72,16 +72,16 @@ groups:
               type: threshold
         noDataState: OK
         execErrState: Error
-        for: 1m
+        for: 5m
         annotations:
           summary: >-
-            Cilium denied TCP traffic from {{ $labels.source }} to
-            {{ $labels.destination }}.
+            Cilium denied more than 10 TCP flows involving
+            {{ $labels.source }} in five minutes.
           description: >-
-            Policy-denied {{ $labels.protocol }} flow from workload
-            {{ $labels.source }} to {{ $labels.destination }} on node
-            {{ $labels.instance }}. Drop reason: {{ $labels.reason }}. Detailed
-            dropped-flow events are retained in Loki.
+            Cilium denied more than 10 TCP flows involving workload
+            {{ $labels.source }} in each of the last five minutes. Inspect the
+            Hubble dashboard and Loki dropped-flow logs for destination and
+            drop reason.
         labels:
           severity: warning
           service: cilium
@@ -132,7 +132,7 @@ groups:
               conditions:
                 - evaluator:
                     params:
-                      - 0
+                      - 10
                     type: gt
                   operator:
                     type: and
@@ -152,13 +152,13 @@ groups:
               type: threshold
         noDataState: OK
         execErrState: Error
-        for: 1m
+        for: 5m
         annotations:
           summary: CoreDNS is returning SERVFAIL responses.
           description: >-
-            CoreDNS on {{ $labels.instance }} returned SERVFAIL responses in
-            the last five minutes. Check CoreDNS logs and the configured
-            upstream resolver.
+            CoreDNS on {{ $labels.instance }} returned more than 10 SERVFAIL
+            responses in each of the last five minutes. Check CoreDNS logs and
+            the configured upstream resolver.
         labels:
           severity: warning
           service: dns
