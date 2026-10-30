@@ -26,6 +26,7 @@ controllers:
             drop:
               - ALL
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
         image:
           repository: ghcr.io/seerr-team/seerr
           tag: v3.5.1
@@ -101,6 +102,13 @@ persistence:
       seerr:
         app:
           - path: /app/config
+
+  tmp:
+    type: emptyDir
+    advancedMounts:
+      seerr:
+        app:
+          - path: /tmp
 
 rawResources:
   defaultDenyNetworkPolicy:
