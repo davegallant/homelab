@@ -18,7 +18,7 @@ spec:
         # Nothing in this pod is ever filesystem-backed-up: the data
         # volume is the TrueNAS ZIM library, tailscale-state is a
         # live identity, caddy-runtime is disposable.
-        backup.velero.io/backup-volumes-excludes: data,tailscale-state,caddy-runtime
+        backup.velero.io/backup-volumes-excludes: data,tailscale-state,caddy-runtime,tmp
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -46,6 +46,7 @@ spec:
               drop:
                 - ALL
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
           # The LXC Compose passes command "*.zim"; in Kubernetes the
           # image entrypoint stays and the glob is the argument,
           # expanded by the image's shell in /data exactly as under
@@ -83,6 +84,8 @@ spec:
             - name: data
               mountPath: /data
               readOnly: true
+            - name: tmp
+              mountPath: /tmp
 {{- if .Values.tailscale.enabled }}
         - name: tailscale
           image: {{ .Values.tailscale.image }}
@@ -158,6 +161,8 @@ spec:
           persistentVolumeClaim:
             claimName: kiwix-data
             readOnly: true
+        - name: tmp
+          emptyDir: {}
 {{- if .Values.tailscale.enabled }}
         - name: tailscale-state
           persistentVolumeClaim:
