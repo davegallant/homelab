@@ -17,6 +17,9 @@ controllers:
     strategy: Recreate
     pod:
       automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       annotations:
         # Opt-in filesystem backup of the two state volumes; the NFS
         # libraries are excluded by omission (TrueNAS snapshots +
@@ -67,10 +70,19 @@ controllers:
             memory: 2Gi
       newt:
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
           capabilities:
             drop:
               - ALL
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+        env:
+          HOME: /tmp
+          XDG_CONFIG_HOME: /tmp/.config
+        args:
+          - --disable-ssh
         image:
           repository: docker.io/fosrl/newt
           tag: 1.19.1
@@ -94,6 +106,12 @@ service:
         port: 80
 
 persistence:
+  tmp:
+    type: emptyDir
+    advancedMounts:
+      audiobookshelf:
+        newt:
+          - path: /tmp
   config:
     type: persistentVolumeClaim
     annotations:
