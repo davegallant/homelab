@@ -171,3 +171,7 @@ endpoints:
   - name: headscale
     url: "https://{{ headscale_server_domain }}/health"
     <<: *defaults
+
+  - name: headplane
+    url: "{{ headplane_url }}/admin"
+    <<: *defaults

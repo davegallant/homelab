@@ -50,6 +50,7 @@ spec:
                   - grafana
                   - maloja
                   - speedtest-tracker
+                  - headplane
       tls:
         mode: Terminate
         certificateRefs:

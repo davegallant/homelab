@@ -2,6 +2,21 @@
 # https://docs.pangolin.net/self-host/manual/docker-compose
 http:
   middlewares:
+    headscale-cors:
+      headers:
+        accessControlAllowOriginList:
+          - "{{ headplane_url }}"
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+          - OPTIONS
+        accessControlAllowHeaders:
+          - "*"
+        accessControlMaxAge: 100
+        addVaryHeader: true
     badger:
       plugin:
         badger:
@@ -57,6 +72,8 @@ http:
       service: headscale-service
       entryPoints:
         - websecure
+      middlewares:
+        - headscale-cors
       tls:
         certResolver: letsencrypt
   services:

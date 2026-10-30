@@ -46,6 +46,8 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: speedtest-tracker
     - server: https://kubernetes.default.svc
+      namespace: headplane
+    - server: https://kubernetes.default.svc
       namespace: tailnet-gateway
     - server: https://kubernetes.default.svc
       namespace: ""

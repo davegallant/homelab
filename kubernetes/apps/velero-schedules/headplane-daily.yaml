@@ -1,0 +1,20 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: headplane-daily
+  namespace: velero
+  labels:
+    app.kubernetes.io/managed-by: ArgoCD
+spec:
+  paused: false
+  schedule: 45 4 * * *
+  skipImmediately: false
+  template:
+    defaultVolumesToFsBackup: true
+    excludedResources:
+      - secrets
+    includedNamespaces:
+      - headplane
+    snapshotVolumes: false
+    storageLocation: default
+    ttl: 336h

@@ -1,0 +1,6 @@
+image: ""
+headplaneUrl: ""
+headscaleUrl: ""
+existingSecret: headplane-external
+storage: 1Gi
+nodeHostname: k8s-w-1

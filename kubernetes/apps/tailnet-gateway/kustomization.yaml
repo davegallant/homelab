@@ -6,3 +6,4 @@ resources:
   - l2-policy.yaml
   - entry-policy.yaml
   - gateway.yaml
+  - headplane-route.yaml
