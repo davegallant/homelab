@@ -1,0 +1,47 @@
+targetNamespaces: ""
+excludeNamespaces: trivy-system
+
+image:
+  registry: mirror.gcr.io
+  repository: aquasec/trivy-operator
+  tag: "0.36.1@sha256:05191a514247ae644dd5cc71306a94f44faff0a6a3fa817235911b911ecebcb9"
+
+trivy:
+  image:
+    registry: mirror.gcr.io
+    repository: aquasec/trivy
+    tag: "0.76.1@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+      ephemeralStorage: 2Gi
+    limits:
+      cpu: 500m
+      memory: 768Mi
+      ephemeralStorage: 4Gi
+
+operator:
+  vulnerabilityScannerEnabled: true
+  configAuditScannerEnabled: true
+  rbacAssessmentScannerEnabled: false
+  infraAssessmentScannerEnabled: false
+  clusterComplianceEnabled: false
+  exposedSecretScannerEnabled: false
+  sbomGenerationEnabled: false
+  scanJobsConcurrentLimit: 2
+  accessGlobalSecretsAndServiceAccount: false
+
+compliance:
+  specs: []
+
+nodeCollector:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
