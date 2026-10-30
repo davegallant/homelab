@@ -17,7 +17,7 @@ spec:
         scope: Namespaced
   matchConditions:
     - name: trivy-scan-job
-      expression: object.metadata.name.startsWith("scan-vulnerabilityreport-")
+      expression: object.metadata.labels["job-name"].startsWith("scan-vulnerabilityreport-")
   reinvocationPolicy: Never
   mutations:
     - patchType: ApplyConfiguration
