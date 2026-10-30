@@ -106,6 +106,7 @@ persistence:
 rawResources:
   defaultDenyNetworkPolicy:
     enabled: true
+    forceRename: jellyfin-defaultdenynetworkpolicy
     manifest:
       apiVersion: cilium.io/v2
       kind: CiliumNetworkPolicy
