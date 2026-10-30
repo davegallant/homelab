@@ -16,6 +16,7 @@ controllers:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
         runAsNonRoot: true
+        runAsUser: 1000
         seccompProfile:
           type: RuntimeDefault
     containers:
