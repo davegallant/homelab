@@ -181,6 +181,26 @@ rawResources:
           matchLabels:
             k8s:app.kubernetes.io/name: sonarr
         egress:
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: kube-system
+                  k8s:k8s-app: kube-dns
+            toPorts:
+              - ports:
+                  - port: "53"
+                    protocol: UDP
+                  - port: "53"
+                    protocol: TCP
+                rules:
+                  dns:
+                    - matchPattern: "*"
+          - toFQDNs:
+              - matchName: services.sonarr.tv
+              - matchName: skyhook.sonarr.tv
+            toPorts:
+              - ports:
+                  - port: "443"
+                    protocol: TCP
           - toCIDR:
               - 72.11.149.242/32
               - 162.248.221.215/32
