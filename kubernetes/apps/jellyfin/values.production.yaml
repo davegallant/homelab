@@ -169,7 +169,7 @@ rawResources:
         name: tmdb-egress
         namespace: jellyfin
       spec:
-        description: Allow Jellyfin DNS tracking and HTTPS to the TMDb API.
+        description: Allow Jellyfin DNS tracking and HTTPS to TMDb and OpenSubtitles.
         endpointSelector:
           matchLabels:
             k8s:app.kubernetes.io/name: jellyfin
@@ -189,6 +189,14 @@ rawResources:
                     - matchPattern: "*"
           - toFQDNs:
               - matchName: api.themoviedb.org
+            toPorts:
+              - ports:
+                  - port: "443"
+                    protocol: TCP
+          - toFQDNs:
+              - matchName: api.opensubtitles.com
+              - matchName: www.opensubtitles.com
+              - matchName: dl.opensubtitles.com
             toPorts:
               - ports:
                   - port: "443"
