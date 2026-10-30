@@ -55,6 +55,7 @@ and policy resources.
 
 - [Argo CD](apps/argocd/README.md): application reconciliation and recovery.
 - [Cilium](apps/cilium/README.md): CNI, network policies, and Hubble.
+- [Trivy Operator](apps/trivy-operator/README.md): workload vulnerability and configuration audit reports.
 - [Monitoring](apps/monitoring/README.md): node and Kubernetes metrics.
 - [NFS CSI](apps/nfs-csi/README.md): NAS-backed volumes.
 - [Local-path provisioner](apps/local-path/README.md): dynamic node-local volumes.

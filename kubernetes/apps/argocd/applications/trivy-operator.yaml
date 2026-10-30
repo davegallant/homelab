@@ -1,0 +1,38 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: trivy-operator
+  namespace: argocd
+spec:
+  project: homelab-platform
+  sources:
+    - repoURL: https://aquasecurity.github.io/helm-charts/
+      chart: trivy-operator
+      targetRevision: "0.38.1"
+      helm:
+        releaseName: trivy-operator
+        valueFiles:
+          - $values/kubernetes/apps/trivy-operator/values.production.yaml
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/trivy-operator/policies
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: trivy-system
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - FailOnSharedResource=true
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: baseline
+        pod-security.kubernetes.io/enforce-version: v1.37
+        pod-security.kubernetes.io/audit: baseline
+        pod-security.kubernetes.io/audit-version: v1.37
+        pod-security.kubernetes.io/warn: baseline
+        pod-security.kubernetes.io/warn-version: v1.37

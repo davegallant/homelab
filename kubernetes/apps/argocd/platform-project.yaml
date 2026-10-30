@@ -14,6 +14,7 @@ spec:
     - ghcr.io/vmware-tanzu/charts
     - https://argoproj.github.io/argo-helm
     - https://helm.cilium.io/
+    - https://aquasecurity.github.io/helm-charts/
     - code.forgejo.org/forgejo-helm
     - https://code.forgejo.org/forgejo-helm/forgejo-runner.git
   destinations:
