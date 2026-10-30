@@ -136,10 +136,33 @@ hubble:
           memory: 64Mi
   metrics:
     enabled:
-      - drop:sourceContext=workload
+      - "drop:sourceContext=workload;destinationContext=dns|ip"
       - flow
       - dns
       - http
+  export:
+    static:
+      enabled: true
+      filePath: stdout
+      allowList:
+        - '{"verdict":["DROPPED"]}'
+      fieldMask:
+        - time
+        - source.namespace
+        - source.pod_name
+        - source.workloads
+        - source.labels
+        - destination.namespace
+        - destination.pod_name
+        - destination.workloads
+        - destination.labels
+        - l4
+        - IP
+        - node_name
+        - is_reply
+        - verdict
+        - drop_reason_desc
+        - traffic_direction
 gatewayAPI:
   enabled: true
   enableAlpn: true

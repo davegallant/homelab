@@ -21,7 +21,7 @@ groups:
                 uid: victoriametrics
               editorMode: code
               expr: >-
-                sum by (source) (
+                sum by (source, destination, protocol, reason, instance) (
                   increase(hubble_drop_total{
                     job="prometheus.scrape.annotated_services",
                     reason=~"POLICY_DENIED|POLICY_DENY",
@@ -74,11 +74,14 @@ groups:
         execErrState: Error
         for: 1m
         annotations:
-          summary: Cilium denied TCP traffic involving {{ $labels.source }}.
+          summary: >-
+            Cilium denied TCP traffic from {{ $labels.source }} to
+            {{ $labels.destination }}.
           description: >-
-            Policy-denied TCP flows involved workload {{ $labels.source }} in
-            the last five minutes. Inspect the Hubble dashboard for the node,
-            protocol, and drop reason.
+            Policy-denied {{ $labels.protocol }} flow from workload
+            {{ $labels.source }} to {{ $labels.destination }} on node
+            {{ $labels.instance }}. Drop reason: {{ $labels.reason }}. Detailed
+            dropped-flow events are retained in Loki.
         labels:
           severity: warning
           service: cilium

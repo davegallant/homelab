@@ -124,8 +124,13 @@ workload coverage is broad enough to be useful; their queries are:
 The drop metric adds the source workload as a label, so the dashboard and
 alerts can identify the workload that generated a denied flow. Grafana sends
 a warning through the configured Gotify contact point when TCP policy drops
-are observed for a workload. A separate alert reports CoreDNS `SERVFAIL`
-responses, including upstream resolver failures.
+are observed for a workload. Its destination label uses a DNS name when Cilium
+knows one, and falls back to the destination IP. The Cilium agent also exports
+only dropped Hubble flows as JSON to its container logs; Alloy collects those
+logs into Loki, which retains them for 31 days. The records include source and
+destination workload details, IPs, ports, protocol, node, traffic direction,
+and drop reason. A separate alert reports CoreDNS `SERVFAIL` responses,
+including upstream resolver failures.
 
 The four-panel dashboard is in Grafana's Homelab folder at
 <https://grafana.tail.davegallant.ca/d/hubble/hubble>. The drop alert remains
