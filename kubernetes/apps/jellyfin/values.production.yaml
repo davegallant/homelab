@@ -25,8 +25,11 @@ controllers:
           digest: sha256:fea863d0cd9ec445985d9c75fc6ed64e38a1d2766cf0c250a33d553f4fc1b771
         securityContext:
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
           capabilities:
             drop: [ALL]
+        env:
+          TMPDIR: /tmp
         probes:
           startup:
             enabled: true
@@ -62,8 +65,14 @@ controllers:
           digest: sha256:c89f01cb387bf6c598959036cbf56306b068a43e8784345bee7398b7af8ee2e1
         securityContext:
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
           capabilities:
             drop: [ALL]
+        env:
+          HOME: /tmp
+          XDG_CONFIG_HOME: /tmp/.config
+        args:
+          - --disable-ssh
         envFrom:
           - secretRef:
               name: jellyfin-newt-external
@@ -98,6 +107,14 @@ persistence:
       jellyfin:
         server:
           - path: /cache
+  tmp:
+    type: emptyDir
+    advancedMounts:
+      jellyfin:
+        server:
+          - path: /tmp
+        newt:
+          - path: /tmp
   media:
     type: persistentVolumeClaim
     existingClaim: jellyfin-media
