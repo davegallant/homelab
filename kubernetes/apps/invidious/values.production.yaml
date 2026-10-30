@@ -280,11 +280,30 @@ rawResources:
         name: exact-hubble-egress
         namespace: invidious
       spec:
-        description: Exact forwarded Hubble egress tuples captured on 2026-10-24.
+        description: Captured egress tuples and DNS-tracked YouTube thumbnail access.
         endpointSelector:
           matchLabels:
             k8s:app.kubernetes.io/name: invidious
         egress:
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: kube-system
+                  k8s:k8s-app: kube-dns
+            toPorts:
+              - ports:
+                  - port: "53"
+                    protocol: UDP
+                  - port: "53"
+                    protocol: TCP
+                rules:
+                  dns:
+                    - matchPattern: "*"
+          - toFQDNs:
+              - matchName: i.ytimg.com
+            toPorts:
+              - ports:
+                  - port: "443"
+                    protocol: TCP
           - toCIDR:
               - 72.11.149.242/32
               - 93.95.230.186/32
