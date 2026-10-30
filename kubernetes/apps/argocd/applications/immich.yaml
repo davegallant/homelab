@@ -5,7 +5,8 @@
 # manual sync only, ServerSideApply + FailOnSharedResource, no prune,
 # no auto-sync, no deletion finalizer.
 #
-# The namespace and its baseline labels are provisioned separately.
+# The namespace and its staged Pod Security labels are provisioned separately
+# from the Argo-managed application; see apps/immich/namespace.yaml.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
