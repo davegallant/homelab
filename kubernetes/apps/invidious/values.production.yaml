@@ -280,7 +280,7 @@ rawResources:
         name: exact-hubble-egress
         namespace: invidious
       spec:
-        description: Captured egress tuples and DNS-tracked YouTube API and thumbnail access.
+        description: Captured egress tuples and DNS-tracked YouTube API, video, and thumbnail access.
         endpointSelector:
           matchLabels:
             k8s:app.kubernetes.io/name: invidious
@@ -299,10 +299,12 @@ rawResources:
                   dns:
                     - matchPattern: "*"
           - toFQDNs:
-              # The Invidious Companion calls youtubei on www.youtube.com;
-              # the main app also fetches thumbnails from i.ytimg.com.
+              # The Invidious Companion calls youtubei on www.youtube.com and
+              # retrieves video streams from Google Video; the main app also
+              # fetches thumbnails from i.ytimg.com.
               - matchName: i.ytimg.com
               - matchName: www.youtube.com
+              - matchPattern: "*.googlevideo.com"
             toPorts:
               - ports:
                   - port: "443"
