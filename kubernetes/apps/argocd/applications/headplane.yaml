@@ -21,13 +21,4 @@ spec:
     namespace: headplane
   syncPolicy:
     syncOptions:
-      - CreateNamespace=true
       - FailOnSharedResource=true
-    managedNamespaceMetadata:
-      labels:
-        pod-security.kubernetes.io/enforce: baseline
-        pod-security.kubernetes.io/enforce-version: v1.37
-        pod-security.kubernetes.io/audit: baseline
-        pod-security.kubernetes.io/audit-version: v1.37
-        pod-security.kubernetes.io/warn: baseline
-        pod-security.kubernetes.io/warn-version: v1.37
