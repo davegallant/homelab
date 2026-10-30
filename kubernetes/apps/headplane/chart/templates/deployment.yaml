@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: headplane
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: headplane
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: headplane
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - {{ .Values.nodeHostname }}
+      containers:
+        - name: headplane
+          image: {{ required "image is required" .Values.image | quote }}
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          startupProbe:
+            exec:
+              command: ["/bin/hp_healthcheck"]
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            exec:
+              command: ["/bin/hp_healthcheck"]
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command: ["/bin/hp_healthcheck"]
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/headplane/config.yaml
+              subPath: config.yaml
+              readOnly: true
+            - name: data
+              mountPath: /var/lib/headplane
+            - name: cookie-secret
+              mountPath: /run/secrets/cookie-secret
+              subPath: cookie-secret
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          configMap:
+            name: headplane
+        - name: data
+          persistentVolumeClaim:
+            claimName: headplane-data
+        - name: cookie-secret
+          secret:
+            secretName: {{ .Values.existingSecret | quote }}
+            items:
+              - key: cookie-secret
+                path: cookie-secret
+        - name: tmp
+          emptyDir: {}

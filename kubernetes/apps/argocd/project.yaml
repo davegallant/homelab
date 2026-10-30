@@ -74,6 +74,8 @@ spec:
     # namespace + RBAC are hand-applied (see apps/k8s-readonly/README.md).
     - server: https://kubernetes.default.svc
       namespace: k8s-readonly
+    - server: https://kubernetes.default.svc
+      namespace: headplane
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
     - group: apps

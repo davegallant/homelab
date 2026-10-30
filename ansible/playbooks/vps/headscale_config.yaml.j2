@@ -90,6 +90,9 @@ dns:
     - name: "argocd.{{ headscale_magic_dns_domain }}"
       type: A
       value: "100.100.0.8"
+    - name: "headplane.{{ headscale_magic_dns_domain }}"
+      type: A
+      value: "100.100.0.8"
   nameservers:
     global:
       - 100.100.0.24

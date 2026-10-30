@@ -1,0 +1,33 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: headplane
+  namespace: argocd
+  annotations:
+    homelab.davegallant.ca/backup-policy: scheduled
+spec:
+  project: homelab
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/headplane/chart
+    helm:
+      releaseName: headplane
+      valueFiles:
+        - ../values.production.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: headplane
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - FailOnSharedResource=true
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: baseline
+        pod-security.kubernetes.io/enforce-version: v1.37
+        pod-security.kubernetes.io/audit: baseline
+        pod-security.kubernetes.io/audit-version: v1.37
+        pod-security.kubernetes.io/warn: baseline
+        pod-security.kubernetes.io/warn-version: v1.37

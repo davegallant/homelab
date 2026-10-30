@@ -51,6 +51,9 @@ Application definitions are under [Argo CD](apps/argocd/applications/).
 Each application directory contains its chart, production values, storage,
 and policy resources.
 
+Headplane provides a tailnet-only admin UI for the existing VPS Headscale
+server; see [its runbook](apps/headplane/README.md).
+
 ## Platform
 
 - [Argo CD](apps/argocd/README.md): application reconciliation and recovery.

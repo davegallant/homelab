@@ -32,6 +32,10 @@
         icon: beszel
         href: "{% raw %}{{HOMEPAGE_VAR_BESZEL_URL}}{% endraw %}"
         description: Server Monitoring
+    - Headplane:
+        icon: mdi-shield-account
+        href: "{% raw %}{{HOMEPAGE_VAR_HEADPLANE_URL}}{% endraw %}"
+        description: Headscale administration
 - Media:
     - Jellyfin:
         icon: jellyfin

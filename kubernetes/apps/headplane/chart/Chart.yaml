@@ -1,0 +1,6 @@
+apiVersion: v2
+name: headplane
+description: Headplane web UI for the homelab Headscale server
+type: application
+version: 0.1.0
+appVersion: 0.8.2
