@@ -17,6 +17,9 @@ controllers:
       # Check free disk and scheduled requests before changing placement.
       nodeSelector:
         kubernetes.io/hostname: k8s-w-2
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       annotations:
         backup.velero.io/backup-volumes: postgres-production
         pre.hook.backup.velero.io/container: postgres
@@ -26,6 +29,9 @@ controllers:
     containers:
       server:
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 950
+          runAsGroup: 950
           capabilities:
             drop:
               - ALL
@@ -40,6 +46,8 @@ controllers:
         env:
           TZ: UTC
           NODE_ENV: production
+          HOME: /tmp
+          TMPDIR: /tmp
           DB_HOSTNAME: 127.0.0.1
           DB_PORT: "5432"
           DB_DATABASE_NAME: immich
@@ -85,6 +93,10 @@ controllers:
             gpu.intel.com/i915: 1
       machine-learning:
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
@@ -98,6 +110,10 @@ controllers:
           ORT_DISABLE_TELEMETRY: "1"
           MACHINE_LEARNING_HOST: 127.0.0.1
           MACHINE_LEARNING_PORT: "3003"
+          HOME: /tmp
+          TRANSFORMERS_CACHE: /cache
+          MACHINE_LEARNING_CACHE_FOLDER: /cache
+          MPLCONFIGDIR: /cache/matplotlib
         probes:
           startup:
             enabled: true
@@ -132,8 +148,10 @@ controllers:
             memory: 3Gi
       valkey:
         securityContext:
+          runAsNonRoot: true
           runAsUser: 999
           runAsGroup: 999
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
@@ -176,7 +194,13 @@ controllers:
             memory: 256Mi
       postgres:
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+          runAsGroup: 999
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
         image:
           repository: ghcr.io/immich-app/postgres
           # RESOLVED from the v3.3.5 release compose
@@ -263,6 +287,18 @@ persistence:
       immich:
         valkey:
           - path: /data
+  valkey-tmp:
+    type: emptyDir
+    advancedMounts:
+      immich:
+        valkey:
+          - path: /tmp
+  machine-learning-tmp:
+    type: emptyDir
+    advancedMounts:
+      immich:
+        machine-learning:
+          - path: /tmp
 
 rawResources:
   defaultDenyNetworkPolicy:
