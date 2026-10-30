@@ -14,15 +14,17 @@ host-level configuration scans. Scan jobs are limited to one concurrent job.
 The operator and Trivy images are pinned by version and SHA-256 digest.
 The controller and scanner jobs have bounded CPU and memory resources; scan
 jobs also have bounded ephemeral storage.
+The built-in Trivy server shares the vulnerability database across jobs using
+ephemeral storage, avoiding repeated database downloads and a standalone-mode
+cache-lock issue with multi-container workloads. A server restart downloads
+the database again.
 
 No persistent storage, application Secret, ingress, or external URL is
-required. Vulnerability scan jobs need registry access and fetch the Trivy
-database; configuration audit needs the upstream policy bundle. With Trivy's
-standalone mode, scan jobs download their own database, so registry egress and
-GitHub rate limits can affect scan completion. The Cilium policy allows DNS,
-the Kubernetes API, and outbound HTTPS so scans can reach the registries used
-by workloads. Reports are Kubernetes API resources and do not require a backup
-volume.
+required. The Trivy server and scanner jobs need registry access; configuration
+audit needs the upstream policy bundle. Registry egress and GitHub rate limits
+can affect scan completion. The Cilium policy allows DNS, the Kubernetes API,
+and outbound HTTPS so scans can reach the registries used by workloads.
+Reports are Kubernetes API resources and do not require a backup volume.
 
 ## Review reports
 
