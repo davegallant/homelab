@@ -217,6 +217,6 @@ just run talos-cluster/gitops-secrets
 
 ## Maintenance
 
-[Renovate](https://docs.renovatebot.com) monitors all Docker image versions and opens PRs with updates. Review version pins and, for Kubernetes images, SHA digests in configuration. Custom versioning rules handle date-versioned images like SearXNG and Invidious.
+[Renovate](https://docs.renovatebot.com) opens PRs with updates. Reviews pins for Kubernetes images, SHA digests in configuration.
 
 ---
