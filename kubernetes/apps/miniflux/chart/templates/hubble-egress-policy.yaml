@@ -5,11 +5,20 @@ metadata:
   name: exact-hubble-egress
   namespace: miniflux
 spec:
-  description: Exact forwarded Hubble egress tuples captured on 2026-10-24.
+  description: Public HTTP(S) feed access with internal ranges denied and observed Newt egress.
   endpointSelector:
     matchLabels:
       k8s:app.kubernetes.io/name: miniflux
   egress:
+    # Miniflux fetches user-configured feeds from arbitrary public hosts.
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+            - port: "443"
+              protocol: TCP
     - toCIDR:
         - 72.11.149.242/32
       toPorts:
@@ -28,3 +37,18 @@ spec:
         - ports:
             - port: "51820"
               protocol: UDP
+  # World access must not reach private, link-local, loopback, multicast, or tailnet addresses.
+  egressDeny:
+    - toCIDR:
+        - 10.0.0.0/8
+        - 100.64.0.0/10
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 224.0.0.0/4
+        - ::1/128
+        - fc00::/7
+        - fd7a:115c:a1e0::/48
+        - fe80::/10
+        - ff00::/8
