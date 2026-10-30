@@ -22,8 +22,6 @@ controllers:
         # Drive sync protect it, never Velero).
         backup.velero.io/backup-volumes: data-local
       securityContext:
-        fsGroup: 1000
-        fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
     containers:
