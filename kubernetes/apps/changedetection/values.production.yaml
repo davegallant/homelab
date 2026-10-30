@@ -15,8 +15,7 @@ controllers:
         backup.velero.io/backup-volumes: datastore-local
       securityContext:
         fsGroup: 1000
-        # Reconcile root-owned legacy watch files with fsGroup on each mount.
-        fsGroupChangePolicy: Always
+        fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
     containers:
@@ -37,6 +36,7 @@ controllers:
         env:
           HIDE_REFERER: "true"
           HOME: /tmp
+          PYTHONDONTWRITEBYTECODE: "1"
         probes:
           startup:
             enabled: true
