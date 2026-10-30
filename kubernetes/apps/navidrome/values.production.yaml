@@ -24,6 +24,8 @@ controllers:
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
     containers:
       app:
         image:
@@ -31,9 +33,11 @@ controllers:
           tag: 0.64.2
           digest: sha256:38dc2727bfcfd5ede290f8ada114fc90368146f265ae4701ddddbcbe2a44ee52
         securityContext:
+          runAsNonRoot: true
           runAsUser: 1000
           runAsGroup: 1000
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
@@ -43,6 +47,7 @@ controllers:
         env:
           ND_ENABLEINSIGHTSCOLLECTOR: "false"
           ND_AUTOIMPORTPLAYLISTS: "false"
+          TMPDIR: /tmp
           # The LXC points ListenBrainz at Maloja's tailnet URL, which
           # a pod cannot resolve or route to (no MagicDNS in-pod).
           # Maloja is in-cluster now, so the scrobble target becomes
@@ -87,10 +92,19 @@ controllers:
             memory: 1Gi
       newt:
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
           capabilities:
             drop:
               - ALL
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+        env:
+          HOME: /tmp
+          XDG_CONFIG_HOME: /tmp/.config
+        args:
+          - --disable-ssh
         image:
           repository: docker.io/fosrl/newt
           tag: 1.19.1
@@ -114,6 +128,14 @@ service:
         port: 4533
 
 persistence:
+  tmp:
+    type: emptyDir
+    advancedMounts:
+      navidrome:
+        app:
+          - path: /tmp
+        newt:
+          - path: /tmp
   # Keep the original hostPath-backed claim present for rollback. Velero
   # cannot make a PodVolumeBackup from this claim.
   data:
