@@ -16,12 +16,22 @@ spec:
         app.kubernetes.io/name: bentopdf
     spec:
       automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: bentopdf
           image: {{ .Values.bentopdf.image }}
           imagePullPolicy: IfNotPresent
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 101
+            runAsGroup: 101
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
           ports:
             - name: http
               containerPort: {{ .Values.bentopdf.port }}
@@ -47,6 +57,11 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 3
             failureThreshold: 3
+          volumeMounts:
+            - name: nginx-tmp
+              mountPath: /etc/nginx/tmp
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
           resources:
             {{- toYaml .Values.bentopdf.resources | nindent 12 }}
         {{- if .Values.newt.enabled }}
@@ -54,13 +69,33 @@ spec:
           image: {{ .Values.newt.image }}
           imagePullPolicy: IfNotPresent
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop:
                 - ALL
-            allowPrivilegeEscalation: false
+          env:
+            - name: HOME
+              value: /tmp
+            - name: XDG_CONFIG_HOME
+              value: /tmp/.config
+          volumeMounts:
+            - name: newt-tmp
+              mountPath: /tmp
           envFrom:
             - secretRef:
                 name: {{ .Values.newt.existingSecret | default "bentopdf-newt" | quote }}
           resources:
             {{- toYaml .Values.newt.resources | nindent 12 }}
+        {{- end }}
+      volumes:
+        - name: nginx-tmp
+          emptyDir: {}
+        - name: nginx-cache
+          emptyDir: {}
+        {{- if .Values.newt.enabled }}
+        - name: newt-tmp
+          emptyDir: {}
         {{- end }}
