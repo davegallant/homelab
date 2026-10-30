@@ -1,0 +1,162 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: cluster-networking
+    folder: Homelab
+    interval: 1m
+    rules:
+      - uid: cilium_workload_tcp_policy_drops
+        title: Kubernetes workload TCP policy drops
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: victoriametrics
+            model:
+              datasource:
+                type: prometheus
+                uid: victoriametrics
+              editorMode: code
+              expr: >-
+                sum by (source) (
+                  increase(hubble_drop_total{
+                    job="prometheus.scrape.annotated_services",
+                    reason=~"POLICY_DENIED|POLICY_DENY",
+                    protocol="TCP",
+                    source!=""
+                  }[5m])
+                )
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: false
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: Cilium denied TCP traffic involving {{ $labels.source }}.
+          description: >-
+            Policy-denied TCP flows involved workload {{ $labels.source }} in
+            the last five minutes. Inspect the Hubble dashboard for the node,
+            protocol, and drop reason.
+        labels:
+          severity: warning
+          service: cilium
+        isPaused: false
+
+      - uid: coredns_servfail_responses
+        title: CoreDNS returned SERVFAIL responses
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: victoriametrics
+            model:
+              datasource:
+                type: prometheus
+                uid: victoriametrics
+              editorMode: code
+              expr: >-
+                sum by (instance) (
+                  increase(coredns_dns_responses_total{
+                    job="prometheus.scrape.annotated_services",
+                    service="kube-dns",
+                    rcode="SERVFAIL"
+                  }[5m])
+                )
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: false
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: CoreDNS is returning SERVFAIL responses.
+          description: >-
+            CoreDNS on {{ $labels.instance }} returned SERVFAIL responses in
+            the last five minutes. Check CoreDNS logs and the configured
+            upstream resolver.
+        labels:
+          severity: warning
+          service: dns
+        isPaused: false

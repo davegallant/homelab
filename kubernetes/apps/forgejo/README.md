@@ -20,6 +20,10 @@ reverse the cutover without Dave's explicit authorization.
   Pangolin Newt identity. The separate Newt Deployment connects to the
   same-namespace `forgejo:3000` Service. Cilium permits its TCP 3000 traffic.
 - Git operations use HTTPS; Git-over-SSH is not exposed.
+- The Forgejo server egress policy allows repository mirror traffic only to
+  `github.com` and `git.ryujinx.app` (including GitHub subdomains) over TCP
+  443. Add a host only when a failed mirror and Hubble event establish the
+  dependency.
 - `forgejo-external` and `forgejo-newt-external` are provisioned outside
   Argo CD from Vault. Keep secret values out of Git and command output.
 - Host and Docker runners remain on the LXC; migrating the Forgejo server

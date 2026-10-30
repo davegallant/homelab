@@ -112,25 +112,32 @@ forwarded events/s and 17 drops/s; live rates vary with cluster traffic. The
 dashboard filters on this job and groups by `instance`, the Cilium agent
 endpoint IP.
 
-DNS and HTTP families require L7-parsed flows. This cluster currently has no
-L7 rules in its network policies and no FQDN policies, so empty DNS and HTTP
-series are expected. The corresponding panels are deferred until those
-policies exist; their queries to restore are:
+DNS and HTTP families require L7-parsed flows. DNS inspection is enabled by
+the Jellyfin and Invidious FQDN policies, so those workloads contribute DNS
+metrics while other workloads remain invisible to that metric. There are no
+HTTP L7 policies yet. DNS and HTTP panels remain deferred until their
+workload coverage is broad enough to be useful; their queries are:
 
 - DNS: `sum by (rcode) (rate(hubble_dns_responses_total[5m]))`
 - HTTP: `sum by (status) (rate(hubble_http_requests_total[5m]))`
 
+The drop metric adds the source workload as a label, so the dashboard and
+alerts can identify the workload that generated a denied flow. Grafana sends
+a warning through the configured Gotify contact point when TCP policy drops
+are observed for a workload. A separate alert reports CoreDNS `SERVFAIL`
+responses, including upstream resolver failures.
+
 The four-panel dashboard is in Grafana's Homelab folder at
 <https://grafana.tail.davegallant.ca/d/hubble/hubble>. The drop alert remains
-deferred pending several days of baseline observation; no alert rule was
-added in this rollout.
+focused on TCP to avoid the expected UDP discovery drops observed during the
+network audit. The dashboard still shows drops across protocols by source
+workload.
 
 ### Endpoint attribution
 
 Use Hubble events to identify source/destination workloads and traffic direction.
-Verify available metric labels before building namespace or workload panels;
-a scrape-target namespace is not a flow endpoint. Baseline drops before
-choosing alert thresholds.
+The drop metric's `source` label identifies the source workload; the scrape
+target `instance` remains the Cilium agent endpoint IP.
 
 ## Enabling Gateway API
 

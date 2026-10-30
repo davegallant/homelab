@@ -136,7 +136,7 @@ hubble:
           memory: 64Mi
   metrics:
     enabled:
-      - drop
+      - drop:sourceContext=workload
       - flow
       - dns
       - http
