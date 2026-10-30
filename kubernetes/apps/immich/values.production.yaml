@@ -95,6 +95,7 @@ controllers:
           digest: sha256:5b28c9352c8374b8a1ed96fbdd8d6755fea6e43510ec43fdf6538aa02ea40f56
         env:
           TZ: UTC
+          ORT_DISABLE_TELEMETRY: "1"
           MACHINE_LEARNING_HOST: 127.0.0.1
           MACHINE_LEARNING_PORT: "3003"
         probes:
