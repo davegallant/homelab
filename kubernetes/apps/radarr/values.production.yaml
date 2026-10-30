@@ -35,7 +35,7 @@ controllers:
         image:
           repository: docker.io/linuxserver/radarr
           tag: 6.4.4
-          digest: sha256:084b3b2ab1d0ef930660727259546a241f2bdf67c9ed085d54bf1486a6887c9b
+          digest: sha256:41fdc1672209c2ef31c5260015ec8b96e3c75513e60a667eb052e1ff54b4cfa9
         env:
           PUID: "1000"
           PGID: "1000"
