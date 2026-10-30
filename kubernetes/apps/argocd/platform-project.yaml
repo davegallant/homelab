@@ -36,6 +36,8 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: monitoring
     - server: https://kubernetes.default.svc
+      namespace: trivy-system
+    - server: https://kubernetes.default.svc
       namespace: velero
   clusterResourceWhitelist:
     - group: admissionregistration.k8s.io
