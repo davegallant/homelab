@@ -63,6 +63,20 @@
 			"src":    ["tag:nanoclaw"],
 			"dst":    ["100.100.0.8:443"],
 		},
+		// Gatus may query only its observed Tailnet health-check targets, DNS,
+		// and Loki. Publicly routed checks use the host's ordinary internet route.
+		{
+			"action": "accept",
+			"proto":  "tcp",
+			"src":    ["tag:gatus"],
+			"dst":    ["100.100.0.8:443", "100.100.0.24:443", "100.100.0.35:443", "100.100.0.42:443", "100.100.0.4:443", "100.100.0.19:443", "100.100.0.11:53", "100.100.0.24:53", "tag:loki:3100"],
+		},
+		{
+			"action": "accept",
+			"proto":  "udp",
+			"src":    ["tag:gatus"],
+			"dst":    ["100.100.0.11:53", "100.100.0.24:53"],
+		},
 		// Match tailnet IPs for user-owned member devices. (On Headscale
 		// >= 0.28 "*" only covers 100.64.0.0/10 — internet-bound traffic
 		// needs the explicit rule below.) Tagged devices are excluded as
@@ -206,6 +220,20 @@
 			"proto": "udp",
 			"deny":  ["100.100.0.8:443"],
 		},
+		{% if headscale_include_gatus_tests | default(true) %}
+		{
+			"src":    "tag:gatus",
+			"proto":  "tcp",
+			"accept": ["100.100.0.8:443", "100.100.0.24:443", "100.100.0.35:443", "100.100.0.42:443", "100.100.0.4:443", "100.100.0.19:443", "100.100.0.11:53", "100.100.0.24:53", "tag:loki:3100"],
+			"deny":   ["100.100.0.8:80", "tag:pangolin:443"],
+		},
+		{
+			"src":    "tag:gatus",
+			"proto":  "udp",
+			"accept": ["100.100.0.11:53", "100.100.0.24:53"],
+			"deny":   ["100.100.0.8:53"],
+		},
+		{% endif %}
 	],
 	"sshTests": [
 		{
@@ -256,6 +284,7 @@
 		"tag:beszel-agent": [],
 		"tag:loki":      [],
 		"tag:monitored": [],
+		"tag:gatus":     [],
 		"tag:external":  [],
 		"tag:nanoclaw":  ["dave@"],
 	},

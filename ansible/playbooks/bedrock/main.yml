@@ -3,9 +3,15 @@
   hosts: bedrock
   vars:
     # Minecraft Bedrock clients (consoles, phones) are not on the tailnet.
-    ufw_docker_allowed_sources:
-      - 100.64.0.0/10
-      - "{{ homelab_lan_subnet }}"
+    ufw_docker_allowed_source_ports:
+      - port: "19132"
+        proto: udp
+        sources:
+          - "{{ homelab_lan_subnet }}"
+      - port: "19132"
+        proto: tcp
+        sources:
+          - "{{ homelab_lan_subnet }}"
   tasks:
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-docker.yml
@@ -30,6 +36,12 @@
         rule: allow
         port: 19132
         proto: udp
+
+    - name: Allow bedrock handshake port
+      community.general.ufw:
+        rule: allow
+        port: 19132
+        proto: tcp
 
     - name: Enable UFW
       community.general.ufw:

@@ -32,9 +32,12 @@
         proto: udp
     # Enforce role and monitoring tags by hostname after nodes enroll.
     headscale_node_tags:
+      adguard-home: [tag:monitored]
       audiobookshelf: [tag:monitored, tag:pangolin]
+      bedrock: [tag:monitored]
       bento-pdf: [tag:monitored, tag:pangolin]
       forgejo: [tag:monitored, tag:pangolin]
+      gatus: [tag:gatus]
       gotify: [tag:monitored, tag:pangolin]
       grafana: [tag:monitored]
       loki: [tag:loki]
@@ -49,6 +52,7 @@
       paperless-ngx: [tag:monitored, tag:pangolin]
       searxng: [tag:monitored, tag:pangolin]
       umami: [tag:monitored, tag:pangolin]
+      upsnap: [tag:monitored]
   tasks:
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-docker.yml
@@ -96,10 +100,11 @@
       register: headscale_config
 
     - name: Copy Headscale policy
-      ansible.builtin.copy:
-        src: policy.headscale.hujson
+      ansible.builtin.template:
+        src: policy.headscale.hujson.j2
         dest: "~/config/headscale/policy.hujson"
         mode: "0640"
+      tags: [headscale_policy]
 
     - name: Copy traefik static config
       ansible.builtin.template:
@@ -142,6 +147,41 @@
         cmd: docker exec headscale headscale nodes list -o json
       register: headscale_nodes
       changed_when: false
+      tags: [headscale_policy]
+
+    - name: Read the Gatus Headscale node
+      ansible.builtin.set_fact:
+        headscale_gatus_node: "{{ (headscale_nodes.stdout | from_json | selectattr('name', 'equalto', 'gatus') | list | first) | default({}) }}"
+      tags: [headscale_policy]
+
+    - name: Determine whether Gatus needs a new tag
+      ansible.builtin.set_fact:
+        headscale_gatus_needs_tag: "{{ 'tag:gatus' not in (headscale_gatus_node.tags | default([])) }}"
+      tags: [headscale_policy]
+
+    # Headscale policy set runs the policy's tests. On the first rollout the
+    # tag:gatus source does not exist yet, so apply the same ACLs without the
+    # Gatus test cases, assign tags, then validate and apply the full file.
+    - name: Copy bootstrap Headscale policy without Gatus tests
+      ansible.builtin.template:
+        src: policy.headscale.hujson.j2
+        dest: "~/config/headscale/policy-bootstrap.hujson"
+        mode: "0640"
+      vars:
+        headscale_include_gatus_tests: false
+      when:
+        - headscale_gatus_node | length > 0
+        - headscale_gatus_needs_tag | bool
+      tags: [headscale_policy]
+
+    - name: Apply bootstrap Headscale policy before assigning the Gatus tag
+      ansible.builtin.command:
+        cmd: docker exec headscale headscale policy set -f /etc/headscale/policy-bootstrap.hujson
+      changed_when: true
+      when:
+        - headscale_gatus_node | length > 0
+        - headscale_gatus_needs_tag | bool
+      tags: [headscale_policy]
 
     - name: Assign Headscale node tags
       ansible.builtin.command:
@@ -165,11 +205,15 @@
       when:
         - headscale_node | length > 0
         - headscale_node.tags | default([]) | sort != item.value | sort
+      tags: [headscale_policy]
 
+    # Policy tests resolve tag:gatus against live nodes, so validate after the
+    # service node has acquired that tag in Headscale's node registry.
     - name: Validate Headscale policy
       ansible.builtin.command:
         cmd: docker exec headscale headscale policy check --file /etc/headscale/policy.hujson
       changed_when: false
+      tags: [headscale_policy]
 
     - name: Read active Headscale policy
       ansible.builtin.command:
@@ -177,6 +221,7 @@
       register: headscale_active_policy
       changed_when: false
       failed_when: false
+      tags: [headscale_policy]
 
     - name: Apply Headscale policy when the database differs
       ansible.builtin.command:
@@ -184,7 +229,8 @@
       changed_when: true
       when: >-
         headscale_active_policy.rc != 0 or
-        headscale_active_policy.stdout | trim != lookup('ansible.builtin.file', playbook_dir + '/policy.headscale.hujson') | trim
+        headscale_active_policy.stdout | trim != lookup('ansible.builtin.template', playbook_dir + '/policy.headscale.hujson.j2') | trim
+      tags: [headscale_policy]
 
     - name: Set up automated VPS state backups
       ansible.builtin.include_role:
