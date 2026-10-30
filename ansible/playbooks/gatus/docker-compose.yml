@@ -12,9 +12,8 @@ services:
     image: docker.io/twinproduction/gatus:v5.38.0@sha256:085ed63da963728965d00a3c78aa6167e3bf135218485b893201758e079e8415
     container_name: gatus
     user: "999:999"
+    network_mode: host
     volumes:
       - ./config:/config
       - ./data:/data
-    ports:
-      - "127.0.0.1:8080:8080"
     restart: always
