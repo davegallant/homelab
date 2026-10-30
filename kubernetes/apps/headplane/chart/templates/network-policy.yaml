@@ -10,7 +10,7 @@ spec:
       app.kubernetes.io/name: headplane
   ingress:
     - fromEntities:
-        - host
+        - ingress
       toPorts:
         - ports:
             - port: "3000"
