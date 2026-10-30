@@ -24,7 +24,6 @@ spec:
       securityContext:
         fsGroup: {{ .Values.fsGroup }}
         fsGroupChangePolicy: OnRootMismatch
-        runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
       affinity:
@@ -41,6 +40,7 @@ spec:
           image: {{ .Values.kiwix.image }}
           imagePullPolicy: IfNotPresent
           securityContext:
+            runAsNonRoot: true
             capabilities:
               drop:
                 - ALL
