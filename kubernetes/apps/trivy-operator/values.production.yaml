@@ -69,6 +69,9 @@ podSecurityContext:
   seccompProfile:
     type: RuntimeDefault
 
+podAnnotations:
+  homelab.davegallant.ca/scanner-security-profile: restricted-v1
+
 trivyOperator:
   scanJobPodTemplatePodSecurityContext:
     runAsUser: 10000
