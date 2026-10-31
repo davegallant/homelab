@@ -12,6 +12,10 @@
         proto: tcp
         sources:
           - "{{ homelab_lan_subnet }}"
+      - port: "19140:19155"
+        proto: udp
+        sources:
+          - "{{ homelab_lan_subnet }}"
   tasks:
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-docker.yml
@@ -42,6 +46,12 @@
         rule: allow
         port: 19132
         proto: tcp
+
+    - name: Allow bedrock gameplay ports
+      community.general.ufw:
+        rule: allow
+        port: "19140:19155"
+        proto: udp
 
     - name: Enable UFW
       community.general.ufw:

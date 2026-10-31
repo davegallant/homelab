@@ -5,10 +5,11 @@ services:
     environment:
       EULA: "TRUE"
       LEVEL_NAME: "Bedrock level"
-      SERVER_UDP_PORTS: "19132"
+      SERVER_UDP_PORTS: "{{ ansible_default_ipv4.address }}:19140-19155:19140-19155"
     ports:
       - "19132:19132/tcp"
       - "19132:19132/udp"
+      - "19140-19155:19140-19155/udp"
     volumes:
       - ./data:/data
     stdin_open: true
