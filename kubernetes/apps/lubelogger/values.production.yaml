@@ -13,16 +13,32 @@ controllers:
         # remains excluded by omission.
         backup.velero.io/backup-volumes: data-local
       securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
     containers:
       app:
         securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          runAsNonRoot: true
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
         image:
           repository: ghcr.io/hargata/lubelogger
           tag: v1.7.4
           digest: sha256:483a9d7582c4e6258615fd822b3de4193b4fcc4230d0a92432c6d407faf75af2
+        env:
+          HOME: /App
         probes:
           startup:
             enabled: true
@@ -126,8 +142,15 @@ persistence:
             subPath: temp
           - path: /App/log
             subPath: log
-          - path: /root/.aspnet/DataProtection-Keys
+          - path: /App/.aspnet/DataProtection-Keys
             subPath: keys
+
+  tmp:
+    type: emptyDir
+    advancedMounts:
+      lubelogger:
+        app:
+          - path: /tmp
 
 rawResources:
   defaultDenyNetworkPolicy:
