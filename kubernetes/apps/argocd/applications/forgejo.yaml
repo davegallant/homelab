@@ -23,9 +23,8 @@ spec:
     namespace: forgejo
   # No automated sync or deletion finalizer: syncs require approval,
   # and deleting this Application preserves its workloads.
-  # Staged at zero replicas until the frozen /data copy and Velero restore
-  # drill have passed. Production cutover is HTTPS-only; Git-over-SSH never
-  # worked on the LXC and is intentionally not exposed by this Application.
+  # Rootless production startup passed an isolated /data Velero restore drill.
+  # SQLite uses one Recreate pod; production access remains HTTPS-only.
   syncPolicy:
     syncOptions:
       - ServerSideApply=true
