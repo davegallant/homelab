@@ -140,10 +140,14 @@ controllers:
         securityContext:
           runAsUser: 1000
           runAsGroup: 1000
+          runAsNonRoot: true
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
+          seccompProfile:
+            type: RuntimeDefault
         probes:
           startup:
             enabled: true
@@ -218,6 +222,12 @@ persistence:
       speedtest-tracker:
         db:
           - path: /var/lib/postgresql
+  apprise-tmp:
+    type: emptyDir
+    advancedMounts:
+      speedtest-tracker:
+        apprise:
+          - path: /tmp
   apprise:
     type: persistentVolumeClaim
     storageClass: local-path
