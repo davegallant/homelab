@@ -46,6 +46,12 @@ filesystem. Their startup commands set umask `002` to preserve group-writable
 media files; `/tmp` is an `emptyDir`. Their namespaces remain Baseline pending
 recovery verification.
 
+Speedtest Tracker's 2026-10-31 hardening backup initially failed because the
+non-root PostgreSQL process could not overwrite the prior root-owned SQL dump.
+The hook now writes a mode-0600 temporary dump and renames it into place. A live
+`pg_dump` probe succeeded; `speedtest-hardening-20261031-retry` is still running
+and must complete without warnings before treating the backup gate as passed.
+
 Maloja runs its pinned image's application directly as UID/GID 1000, with all
 capabilities dropped, a read-only root filesystem, and writable `/data` and
 `/tmp` volumes. Before migration, `maloja-hardening-20261031` backed up the
