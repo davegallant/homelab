@@ -16,6 +16,11 @@ spec:
         app.kubernetes.io/name: miniflux
     spec:
       automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -30,7 +35,14 @@ spec:
           image: {{ .Values.miniflux.image }}
           imagePullPolicy: IfNotPresent
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
             allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
           env:
             - name: DB_USER
               valueFrom:
@@ -87,16 +99,29 @@ spec:
             failureThreshold: 3
           resources:
             {{- toYaml .Values.miniflux.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
 {{- if .Values.newt.enabled }}
         - name: newt
           image: {{ .Values.newt.image }}
           imagePullPolicy: IfNotPresent
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
             capabilities:
               drop:
                 - ALL
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          args:
+            - --disable-ssh
           env:
+            - name: HOME
+              value: /tmp
+            - name: XDG_CONFIG_HOME
+              value: /tmp/.config
             - name: PANGOLIN_ENDPOINT
               value: {{ required "pangolinEndpoint must be supplied from Ansible (see values.ansible.yaml.j2)" .Values.pangolinEndpoint | quote }}
             - name: NEWT_ID
@@ -111,4 +136,10 @@ spec:
                   key: newt-secret
           resources:
             {{- toYaml .Values.newt.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
 {{- end }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
