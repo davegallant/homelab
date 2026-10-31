@@ -6,6 +6,9 @@ controllers:
     strategy: Recreate
     pod:
       automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       nodeSelector:
         kubernetes.io/hostname: k8s-w-1
       annotations:
