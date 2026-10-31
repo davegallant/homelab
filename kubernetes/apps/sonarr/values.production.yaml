@@ -220,6 +220,7 @@ rawResources:
               - matchName: services.sonarr.tv
               - matchName: skyhook.sonarr.tv
               - matchName: thexem.info
+              - matchName: artworks.thetvdb.com
             toPorts:
               - ports:
                   - port: "443"
