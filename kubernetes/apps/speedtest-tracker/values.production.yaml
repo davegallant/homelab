@@ -38,6 +38,16 @@ controllers:
       app:
         securityContext:
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+            add:
+              - CHOWN
+              - DAC_OVERRIDE
+              - FOWNER
+              - KILL
+              - SETGID
+              - SETUID
         image:
           repository: docker.io/linuxserver/speedtest-tracker
           tag: 1.15.1
