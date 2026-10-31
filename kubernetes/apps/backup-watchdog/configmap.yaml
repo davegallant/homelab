@@ -21,6 +21,9 @@ data:
         "kube-node-lease": "system, no user PVCs",
         "velero": "Velero's own namespace, no user PVCs"
       },
+      "namespace_patterns": [
+        {"pattern": "*-drill*", "reason": "temporary restore drill namespace, not production backup scope"}
+      ],
       "volumes": {
         "romm/romm-library": "TrueNAS snapshots + Drive sync, not Velero"
       },
@@ -42,6 +45,7 @@ data:
     pvcs/pvs/pods/schedules/backups/pvbs JSON lists, for local testing.
     """
     import json
+    import fnmatch
     import os
     import ssl
     import sys
@@ -116,6 +120,7 @@ data:
             return fail(f"failed to load cluster data: {exc}")
         allow = load_allowlist()
         allow_ns = allow.get("namespaces", {})
+        allow_ns_patterns = allow.get("namespace_patterns", [])
         allow_vol = allow.get("volumes", {})
         allow_suffixes = allow.get("volume_suffixes", [])
         def volume_allowlisted(ns, claim):
@@ -124,6 +129,13 @@ data:
             for suf in allow_suffixes:
                 if claim.endswith(suf):
                     return f"volume suffix {suf} (tailscale/caddy state, intentionally not Velero-backed)"
+            return None
+        def namespace_allowlisted(ns):
+            if ns in allow_ns:
+                return allow_ns[ns]
+            for entry in allow_ns_patterns:
+                if fnmatch.fnmatchcase(ns, entry.get("pattern", "")):
+                    return entry.get("reason", "allowlisted namespace pattern")
             return None
         pv_by_name = {p["metadata"]["name"]: p for p in data["pvs"].get("items", [])}
         pvc_pv_type = {}
@@ -159,8 +171,9 @@ data:
         pvbs = data["pvbs"].get("items", [])
         gaps, warnings, covered, backups_checked = [], [], [], {}
         for ns in sorted(bound):
-            if ns in allow_ns:
-                warnings.append(f"{ns}: allowlisted namespace ({allow_ns[ns]}), skipped")
+            namespace_reason = namespace_allowlisted(ns)
+            if namespace_reason:
+                warnings.append(f"{ns}: allowlisted namespace ({namespace_reason}), skipped")
                 continue
             coverable = [c for c in bound[ns] if not volume_allowlisted(ns, c) and pvc_pv_type.get((ns, c), "other") not in ("hostPath", "nfs")]
             if not coverable:

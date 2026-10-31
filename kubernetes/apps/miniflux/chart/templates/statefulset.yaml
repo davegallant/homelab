@@ -17,11 +17,11 @@ spec:
         # Opt this pod's data volume into Velero filesystem backup
         # (the Schedule keeps defaultVolumesToFsBackup off), and take
         # a logical dump first: every volume backup then contains
-        # /var/lib/postgresql/dump.sql, a restore path that does not
+        # $PGDATA/dump.sql, a restore path that does not
         # depend on the raw data directory being consistent.
         backup.velero.io/backup-volumes: data
         pre.hook.backup.velero.io/container: miniflux-db
-        pre.hook.backup.velero.io/command: '["/bin/sh", "-c", "PGPASSWORD=$POSTGRES_PASSWORD pg_dump -h 127.0.0.1 -U $POSTGRES_USER -d {{ .Values.db.name }} > /var/lib/postgresql/dump.sql"]'
+        pre.hook.backup.velero.io/command: '["/bin/sh", "-c", "umask 077; PGPASSWORD=\"$POSTGRES_PASSWORD\" pg_dump -h 127.0.0.1 -U \"$POSTGRES_USER\" -d {{ .Values.db.name }} > \"$PGDATA/dump.sql.tmp\" && mv -f \"$PGDATA/dump.sql.tmp\" \"$PGDATA/dump.sql\""]'
         pre.hook.backup.velero.io/timeout: 180s
     spec:
       automountServiceAccountToken: false
