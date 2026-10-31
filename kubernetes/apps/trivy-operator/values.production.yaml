@@ -71,10 +71,16 @@ podSecurityContext:
 
 trivyOperator:
   scanJobPodTemplatePodSecurityContext:
+    runAsUser: 10000
+    runAsGroup: 10000
     runAsNonRoot: true
+    fsGroup: 10000
+    fsGroupChangePolicy: OnRootMismatch
     seccompProfile:
       type: RuntimeDefault
   scanJobPodTemplateContainerSecurityContext:
+    runAsUser: 10000
+    runAsGroup: 10000
     runAsNonRoot: true
     allowPrivilegeEscalation: false
     capabilities:
