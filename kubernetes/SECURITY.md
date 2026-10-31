@@ -47,8 +47,10 @@ restored config.
 Lidarr, Radarr, and Sonarr run their pinned images' application binaries
 directly as UID/GID 1000, with all capabilities dropped and a read-only root
 filesystem. Their startup commands set umask `002` to preserve group-writable
-media files; `/tmp` is an `emptyDir`. Their namespaces remain Baseline pending
-recovery verification.
+media files; `/tmp` is an `emptyDir`. Radarr's namespace enforces Restricted
+after its isolated config restore recovered 579,598,747 bytes and the restored
+app started as UID 1000 with a read-only root filesystem. Lidarr and Sonarr
+remain Baseline pending recovery verification.
 
 Speedtest Tracker's 2026-10-31 hardening backup initially failed because the
 non-root PostgreSQL process could not overwrite the prior root-owned SQL dump.
@@ -84,7 +86,7 @@ auditing Restricted:
 
 | Namespace | Current hardening | Remaining gate |
 |---|---|---|
-| Lidarr, Radarr, Sonarr | App binaries run as UID 1000 with read-only root filesystems; NFS write behavior was checked. | Verify isolated config restores before Restricted enforcement. |
+| Lidarr, Sonarr | App binaries run as UID 1000 with read-only root filesystems; NFS write behavior was checked. | Verify isolated config restores before Restricted enforcement. |
 | Maloja | App runs as UID 1000 with read-only root filesystem; SQLite integrity passed after ownership migration. | Verify data recovery before Restricted enforcement. |
 | Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Backup completed; app is 3/3 Ready. | s6, nginx and PHP-FPM masters require root and extra capabilities. Validate an isolated restore; find a maintainable rootless path or keep Baseline as a reviewed exception. |
 | Forgejo | Rootful chart remains in use. | Validate the existing data and restore path under a rootless layout before changing the image. |
