@@ -131,10 +131,16 @@ controllers:
             memory: 512Mi
       newt:
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
           capabilities:
             drop:
               - ALL
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
         image:
           repository: docker.io/fosrl/newt
           tag: 1.19.1
@@ -142,6 +148,9 @@ controllers:
         envFrom:
           - secretRef:
               name: paperless-newt-external
+        env:
+          HOME: /tmp
+          XDG_CONFIG_HOME: /tmp/.config
         resources:
           requests:
             cpu: 10m
@@ -158,6 +167,12 @@ service:
         port: 8000
 
 persistence:
+  newt-tmp:
+    type: emptyDir
+    advancedMounts:
+      paperless-ngx:
+        newt:
+          - path: /tmp
   data:
     type: persistentVolumeClaim
     storageClass: local-path
