@@ -26,6 +26,9 @@ controllers:
     strategy: Recreate
     pod:
       automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       annotations:
         # Opt-in filesystem backup of the database volume, with a
         # consistent logical dump written into the volume first so
@@ -37,10 +40,14 @@ controllers:
     containers:
       app:
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          runAsGroup: 65533
           capabilities:
             drop:
               - ALL
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
         image:
           repository: ghcr.io/umami-software/umami
           tag: 3.4.1
@@ -87,7 +94,14 @@ controllers:
             memory: 512Mi
       db:
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+          runAsGroup: 999
+          capabilities:
+            drop:
+              - ALL
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
         image:
           repository: docker.io/library/postgres
           tag: "18.6"
@@ -167,6 +181,24 @@ service:
         port: 3000
 
 persistence:
+  app-tmp:
+    type: emptyDir
+    advancedMounts:
+      umami:
+        app:
+          - path: /tmp
+  db-tmp:
+    type: emptyDir
+    advancedMounts:
+      umami:
+        db:
+          - path: /tmp
+  db-run:
+    type: emptyDir
+    advancedMounts:
+      umami:
+        db:
+          - path: /var/run/postgresql
   newt-tmp:
     type: emptyDir
     advancedMounts:
