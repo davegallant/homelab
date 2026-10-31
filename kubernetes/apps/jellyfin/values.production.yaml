@@ -82,7 +82,7 @@ controllers:
             memory: 64Mi
           limits:
             cpu: 200m
-            memory: 192Mi
+            memory: 512Mi
 service:
   jellyfin:
     controller: jellyfin
