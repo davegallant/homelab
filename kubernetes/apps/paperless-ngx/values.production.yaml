@@ -26,6 +26,9 @@ controllers:
     strategy: Recreate
     pod:
       automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       annotations:
         # Opt-in filesystem backup of the file volumes (Redis broker
         # state excluded by omission). The pre-backup hook writes a
@@ -92,7 +95,14 @@ controllers:
             memory: 2Gi
       redis:
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+          runAsGroup: 999
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: true
         image:
           repository: docker.io/library/redis
           tag: "8"
@@ -250,6 +260,12 @@ persistence:
       paperless-ngx:
         redis:
           - path: /data
+  redis-tmp:
+    type: emptyDir
+    advancedMounts:
+      paperless-ngx:
+        redis:
+          - path: /tmp
 
 rawResources:
   defaultDenyNetworkPolicy:
