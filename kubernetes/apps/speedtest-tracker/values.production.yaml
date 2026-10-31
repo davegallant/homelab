@@ -38,6 +38,7 @@ controllers:
       app:
         securityContext:
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
@@ -208,6 +209,18 @@ service:
         port: 80
 
 persistence:
+  app-run:
+    type: emptyDir
+    advancedMounts:
+      speedtest-tracker:
+        app:
+          - path: /run
+  app-tmp:
+    type: emptyDir
+    advancedMounts:
+      speedtest-tracker:
+        app:
+          - path: /tmp
   db-run:
     type: emptyDir
     advancedMounts:
