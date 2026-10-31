@@ -21,6 +21,14 @@ controllers:
       app:
         securityContext:
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+            add:
+              - CHOWN
+              - DAC_OVERRIDE
+              - FOWNER
+              - KILL
         image:
           repository: docker.io/krateng/maloja
           tag: 3.2.9
