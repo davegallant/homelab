@@ -91,12 +91,13 @@ auditing Restricted:
 | RomM | Existing reduced-capability configuration remains. | Deferred at Dave's direction. |
 
 Platform namespaces Alloy and Loki also remain Baseline with Restricted
-warn/audit; review them separately from ordinary applications. Temporary
-recovery namespaces remain isolated and are not production policy targets:
-`qbittorrent-drill-v3-20261031` and `prowlarr-drill-v3-20261031` completed
-restores of 69,524,529 and 136,087,005 bytes, respectively. Earlier failed
-qBittorrent and Prowlarr drills remain for evidence. The older
-`miniflux-drill` and `miniflux-drill-v2` namespaces remain Baseline.
+warn/audit; review them separately from ordinary applications. The completed
+qBittorrent and Prowlarr drill namespaces were removed after restoring
+69,524,529 and 136,087,005 bytes, respectively. Their Velero restore records
+remain. The older failed restore records are also retained in Velero; their
+namespaces were removed. The Miniflux drill namespaces remain: PostgreSQL
+restore probes are running, and the Miniflux Pods are not ready because the
+restored external Secret lacks the `admin-username` key.
 
 Do not raise enforcement in another namespace until rendered Pods pass
 server-side Restricted admission, live service behavior is verified, and
