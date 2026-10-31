@@ -8,6 +8,20 @@ image:
 
 trivy:
   storageClassEnabled: false
+  server:
+    podSecurityContext:
+      runAsUser: 65534
+      runAsNonRoot: true
+      fsGroup: 65534
+      seccompProfile:
+        type: RuntimeDefault
+    securityContext:
+      privileged: false
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
   image:
     registry: mirror.gcr.io
     repository: aquasec/trivy
@@ -47,3 +61,26 @@ resources:
   limits:
     cpu: 250m
     memory: 512Mi
+
+podSecurityContext:
+  runAsUser: 10000
+  runAsGroup: 10000
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+trivyOperator:
+  scanJobPodTemplatePodSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  scanJobPodTemplateContainerSecurityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    privileged: false
+    readOnlyRootFilesystem: true
+    seccompProfile:
+      type: RuntimeDefault
