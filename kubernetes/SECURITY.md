@@ -11,8 +11,8 @@ pinned to `v1.37`; Baseline enforcement remains while rendered and running
 workloads are remediated. Headplane, k8s-readonly, LubeLogger,
 Audiobookshelf, BentoPDF, Beszel, Changedetection, Grafana, Homepage, Immich,
 Invidious, Jellyfin, Kiwix, Lidarr, Maloja, Miniflux, Navidrome, Paperless,
-SearXNG, Seerr, Sonarr, and Umami enforce Restricted. Confirm live namespace
-labels before changing this inventory.
+Prowlarr, qBittorrent, Radarr, SearXNG, Seerr, Sonarr, and Umami enforce
+Restricted. Confirm live namespace labels before changing this inventory.
 An unsafe test Pod was rejected by Audiobookshelf's Restricted enforcement;
 its existing workloads remained Ready.
 LubeLogger runs as UID 1000 and keeps its existing DataProtection keyring on the
