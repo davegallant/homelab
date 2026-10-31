@@ -26,10 +26,6 @@ controllers:
           tag: 3.2.9
           digest: sha256:313b58d282934b2e7dc27f794462eb2ceb1567db23806b49f78b706dd86afe09
         env:
-          # The image's s6 init remains root, but Maloja itself drops to
-          # this UID/GID. The data PVC is already owned by 1000:1000.
-          PUID: "1000"
-          PGID: "1000"
           # Parity with the LXC compose. MALOJA_FORCE_PASSWORD=stub is
           # already committed in the LXC playbook; it is not a real
           # credential — access control is the tailnet itself.
@@ -40,7 +36,7 @@ controllers:
           startup:
             enabled: true
             type: HTTP
-            path: /
+            path: /static/css/startpage.css
             port: 42010
             spec:
               periodSeconds: 5
@@ -49,7 +45,7 @@ controllers:
           readiness:
             enabled: true
             type: HTTP
-            path: /
+            path: /static/css/startpage.css
             port: 42010
             spec:
               periodSeconds: 10
@@ -58,7 +54,7 @@ controllers:
           liveness:
             enabled: true
             type: HTTP
-            path: /
+            path: /static/css/startpage.css
             port: 42010
             spec:
               periodSeconds: 30
