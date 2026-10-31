@@ -21,6 +21,8 @@ metadata on the local PVCs and its NFS library ownership unchanged.
 k8s-readonly intentionally mounts its read-only service-account token for
 Kubernetes API access. Tailnet Gateway still has Restricted `warn`/`audit`; its
 namespace labels are managed through its Argo application.
+The qBittorrent egress monitor also needs its scoped service-account token to
+check the protected Cilium policy and Argo Application.
 
 This rollout is not complete. Do not raise enforcement in another namespace
 until its rendered Pod shapes pass server-side admission, its running workload

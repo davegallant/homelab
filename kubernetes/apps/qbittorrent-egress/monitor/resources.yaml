@@ -92,6 +92,8 @@ spec:
             app.kubernetes.io/controller: qbittorrent
         spec:
           serviceAccountName: qbittorrent-egress-monitor
+          # check.py reads this scoped token to verify the policy and Argo app.
+          automountServiceAccountToken: true
           restartPolicy: Never
           nodeSelector:
             kubernetes.io/hostname: k8s-w-1
@@ -99,6 +101,8 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000
             runAsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
           # Startup ordering only; this delay is not a map check or a
           # fail-closed boundary. The actual exit is checked by check.py.
           initContainers:
@@ -106,7 +110,9 @@ spec:
               image: docker.io/linuxserver/qbittorrent:5.3.0@sha256:75ecbb1c89ab7b0a21c4bde40b4820e4f1649d2d56d83b91913422155e8d2a5f
               command: [sleep, '20']
               securityContext:
+                runAsNonRoot: true
                 allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
                 capabilities:
                   drop: [ALL]
               resources:
