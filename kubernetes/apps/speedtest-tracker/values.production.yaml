@@ -23,6 +23,9 @@ controllers:
     replicas: 1
     pod:
       automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       annotations:
         # Opt-in filesystem backup of the state volumes, with a
         # consistent logical dump written into the database volume
