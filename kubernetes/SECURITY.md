@@ -35,7 +35,9 @@ and bootstrap init container run
 as UID/GID 1000 with all capabilities dropped. The init container creates a
 user-owned `/run` directory in an `emptyDir` and uses a read-only root filesystem.
 The namespace enforces Restricted after an isolated restore recovered 69,524,529
-bytes and passed admission with the restored config. Prowlarr's app
+bytes and passed admission with the restored config. The current egress monitor
+Job passes Restricted; one failed pre-enforcement Job Pod remains as evidence.
+Prowlarr's app
 also runs as UID/GID 1000 with all capabilities dropped; its non-root init
 container prepares `/run` and copies the startup-patched Chromium driver into
 writable `emptyDir` volumes. Its namespace enforces Restricted after an
