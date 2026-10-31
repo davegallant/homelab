@@ -28,6 +28,16 @@ controllers:
           QBITTORRENT_VERSION: 5.3.0
         securityContext:
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+            add:
+              - CHOWN
+              - DAC_OVERRIDE
+              - FOWNER
+              - KILL
+              - SETGID
+              - SETUID
         resources:
           requests:
             cpu: 25m
@@ -89,6 +99,13 @@ controllers:
             fi
         securityContext:
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+            add:
+              - CHOWN
+              - DAC_OVERRIDE
+              - FOWNER
         resources:
           requests:
             cpu: 25m
