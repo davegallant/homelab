@@ -21,12 +21,25 @@ groups:
                 uid: victoriametrics
               editorMode: code
               expr: >-
+                (
+                  sum by (source) (
+                    increase(hubble_drop_total{
+                      job="prometheus.scrape.annotated_services",
+                      reason=~"POLICY_DENIED|POLICY_DENY",
+                      protocol="TCP",
+                      source!="",
+                      source!~"^(audiobookshelf/audiobookshelf|bentopdf/bentopdf|forgejo/forgejo-newt|invidious/invidious|jellyfin/jellyfin|navidrome/navidrome|paperless-ngx/paperless-ngx|searxng/searxng|umami/umami|miniflux/miniflux)$"
+                    }[5m])
+                  )
+                )
+                or
                 sum by (source) (
                   increase(hubble_drop_total{
                     job="prometheus.scrape.annotated_services",
                     reason=~"POLICY_DENIED|POLICY_DENY",
                     protocol="TCP",
-                    source!=""
+                    source=~"^(audiobookshelf/audiobookshelf|bentopdf/bentopdf|forgejo/forgejo-newt|invidious/invidious|jellyfin/jellyfin|navidrome/navidrome|paperless-ngx/paperless-ngx|searxng/searxng|umami/umami|miniflux/miniflux)$",
+                    destination!~"^(api\\.fossorial\\.io|13\\.223\\.241\\.208|98\\.85\\.9\\.165)$"
                   }[5m])
                 )
               instant: true
