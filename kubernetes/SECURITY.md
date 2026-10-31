@@ -12,7 +12,7 @@ workloads are remediated. Headplane, k8s-readonly, LubeLogger,
 Audiobookshelf, BentoPDF, Beszel, Changedetection, Grafana, Homepage, Immich,
 Invidious, Jellyfin, Kiwix, Miniflux, Navidrome, Paperless, SearXNG, Seerr, and
 Umami enforce Restricted. Confirm live namespace labels before changing this
-inventory; the Miniflux restore-drill namespaces are not production workloads.
+inventory.
 An unsafe test Pod was rejected by Audiobookshelf's Restricted enforcement;
 its existing workloads remained Ready.
 LubeLogger runs as UID 1000 and keeps its existing DataProtection keyring on the
@@ -91,13 +91,17 @@ auditing Restricted:
 | RomM | Existing reduced-capability configuration remains. | Deferred at Dave's direction. |
 
 Platform namespaces Alloy and Loki also remain Baseline with Restricted
-warn/audit; review them separately from ordinary applications. The completed
-qBittorrent and Prowlarr drill namespaces were removed after restoring
-69,524,529 and 136,087,005 bytes, respectively. Their Velero restore records
-remain. The older failed restore records are also retained in Velero; their
-namespaces were removed. The Miniflux drill namespaces remain: PostgreSQL
-restore probes are running, and the Miniflux Pods are not ready because the
-restored external Secret lacks the `admin-username` key.
+warn/audit; review them separately from ordinary applications. The qBittorrent,
+Prowlarr, and Miniflux drill namespaces were removed after successful isolated
+recovery checks; Velero restore records remain. Miniflux's v4 restore recovered
+499,615,433 bytes, including 24 feeds and 4,192 entries. The restored Miniflux
+app passed Restricted admission as UID 65534 with a read-only root filesystem,
+all capabilities dropped, RuntimeDefault seccomp, and no service-account token;
+its healthcheck returned HTTP 200. Its two local-path PVs remain Released with
+the Retain policy, preserving the isolated data. The restored PostgreSQL role
+password was reconciled to a test-only credential because database roles are
+in the volume backup while external Secrets are excluded. The production
+database and credentials were not changed.
 
 Do not raise enforcement in another namespace until rendered Pods pass
 server-side Restricted admission, live service behavior is verified, and
