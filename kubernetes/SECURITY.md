@@ -8,12 +8,14 @@ resources to establish enforcement; a tracked deny rule alone is insufficient.
 
 Restricted `warn` and `audit` are staged on ordinary application namespaces,
 pinned to `v1.37`; Baseline enforcement remains while rendered and running
-workloads are remediated. Headplane and k8s-readonly enforce Restricted. Unsafe
-test Pods were rejected in both; their existing workloads remained Ready.
+workloads are remediated. Headplane, k8s-readonly, and Trivy enforce Restricted.
+Unsafe test Pods were rejected in the enforced namespaces; their existing
+workloads remained Ready. Trivy's operator and generated scan Jobs run under
+Restricted; the operator keeps its service-account token for Kubernetes API
+access.
 k8s-readonly intentionally mounts its read-only service-account token for
-Kubernetes API access. Tailnet Gateway and Trivy also have Restricted
-`warn`/`audit`; their namespace labels are managed through their Argo
-applications.
+Kubernetes API access. Tailnet Gateway still has Restricted `warn`/`audit`; its
+namespace labels are managed through its Argo application.
 
 This rollout is not complete. Do not raise enforcement in another namespace
 until its rendered Pod shapes pass server-side admission, its running workload
