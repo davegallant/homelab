@@ -46,6 +46,9 @@ spec:
         pre.hook.backup.velero.io/on-error: Fail
     spec:
       automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       nodeSelector:
         kubernetes.io/hostname: k8s-w-1
       containers:
@@ -64,10 +67,13 @@ spec:
                   name: grafana-gotify
                   key: token
           securityContext:
-            runAsUser: 0
+            runAsNonRoot: true
+            runAsUser: 472
+            runAsGroup: 472
             allowPrivilegeEscalation: false
             capabilities:
               drop: [ALL]
+            readOnlyRootFilesystem: true
           resources:
             requests:
               cpu: 50m
@@ -87,6 +93,7 @@ spec:
             httpGet: {path: /api/health, port: 3000}
           volumeMounts:
             - {name: data, mountPath: /var/lib/grafana}
+            - {name: tmp, mountPath: /tmp}
             - {name: datasources, mountPath: /etc/grafana/provisioning/datasources}
             - {name: dashboards, mountPath: /etc/grafana/provisioning/dashboards/provider.yaml, subPath: provider.yaml}
             - {name: dashboard-files, mountPath: /etc/grafana/provisioning/dashboards/files}
@@ -95,10 +102,13 @@ spec:
           image: docker.io/paperlessngx/paperless-ngx:3.4.0@sha256:7c1d98afd200def9e2bad3a377d30829e8d486554b3c818995af5860114ea17f
           command: ["sleep", "infinity"]
           securityContext:
-            runAsUser: 0
+            runAsNonRoot: true
+            runAsUser: 472
+            runAsGroup: 472
             allowPrivilegeEscalation: false
             capabilities:
               drop: [ALL]
+            readOnlyRootFilesystem: true
           resources:
             requests: {cpu: 5m, memory: 32Mi}
             limits: {cpu: 100m, memory: 128Mi}
@@ -107,6 +117,8 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim: {claimName: grafana-data}
+        - name: tmp
+          emptyDir: {}
         - name: datasources
           configMap: {name: grafana-datasources}
         - name: dashboards
