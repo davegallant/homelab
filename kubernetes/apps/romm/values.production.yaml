@@ -23,6 +23,8 @@ controllers:
     pod:
       automountServiceAccountToken: false
       securityContext:
+        supplementalGroups:
+          - 950
         seccompProfile:
           type: RuntimeDefault
       nodeSelector:
@@ -41,14 +43,13 @@ controllers:
       app:
         securityContext:
           allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
-            add:
-              - CHOWN
-              - DAC_OVERRIDE
-              - SETGID
-              - SETUID
         image:
           repository: docker.io/rommapp/romm
           tag: 5.4.1
@@ -103,6 +104,7 @@ controllers:
           runAsNonRoot: true
           runAsUser: 999
           runAsGroup: 999
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
@@ -157,6 +159,24 @@ service:
         port: 8080
 
 persistence:
+  app-tmp:
+    type: emptyDir
+    advancedMounts:
+      romm:
+        app:
+          - path: /tmp
+          - path: /run
+          - path: /var/cache/nginx
+          - path: /var/run
+          - path: /var/log/nginx
+          - path: /etc/nginx/conf.d
+  db-tmp:
+    type: emptyDir
+    advancedMounts:
+      romm:
+        db:
+          - path: /tmp
+          - path: /run/mysqld
   library:
     type: persistentVolumeClaim
     existingClaim: romm-library
