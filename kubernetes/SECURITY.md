@@ -31,9 +31,11 @@ Speedtest Tracker containers now drop all capabilities except the set their s6
 startup and user switch require. RomM and Maloja also use reduced capability
 sets tailored to their startup behavior. These containers still start as root,
 and their added capabilities are outside Restricted's allowlist, so their
-namespaces remain Baseline. The Prowlarr and qBittorrent bootstrap init
-containers also retain only the capabilities needed for config ownership and
-setup.
+namespaces remain Baseline. The qBittorrent bootstrap init container runs as
+UID/GID 1000 with a read-only root filesystem; it stores its temporary theme
+archive on the config PVC and passes Restricted admission. Prowlarr's
+non-root init container copies the startup-patched Chromium driver into a
+writable `emptyDir` and also passes Restricted admission.
 
 Forgejo remains Baseline while its rootful chart init containers and writable
 data volume are reviewed. Do not switch it to rootless operation until its
