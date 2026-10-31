@@ -27,10 +27,10 @@ admission. FlareSolverr uses a non-root init container to copy its
 startup-patched Chromium driver into a writable `emptyDir`; the monitor needs
 its scoped service-account token to check the protected Cilium policy and Argo
 Application. The LinuxServer Speedtest Tracker container now drops all
-capabilities except the set its s6
-startup and user switch require. RomM and Maloja also use reduced capability
-sets tailored to their startup behavior. These containers still start as root,
-and their added capabilities are outside Restricted's allowlist, so their
+capabilities except the set its s6 startup and user switch require. RomM also
+uses a reduced capability set tailored to its startup behavior. These
+containers still start as root, and their added capabilities are outside
+Restricted's allowlist, so their
 namespaces remain Baseline. qBittorrent's app and bootstrap init container run
 as UID/GID 1000 with all capabilities dropped. The init container creates a
 user-owned `/run` directory in an `emptyDir` and uses a read-only root filesystem.
@@ -45,6 +45,14 @@ directly as UID/GID 1000, with all capabilities dropped and a read-only root
 filesystem. Their startup commands set umask `002` to preserve group-writable
 media files; `/tmp` is an `emptyDir`. Their namespaces remain Baseline pending
 recovery verification.
+
+Maloja runs its pinned image's application directly as UID/GID 1000, with all
+capabilities dropped, a read-only root filesystem, and writable `/data` and
+`/tmp` volumes. Before migration, `maloja-hardening-20261031` backed up the
+data volume; 61 root-owned files were changed to UID/GID 1000 while the app
+was stopped. The recorded path list is kept in the protected local Talos
+credentials directory as `maloja-root-owned-20261031.paths`. The namespace
+remains Baseline pending recovery verification.
 
 Forgejo remains Baseline while its rootful chart init containers and writable
 data volume are reviewed. Do not switch it to rootless operation until its
