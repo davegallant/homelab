@@ -221,6 +221,18 @@ persistence:
       speedtest-tracker:
         app:
           - path: /tmp
+  app-bootstrap-cache:
+    type: emptyDir
+    advancedMounts:
+      speedtest-tracker:
+        app:
+          - path: /app/www/bootstrap/cache
+  app-storage:
+    type: emptyDir
+    advancedMounts:
+      speedtest-tracker:
+        app:
+          - path: /app/www/storage
   db-run:
     type: emptyDir
     advancedMounts:
