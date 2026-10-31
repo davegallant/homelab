@@ -91,6 +91,12 @@ controllers:
       db:
         securityContext:
           allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 999
+          runAsGroup: 999
+          capabilities:
+            drop:
+              - ALL
         image:
           repository: docker.io/library/postgres
           tag: "18.6"
