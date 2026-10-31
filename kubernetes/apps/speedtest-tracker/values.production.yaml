@@ -34,6 +34,32 @@ controllers:
         pre.hook.backup.velero.io/container: db
         pre.hook.backup.velero.io/command: '["/bin/sh","-c","umask 077; PGPASSWORD=\"$POSTGRES_PASSWORD\" pg_dump -U \"$POSTGRES_USER\"
           -d \"$POSTGRES_DB\" > \"$PGDATA/speedtest-backup.sql.tmp\" && mv -f \"$PGDATA/speedtest-backup.sql.tmp\" \"$PGDATA/speedtest-backup.sql\""]'
+    initContainers:
+      prepare-writable-paths:
+        image:
+          repository: docker.io/linuxserver/speedtest-tracker
+          tag: 1.15.1
+          digest: sha256:8d3c2826b708c18be7fb46c1afebc6bb3b1ab7c519473df1be89f5ecaa8bb31f
+        command:
+          - /bin/sh
+          - -ec
+        args:
+          - mkdir -p /storage/app /storage/framework/cache/data /storage/framework/sessions /storage/framework/views /storage/logs
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+        resources:
+          requests:
+            cpu: 5m
+            memory: 16Mi
+          limits:
+            memory: 64Mi
     containers:
       app:
         securityContext:
@@ -233,6 +259,8 @@ persistence:
       speedtest-tracker:
         app:
           - path: /app/www/storage
+        prepare-writable-paths:
+          - path: /storage
   db-run:
     type: emptyDir
     advancedMounts:
