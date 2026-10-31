@@ -22,9 +22,44 @@ controllers:
       automountServiceAccountToken: false
       nodeSelector:
         kubernetes.io/hostname: k8s-w-1
+      securityContext:
+        # The config PVC is already owned by 1000:1000; fsGroup also
+        # makes the sidecar's emptyDir scratch volumes writable.
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
       annotations:
         # Opt-in filesystem backup of the config volume.
         backup.velero.io/backup-volumes: config-local
+    initContainers:
+      # FlareSolverr patches this pinned image's driver at startup. Copy
+      # it to an emptyDir so the sidecar can keep its root filesystem read-only.
+      prepare-chromedriver:
+        image:
+          repository: ghcr.io/flaresolverr/flaresolverr
+          tag: v3.5.2
+          digest: sha256:c80ae007ce2ccdcd217a12426e4f039ef763ff90738c808d38810c3e59323767
+        command:
+          - sh
+          - -ec
+          - cp /app/chromedriver /work/chromedriver
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+          allowPrivilegeEscalation: false
+        resources:
+          requests:
+            cpu: 5m
+            memory: 16Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
     containers:
       app:
         securityContext:
@@ -73,6 +108,10 @@ controllers:
             memory: 1Gi
       flaresolverr:
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
@@ -82,6 +121,8 @@ controllers:
           tag: v3.5.2
           digest: sha256:c80ae007ce2ccdcd217a12426e4f039ef763ff90738c808d38810c3e59323767
         env:
+          HOME: /tmp
+          TMPDIR: /tmp
           LOG_LEVEL: info
           LOG_HTML: "false"
           CAPTCHA_SOLVER: none
@@ -127,6 +168,21 @@ service:
         port: 9696
 
 persistence:
+  chromedriver:
+    type: emptyDir
+    advancedMounts:
+      prowlarr:
+        prepare-chromedriver:
+          - path: /work
+        flaresolverr:
+          - path: /app/chromedriver
+            subPath: chromedriver
+  flaresolverr-tmp:
+    type: emptyDir
+    advancedMounts:
+      prowlarr:
+        flaresolverr:
+          - path: /tmp
   config-local:
     type: persistentVolumeClaim
     existingClaim: prowlarr-config-local
