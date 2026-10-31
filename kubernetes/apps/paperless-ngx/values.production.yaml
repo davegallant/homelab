@@ -216,6 +216,12 @@ persistence:
       paperless-ngx:
         newt:
           - path: /tmp
+  app-tmp:
+    type: emptyDir
+    advancedMounts:
+      paperless-ngx:
+        app:
+          - path: /tmp
   data:
     type: persistentVolumeClaim
     storageClass: local-path
