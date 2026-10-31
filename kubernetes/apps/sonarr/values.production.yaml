@@ -45,7 +45,7 @@ controllers:
         image:
           repository: docker.io/linuxserver/sonarr
           tag: 4.0.20
-          digest: sha256:48e36b608b461273b9dae857725cd0561a127f2c694b687318f6d0c5ce63e5c9
+          digest: sha256:386c962ee6e260e3a5656b25df2ed056bcc9b6410e197d075f9547fd14c23bca
         # s6 resets the umask in non-root mode. Start Sonarr directly so
         # imported media keeps the existing group-writable permissions.
         command:
