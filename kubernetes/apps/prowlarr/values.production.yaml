@@ -23,8 +23,9 @@ controllers:
       nodeSelector:
         kubernetes.io/hostname: k8s-w-1
       securityContext:
-        # The config PVC is already owned by 1000:1000; fsGroup also
-        # makes the sidecar's emptyDir scratch volumes writable.
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
@@ -64,6 +65,9 @@ controllers:
       app:
         securityContext:
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
         image:
           repository: docker.io/linuxserver/prowlarr
           tag: 2.7.0
@@ -168,6 +172,12 @@ service:
         port: 9696
 
 persistence:
+  run:
+    type: emptyDir
+    advancedMounts:
+      prowlarr:
+        app:
+          - path: /run
   chromedriver:
     type: emptyDir
     advancedMounts:
