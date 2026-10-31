@@ -31,6 +31,9 @@ controllers:
     replicas: 1
     pod:
       automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       annotations:
         # Opt-in filesystem backup of the database volume, with a
         # consistent logical dump written into the volume first so
@@ -39,11 +42,19 @@ controllers:
         backup.velero.io/backup-volumes: db-data-local
         pre.hook.backup.velero.io/container: db
         pre.hook.backup.velero.io/command: '["/bin/sh","-c","PGPASSWORD=$POSTGRES_PASSWORD pg_dump -U $POSTGRES_USER
-          -d $POSTGRES_DB > /var/lib/postgresql/invidious-backup.sql"]'
+          -d $POSTGRES_DB > /var/lib/postgresql/invidious-backup.sql.tmp && mv -f /var/lib/postgresql/invidious-backup.sql.tmp
+          /var/lib/postgresql/invidious-backup.sql"]'
     containers:
       app:
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: true
         image:
           repository: quay.io/invidious/invidious
           tag: 2026.10.26-1c4b41f
@@ -97,6 +108,9 @@ controllers:
           - secretRef:
               name: invidious-external
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 10001
+          runAsGroup: 65533
           readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
           capabilities:
@@ -136,7 +150,14 @@ controllers:
             memory: 1Gi
       db:
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+          runAsGroup: 999
+          capabilities:
+            drop:
+              - ALL
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
         image:
           repository: docker.io/library/postgres
           tag: "18.6"
@@ -220,6 +241,24 @@ service:
         port: 3000
 
 persistence:
+  app-tmp:
+    type: emptyDir
+    advancedMounts:
+      invidious:
+        app:
+          - path: /tmp
+  db-tmp:
+    type: emptyDir
+    advancedMounts:
+      invidious:
+        db:
+          - path: /tmp
+  db-run:
+    type: emptyDir
+    advancedMounts:
+      invidious:
+        db:
+          - path: /var/run/postgresql
   # Keep the original local-path claim read-only for rollback.
   db-data:
     type: persistentVolumeClaim
