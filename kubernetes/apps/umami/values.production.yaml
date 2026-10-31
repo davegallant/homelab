@@ -131,10 +131,16 @@ controllers:
             memory: 1Gi
       newt:
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
           capabilities:
             drop:
               - ALL
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
         image:
           repository: docker.io/fosrl/newt
           tag: 1.19.1
@@ -142,6 +148,9 @@ controllers:
         envFrom:
           - secretRef:
               name: umami-newt-external
+        env:
+          HOME: /tmp
+          XDG_CONFIG_HOME: /tmp/.config
         resources:
           requests:
             cpu: 5m
@@ -158,6 +167,12 @@ service:
         port: 3000
 
 persistence:
+  newt-tmp:
+    type: emptyDir
+    advancedMounts:
+      umami:
+        newt:
+          - path: /tmp
   # Keep the original local-path claim mounted read-only for rollback.
   db-data:
     type: persistentVolumeClaim
