@@ -22,12 +22,22 @@ metadata on the local PVCs and its NFS library ownership unchanged.
 k8s-readonly intentionally mounts its read-only service-account token for
 Kubernetes API access. Tailnet Gateway still has Restricted `warn`/`audit`; its
 namespace labels are managed through its Argo application.
-The Prowlarr FlareSolverr sidecar and qBittorrent egress monitor are hardened
-for Restricted admission. FlareSolverr uses a non-root init container to copy
-its startup-patched Chromium driver into a writable `emptyDir`; the monitor
-needs its scoped service-account token to check the protected Cilium policy
-and Argo Application. Their parent namespaces remain Baseline because the
-LinuxServer Prowlarr and qBittorrent containers start their s6 init as root.
+FlareSolverr and the qBittorrent egress monitor are hardened for Restricted
+admission. FlareSolverr uses a non-root init container to copy its
+startup-patched Chromium driver into a writable `emptyDir`; the monitor needs
+its scoped service-account token to check the protected Cilium policy and Argo
+Application. The LinuxServer Prowlarr, qBittorrent, Lidarr, Radarr, Sonarr, and
+Speedtest Tracker containers now drop all capabilities except the set their s6
+startup and user switch require. RomM and Maloja also use reduced capability
+sets tailored to their startup behavior. These containers still start as root,
+and their added capabilities are outside Restricted's allowlist, so their
+namespaces remain Baseline. The Prowlarr and qBittorrent bootstrap init
+containers also retain only the capabilities needed for config ownership and
+setup.
+
+Forgejo remains Baseline while its rootful chart init containers and writable
+data volume are reviewed. Do not switch it to rootless operation until its
+existing data and Velero restore path have been validated under that layout.
 
 This rollout is not complete. Do not raise enforcement in another namespace
 until its rendered Pod shapes pass server-side admission, its running workload
