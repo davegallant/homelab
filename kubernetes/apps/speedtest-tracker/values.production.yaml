@@ -94,6 +94,7 @@ controllers:
           runAsNonRoot: true
           runAsUser: 999
           runAsGroup: 999
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
@@ -197,6 +198,18 @@ service:
         port: 80
 
 persistence:
+  db-run:
+    type: emptyDir
+    advancedMounts:
+      speedtest-tracker:
+        db:
+          - path: /run/postgresql
+  db-tmp:
+    type: emptyDir
+    advancedMounts:
+      speedtest-tracker:
+        db:
+          - path: /tmp
   config:
     type: persistentVolumeClaim
     storageClass: local-path
