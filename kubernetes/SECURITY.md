@@ -11,8 +11,9 @@ pinned to `v1.37`; Baseline enforcement remains while rendered and running
 workloads are remediated. Headplane, k8s-readonly, LubeLogger,
 Audiobookshelf, BentoPDF, Beszel, Changedetection, Forgejo, Grafana, Homepage,
 Immich, Invidious, Jellyfin, Kiwix, Lidarr, Maloja, Miniflux, Navidrome,
-Paperless, Prowlarr, qBittorrent, Radarr, SearXNG, Seerr, Sonarr, and Umami enforce
-Restricted. Confirm live namespace labels before changing this inventory.
+Paperless, Prowlarr, qBittorrent, Radarr, RomM, SearXNG, Seerr, Sonarr, and
+Umami enforce Restricted. Confirm live namespace labels before changing this
+inventory.
 An unsafe test Pod was rejected by Audiobookshelf's Restricted enforcement;
 its existing workloads remained Ready.
 LubeLogger runs as UID 1000 and keeps its existing DataProtection keyring on the
@@ -27,16 +28,10 @@ admission. FlareSolverr uses a non-root init container to copy its
 startup-patched Chromium driver into a writable `emptyDir`; the monitor needs
 its scoped service-account token to check the protected Cilium policy and Argo
 Application. The LinuxServer Speedtest Tracker container now drops all
-capabilities except the set its s6 startup and user switch require. RomM's
-production app still starts as root with a reduced capability set; it needs
-`DAC_OVERRIDE` to save Valkey's RDB into its UID-1000-owned data directory.
-These production containers use capabilities outside Restricted's allowlist,
-so their namespaces remain Baseline. A separate RomM probe succeeded as UID
-1000 with all capabilities dropped and a read-only root filesystem after
-mounting `/etc/nginx/conf.d` as writable storage. Its fresh MariaDB started
-non-root with a read-only root filesystem, Valkey saved its RDB, and RomM
-returned HTTP 200. This proves the image can start rootless with explicit
-writable paths, but does not verify the existing production volumes.
+capabilities except the set its s6 startup and user switch require. Its
+namespace remains Baseline as a reviewed image exception. RomM now runs both
+containers without capabilities, as non-root users, with read-only root
+filesystems and explicit writable volumes. Its namespace enforces Restricted.
 qBittorrent's app
 and bootstrap init container run
 as UID/GID 1000 with all capabilities dropped. The init container creates a
@@ -81,6 +76,22 @@ failed because its startup scripts require group switching. Keep the namespace
 at Baseline as a reviewed image exception until a maintainable rootless startup
 path is available.
 
+RomM's app runs as UID/GID 1000 and MariaDB as UID/GID 999; both drop all
+capabilities and use read-only root filesystems. RuntimeDefault seccomp, no
+service-account token, and explicit writable `emptyDir` mounts cover app and
+database runtime paths. The `romm-recovery-20261031` backup restored in
+`romm-drill-20261031-v4`; all four PodVolumeRestores completed with expected
+byte counts (config 95, MySQL 191,548,412, Redis 6,905,760, resources
+1,217,172,959). The restored app ran as UID 1000 under Restricted and returned
+HTTP 200. Production config/resources were changed to group 950 with group
+write permission; the TrueNAS library was untouched. Production starts
+cleanly, returns HTTP 200, reads 1 user and 373 ROMs at schema
+`0153_play_permissions`, saves Valkey RDBs successfully, and UID 1000
+write/delete checks passed on config, resources, library ROMs, and assets. An
+unsafe privileged Pod was rejected after Restricted enforcement. Authenticated
+upload and scan workflows were not exercised because this workspace has no
+test-user credential.
+
 Maloja runs its pinned image's application directly as UID/GID 1000, with all
 capabilities dropped, a read-only root filesystem, and writable `/data` and
 `/tmp` volumes. Before migration, `maloja-hardening-20261031` backed up the
@@ -103,13 +114,12 @@ rejected, and the production namespace now enforces Restricted.
 ## Remaining ordinary namespace gates
 
 Live namespace labels are the source of truth. The following production
-remaining ordinary namespaces still enforce Baseline while warning and
-auditing Restricted:
+ordinary namespace still enforces Baseline while warning and auditing
+Restricted:
 
 | Namespace | Current hardening | Remaining gate |
 |---|---|---|
 | Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Isolated restore passed: 14,581 results, 2 users, HTTP 200, and 3/3 Ready. | Keep Baseline as a reviewed exception; the pinned image's s6 startup runs root-owned service masters and uses six additional capabilities. Revisit if a maintainable rootless path becomes available. |
-| RomM | Production still uses a reduced capability set, including `DAC_OVERRIDE`, for Valkey persistence. A scratch probe ran as UID 1000 with a read-only root filesystem and returned HTTP 200. | Verify the restored production database/config/resources volumes and library write behavior as UID 1000 before changing production. The `romm-recovery-20261031` backup has four completed volume backups, but two isolated restores produced no PodVolumeRestore records and left the restored Pod waiting for Velero completion markers. |
 
 Platform namespaces Alloy and Loki also remain Baseline with Restricted
 warn/audit; review them separately from ordinary applications. The qBittorrent,
