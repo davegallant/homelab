@@ -10,9 +10,9 @@ Restricted `warn` and `audit` are staged on ordinary application namespaces,
 pinned to `v1.37`; Baseline enforcement remains while rendered and running
 workloads are remediated. Headplane, k8s-readonly, LubeLogger,
 Audiobookshelf, BentoPDF, Beszel, Changedetection, Grafana, Homepage, Immich,
-Invidious, Jellyfin, Kiwix, Maloja, Miniflux, Navidrome, Paperless, SearXNG,
-Seerr, Sonarr, and Umami enforce Restricted. Confirm live namespace labels
-before changing this inventory.
+Invidious, Jellyfin, Kiwix, Lidarr, Maloja, Miniflux, Navidrome, Paperless,
+SearXNG, Seerr, Sonarr, and Umami enforce Restricted. Confirm live namespace
+labels before changing this inventory.
 An unsafe test Pod was rejected by Audiobookshelf's Restricted enforcement;
 its existing workloads remained Ready.
 LubeLogger runs as UID 1000 and keeps its existing DataProtection keyring on the
@@ -49,11 +49,13 @@ directly as UID/GID 1000, with all capabilities dropped and a read-only root
 filesystem. Their startup commands set umask `002` to preserve group-writable
 media files; `/tmp` is an `emptyDir`. Radarr's namespace enforces Restricted
 after its isolated config restore recovered 579,598,747 bytes and the restored
-app started as UID 1000 with a read-only root filesystem. Lidarr and Sonarr
-run with the same security settings. Sonarr's namespace enforces Restricted
-after its isolated config restore recovered 307,684,995 bytes and the restored
-app returned HTTP 302 as UID 1000 with a read-only root filesystem. The media
-NFS volume was detached during the isolated restore.
+app started as UID 1000 with a read-only root filesystem. Sonarr's namespace
+enforces Restricted after its isolated config restore recovered 307,684,995
+bytes and the restored app returned HTTP 302 as UID 1000 with a read-only root
+filesystem. Lidarr's namespace also enforces Restricted after its isolated
+config restore recovered 716,627,007 bytes and the restored app returned HTTP
+302 as UID 1000. Sonarr media and Lidarr media/music NFS volumes were detached
+during their isolated restores.
 
 Speedtest Tracker's 2026-10-31 hardening backup initially failed because the
 non-root PostgreSQL process could not overwrite the prior root-owned SQL dump.
@@ -93,7 +95,6 @@ auditing Restricted:
 
 | Namespace | Current hardening | Remaining gate |
 |---|---|---|
-| Lidarr | App binary runs as UID 1000 with read-only root filesystem; NFS write behavior was checked. | Verify isolated config restore before Restricted enforcement. |
 | Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Backup completed; app is 3/3 Ready. | s6, nginx and PHP-FPM masters require root and extra capabilities. Validate an isolated restore; find a maintainable rootless path or keep Baseline as a reviewed exception. |
 | Forgejo | Rootful chart remains in use. | Validate the existing data and restore path under a rootless layout before changing the image. |
 | RomM | Existing reduced-capability configuration remains. | Deferred at Dave's direction. |
