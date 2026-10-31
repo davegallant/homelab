@@ -44,6 +44,8 @@ controllers:
           capabilities:
             drop:
               - ALL
+            add:
+              - CHOWN
         image:
           repository: docker.io/rommapp/romm
           tag: 5.4.1
