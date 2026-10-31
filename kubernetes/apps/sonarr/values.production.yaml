@@ -197,6 +197,7 @@ rawResources:
           - toFQDNs:
               - matchName: services.sonarr.tv
               - matchName: skyhook.sonarr.tv
+              - matchName: thexem.info
             toPorts:
               - ports:
                   - port: "443"

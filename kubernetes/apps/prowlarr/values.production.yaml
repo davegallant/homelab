@@ -201,7 +201,7 @@ rawResources:
         name: default-deny
         namespace: prowlarr
       spec:
-        description: Default deny with indexer egress, cluster DNS, and two-way API access with the *arr apps.
+        description: Default deny with web indexer egress, cluster DNS, and two-way API access with the *arr apps.
         endpointSelector: {}
         ingress:
           - fromEndpoints:
@@ -257,6 +257,15 @@ rawResources:
                     protocol: TCP
           - toEntities:
               - cluster
+          # Indexers and FlareSolverr use public HTTP and HTTPS endpoints.
+          - toEntities:
+              - world
+            toPorts:
+              - ports:
+                  - port: "80"
+                    protocol: TCP
+                  - port: "443"
+                    protocol: TCP
         egressDeny:
           - toCIDR:
               - 192.168.1.0/24
