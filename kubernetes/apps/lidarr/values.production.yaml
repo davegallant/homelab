@@ -42,24 +42,26 @@ controllers:
       app:
         securityContext:
           allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
-            add:
-              - CHOWN
-              - DAC_OVERRIDE
-              - FOWNER
-              - KILL
-              - SETGID
-              - SETUID
         image:
           repository: docker.io/linuxserver/lidarr
           tag: 3.1.6
           digest: sha256:9fddcf5c613361edfce390d4e6b7c364282e71e90a40ce7793077fed788f6e63
+        # s6 resets the umask in non-root mode. Start Lidarr directly so
+        # imported media keeps the existing group-writable permissions.
+        command:
+          - /bin/sh
+          - -ec
+          - umask 002; cd /app/lidarr/bin; exec ./Lidarr -nobrowser -data=/config
         env:
-          PUID: "1000"
-          PGID: "1000"
-          UMASK: "002"
+          HOME: /config
+          TMPDIR: /tmp
           TZ: Etc/UTC
           NO_PROXY: localhost,127.0.0.1,.svc,.cluster.local
         probes:
@@ -104,6 +106,12 @@ service:
         port: 8686
 
 persistence:
+  tmp:
+    type: emptyDir
+    advancedMounts:
+      lidarr:
+        app:
+          - path: /tmp
   config-local:
     type: persistentVolumeClaim
     existingClaim: lidarr-config-local
