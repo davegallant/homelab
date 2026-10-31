@@ -25,8 +25,6 @@ spec:
       securityContext:
         fsGroup: {{ .Values.fsGroup }}
         fsGroupChangePolicy: OnRootMismatch
-        seccompProfile:
-          type: RuntimeDefault
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -41,14 +39,7 @@ spec:
           image: {{ .Values.homepage.image }}
           imagePullPolicy: IfNotPresent
           securityContext:
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
             allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-            readOnlyRootFilesystem: true
           env:
             - name: PUID
               value: {{ .Values.homepage.puid | quote }}
@@ -116,8 +107,6 @@ spec:
             - name: custom-icons
               mountPath: /app/config/icons
               readOnly: true
-            - name: tmp
-              mountPath: /tmp
 
       volumes:
         - name: homepage-config
@@ -129,5 +118,3 @@ spec:
         - name: custom-icons
           configMap:
             name: homepage-icons
-        - name: tmp
-          emptyDir: {}
