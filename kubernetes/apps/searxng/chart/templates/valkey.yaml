@@ -61,6 +61,7 @@ spec:
             capabilities:
               drop:
                 - ALL
+              add: []
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: valkey-data
