@@ -65,6 +65,7 @@ ingress:
   enabled: false
 
 serviceAccount:
+  create: true
   automountServiceAccountToken: false
 
 gitea:
