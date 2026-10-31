@@ -180,10 +180,23 @@ controllers:
             memory: 1Gi
       newt:
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
           capabilities:
             drop:
               - ALL
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
+        args:
+          - --disable-ssh
+        env:
+          - name: HOME
+            value: /tmp
+          - name: XDG_CONFIG_HOME
+            value: /tmp/.config
         image:
           repository: docker.io/fosrl/newt
           tag: 1.19.1
@@ -232,6 +245,12 @@ persistence:
       invidious:
         companion:
           - path: /var/tmp/youtubei.js
+  newt-tmp:
+    type: emptyDir
+    advancedMounts:
+      invidious:
+        newt:
+          - path: /tmp
 
 rawResources:
   defaultDenyNetworkPolicy:
