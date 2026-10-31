@@ -41,6 +41,9 @@ controllers:
       app:
         securityContext:
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
         image:
           repository: docker.io/rommapp/romm
           tag: 5.4.1
