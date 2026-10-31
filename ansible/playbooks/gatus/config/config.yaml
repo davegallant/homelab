@@ -97,7 +97,7 @@ endpoints:
     <<: *defaults
 
   - name: maloja
-    url: "{{ maloja_url }}"
+    url: "{{ maloja_url | regex_replace('/+$', '') }}/static/css/startpage.css"
     <<: *defaults
 
   - name: beszel
