@@ -21,21 +21,28 @@ controllers:
       app:
         securityContext:
           allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
-            add:
-              - CHOWN
-              - DAC_OVERRIDE
-              - FOWNER
-              - KILL
-              - SETGID
-              - SETUID
         image:
           repository: docker.io/krateng/maloja
           tag: 3.2.9
           digest: sha256:313b58d282934b2e7dc27f794462eb2ceb1567db23806b49f78b706dd86afe09
+        # The image's s6 service switches users even in non-root mode.
+        # Run the same application command directly as the pod user.
+        command:
+          - /venv/bin/python
+          - -m
+          - maloja
+          - run
         env:
+          HOME: /data
+          TMPDIR: /tmp
+          PYTHONDONTWRITEBYTECODE: "1"
           # Parity with the LXC compose. MALOJA_FORCE_PASSWORD=stub is
           # already committed in the LXC playbook; it is not a real
           # credential — access control is the tailnet itself.
@@ -85,6 +92,12 @@ service:
         port: 42010
 
 persistence:
+  tmp:
+    type: emptyDir
+    advancedMounts:
+      maloja:
+        app:
+          - path: /tmp
   # Keep the original hostPath-backed claim present for rollback. Velero
   # cannot make a PodVolumeBackup from this claim.
   data:
