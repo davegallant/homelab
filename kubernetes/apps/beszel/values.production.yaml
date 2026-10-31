@@ -18,8 +18,10 @@ controllers:
       annotations:
         backup.velero.io/backup-volumes: data
       securityContext:
-        fsGroup: 0
+        fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
     containers:
       app:
         image:
@@ -27,12 +29,14 @@ controllers:
           tag: 0.21.1
           digest: sha256:8514a69d9bbbcb74f371a3205561ee231fc0289739cea64e8131f341d695b770
         securityContext:
-          runAsUser: 0
-          runAsGroup: 0
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
           allowPrivilegeEscalation: false
           capabilities:
             drop:
               - ALL
+          readOnlyRootFilesystem: true
         env:
           APP_URL: https://beszel.tail.davegallant.ca
         probes:
