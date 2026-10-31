@@ -36,7 +36,8 @@ controllers:
         backup.velero.io/backup-volumes: db-data-local
         pre.hook.backup.velero.io/container: db
         pre.hook.backup.velero.io/command: '["/bin/sh","-c","PGPASSWORD=$POSTGRES_PASSWORD pg_dump -U $POSTGRES_USER
-          -d $POSTGRES_DB > /var/lib/postgresql/umami-backup.sql"]'
+          -d $POSTGRES_DB > /var/lib/postgresql/umami-backup.sql.tmp && mv -f /var/lib/postgresql/umami-backup.sql.tmp
+          /var/lib/postgresql/umami-backup.sql"]'
     containers:
       app:
         securityContext:
