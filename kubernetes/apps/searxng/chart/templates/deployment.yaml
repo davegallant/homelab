@@ -21,19 +21,21 @@ spec:
     spec:
       automountServiceAccountToken: false
       securityContext:
+        fsGroup: 977
+        fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: searxng
           image: {{ .Values.searxng.image }}
           imagePullPolicy: IfNotPresent
-          securityContext:
-            allowPrivilegeEscalation: false
           env:
             - name: UWSGI_WORKERS
               value: {{ .Values.searxng.uwsgiWorkers | quote }}
             - name: UWSGI_THREADS
               value: {{ .Values.searxng.uwsgiThreads | quote }}
+            - name: FORCE_OWNERSHIP
+              value: "false"
           ports:
             - name: http
               containerPort: 8080
@@ -62,19 +64,23 @@ spec:
           resources:
             {{- toYaml .Values.searxng.resources | nindent 12 }}
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 977
+            runAsGroup: 977
+            readOnlyRootFilesystem: true
             capabilities:
               drop:
                 - ALL
-              add:
-                - CHOWN
-                - SETGID
-                - SETUID
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: searxng-settings
               mountPath: /etc/searxng/settings.yml
               subPath: settings.yml
               readOnly: true
+            - name: cache
+              mountPath: /var/cache/searxng
+            - name: tmp
+              mountPath: /tmp
         {{- if .Values.newt.enabled }}
         - name: newt
           image: {{ .Values.newt.image }}
@@ -103,6 +109,10 @@ spec:
             {{- toYaml .Values.newt.resources | nindent 12 }}
         {{- end }}
       volumes:
+        - name: cache
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
         - name: newt-tmp
           emptyDir: {}
         - name: searxng-settings
