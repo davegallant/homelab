@@ -26,14 +26,15 @@ FlareSolverr and the qBittorrent egress monitor are hardened for Restricted
 admission. FlareSolverr uses a non-root init container to copy its
 startup-patched Chromium driver into a writable `emptyDir`; the monitor needs
 its scoped service-account token to check the protected Cilium policy and Argo
-Application. The LinuxServer Prowlarr, qBittorrent, Lidarr, Radarr, Sonarr, and
+Application. The LinuxServer Prowlarr, Lidarr, Radarr, Sonarr, and
 Speedtest Tracker containers now drop all capabilities except the set their s6
 startup and user switch require. RomM and Maloja also use reduced capability
 sets tailored to their startup behavior. These containers still start as root,
 and their added capabilities are outside Restricted's allowlist, so their
-namespaces remain Baseline. The qBittorrent bootstrap init container runs as
-UID/GID 1000 with a read-only root filesystem; it stores its temporary theme
-archive on the config PVC and passes Restricted admission. Prowlarr's
+namespaces remain Baseline. qBittorrent's app and bootstrap init container run
+as UID/GID 1000 with all capabilities dropped. The init container creates a
+user-owned `/run` directory in an `emptyDir` and uses a read-only root filesystem.
+The namespace remains Baseline pending recovery verification. Prowlarr's
 non-root init container copies the startup-patched Chromium driver into a
 writable `emptyDir` and also passes Restricted admission.
 
