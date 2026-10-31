@@ -32,8 +32,8 @@ controllers:
         # first so the filesystem backup carries a restorable copy.
         backup.velero.io/backup-volumes: config-local,db-data-local,apprise-local
         pre.hook.backup.velero.io/container: db
-        pre.hook.backup.velero.io/command: '["/bin/sh","-c","PGPASSWORD=$POSTGRES_PASSWORD pg_dump -U $POSTGRES_USER
-          -d $POSTGRES_DB > /var/lib/postgresql/speedtest-backup.sql"]'
+        pre.hook.backup.velero.io/command: '["/bin/sh","-c","umask 077; PGPASSWORD=\"$POSTGRES_PASSWORD\" pg_dump -U \"$POSTGRES_USER\"
+          -d \"$POSTGRES_DB\" > \"$PGDATA/speedtest-backup.sql.tmp\" && mv -f \"$PGDATA/speedtest-backup.sql.tmp\" \"$PGDATA/speedtest-backup.sql\""]'
     containers:
       app:
         securityContext:

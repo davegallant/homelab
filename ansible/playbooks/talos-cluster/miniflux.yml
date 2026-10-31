@@ -673,7 +673,7 @@
 
             - name: Require the pg_dump hook output inside the database volume
               ansible.builtin.command:
-                argv: [kubectl, -n, miniflux, exec, pod/miniflux-db-0, --, test, -s, /var/lib/postgresql/dump.sql]
+                argv: [kubectl, -n, miniflux, exec, pod/miniflux-db-0, --, sh, -c, 'test -s "$PGDATA/dump.sql"']
               changed_when: false
 
             - name: Report the verified backup name
