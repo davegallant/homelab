@@ -9,6 +9,13 @@ Velero resource archives are not encrypted. Restrict Garage and off-site
 copies, especially backups including Secrets. Recreate external Secrets from
 Ansible Vault. Verify off-site encryption and deletion retention independently.
 
+Miniflux's filesystem backup includes PostgreSQL role metadata in `PGDATA`,
+while external Secrets are excluded. During an isolated restore, verify the
+restored role password against the recreated Secret over TCP from the app
+network path; a local PostgreSQL socket check alone does not verify password
+authentication. If the role password differs, reconcile it only in the
+isolated restored database before starting the app.
+
 Keep the Kopia repository password in Vault. Never replace its Kubernetes
 Secret alone: existing repositories require a coordinated password change.
 Rehearse against an isolated repository copy, preserve snapshot counts, and
