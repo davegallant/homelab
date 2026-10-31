@@ -14,9 +14,8 @@
 #                     trees. The data never moves and is never
 #                     Velero-backed-up (TrueNAS snapshots + Drive
 #                     sync, same as Kiwix).
-#   config / metadata - the app's small state, chart-managed
-#                     local-path PVCs declared in
-#                     values.production.yaml; nothing lives here.
+#   config / metadata - the app's database, logs, and cache, chart-managed
+#                     local-path PVCs declared in values.production.yaml.
 #
 # Verify the share paths against the LXC's mounts before applying:
 # the exports below follow the Kiwix spelling (/mnt/tank/media/<name>)
@@ -26,7 +25,8 @@ kind: Namespace
 metadata:
   name: audiobookshelf
   labels:
-    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.37
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/audit-version: v1.37
     pod-security.kubernetes.io/warn: restricted

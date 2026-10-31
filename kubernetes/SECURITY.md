@@ -8,14 +8,16 @@ resources to establish enforcement; a tracked deny rule alone is insufficient.
 
 Restricted `warn` and `audit` are staged on ordinary application namespaces,
 pinned to `v1.37`; Baseline enforcement remains while rendered and running
-workloads are remediated. Headplane, k8s-readonly, Trivy, and LubeLogger enforce
-Restricted.
+workloads are remediated. Headplane, k8s-readonly, Trivy, LubeLogger, and
+Audiobookshelf enforce Restricted.
 Unsafe test Pods were rejected in the enforced namespaces; their existing
 workloads remained Ready. Trivy's operator and generated scan Jobs run under
 Restricted; the operator keeps its service-account token for Kubernetes API
 access.
 LubeLogger runs as UID 1000 and keeps its existing DataProtection keyring on the
 application data volume.
+Audiobookshelf runs as UID 1000/GID 950, with its existing SQLite database and
+metadata on the local PVCs and its NFS library ownership unchanged.
 k8s-readonly intentionally mounts its read-only service-account token for
 Kubernetes API access. Tailnet Gateway still has Restricted `warn`/`audit`; its
 namespace labels are managed through its Argo application.
