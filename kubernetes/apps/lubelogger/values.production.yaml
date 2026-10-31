@@ -144,6 +144,10 @@ persistence:
             subPath: log
           - path: /App/.aspnet/DataProtection-Keys
             subPath: keys
+          # Keep the old key path read-only for rollback compatibility.
+          - path: /root/.aspnet/DataProtection-Keys
+            subPath: keys
+            readOnly: true
 
   tmp:
     type: emptyDir
