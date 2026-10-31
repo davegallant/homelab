@@ -26,8 +26,8 @@ FlareSolverr and the qBittorrent egress monitor are hardened for Restricted
 admission. FlareSolverr uses a non-root init container to copy its
 startup-patched Chromium driver into a writable `emptyDir`; the monitor needs
 its scoped service-account token to check the protected Cilium policy and Argo
-Application. The LinuxServer Radarr, Sonarr, and
-Speedtest Tracker containers now drop all capabilities except the set their s6
+Application. The LinuxServer Speedtest Tracker container now drops all
+capabilities except the set its s6
 startup and user switch require. RomM and Maloja also use reduced capability
 sets tailored to their startup behavior. These containers still start as root,
 and their added capabilities are outside Restricted's allowlist, so their
@@ -40,10 +40,11 @@ container prepares `/run` and copies the startup-patched Chromium driver into
 writable `emptyDir` volumes. Prowlarr remains Baseline pending recovery
 verification.
 
-Lidarr runs its pinned image's application binary directly as UID/GID 1000,
-with all capabilities dropped and a read-only root filesystem. Its startup
-command sets umask `002` to preserve group-writable media files; `/tmp` is an
-`emptyDir`. Its namespace remains Baseline pending recovery verification.
+Lidarr, Radarr, and Sonarr run their pinned images' application binaries
+directly as UID/GID 1000, with all capabilities dropped and a read-only root
+filesystem. Their startup commands set umask `002` to preserve group-writable
+media files; `/tmp` is an `emptyDir`. Their namespaces remain Baseline pending
+recovery verification.
 
 Forgejo remains Baseline while its rootful chart init containers and writable
 data volume are reviewed. Do not switch it to rootless operation until its
