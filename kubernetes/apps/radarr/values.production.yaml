@@ -35,24 +35,26 @@ controllers:
       app:
         securityContext:
           allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
-            add:
-              - CHOWN
-              - DAC_OVERRIDE
-              - FOWNER
-              - KILL
-              - SETGID
-              - SETUID
         image:
           repository: docker.io/linuxserver/radarr
           tag: 6.4.4
           digest: sha256:41fdc1672209c2ef31c5260015ec8b96e3c75513e60a667eb052e1ff54b4cfa9
+        # s6 resets the umask in non-root mode. Start Radarr directly so
+        # imported media keeps the existing group-writable permissions.
+        command:
+          - /bin/sh
+          - -ec
+          - umask 002; cd /app/radarr/bin; exec ./Radarr -nobrowser -data=/config
         env:
-          PUID: "1000"
-          PGID: "1000"
-          UMASK: "002"
+          HOME: /config
+          TMPDIR: /tmp
           TZ: Etc/UTC
           NO_PROXY: localhost,127.0.0.1,.svc,.cluster.local
         probes:
@@ -98,6 +100,12 @@ service:
         port: 7878
 
 persistence:
+  tmp:
+    type: emptyDir
+    advancedMounts:
+      radarr:
+        app:
+          - path: /tmp
   config-local:
     type: persistentVolumeClaim
     existingClaim: radarr-config-local
