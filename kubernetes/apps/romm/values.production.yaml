@@ -46,6 +46,8 @@ controllers:
               - ALL
             add:
               - CHOWN
+              - SETGID
+              - SETUID
         image:
           repository: docker.io/rommapp/romm
           tag: 5.4.1
