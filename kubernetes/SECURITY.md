@@ -34,11 +34,13 @@ Restricted's allowlist, so their namespaces remain Baseline. qBittorrent's app
 and bootstrap init container run
 as UID/GID 1000 with all capabilities dropped. The init container creates a
 user-owned `/run` directory in an `emptyDir` and uses a read-only root filesystem.
-The namespace remains Baseline pending recovery verification. Prowlarr's app
+The namespace enforces Restricted after an isolated restore recovered 69,524,529
+bytes and passed admission with the restored config. Prowlarr's app
 also runs as UID/GID 1000 with all capabilities dropped; its non-root init
 container prepares `/run` and copies the startup-patched Chromium driver into
-writable `emptyDir` volumes. Prowlarr remains Baseline pending recovery
-verification.
+writable `emptyDir` volumes. Its namespace enforces Restricted after an
+isolated restore recovered 136,087,005 bytes and passed admission with the
+restored config.
 
 Lidarr, Radarr, and Sonarr run their pinned images' application binaries
 directly as UID/GID 1000, with all capabilities dropped and a read-only root
@@ -75,13 +77,11 @@ existing data and Velero restore path have been validated under that layout.
 ## Remaining ordinary namespace gates
 
 Live namespace labels are the source of truth. The following production
-application namespaces still enforce Baseline while warning and auditing
-Restricted:
+remaining ordinary namespaces still enforce Baseline while warning and
+auditing Restricted:
 
 | Namespace | Current hardening | Remaining gate |
 |---|---|---|
-| qBittorrent | App and bootstrap run as UID 1000 with all capabilities dropped. | Isolated recovery remains unverified; `qbittorrent-drill-20261031` is `FailedValidation`. |
-| Prowlarr | App runs as UID 1000 with all capabilities dropped. | Recovery remains unverified; both `prowlarr-drill-20261031` and `prowlarr-drill-v2-20261031` are `PartiallyFailed`. |
 | Lidarr, Radarr, Sonarr | App binaries run as UID 1000 with read-only root filesystems; NFS write behavior was checked. | Verify isolated config restores before Restricted enforcement. |
 | Maloja | App runs as UID 1000 with read-only root filesystem; SQLite integrity passed after ownership migration. | Verify data recovery before Restricted enforcement. |
 | Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Backup completed; app is 3/3 Ready. | s6, nginx and PHP-FPM masters require root and extra capabilities. Validate an isolated restore; find a maintainable rootless path or keep Baseline as a reviewed exception. |
@@ -91,9 +91,10 @@ Restricted:
 Platform namespaces Alloy and Loki also remain Baseline with Restricted
 warn/audit; review them separately from ordinary applications. Temporary
 recovery namespaces remain isolated and are not production policy targets:
-`prowlarr-drill-20261031` and `prowlarr-drill-v2-20261031` restores are
-`PartiallyFailed`, `qbittorrent-drill-20261031` is `FailedValidation`, and the
-older `miniflux-drill` and `miniflux-drill-v2` namespaces remain Baseline.
+`qbittorrent-drill-v3-20261031` and `prowlarr-drill-v3-20261031` completed
+restores of 69,524,529 and 136,087,005 bytes, respectively. Earlier failed
+qBittorrent and Prowlarr drills remain for evidence. The older
+`miniflux-drill` and `miniflux-drill-v2` namespaces remain Baseline.
 
 Do not raise enforcement in another namespace until rendered Pods pass
 server-side Restricted admission, live service behavior is verified, and
