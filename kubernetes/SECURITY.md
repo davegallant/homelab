@@ -74,8 +74,9 @@ existing data and Velero restore path have been validated under that layout.
 
 ## Remaining ordinary namespace gates
 
-Live namespace labels are the source of truth. The following namespaces still
-enforce Baseline while warning and auditing Restricted:
+Live namespace labels are the source of truth. The following production
+application namespaces still enforce Baseline while warning and auditing
+Restricted:
 
 | Namespace | Current hardening | Remaining gate |
 |---|---|---|
@@ -83,9 +84,16 @@ enforce Baseline while warning and auditing Restricted:
 | Prowlarr | App runs as UID 1000 with all capabilities dropped. | Recovery remains unverified; both `prowlarr-drill-20261031` and `prowlarr-drill-v2-20261031` are `PartiallyFailed`. |
 | Lidarr, Radarr, Sonarr | App binaries run as UID 1000 with read-only root filesystems; NFS write behavior was checked. | Verify isolated config restores before Restricted enforcement. |
 | Maloja | App runs as UID 1000 with read-only root filesystem; SQLite integrity passed after ownership migration. | Verify data recovery before Restricted enforcement. |
-| Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. | s6, nginx and PHP-FPM masters require root and extra capabilities. Find a maintainable rootless path or keep Baseline as a reviewed exception. |
+| Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Backup completed; app is 3/3 Ready. | s6, nginx and PHP-FPM masters require root and extra capabilities. Validate an isolated restore; find a maintainable rootless path or keep Baseline as a reviewed exception. |
 | Forgejo | Rootful chart remains in use. | Validate the existing data and restore path under a rootless layout before changing the image. |
 | RomM | Existing reduced-capability configuration remains. | Deferred at Dave's direction. |
+
+Platform namespaces Alloy and Loki also remain Baseline with Restricted
+warn/audit; review them separately from ordinary applications. Temporary
+recovery namespaces remain isolated and are not production policy targets:
+`prowlarr-drill-20261031` and `prowlarr-drill-v2-20261031` restores are
+`PartiallyFailed`, `qbittorrent-drill-20261031` is `FailedValidation`, and the
+older `miniflux-drill` and `miniflux-drill-v2` namespaces remain Baseline.
 
 Do not raise enforcement in another namespace until rendered Pods pass
 server-side Restricted admission, live service behavior is verified, and
