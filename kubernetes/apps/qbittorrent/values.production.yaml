@@ -89,23 +89,25 @@ controllers:
               install -o 1000 -g 1000 -m 0640 /bootstrap/qbittorrent.conf /config/qBittorrent/qBittorrent.conf
             fi
             if [ ! -f /config/qBittorrent/dracula/.revision ]; then
+              archive="$(mktemp /config/qBittorrent/.dracula.XXXXXX.tar.gz)"
+              trap 'rm -f "$archive"' EXIT
               curl --fail --silent --show-error --location \
                 https://codeload.github.com/dracula/qbittorrent/tar.gz/9020f6eb457087270179beb86d45914d434adb6b \
-                --output /tmp/dracula.tar.gz
+                --output "$archive"
               install -d /config/qBittorrent/dracula
-              tar -xzf /tmp/dracula.tar.gz -C /config/qBittorrent/dracula --strip-components=1
+              tar -xzf "$archive" -C /config/qBittorrent/dracula --strip-components=1
               echo 9020f6eb457087270179beb86d45914d434adb6b > /config/qBittorrent/dracula/.revision
               chown -R 1000:1000 /config/qBittorrent/dracula
             fi
         securityContext:
           allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
-            add:
-              - CHOWN
-              - DAC_OVERRIDE
-              - FOWNER
         resources:
           requests:
             cpu: 25m
