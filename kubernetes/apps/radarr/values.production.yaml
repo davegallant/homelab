@@ -197,6 +197,7 @@ rawResources:
           - toFQDNs:
               - matchName: api.radarr.video
               - matchName: radarr.servarr.com
+              - matchName: image.tmdb.org
             toPorts:
               - ports:
                   - port: "443"
