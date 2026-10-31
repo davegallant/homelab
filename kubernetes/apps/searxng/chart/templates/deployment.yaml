@@ -20,6 +20,9 @@ spec:
       {{- end }}
     spec:
       automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: searxng
           image: {{ .Values.searxng.image }}
@@ -77,17 +80,31 @@ spec:
           image: {{ .Values.newt.image }}
           imagePullPolicy: IfNotPresent
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
             capabilities:
               drop:
                 - ALL
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          env:
+            - name: HOME
+              value: /tmp
+            - name: XDG_CONFIG_HOME
+              value: /tmp/.config
           envFrom:
             - secretRef:
                 name: {{ .Values.newt.existingSecret | default "searxng-newt" | quote }}
+          volumeMounts:
+            - name: newt-tmp
+              mountPath: /tmp
           resources:
             {{- toYaml .Values.newt.resources | nindent 12 }}
         {{- end }}
       volumes:
+        - name: newt-tmp
+          emptyDir: {}
         - name: searxng-settings
           secret:
             secretName: {{ .Values.settings.existingSecret | default "searxng-settings" | quote }}
