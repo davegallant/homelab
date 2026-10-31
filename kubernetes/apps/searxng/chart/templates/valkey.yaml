@@ -16,6 +16,9 @@ spec:
         app.kubernetes.io/name: valkey
     spec:
       automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: valkey
           image: {{ .Values.valkey.image }}
@@ -51,14 +54,13 @@ spec:
           resources:
             {{- toYaml .Values.valkey.resources | nindent 12 }}
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
+            readOnlyRootFilesystem: true
             capabilities:
               drop:
                 - ALL
-              add:
-                - CHOWN
-                - SETGID
-                - SETUID
-                - DAC_OVERRIDE
             allowPrivilegeEscalation: false
           volumeMounts:
             - name: valkey-data
