@@ -41,7 +41,7 @@ controllers:
         command:
           - sh
           - -ec
-          - cp /app/chromedriver /work/chromedriver
+          - mkdir -p /runtime/run && cp /app/chromedriver /work/chromedriver
         securityContext:
           runAsNonRoot: true
           runAsUser: 1000
@@ -62,16 +62,12 @@ controllers:
       app:
         securityContext:
           allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
           capabilities:
             drop:
               - ALL
-            add:
-              - CHOWN
-              - DAC_OVERRIDE
-              - FOWNER
-              - KILL
-              - SETGID
-              - SETUID
         image:
           repository: docker.io/linuxserver/prowlarr
           tag: 2.7.0
@@ -176,6 +172,15 @@ service:
         port: 9696
 
 persistence:
+  runtime:
+    type: emptyDir
+    advancedMounts:
+      prowlarr:
+        prepare-chromedriver:
+          - path: /runtime
+        app:
+          - path: /run
+            subPath: run
   chromedriver:
     type: emptyDir
     advancedMounts:
