@@ -30,8 +30,8 @@ Application. The LinuxServer Speedtest Tracker container now drops all
 capabilities except the set its s6 startup and user switch require. RomM also
 uses a reduced capability set tailored to its startup behavior. These
 containers still start as root, and their added capabilities are outside
-Restricted's allowlist, so their
-namespaces remain Baseline. qBittorrent's app and bootstrap init container run
+Restricted's allowlist, so their namespaces remain Baseline. qBittorrent's app
+and bootstrap init container run
 as UID/GID 1000 with all capabilities dropped. The init container creates a
 user-owned `/run` directory in an `emptyDir` and uses a read-only root filesystem.
 The namespace remains Baseline pending recovery verification. Prowlarr's app
@@ -49,8 +49,16 @@ recovery verification.
 Speedtest Tracker's 2026-10-31 hardening backup initially failed because the
 non-root PostgreSQL process could not overwrite the prior root-owned SQL dump.
 The hook now writes a mode-0600 temporary dump and renames it into place. A live
-`pg_dump` probe succeeded; `speedtest-hardening-20261031-retry` is still running
-and must complete without warnings before treating the backup gate as passed.
+`pg_dump` probe succeeded, and `speedtest-hardening-20261031-retry` completed
+with 53/53 items, all three volume backups complete, and no failed hooks.
+Speedtest Tracker now has a read-only app root filesystem with explicit `/run`,
+`/tmp`, Laravel cache, and Laravel storage volumes. Its small non-root init
+container creates Laravel's required storage directories. The web login returns
+HTTP 200 and the workload is 3/3 Ready. The s6 supervisor, nginx and PHP-FPM
+masters still run as root; running the full image as non-root failed because
+its startup scripts require group switching. Restricted admission therefore
+still warns on this container, and the namespace remains Baseline pending a
+maintainable rootless image path or reviewed exception.
 
 Maloja runs its pinned image's application directly as UID/GID 1000, with all
 capabilities dropped, a read-only root filesystem, and writable `/data` and
@@ -64,12 +72,27 @@ Forgejo remains Baseline while its rootful chart init containers and writable
 data volume are reviewed. Do not switch it to rootless operation until its
 existing data and Velero restore path have been validated under that layout.
 
-This rollout is not complete. Do not raise enforcement in another namespace
-until its rendered Pod shapes pass server-side admission, its running workload
-and service behavior are verified, and its storage/recovery paths are reviewed.
-Restricted admission does not require read-only root filesystems or disable
-service-account tokens. Keep applying those workload-level controls, and mount
-tokens only for workloads that need Kubernetes API access.
+## Remaining ordinary namespace gates
+
+Live namespace labels are the source of truth. The following namespaces still
+enforce Baseline while warning and auditing Restricted:
+
+| Namespace | Current hardening | Remaining gate |
+|---|---|---|
+| qBittorrent | App and bootstrap run as UID 1000 with all capabilities dropped. | Isolated recovery remains unverified; `qbittorrent-drill-20261031` is `FailedValidation`. |
+| Prowlarr | App runs as UID 1000 with all capabilities dropped. | Recovery remains unverified; both `prowlarr-drill-20261031` and `prowlarr-drill-v2-20261031` are `PartiallyFailed`. |
+| Lidarr, Radarr, Sonarr | App binaries run as UID 1000 with read-only root filesystems; NFS write behavior was checked. | Verify isolated config restores before Restricted enforcement. |
+| Maloja | App runs as UID 1000 with read-only root filesystem; SQLite integrity passed after ownership migration. | Verify data recovery before Restricted enforcement. |
+| Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. | s6, nginx and PHP-FPM masters require root and extra capabilities. Find a maintainable rootless path or keep Baseline as a reviewed exception. |
+| Forgejo | Rootful chart remains in use. | Validate the existing data and restore path under a rootless layout before changing the image. |
+| RomM | Existing reduced-capability configuration remains. | Deferred at Dave's direction. |
+
+Do not raise enforcement in another namespace until rendered Pods pass
+server-side Restricted admission, live service behavior is verified, and
+storage recovery is reviewed. Restricted admission does not require read-only
+root filesystems or disabled service-account tokens. Keep applying those
+workload-level controls, and mount tokens only for workloads that need API
+access.
 
 Keep the reviewed CNI, CSI, Intel GPU, local-path storage, monitoring, Velero,
 and privileged Forgejo runner namespaces at their existing scoped policies.
