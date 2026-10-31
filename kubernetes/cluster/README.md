@@ -26,6 +26,31 @@ etcd snapshot. Afterward verify capacity, DiskPressure, local mounts and
 workload health. On a failed gate, halt and preserve state; do not shrink disks
 or reboot another node as a workaround.
 
+### Investigating node disk usage
+
+Use the current node address from Kubernetes and supply it as both the Talos
+node and endpoint when the local Talos configuration has no default endpoint:
+
+```sh
+kubectl get node k8s-w-1 -o wide
+talosctl -n <node-ip> -e <node-ip> list /var/mnt/local-path
+talosctl -n <node-ip> -e <node-ip> usage -H -d 1 /var/mnt/local-path
+```
+
+The directory names include the namespace and PVC name. `usage` walks the
+files and can take several minutes; interrupting it prints the entries scanned
+so far. To narrow a slow scan, pass an individual directory from `list` to
+`usage`. Alternatively, run `kubectl exec` with `du -sh` on a mounted local
+configuration directory, for example `/config` in Jellyfin. Measure its
+transcode cache separately with `du -sh /cache/transcodes`.
+
+Avoid a recursive scan of all `/var`: kubelet directories contain mounted NFS
+shares, so it can traverse remote media, take a long time, and report remote
+usage or permission errors. Kubelet volume statistics for local-path PVCs can
+report the usage of the entire shared filesystem for each PVC; do not sum or
+interpret those values as individual PVC sizes. Check filesystem capacity and
+DiskPressure separately from directory sizes.
+
 Check every node address against NFS exports and firewall allowlists; an extra
 address can become Kubernetes InternalIP. Verify GPU driver, render device and
 advertised resources after worker rebuilds or upgrades. Preserve the configured
