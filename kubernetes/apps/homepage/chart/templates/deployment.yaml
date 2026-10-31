@@ -116,8 +116,6 @@ spec:
             - name: custom-icons
               mountPath: /app/config/icons
               readOnly: true
-            - name: next-cache
-              mountPath: /app/.next/cache
             - name: tmp
               mountPath: /tmp
 
@@ -131,7 +129,5 @@ spec:
         - name: custom-icons
           configMap:
             name: homepage-icons
-        - name: next-cache
-          emptyDir: {}
         - name: tmp
           emptyDir: {}
