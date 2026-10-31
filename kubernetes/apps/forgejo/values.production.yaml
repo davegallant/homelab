@@ -15,6 +15,10 @@ image:
   digest: sha256:fcd19ff4ebc85fb098a67e8e1d0d5a84d07dd6e8a23edcfdfd5b71a6178953be
   rootless: false
 
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
 deployment:
   env:
     - name: FORGEJO_WORK_DIR
