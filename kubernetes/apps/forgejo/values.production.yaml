@@ -1,7 +1,6 @@
-# Forgejo production values for forgejo-helm/forgejo 7.1.7.
-# Staging is deliberately at zero replicas until the frozen /data copy and
-# Velero restore drill have passed. SSH remains internal; production cutover
-# is HTTPS-only because the live instance did not expose Git-over-SSH.
+# Forgejo production values for forgejo-helm/forgejo 7.1.14.
+# Rootless operation passed an isolated Velero restore and startup drill on
+# 2026-10-31. Git-over-SSH remains disabled; the service is HTTPS-only.
 #
 # STORAGE TEST (2026-10-24): persistence uses the manually created
 # forgejo-data-local PVC, annotated with volumeType: local before
@@ -12,20 +11,33 @@ image:
   registry: codeberg.org
   repository: forgejo/forgejo
   tag: "17.0.1"
-  digest: sha256:fcd19ff4ebc85fb098a67e8e1d0d5a84d07dd6e8a23edcfdfd5b71a6178953be
-  rootless: false
+  digest: sha256:5ef02fbcf22beef56b8c844952ffad58cfe177b6f98e46e6abb5df90b88dc8d3
+  rootless: true
 
 podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
   seccompProfile:
     type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
 
 deployment:
   env:
     - name: FORGEJO_WORK_DIR
       value: /data/gitea
 
-# One internal Forgejo pod is running for the Velero volume-backup test.
-# The Newt Deployment remains at zero until separately approved cutover.
+# Forgejo uses one pod because SQLite is not HA-ready.
 replicaCount: 1
 
 # Forgejo is not HA-ready; do not overlap pods that share its data volume.
@@ -82,6 +94,7 @@ gitea:
       HTTP_PORT: 3000
       SSH_PORT: 22
       SSH_LISTEN_PORT: 22
+      START_SSH_SERVER: "false"
     database:
       DB_TYPE: sqlite3
       PATH: /data/gitea/gitea.db

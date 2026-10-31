@@ -9,9 +9,9 @@ resources to establish enforcement; a tracked deny rule alone is insufficient.
 Restricted `warn` and `audit` are staged on ordinary application namespaces,
 pinned to `v1.37`; Baseline enforcement remains while rendered and running
 workloads are remediated. Headplane, k8s-readonly, LubeLogger,
-Audiobookshelf, BentoPDF, Beszel, Changedetection, Grafana, Homepage, Immich,
-Invidious, Jellyfin, Kiwix, Lidarr, Maloja, Miniflux, Navidrome, Paperless,
-Prowlarr, qBittorrent, Radarr, SearXNG, Seerr, Sonarr, and Umami enforce
+Audiobookshelf, BentoPDF, Beszel, Changedetection, Forgejo, Grafana, Homepage,
+Immich, Invidious, Jellyfin, Kiwix, Lidarr, Maloja, Miniflux, Navidrome,
+Paperless, Prowlarr, qBittorrent, Radarr, SearXNG, Seerr, Sonarr, and Umami enforce
 Restricted. Confirm live namespace labels before changing this inventory.
 An unsafe test Pod was rejected by Audiobookshelf's Restricted enforcement;
 its existing workloads remained Ready.
@@ -86,9 +86,12 @@ applied only to the restored test volume. The app then started under Restricted
 settings, returned HTTP 200, and all three SQLite databases passed
 `PRAGMA integrity_check`. The namespace now enforces Restricted.
 
-Forgejo remains Baseline while its rootful chart init containers and writable
-data volume are reviewed. Do not switch it to rootless operation until its
-existing data and Velero restore path have been validated under that layout.
+Forgejo now uses the rootless image with UID/GID 1000, a read-only root
+filesystem, all capabilities dropped, RuntimeDefault seccomp, and no service
+account token. An isolated Velero restore recovered 1,022,640,284 bytes; the
+rootless app started against the restored SQLite database and returned HTTP
+200. All chart init containers passed Restricted admission, an unsafe Pod was
+rejected, and the production namespace now enforces Restricted.
 
 ## Remaining ordinary namespace gates
 
@@ -99,7 +102,6 @@ auditing Restricted:
 | Namespace | Current hardening | Remaining gate |
 |---|---|---|
 | Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Isolated restore passed: 14,581 results, 2 users, HTTP 200, and 3/3 Ready. | Keep Baseline as a reviewed exception; the pinned image's s6 startup runs root-owned service masters and uses six additional capabilities. Revisit if a maintainable rootless path becomes available. |
-| Forgejo | Rootful chart remains in use. | Validate the existing data and restore path under a rootless layout before changing the image. |
 | RomM | Existing reduced-capability configuration remains. | Deferred at Dave's direction. |
 
 Platform namespaces Alloy and Loki also remain Baseline with Restricted

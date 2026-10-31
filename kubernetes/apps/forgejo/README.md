@@ -8,7 +8,10 @@ reverse the cutover without Dave's explicit authorization.
 
 ## Runtime
 
-- Official Forgejo chart 7.1.7, Forgejo 17.0.0 pinned by image digest.
+- Official Forgejo chart 7.1.14, Forgejo 17.0.1 rootless image pinned by digest.
+- Forgejo and its init containers run as UID/GID 1000 with privilege escalation
+  disabled, all capabilities dropped, RuntimeDefault seccomp, and a read-only
+  root filesystem. The namespace enforces Restricted Pod Security.
 - SQLite: `/data/gitea/gitea.db`; PostgreSQL HA and Redis Cluster disabled.
 - Repository root: `/data/git/repositories`.
 - `FORGEJO_WORK_DIR=/data/gitea` matches the copied configuration's
@@ -20,6 +23,7 @@ reverse the cutover without Dave's explicit authorization.
   Pangolin Newt identity. The separate Newt Deployment connects to the
   same-namespace `forgejo:3000` Service. Cilium permits its TCP 3000 traffic.
 - Git operations use HTTPS; Git-over-SSH is not exposed.
+- The embedded SSH server is disabled; the service remains HTTPS-only.
 - The Forgejo server egress policy allows repository mirror traffic only to
   `github.com` and `git.ryujinx.app` (including GitHub subdomains) over TCP
   443. Add a host only when a failed mirror and Hubble event establish the
