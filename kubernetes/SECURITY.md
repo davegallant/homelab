@@ -27,10 +27,17 @@ admission. FlareSolverr uses a non-root init container to copy its
 startup-patched Chromium driver into a writable `emptyDir`; the monitor needs
 its scoped service-account token to check the protected Cilium policy and Argo
 Application. The LinuxServer Speedtest Tracker container now drops all
-capabilities except the set its s6 startup and user switch require. RomM also
-uses a reduced capability set tailored to its startup behavior. These
-containers still start as root, and their added capabilities are outside
-Restricted's allowlist, so their namespaces remain Baseline. qBittorrent's app
+capabilities except the set its s6 startup and user switch require. RomM's
+production app still starts as root with a reduced capability set; it needs
+`DAC_OVERRIDE` to save Valkey's RDB into its UID-1000-owned data directory.
+These production containers use capabilities outside Restricted's allowlist,
+so their namespaces remain Baseline. A separate RomM probe succeeded as UID
+1000 with all capabilities dropped and a read-only root filesystem after
+mounting `/etc/nginx/conf.d` as writable storage. Its fresh MariaDB started
+non-root with a read-only root filesystem, Valkey saved its RDB, and RomM
+returned HTTP 200. This proves the image can start rootless with explicit
+writable paths, but does not verify the existing production volumes.
+qBittorrent's app
 and bootstrap init container run
 as UID/GID 1000 with all capabilities dropped. The init container creates a
 user-owned `/run` directory in an `emptyDir` and uses a read-only root filesystem.
@@ -102,7 +109,7 @@ auditing Restricted:
 | Namespace | Current hardening | Remaining gate |
 |---|---|---|
 | Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Isolated restore passed: 14,581 results, 2 users, HTTP 200, and 3/3 Ready. | Keep Baseline as a reviewed exception; the pinned image's s6 startup runs root-owned service masters and uses six additional capabilities. Revisit if a maintainable rootless path becomes available. |
-| RomM | Existing reduced-capability configuration remains. | Deferred at Dave's direction. |
+| RomM | Production still uses a reduced capability set, including `DAC_OVERRIDE`, for Valkey persistence. A scratch probe ran as UID 1000 with a read-only root filesystem and returned HTTP 200. | Verify the restored production database/config/resources volumes and library write behavior as UID 1000 before changing production. The `romm-recovery-20261031` backup has four completed volume backups, but two isolated restores produced no PodVolumeRestore records and left the restored Pod waiting for Velero completion markers. |
 
 Platform namespaces Alloy and Loki also remain Baseline with Restricted
 warn/audit; review them separately from ordinary applications. The qBittorrent,
