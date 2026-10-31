@@ -35,24 +35,27 @@ controllers:
       app:
         securityContext:
           allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
-            add:
-              - CHOWN
-              - DAC_OVERRIDE
-              - FOWNER
-              - KILL
-              - SETGID
-              - SETUID
         image:
           repository: docker.io/linuxserver/sonarr
           tag: 4.0.20
           digest: sha256:48e36b608b461273b9dae857725cd0561a127f2c694b687318f6d0c5ce63e5c9
+        # s6 resets the umask in non-root mode. Start Sonarr directly so
+        # imported media keeps the existing group-writable permissions.
+        command:
+          - /bin/sh
+          - -ec
+          - umask 002; cd /app/sonarr/bin; exec ./Sonarr -nobrowser -data=/config
         env:
-          PUID: "1000"
-          PGID: "1000"
-          UMASK: "002"
+          HOME: /config
+          TMPDIR: /tmp
+          TERM: DUMB
           TZ: Etc/UTC
           NO_PROXY: localhost,127.0.0.1,.svc,.cluster.local
         probes:
@@ -98,6 +101,12 @@ service:
         port: 8989
 
 persistence:
+  tmp:
+    type: emptyDir
+    advancedMounts:
+      sonarr:
+        app:
+          - path: /tmp
   config-local:
     type: persistentVolumeClaim
     existingClaim: sonarr-config-local
