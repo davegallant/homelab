@@ -196,6 +196,7 @@ rawResources:
                     - matchPattern: "*"
           - toFQDNs:
               - matchName: api.radarr.video
+              - matchName: radarr.servarr.com
             toPorts:
               - ports:
                   - port: "443"
