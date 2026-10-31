@@ -10,9 +10,8 @@
 # playbooks/talos-cluster/audiobookshelf-secret.yml from Vault:
 #   audiobookshelf-newt-external (PANGOLIN_ENDPOINT, NEWT_ID, NEWT_SECRET)
 #
-# The state PVCs are migrated to UID 1000/GID 950 by a temporary
-# root init container. The NFS library exports keep their existing
-# ownership and are never mounted by that init container.
+# The state PVCs use UID 1000/GID 950. The NFS library exports keep
+# their existing ownership and are not changed by the Pod.
 controllers:
   audiobookshelf:
     type: deployment
@@ -27,41 +26,6 @@ controllers:
         # libraries are excluded by omission (TrueNAS snapshots +
         # Drive sync protect them, never Velero).
         backup.velero.io/backup-volumes: config-local,metadata-local
-    initContainers:
-      prepare-storage:
-        image:
-          repository: docker.io/library/busybox
-          tag: 1.37.0
-          digest: sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec
-        command:
-          - sh
-          - -ec
-          - |
-            if [ "$(stat -c '%u:%g' /config)" != "1000:950" ]; then
-              chown -R 1000:950 /config
-            fi
-            if [ "$(stat -c '%u:%g' /metadata)" != "1000:950" ]; then
-              chown -R 1000:950 /metadata
-            fi
-            chmod 1770 /tmp
-            chown 1000:950 /tmp
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          capabilities:
-            drop:
-              - ALL
-            add:
-              - CHOWN
-        resources:
-          requests:
-            cpu: 5m
-            memory: 8Mi
-          limits:
-            cpu: 50m
-            memory: 32Mi
     containers:
       app:
         securityContext:
@@ -73,6 +37,10 @@ controllers:
             drop:
               - ALL
           readOnlyRootFilesystem: true
+        env:
+          # Upload and media-processing temp files already use
+          # MetadataPath/tmp; also direct Node's temp helpers there.
+          TMPDIR: /metadata/tmp
         image:
           repository: ghcr.io/advplyr/audiobookshelf
           tag: 2.37.2
@@ -123,8 +91,9 @@ controllers:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
         env:
-          HOME: /tmp
-          XDG_CONFIG_HOME: /tmp/.config
+          HOME: /dev/shm
+          XDG_CONFIG_HOME: /dev/shm/.config
+          TMPDIR: /dev/shm
         args:
           - --disable-ssh
         image:
@@ -150,16 +119,6 @@ service:
         port: 80
 
 persistence:
-  tmp:
-    type: emptyDir
-    advancedMounts:
-      audiobookshelf:
-        app:
-          - path: /tmp
-        prepare-storage:
-          - path: /tmp
-        newt:
-          - path: /tmp
   config:
     type: persistentVolumeClaim
     annotations:
@@ -183,8 +142,6 @@ persistence:
       audiobookshelf:
         app:
           - path: /config
-        prepare-storage:
-          - path: /config
   metadata:
     type: persistentVolumeClaim
     annotations:
@@ -207,8 +164,6 @@ persistence:
     advancedMounts:
       audiobookshelf:
         app:
-          - path: /metadata
-        prepare-storage:
           - path: /metadata
   audiobooks:
     type: persistentVolumeClaim
