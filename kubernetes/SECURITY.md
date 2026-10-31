@@ -64,12 +64,15 @@ The hook now writes a mode-0600 temporary dump and renames it into place. A live
 with 53/53 items, all three volume backups complete, and no failed hooks.
 Speedtest Tracker now has a read-only app root filesystem with explicit `/run`,
 `/tmp`, Laravel cache, and Laravel storage volumes. Its small non-root init
-container creates Laravel's required storage directories. The web login returns
-HTTP 200 and the workload is 3/3 Ready. The s6 supervisor, nginx and PHP-FPM
-masters still run as root; running the full image as non-root failed because
-its startup scripts require group switching. Restricted admission therefore
-still warns on this container, and the namespace remains Baseline pending a
-maintainable rootless image path or reviewed exception.
+container creates Laravel's required storage directories. The dedicated
+`speedtest-hardening-20261031-retry` backup restored all three data volumes in
+an isolated drill; PostgreSQL recovered, the app read 14,581 results and 2
+users, the login page returned HTTP 200, and all three containers were Ready.
+The pinned LinuxServer image's s6 startup launches nginx and PHP-FPM masters as
+root and uses six additional capabilities; running the full image as non-root
+failed because its startup scripts require group switching. Keep the namespace
+at Baseline as a reviewed image exception until a maintainable rootless startup
+path is available.
 
 Maloja runs its pinned image's application directly as UID/GID 1000, with all
 capabilities dropped, a read-only root filesystem, and writable `/data` and
@@ -95,7 +98,7 @@ auditing Restricted:
 
 | Namespace | Current hardening | Remaining gate |
 |---|---|---|
-| Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Backup completed; app is 3/3 Ready. | s6, nginx and PHP-FPM masters require root and extra capabilities. Validate an isolated restore; find a maintainable rootless path or keep Baseline as a reviewed exception. |
+| Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Isolated restore passed: 14,581 results, 2 users, HTTP 200, and 3/3 Ready. | Keep Baseline as a reviewed exception; the pinned image's s6 startup runs root-owned service masters and uses six additional capabilities. Revisit if a maintainable rootless path becomes available. |
 | Forgejo | Rootful chart remains in use. | Validate the existing data and restore path under a rootless layout before changing the image. |
 | RomM | Existing reduced-capability configuration remains. | Deferred at Dave's direction. |
 
