@@ -39,16 +39,22 @@ controllers:
             spec:
               periodSeconds: 5
               failureThreshold: 36
+              timeoutSeconds: 5
           readiness:
             enabled: true
             type: HTTP
             path: /health
             port: 8096
+            spec:
+              timeoutSeconds: 5
           liveness:
             enabled: true
             type: HTTP
             path: /health
             port: 8096
+            spec:
+              failureThreshold: 6
+              timeoutSeconds: 5
         resources:
           requests:
             cpu: 500m
