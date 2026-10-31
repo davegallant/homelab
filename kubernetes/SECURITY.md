@@ -10,9 +10,9 @@ Restricted `warn` and `audit` are staged on ordinary application namespaces,
 pinned to `v1.37`; Baseline enforcement remains while rendered and running
 workloads are remediated. Headplane, k8s-readonly, LubeLogger,
 Audiobookshelf, BentoPDF, Beszel, Changedetection, Grafana, Homepage, Immich,
-Invidious, Jellyfin, Kiwix, Miniflux, Navidrome, Paperless, SearXNG, Seerr, and
-Umami enforce Restricted. Confirm live namespace labels before changing this
-inventory.
+Invidious, Jellyfin, Kiwix, Maloja, Miniflux, Navidrome, Paperless, SearXNG,
+Seerr, and Umami enforce Restricted. Confirm live namespace labels before
+changing this inventory.
 An unsafe test Pod was rejected by Audiobookshelf's Restricted enforcement;
 its existing workloads remained Ready.
 LubeLogger runs as UID 1000 and keeps its existing DataProtection keyring on the
@@ -71,8 +71,12 @@ capabilities dropped, a read-only root filesystem, and writable `/data` and
 `/tmp` volumes. Before migration, `maloja-hardening-20261031` backed up the
 data volume; 61 root-owned files were changed to UID/GID 1000 while the app
 was stopped. The recorded path list is kept in the protected local Talos
-credentials directory as `maloja-root-owned-20261031.paths`. The namespace
-remains Baseline pending recovery verification.
+credentials directory as `maloja-root-owned-20261031.paths`. The isolated
+restore recovered 23,903,851 bytes. Because that
+backup predates the ownership migration, the same ownership correction was
+applied only to the restored test volume. The app then started under Restricted
+settings, returned HTTP 200, and all three SQLite databases passed
+`PRAGMA integrity_check`. The namespace now enforces Restricted.
 
 Forgejo remains Baseline while its rootful chart init containers and writable
 data volume are reviewed. Do not switch it to rootless operation until its
@@ -87,7 +91,6 @@ auditing Restricted:
 | Namespace | Current hardening | Remaining gate |
 |---|---|---|
 | Lidarr, Sonarr | App binaries run as UID 1000 with read-only root filesystems; NFS write behavior was checked. | Verify isolated config restores before Restricted enforcement. |
-| Maloja | App runs as UID 1000 with read-only root filesystem; SQLite integrity passed after ownership migration. | Verify data recovery before Restricted enforcement. |
 | Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Backup completed; app is 3/3 Ready. | s6, nginx and PHP-FPM masters require root and extra capabilities. Validate an isolated restore; find a maintainable rootless path or keep Baseline as a reviewed exception. |
 | Forgejo | Rootful chart remains in use. | Validate the existing data and restore path under a rootless layout before changing the image. |
 | RomM | Existing reduced-capability configuration remains. | Deferred at Dave's direction. |
