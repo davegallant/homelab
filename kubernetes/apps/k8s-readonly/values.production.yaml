@@ -38,7 +38,7 @@ controllers:
         seccompProfile:
           type: RuntimeDefault
       nodeSelector:
-        kubernetes.io/hostname: k8s-w-1
+        kubernetes.io/hostname: k8s-w-2
       annotations:
         # This pod holds no backed-up data.
         backup.velero.io/backup-volumes: ""

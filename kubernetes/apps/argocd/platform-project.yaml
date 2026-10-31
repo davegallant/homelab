@@ -14,7 +14,6 @@ spec:
     - ghcr.io/vmware-tanzu/charts
     - https://argoproj.github.io/argo-helm
     - https://helm.cilium.io/
-    - https://aquasecurity.github.io/helm-charts/
     - code.forgejo.org/forgejo-helm
     - https://code.forgejo.org/forgejo-helm/forgejo-runner.git
   destinations:
@@ -35,8 +34,6 @@ spec:
       namespace: kube-system
     - server: https://kubernetes.default.svc
       namespace: monitoring
-    - server: https://kubernetes.default.svc
-      namespace: trivy-system
     - server: https://kubernetes.default.svc
       namespace: velero
   clusterResourceWhitelist:

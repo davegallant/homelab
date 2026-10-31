@@ -8,15 +8,13 @@ resources to establish enforcement; a tracked deny rule alone is insufficient.
 
 Restricted `warn` and `audit` are staged on ordinary application namespaces,
 pinned to `v1.37`; Baseline enforcement remains while rendered and running
-workloads are remediated. Headplane, k8s-readonly, Trivy, LubeLogger,
+workloads are remediated. Headplane, k8s-readonly, LubeLogger,
 Audiobookshelf, BentoPDF, Beszel, Changedetection, Grafana, Homepage, Immich,
 Invidious, Jellyfin, Kiwix, Miniflux, Navidrome, Paperless, SearXNG, Seerr, and
 Umami enforce Restricted. Confirm live namespace labels before changing this
 inventory; the Miniflux restore-drill namespaces are not production workloads.
 An unsafe test Pod was rejected by Audiobookshelf's Restricted enforcement;
-its existing workloads remained Ready. Trivy's operator and generated scan
-Jobs run under Restricted; the operator keeps its service-account token for
-Kubernetes API access.
+its existing workloads remained Ready.
 LubeLogger runs as UID 1000 and keeps its existing DataProtection keyring on the
 application data volume.
 Audiobookshelf runs as UID 1000/GID 950, with its existing SQLite database and
