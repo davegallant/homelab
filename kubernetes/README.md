@@ -17,6 +17,7 @@ recovery guidance.
 | Update applications or recover Argo CD | [Release management](apps/argocd/MANAGEMENT.md), [Argo CD](apps/argocd/README.md) |
 | Restore a namespace or rehearse Homepage recovery | [Backups and restore drill](BACKUPS.md) |
 | Add any volume to any app | [Storage - canonical rule, read first](STORAGE.md) |
+| Move stateful app data between workers | [Local-PV migration runbook](LOCAL-PV-MIGRATION.md) |
 | Operate Alloy or diagnose Loki ingestion | [Observability](OBSERVABILITY.md) |
 | Review Cilium policies and Pod Security exceptions | [Security](SECURITY.md), [Cilium](apps/cilium/README.md) |
 
