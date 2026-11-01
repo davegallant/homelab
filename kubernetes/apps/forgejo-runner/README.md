@@ -21,11 +21,11 @@
   and share a worker with production workloads. Treat privileged DinD as a
   reviewed exception; a tainted worker would reduce sharing but would not
   create a separate cluster boundary.
-- Public egress is limited to TCP 443 and blocks private address ranges.
-  Workflow observations showed no public TCP 80 connections. The policy still
-  permits any public hostname; DNS queries are temporarily visible through
-  Cilium's DNS proxy to inventory required names before narrowing egress. Do not
-  expose long-lived or broadly scoped credentials to jobs.
+- Public egress is limited to TCP 443 for the explicit FQDNs in
+  `policy/network-policy.yaml`; direct public IPs and unlisted HTTPS hosts are
+  denied. DNS queries to cluster DNS are visible through Cilium's DNS proxy.
+  DNS query names are temporarily unrestricted while FQDN-based egress is
+  validated. Do not expose long-lived or broadly scoped credentials to jobs.
 
 ## Apply and verify
 
