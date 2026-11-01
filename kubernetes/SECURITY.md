@@ -143,8 +143,13 @@ timeouts and workloads on that worker failed probes. Those workloads and
 production Loki recovered after the restore stopped; Loki returned `/ready`.
 No rootless settings were tested. The partial restore volumes remain
 `Released` with `Retain`; retry only with a lower-impact restore plan and a
-worker health gate. Do not change Loki's namespace policy until that work is
-complete. The qBittorrent,
+worker health gate. A follow-up restore mapped to `k8s-w-2` with one-file
+download concurrency did not start: its Restore request and a separate
+config-map-only control restore both remain `New`, without finalizers, PVRs, or
+target resources. This is a Velero reconciliation gate, not a worker-load
+result; production Loki was untouched. Do not change Loki's namespace policy
+until Velero processes new Restore requests and the recovery drill completes.
+The qBittorrent,
 Prowlarr, and Miniflux drill namespaces were removed after successful isolated
 recovery checks; Velero restore records remain. Miniflux's v4 restore recovered
 499,615,433 bytes, including 24 feeds and 4,192 entries. The restored Miniflux
