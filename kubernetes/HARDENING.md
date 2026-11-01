@@ -132,7 +132,11 @@ cluster API Service is ClusterIP; the Tailnet Gateway is a LoadBalancer on
 CiliumHostPolicy CRD is installed; the only CiliumClusterwideNetworkPolicy is
 `tailnet-gateway-entry`. A safe Tailnet ACL reduction still needs a verified
 mapping of Dave’s administrator devices so routine member access and root SSH
-can be narrowed without cutting off recovery.
+can be narrowed without cutting off recovery. A TCP probe from
+`hephaestus` (`192.168.1.165`) reached the control-plane Kubernetes API,
+Talos API, kubelet, and etcd ports, plus both workers’ Talos API and kubelet
+ports. This confirms the current admin-device path; it does not establish what
+other LAN clients can reach.
 
 **Action:** separate administrator devices from ordinary member clients; narrow
 root SSH and management destinations. Verify LAN/router/Proxmox firewall rules
