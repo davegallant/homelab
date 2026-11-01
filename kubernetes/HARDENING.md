@@ -203,7 +203,11 @@ unsafe Pod was rejected. The app runs non-root with all capabilities dropped;
 its root filesystem remains writable because the image's s6 startup requires
 `/run` to retain UID 82 ownership. Read-only root filesystems remain in place
 for its database and Apprise containers. Other app-specific functional checks
-are recorded in [SECURITY.md](SECURITY.md).
+are recorded in [SECURITY.md](SECURITY.md). A live audit checked 36 Running
+Pods in Restricted namespaces. The only findings were the documented API-token
+needs of Alloy and the read-only API proxy, plus writable-root requirements for
+Immich PostgreSQL and Speedtest Tracker; the Alloy exception is recorded in
+`pod-security-exceptions.yaml`.
 
 ## 7. Make security expectations enforceable before deployment
 

@@ -8,3 +8,7 @@ exceptions:
   speedtest-tracker/speedtest-tracker containers:app readOnlyRootFilesystem: >-
     The upstream s6 image needs writable runtime paths; its writable mounts
     are defined in the chart values.
+live_only_exceptions:
+  "alloy/* pod automountServiceAccountToken": >-
+    Alloy reads pod metadata and streams pod logs through the Kubernetes API;
+    its ServiceAccount has read-only RBAC for those resources.
