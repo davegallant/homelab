@@ -4,7 +4,7 @@ metadata:
   name: forgejo-runner-egress
   namespace: forgejo-runner
 spec:
-  description: Deny ingress; allow Forgejo, cluster DNS, and public web egress while blocking private networks.
+  description: Deny ingress; allow Forgejo, cluster DNS, and approved public HTTPS destinations.
   endpointSelector: {}
   ingress: []
   egress:
@@ -43,19 +43,6 @@ spec:
         - matchName: raw.githubusercontent.com
         - matchName: releases.astral.sh
         - matchName: www.gasbuddy.com
-      toPorts:
-        - ports:
-            - port: "443"
-              protocol: TCP
-    - toCIDRSet:
-        - cidr: 0.0.0.0/0
-          except:
-            - 10.0.0.0/8
-            - 100.64.0.0/10
-            - 127.0.0.0/8
-            - 169.254.0.0/16
-            - 172.16.0.0/12
-            - 192.168.0.0/16
       toPorts:
         - ports:
             - port: "443"
