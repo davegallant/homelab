@@ -39,8 +39,12 @@ non-root users, with read-only root filesystems and explicit writable volumes.
 Its namespace enforces Restricted.
 qBittorrent's app
 and bootstrap init container run
-as UID/GID 1000 with all capabilities dropped. The init container creates a
-user-owned `/run` directory in an `emptyDir` and uses a read-only root filesystem.
+as UID/GID 1000 with all capabilities dropped and read-only root filesystems.
+The app has explicit writable mounts for `/config`, `/mnt/torrents`, `/run`,
+and `/tmp`; `/scripts` is read-only. The init container creates a user-owned
+`/run` directory in an `emptyDir`. After rollout, writes to `/tmp` and `/config`
+succeeded, a write to `/etc` was denied, and the WebUI returned HTTP 200 both
+inside the Pod and through the Tailnet Gateway. No torrents were started.
 The namespace enforces Restricted after an isolated restore recovered 69,524,529
 bytes and passed admission with the restored config. The current egress monitor
 Job passes Restricted; one failed pre-enforcement Job Pod remains as evidence.
