@@ -15,6 +15,14 @@ Speedtest Tracker, and Umami enforce Restricted. Confirm live namespace labels
 before changing this inventory.
 An unsafe test Pod was rejected by Audiobookshelf's Restricted enforcement;
 its existing workloads remained Ready.
+Immich's server now uses a read-only root filesystem with `/tmp` and the
+library PVC as writable mounts. A root write was denied, temporary writes to
+both mounts succeeded, PostgreSQL accepted connections and reported 73 public
+tables, and the Tailnet API health check returned HTTP 200. PostgreSQL retains
+a writable root filesystem: its pinned image entrypoint copies generated
+configuration to `/etc/postgresql/postgresql.conf`, and making that root
+read-only caused a startup failure. The database root setting was reverted;
+the server remains read-only and healthy.
 LubeLogger runs as UID 1000 and keeps its existing DataProtection keyring on the
 application data volume.
 Audiobookshelf runs as UID 1000/GID 950, with its existing SQLite database and
