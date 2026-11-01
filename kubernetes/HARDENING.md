@@ -284,11 +284,16 @@ from a second Pod, and confirmed Delete-policy teardown removed the volume.
 Argo CD's missing limits were also set from measured p95 usage: application
 controller 47m/434Mi, repo server 79m/102Mi, notifications 2m/103Mi, Redis
 3m/13Mi, and server 2m/116Mi for CPU/memory. Argo CD rolled out Healthy, and
-all 45 child Applications remained Synced and Healthy. The latest live audit
-has 42 platform entries still missing at least one limit, all in Cilium, kube-
-system (including NFS CSI and control-plane static Pods), and Velero. These
-CNI, CSI, control-plane, and backup workloads remain individually reviewed;
-they do not receive blanket limits. Grafana has alerts for node memory, `/var` fullness,
+all 45 child Applications remained Synced and Healthy. NFS CSI sidecars were
+capped at 100m CPU and its NFS containers at 250m after three-day maxima stayed
+below 14m CPU and 53 MiB memory; all three node plugins and the controller
+rolled out Ready. Cilium operator, Hubble relay, and UI CPU limits were set from
+p95 usage (10m, 1m, and under 1m); their Deployments rolled out Healthy without
+restarting Cilium agents. The latest live audit has 24 platform entries still
+missing at least one limit, in Cilium agents/Envoy/init containers, CoreDNS and
+control-plane static Pods, and Velero. These CNI, control-plane, and backup
+workloads remain individually reviewed; they do not receive blanket limits.
+Grafana has alerts for node memory, `/var` fullness,
 restart bursts, and crash loops. The daily `backup-watchdog` completed
 successfully today, but no independent missed-run alert or inode-pressure alert
 was found in the tracked configuration.
