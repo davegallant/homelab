@@ -89,7 +89,7 @@
               {{ lookup('file', local_path_dir.path + '/local-path-storage.yaml')
               | replace('image: rancher/local-path-provisioner:v' + local_path_provisioner_version,
                         'image: ' + local_path_provisioner_image)
-              | replace('image: busybox\n', 'image: ' + local_path_helper_image + '\n')
+              | replace('image: busybox', 'image: ' + local_path_helper_image)
               | from_yaml_all | list }}
 
         - name: Require both image overrides to match the upstream manifest
