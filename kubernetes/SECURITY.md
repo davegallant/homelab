@@ -132,21 +132,30 @@ Restricted:
 
 | Namespace | Current hardening | Remaining gate |
 |---|---|---|
+| Loki | Rootless chart and Restricted Pod validated against an isolated restored PVC; synthetic write/query and historical data query passed. Production remains unchanged. | Migrate the production Loki PVC's group permissions during a controlled stop, deploy the chart, then enforce Restricted. |
 | Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Isolated restore passed: 14,581 results, 2 users, HTTP 200, and 3/3 Ready. | Keep Baseline as a reviewed exception. A Restricted rootless probe failed because s6 needs `SETGID` for user switching, and config files need a one-time ownership migration. Revisit with a maintainable startup path or an image that supports non-root execution. |
 
-Loki remains Baseline with Restricted warn/audit because its Loki container
-currently runs as UID 0. Its data PVC is local-path backed, so moving to a
-non-root UID requires a planned ownership migration and restore validation.
-An isolated restore on `k8s-w-1` created a chunk tree with roughly 376,000
-directories. During that restore, several workloads on w1, including production
-Loki, hit liveness timeouts and restarted. The worker remained Ready. Probe
-timeouts had also occurred before the restore, so the restore likely aggravated
-an existing sensitivity; no Loki spec or PVC changes were made. All affected
-workloads recovered, and Loki returned `/ready`. The partial test volumes are
-retained as Released PVs. The current restore is isolated on `k8s-w-2` with
-parallel file download set to 4; it is progressing without new probe failures,
-and production Loki is Ready 2/2. Do not change Loki's namespace policy until
-the restore and rootless runtime validation complete.
+Loki's first w1 isolated restore created a large chunk tree. During that restore,
+several w1 workloads, including Loki, hit liveness timeouts and restarted. The
+worker remained Ready. Probe timeouts had also occurred before the restore, so
+the restore likely aggravated existing sensitivity; all affected workloads
+recovered. A later restore on w2 completed 1,085,182,436 bytes and all 6 items.
+Its only warning was the expected conflict on the generated `kube-root-ca.crt`
+ConfigMap. Loki started from the restored data as root and returned `/ready`.
+
+The rootless restore test exposed that the local PV's root-owned tree was not
+made group-writable by kubelet's `fsGroup` pass. A temporary migration on the
+isolated copy set group 1000 and group-write permissions; UID 10001 Loki then
+started with a read-only root filesystem, all capabilities dropped,
+RuntimeDefault seccomp, and no service-account token. Its Restricted namespace
+rejected an unsafe privileged Pod. Loki accepted a synthetic log push (HTTP
+204), returned that entry from a query, and also returned older logs from the
+restored backup. The `OnRootMismatch` policy avoids repeating the full
+permission scan after the volume root is prepared. Production Loki remains
+unchanged and Ready 2/2; its pre-change daily backup completed with a 1.136 GB
+live PVC backup. Velero's one backup warning concerned an obsolete Succeeded Pod
+whose volume was skipped. Next, migrate the production data volume under a
+controlled Loki stop, then apply the Restricted namespace policy and chart.
 
 Follow-up Restore requests mapped to `k8s-w-2` initially stayed `New`,
 including a config-map-only control. Restarting the Velero server unblocked
