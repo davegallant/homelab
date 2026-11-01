@@ -134,7 +134,14 @@ Restricted:
 Loki remains Baseline with Restricted warn/audit because its Loki container
 currently runs as UID 0. Its data PVC is local-path backed, so moving to a
 non-root UID requires a planned ownership migration and restore validation.
-Do not change its namespace policy until that work is complete. The qBittorrent,
+An isolated restore trial on 2026-11-01 was canceled at 54,969,680 of
+1,085,182,436 bytes after `k8s-w-1` reported CRI and kubelet health-check
+timeouts and workloads on that worker failed probes. Those workloads and
+production Loki recovered after the restore stopped; Loki returned `/ready`.
+No rootless settings were tested. The partial restore volumes remain
+`Released` with `Retain`; retry only with a lower-impact restore plan and a
+worker health gate. Do not change Loki's namespace policy until that work is
+complete. The qBittorrent,
 Prowlarr, and Miniflux drill namespaces were removed after successful isolated
 recovery checks; Velero restore records remain. Miniflux's v4 restore recovered
 499,615,433 bytes, including 24 feeds and 4,192 entries. The restored Miniflux
