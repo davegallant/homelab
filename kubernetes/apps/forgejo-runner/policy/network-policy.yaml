@@ -29,6 +29,7 @@ spec:
               - matchName: codeload.github.com
               - matchName: registry-1.docker.io
               - matchName: auth.docker.io
+              - matchName: ghcr.io
               - matchName: production.cloudfront.docker.com
               - matchName: forums.redflagdeals.com
               - matchName: gotify.davegallant.ca
@@ -60,6 +61,7 @@ spec:
         - matchName: codeload.github.com
         - matchName: registry-1.docker.io
         - matchName: auth.docker.io
+        - matchName: ghcr.io
         - matchName: production.cloudfront.docker.com
         - matchName: forums.redflagdeals.com
         - matchName: gotify.davegallant.ca
