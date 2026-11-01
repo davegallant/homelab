@@ -150,7 +150,7 @@ completed. The reason the original controller stopped reconciling remains
 unknown. The first manifest-only Loki restore omitted the PV resource, so it
 did not trigger a PVR. A corrected isolated restore including the Pod, PVCs,
 and PV is now restoring the Loki data volume on `k8s-w-2` with one-file
-concurrency. Its PVR is active at 61,271,721 of 1,085,182,436 bytes; production
+concurrency. Its PVR is active at 89,357,719 of 1,085,182,436 bytes; production
 Loki remains untouched. Do not change Loki's namespace policy until the volume
 restore and rootless validation complete.
 The qBittorrent,
