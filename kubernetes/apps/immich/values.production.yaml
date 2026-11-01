@@ -32,6 +32,7 @@ controllers:
           runAsNonRoot: true
           runAsUser: 950
           runAsGroup: 950
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
@@ -197,6 +198,7 @@ controllers:
           runAsNonRoot: true
           runAsUser: 999
           runAsGroup: 999
+          readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
           capabilities:
             drop:
@@ -273,6 +275,24 @@ persistence:
       immich:
         postgres:
           - path: /var/lib/postgresql/data
+  server-tmp:
+    type: emptyDir
+    advancedMounts:
+      immich:
+        server:
+          - path: /tmp
+  postgres-tmp:
+    type: emptyDir
+    advancedMounts:
+      immich:
+        postgres:
+          - path: /tmp
+  postgres-run:
+    type: emptyDir
+    advancedMounts:
+      immich:
+        postgres:
+          - path: /var/run/postgresql
   model-cache-local:
     type: persistentVolumeClaim
     # Reuse the populated test cache instead of creating a second 1.7 GiB copy.
