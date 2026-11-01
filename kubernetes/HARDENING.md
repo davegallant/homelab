@@ -275,14 +275,20 @@ both limits on rendered Restricted workloads. The qBittorrent egress monitor
 init peaked below 1m CPU in the retained three-day metrics window; a 10m limit
 is now set, and its next scheduled job completed with the expected policy,
 Argo, and Mullvad checks. The cluster has no ResourceQuota or LimitRange
-objects. A live audit found 49 platform container/init-container entries
-missing at least one limit across 36 Running Pods, including Argo CD, Cilium,
-NFS CSI, Velero, and control-plane static Pods. Three-day p95 usage was reviewed.
-The local-path provisioner was the first target: p95 was 0.4m CPU and 31 MiB
-memory, so its Deployment now has 250m and 256Mi limits reapplied by the install
-playbook. CNI, CSI, backup agents, and control-plane components remain
-individually reviewed rather than receiving blanket limits. Grafana has alerts
-for node memory, `/var` fullness,
+objects. A live audit initially found 49 platform container/init-container
+entries missing at least one limit across 36 Running Pods. Three-day p95 usage
+was reviewed before making targeted changes. The local-path provisioner used
+0.4m CPU and 31 MiB memory at p95; it now has 250m and 256Mi limits, reapplied
+by the install playbook. Its PVC smoke test provisioned a volume, read a marker
+from a second Pod, and confirmed Delete-policy teardown removed the volume.
+Argo CD's missing limits were also set from measured p95 usage: application
+controller 47m/434Mi, repo server 79m/102Mi, notifications 2m/103Mi, Redis
+3m/13Mi, and server 2m/116Mi for CPU/memory. Argo CD rolled out Healthy, and
+all 45 child Applications remained Synced and Healthy. The latest live audit
+has 42 platform entries still missing at least one limit, all in Cilium, kube-
+system (including NFS CSI and control-plane static Pods), and Velero. These
+CNI, CSI, control-plane, and backup workloads remain individually reviewed;
+they do not receive blanket limits. Grafana has alerts for node memory, `/var` fullness,
 restart bursts, and crash loops. The daily `backup-watchdog` completed
 successfully today, but no independent missed-run alert or inode-pressure alert
 was found in the tracked configuration.
