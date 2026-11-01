@@ -97,8 +97,8 @@ runner:
     create: false
     # Instance URL for the runner daemon (polling). Internal, see above.
     instance: "http://forgejo.forgejo.svc.cluster.local:3000"
-    # Prebuilt .runner file, provisioned from Vault outside Argo CD.
-    # Runner registration name: k8s-runner.
+    # Prebuilt user-scoped .runner file, provisioned from Vault by Ansible.
+    # It covers repositories owned by dave; see the runner README.
     existingSecret: "forgejo-runner-config"
     file:
       runner:
