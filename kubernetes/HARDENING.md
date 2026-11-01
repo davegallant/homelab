@@ -262,6 +262,19 @@ stop-on-failure rules and local-PV recovery constraints.
 
 ## 9. Detect abuse and resource exhaustion
 
+**Audit follow-up (2026-11-01):** the audit-policy and stdout-export configuration
+is drafted and locally validated, but is **not confirmed active**. Before applying,
+all three nodes were Ready and Loki/Alloy were healthy. Applying the audit-only
+Talos config caused the API at `192.168.1.210:6443` to refuse connections. I
+reapplied the protected pre-change control-plane config using `--mode=no-reboot`,
+but API access did not recover during this session. Talos services reported
+Running; kubelet logs showed static control-plane containers restarting/exited.
+The audit probe was correctly denied, but its Loki event could not be checked.
+Treat the cluster as degraded until API recovery is confirmed. Do not retry the
+audit apply. A control-plane reboot requires Dave's explicit approval under the
+Talos operating instructions. See the audit plan for the command sequence and
+failed gate evidence.
+
 **Progress (2026-11-01):** the three nodes are Ready, with MemoryPressure and
 DiskPressure false; current memory use is 54–71%. All regular containers in
 Restricted namespaces have CPU and memory limits; the remaining gaps there
