@@ -35,13 +35,18 @@ unrelated APIs, NAS exports, node management addresses, or production
 credentials. Verify the actual network mode and trust restrictions in Forgejo.
 
 **Progress (2026-11-01):** the live Cilium policy is synced and healthy. It
-allows DNS, internal Forgejo polling, and public TCP 443 while blocking private
-address ranges; Hubble recorded a policy drop when both the runner container
-and an actual DinD job tried to reach the Kubernetes API. The runner pod has no
-service-account token volume. Two trusted Docker workflows completed
-concurrently, including checkout; after removing public TCP 80, fresh tasks
-were also dispatched and observed on the runner. The instance-wide runner
-registration was removed and replaced with a registration scoped to user
+allows internal Forgejo polling and TCP 443 to the explicit workflow hostnames
+in `apps/forgejo-runner/policy/network-policy.yaml`; DNS requests are limited to
+those names plus resolver search suffixes and the Forgejo service. A DinD
+container reached approved `www.gasbuddy.com`, while unlisted
+`www.example.com`, its DNS lookup, and direct public IP `1.1.1.1` were blocked.
+Hubble previously recorded a policy drop when both the runner and a DinD job
+tried to reach the Kubernetes API. The runner pod has no service-account token
+volume. The latest restricted-policy runs succeeded for
+[rfd-notify-cron](https://forgejo.davegallant.ca/dave/rfd-notify-cron/actions/runs/52260)
+and [gaswatch](https://forgejo.davegallant.ca/dave/gaswatch/actions/runs/1325).
+
+The instance-wide runner registration was replaced with one scoped to user
 `dave`. This includes all repositories Dave owns, so new repositories still
 need workflow review. The current private workflow repositories have no
 collaborators, do not use pull-request triggers, and registration is disabled.
@@ -51,11 +56,13 @@ restricted to `main`.
 The Forgejo backup `forgejo-daily-20261101050044` completed with both Forgejo
 namespaces, Secrets, and runner data included. It has not been restored, and
 fresh runner registration recovery has not been exercised. Keep Secrets in
-backups. Public HTTPS egress still permits any public hostname on TCP 443; do
-not expose long-lived or broadly scoped credentials to jobs. Exact FQDN-based
-egress restrictions remain open.
+backups until those recovery checks pass.
 
 ## 2. Protect secret-bearing backups and test credential recovery
+
+**Progress (2026-11-01):** the latest Forgejo backup includes the runner
+configuration Secrets and `runner-data`; the backup completed, but there has
+been no isolated restore or fresh-registration recovery test.
 
 **Action:** migrate each existing Kopia repository to a strong Vault-held
 password with a tested restore before updating the shared Velero credential;
