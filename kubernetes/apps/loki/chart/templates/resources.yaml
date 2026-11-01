@@ -188,8 +188,12 @@ spec:
             - {port: "443", protocol: TCP}
             - {port: "3478", protocol: UDP}
             - {port: "41641", protocol: UDP}
-    - toFQDNs:
-        - matchPattern: "derp*.tailscale.com"
+    # Tailscale supplies DERP IPs through its DERP map, so Cilium cannot
+    # associate these connections with DNS names for toFQDNs matching.
+    - toEntities: [world]
       toPorts:
         - ports:
             - {port: "80", protocol: TCP}
+          rules:
+            http:
+              - host: "derp[0-9]+[a-z]\\.tailscale\\.com(:80)?"
