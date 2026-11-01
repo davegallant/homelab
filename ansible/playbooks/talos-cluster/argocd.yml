@@ -123,6 +123,7 @@
       ansible.builtin.command:
         argv: [kubectl, --context, "{{ talos_kube_context }}", apply, -f, "{{ argocd_apps_dir }}/{{ item }}"]
       loop:
+        - default-project.yaml
         - project-monitoring.yaml
         - project-velero-backup.yaml
         - project-tailnet-gateway.yaml

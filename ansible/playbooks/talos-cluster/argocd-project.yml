@@ -11,6 +11,37 @@
         that:
           - talos_kube_context | length > 0
 
+    - name: Read all Argo CD Applications before restricting the default project
+      ansible.builtin.command:
+        argv: [kubectl, --context, "{{ talos_kube_context }}", -n, argocd, get, applications.argoproj.io, -o, json]
+      register: argocd_default_project_applications
+      changed_when: false
+
+    - name: Require Applications to use an explicit project
+      ansible.builtin.assert:
+        that:
+          - >-
+            (argocd_default_project_applications.stdout | from_json).items
+            | selectattr('spec.project', 'defined')
+            | selectattr('spec.project', 'equalto', 'default') | list | length == 0
+        fail_msg: >-
+          An Argo CD Application still uses the default project. Move it to an
+          explicit restricted project before applying default-project.yaml.
+
+    - name: Apply the deny-all default project
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --context
+          - "{{ talos_kube_context }}"
+          - apply
+          - -f
+          - "{{ playbook_dir }}/../../../kubernetes/apps/argocd/default-project.yaml"
+      register: argocd_default_project_apply
+      changed_when: >-
+        'created' in argocd_default_project_apply.stdout or
+        'configured' in argocd_default_project_apply.stdout
+
     - name: Apply the restricted monitoring, backup, and Tailnet Gateway projects
       ansible.builtin.command:
         argv:
