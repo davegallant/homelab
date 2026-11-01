@@ -25,6 +25,23 @@ spec:
         fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        - name: prepare-cache
+          image: {{ .Values.searxng.image }}
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c", "mkdir -p /cache/searxng"]
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 977
+            runAsGroup: 977
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: cache
+              mountPath: /cache
       containers:
         - name: searxng
           image: {{ .Values.searxng.image }}
@@ -80,6 +97,7 @@ spec:
               readOnly: true
             - name: cache
               mountPath: /var/cache/searxng
+              subPath: searxng
             - name: tmp
               mountPath: /tmp
         {{- if .Values.newt.enabled }}
