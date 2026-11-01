@@ -265,11 +265,15 @@ stop-on-failure rules and local-PV recovery constraints.
 **Progress (2026-11-01):** the three nodes are Ready, with MemoryPressure and
 DiskPressure false; current memory use is 54–71%. All regular containers in
 Restricted namespaces have CPU and memory limits; the remaining gaps there
-are five init containers without CPU limits, three of which also lack memory
-limits. The qBittorrent egress monitor init peaked below 1m CPU in the retained
-three-day metrics window; a 10m limit is now set, and its next scheduled job
-completed with the expected policy, Argo, and Mullvad checks. The cluster has
-no ResourceQuota or LimitRange objects. Many platform containers still lack
+were five init containers without CPU limits, three of which also lacked memory
+limits. CPU and memory limits are now set in the Forgejo chart values; CPU
+limits are set for the qBittorrent bootstrap and Speedtest Tracker preparation
+init containers. `just lint` checks rendered Restricted workloads for both
+limits, and their rendered manifests pass. Live rollouts are pending. The
+qBittorrent egress monitor init peaked below 1m CPU in the retained three-day
+metrics window; a 10m limit is now set, and its next scheduled job completed
+with the expected policy, Argo, and Mullvad checks. The cluster has no
+ResourceQuota or LimitRange objects. Many platform containers still lack
 CPU and/or memory limits. Grafana has alerts for node memory, `/var` fullness,
 restart bursts, and crash loops. The daily `backup-watchdog` completed
 successfully today, but no independent missed-run alert or inode-pressure alert

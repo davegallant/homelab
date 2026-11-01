@@ -14,6 +14,17 @@ SPEC.loader.exec_module(RENDERED_CHECKER)
 
 
 class RenderedPodSecurityTests(unittest.TestCase):
+    def test_all_rendered_containers_need_cpu_and_memory_limits(self):
+        self.assertEqual(
+            RENDERED_CHECKER.missing_resource_limits({"limits": {"cpu": "250m", "memory": "128Mi"}}),
+            [],
+        )
+        self.assertEqual(
+            RENDERED_CHECKER.missing_resource_limits({"limits": {"memory": "128Mi"}}),
+            ["cpu"],
+        )
+        self.assertEqual(RENDERED_CHECKER.missing_resource_limits({}), ["cpu", "memory"])
+
     def test_image_requires_version_tag_and_sha256_digest(self):
         digest = "a" * 64
         self.assertTrue(RENDERED_CHECKER.image_is_pinned("registry.example/app:1.2.3@sha256:" + digest))

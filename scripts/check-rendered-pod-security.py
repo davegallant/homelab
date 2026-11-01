@@ -142,12 +142,21 @@ def inspect(root):
                     rendered.extend(render_source(root, source, namespace, app["metadata"]["name"], values_sources, env))
                 findings.extend(inspect_documents(rendered))
                 for document in rendered:
-                    for _metadata, pod_spec in _CHECKER.workload_pod_spec(document):
+                    for template_metadata, pod_spec in _CHECKER.workload_pod_spec(document):
                         for group in _CHECKER.CONTAINER_GROUPS:
                             for container in pod_spec.get(group, []) or []:
+                                container_name = container.get("name", "unnamed")
                                 rendered_images.append(
-                                    (app["metadata"]["name"], group, container.get("name", "unnamed"), container.get("image", ""))
+                                    (app["metadata"]["name"], group, container_name, container.get("image", ""))
                                 )
+                                namespace_name = template_metadata.get("namespace", namespace)
+                                workload_name = template_metadata.get("name", app["metadata"]["name"])
+                                for resource in missing_resource_limits(container.get("resources", {})):
+                                    findings.append(
+                                        "{}/{} {}:{} missing {} limit".format(
+                                            namespace_name, workload_name, group, container_name, resource
+                                        )
+                                    )
                 rendered_apps.append(app["metadata"]["name"])
     return rendered_apps, findings, rendered_images
 
@@ -214,6 +223,12 @@ def image_is_pinned(image):
     valid_digest = len(digest) == 64 and all(character in "0123456789abcdefABCDEF" for character in digest)
     valid_tag = len(tag) == 2 and bool(tag[1]) and tag[1].lower() != "latest"
     return valid_digest and valid_tag
+
+
+def missing_resource_limits(resources):
+    """Return required resource limits absent from a rendered container."""
+    limits = (resources or {}).get("limits", {}) or {}
+    return [resource for resource in ("cpu", "memory") if not limits.get(resource)]
 
 
 if __name__ == "__main__":
