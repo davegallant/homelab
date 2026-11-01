@@ -4,9 +4,9 @@
 # name-only (changedetection, homepage, kiwix) and controller+instance+name
 # (the app-template apps). Do not assume one shape.
 #
-# policyName is only overridden for changedetection: its live policy is
-# named changedetection-gateway-test. Renaming it is a separate, explicitly
-# approved step, not part of this DRY start.
+# policyPort is overridden when the pod listener differs from the Service
+# port. policyName is overridden for changedetection, whose live policy has a
+# separate name; renaming it is a separate change.
 apps:
   - name: immich
     port: 2283
@@ -106,6 +106,7 @@ apps:
       app.kubernetes.io/name: maloja
   - name: speedtest-tracker
     port: 80
+    policyPort: 8080
     selectorLabels:
       app.kubernetes.io/controller: speedtest-tracker
       app.kubernetes.io/instance: speedtest-tracker
