@@ -71,13 +71,21 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: k8s-w-1
       automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: loki
           image: docker.io/grafana/loki:3.7.9@sha256:0db216b630ae1f348a1584c67f3cead8b4c1fc839169a39501db664744158e28
           args: [-config.file=/etc/loki/loki.yaml]
           securityContext:
-            runAsUser: 0
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
           ports:
@@ -96,10 +104,15 @@ spec:
           volumeMounts:
             - {name: data, mountPath: /loki}
             - {name: config, mountPath: /etc/loki}
+            - {name: tmp, mountPath: /tmp}
         - name: tailscale
           image: ghcr.io/tailscale/tailscale:v1.104.4@sha256:ed6480b33c6eb67c9cbd203ed42b9fb57e361986725b6856def71b7a3d9e276c
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
           envFrom:
@@ -119,10 +132,16 @@ spec:
             limits: {cpu: 200m, memory: 192Mi}
           volumeMounts:
             - {name: tailscale-state, mountPath: /var/lib/tailscale}
+            - {name: tailscale-runtime, mountPath: /var/run/tailscale}
+            - {name: tmp, mountPath: /tmp}
             - {name: tailscale-config, mountPath: /etc/tailscale/serve-config.json, subPath: serve-config.json, readOnly: true}
       volumes:
         - name: tailscale-state
           persistentVolumeClaim: {claimName: loki-tailscale-state}
+        - name: tailscale-runtime
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
         - name: tailscale-config
           configMap: {name: loki-tailscale-config}
         - name: data
