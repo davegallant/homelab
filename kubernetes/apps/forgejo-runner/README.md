@@ -9,9 +9,14 @@
 - Runner polling uses the internal Forgejo URL
   `http://forgejo.forgejo.svc.cluster.local:3000`.
 - The runner uses the `docker` label and DinD. Only trusted repositories and
-  maintainers should be able to send work to it. The actual registration scope,
-  workflow triggers, and secret use still need review in Forgejo and the
-  workflow repositories; those files are not in this repository.
+  maintainers should be able to send work to it. Its registration is scoped to
+  the `dave` user, which includes all repositories owned by that user. The two
+  current private workflow repositories have no collaborators; workflows use
+  `push`/schedule/manual triggers and do not use pull-request triggers.
+- The `.runner` registration file is stored in Ansible Vault as
+  `forgejo_runner_config` and provisioned by
+  `ansible/playbooks/talos-cluster/forgejo-runner-secret.yml`. Keep a completed
+  Forgejo Velero backup with Secrets included before changing registration.
 - The runner and privileged DinD are intentionally in this Kubernetes cluster
   and share a worker with production workloads. Treat privileged DinD as a
   reviewed exception; a tainted worker would reduce sharing but would not
@@ -39,9 +44,9 @@ After approval and sync:
 4. Run two real trusted Docker workflows concurrently and verify both checkout
    and complete successfully.
    Runner registration alone does not prove job networking works.
-5. Confirm in Forgejo that the runner is registered only at the intended
-   trusted scope, and review all workflow triggers and job secrets before
-   treating this runner as safe for untrusted contributions.
+5. Review all workflow triggers and job secrets before treating this runner as
+   safe for untrusted contributions. User scope includes future repositories
+   Dave owns, so review those workflows before enabling Actions for them.
 
 Do not sync the policy or runner values until the rendered Argo diff has been
 reviewed. Do not rotate the registration credential or change its scope as part
