@@ -126,13 +126,12 @@ rejected, and the production namespace now enforces Restricted.
 
 ## Remaining ordinary namespace gates
 
-Live namespace labels are the source of truth. The following production
-ordinary namespace still enforces Baseline while warning and auditing
+Live namespace labels are the source of truth. Speedtest Tracker is the only
+ordinary namespace that still enforces Baseline while warning and auditing
 Restricted:
 
 | Namespace | Current hardening | Remaining gate |
 |---|---|---|
-| Loki | Rootless chart and Restricted Pod validated against an isolated restored PVC; synthetic write/query and historical data query passed. Production remains unchanged. | Migrate the production Loki PVC's group permissions during a controlled stop, deploy the chart, then enforce Restricted. |
 | Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Isolated restore passed: 14,581 results, 2 users, HTTP 200, and 3/3 Ready. | Keep Baseline as a reviewed exception. A Restricted rootless probe failed because s6 needs `SETGID` for user switching, and config files need a one-time ownership migration. Revisit with a maintainable startup path or an image that supports non-root execution. |
 
 Loki's first w1 isolated restore created a large chunk tree. During that restore,
@@ -151,16 +150,25 @@ RuntimeDefault seccomp, and no service-account token. Its Restricted namespace
 rejected an unsafe privileged Pod. Loki accepted a synthetic log push (HTTP
 204), returned that entry from a query, and also returned older logs from the
 restored backup. The `OnRootMismatch` policy avoids repeating the full
-permission scan after the volume root is prepared. Production Loki remains
-unchanged and Ready 2/2. Its pre-change daily backup completed with a 1.136 GB
-live PVC backup; Velero's one warning concerned an obsolete Succeeded Pod whose
-volume was skipped. A fresh manual backup was attempted before migration, but
-while its PVB ran on w1, Loki restarted and w1 briefly went NotReady;
-metrics-server also timed out scraping that node's kubelet. The PVB was
-canceled, leaving the completed daily backup intact. These probe failures
-predated the manual backup, so it likely aggravated existing w1 instability.
-Do not proceed with the production migration until w1 is stable and a fresh
-backup can complete without disrupting Loki.
+permission scan after the volume root is prepared.
+
+Loki now runs under Restricted enforcement. Its production PVC was migrated
+during a controlled stop: Loki data was made group-writable for GID 1000, and
+the Tailscale state volume was migrated to UID/GID 1000 to retain its identity.
+The production Pod is 2/2 Ready, the Tailscale sidecar is online, and `/ready`
+and the labels API respond through the tailnet address. The namespace enforces
+Restricted v1.37 and rejects an unsafe privileged Pod.
+
+Before migration, the scheduled daily backup completed with a 1.136 GB live
+PVC backup; Velero's one warning concerned an obsolete Succeeded Pod whose
+volume was skipped. A separate manual Kopia backup read and uploaded about
+1.14 GB, then was canceled when Loki restarted and w1 briefly went NotReady;
+metrics-server also timed out scraping that node's kubelet. The canceled
+backup is not a recovery point. Loki and w1 recovered, and production migration
+used the completed scheduled backup. Probe failures predated the manual backup,
+so the extra backup I/O may have aggravated existing w1 sensitivity, but the
+available evidence does not establish that it caused the restart or NotReady
+period.
 
 Follow-up Restore requests mapped to `k8s-w-2` initially stayed `New`,
 including a config-map-only control. Restarting the Velero server unblocked
