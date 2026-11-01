@@ -100,6 +100,8 @@ credentials if unauthorized backup exposure is established.
 built-in `default` project. It now denies all repositories, destinations, and
 resource kinds, and the Ansible project playbook guards against future use.
 All 45 Applications remained Synced and Healthy after the change. The
+Argo CD Redis Pod now disables service-account token automount; the new Pod
+has no projected API token, and Argo remains Synced and Healthy. The
 [read-only API proxy](apps/k8s-readonly/README.md) returned pod logs and
 persistent volumes through its tailnet route and denied `/api/v1/secrets` with
 403. Its ServiceAccount can get `pods/log`, but cannot read Secrets or create
