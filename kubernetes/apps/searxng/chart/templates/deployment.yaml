@@ -39,6 +39,8 @@ spec:
               drop:
                 - ALL
             allowPrivilegeEscalation: false
+          resources:
+            {{- toYaml .Values.searxng.initContainerResources | nindent 12 }}
           volumeMounts:
             - name: cache
               mountPath: /cache

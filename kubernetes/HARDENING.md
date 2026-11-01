@@ -266,10 +266,13 @@ stop-on-failure rules and local-PV recovery constraints.
 DiskPressure false; current memory use is 54–71%. All regular containers in
 Restricted namespaces have CPU and memory limits; the remaining gaps there
 were five init containers without CPU limits, three of which also lacked memory
-limits. CPU and memory limits are now set in the Forgejo chart values; CPU
-limits are set for the qBittorrent bootstrap and Speedtest Tracker preparation
-init containers. `just lint` checks rendered Restricted workloads for both
-limits, and their rendered manifests pass. Live rollouts are pending. The
+limits. CPU and memory limits are now set for the Forgejo init containers; CPU
+limits are set for qBittorrent bootstrap and Speedtest Tracker preparation.
+Forgejo, qBittorrent, and Speedtest Tracker rolled out Healthy. A subsequent
+live audit found the SearXNG cache init container, which was absent from the
+earlier live inventory; it now has explicit limits in the local chart. `just
+lint` checks rendered Restricted workloads for CPU and memory limits. The
+SearXNG rollout is pending. The
 qBittorrent egress monitor init peaked below 1m CPU in the retained three-day
 metrics window; a 10m limit is now set, and its next scheduled job completed
 with the expected policy, Argo, and Mullvad checks. The cluster has no
