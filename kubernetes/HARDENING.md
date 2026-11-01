@@ -152,6 +152,17 @@ management connections fail. Keep recovery console access during rollout.
 
 ## 5. Tighten Cilium policy beyond namespace isolation
 
+**Progress (2026-11-01):** the live cluster has 81 namespace Cilium policies
+covering 37 namespaces. All 31 namespaces enforcing Restricted Pod Security
+have namespace-scoped policy coverage. The only active pod namespaces without
+namespace Cilium policies are `intel-gpu` (device-plugin DaemonSet) and
+`tailnet-gateway` (Tailscale fronting pod); both are platform components and
+need explicit egress review. Fourteen namespaces have at least one egress rule
+to the `world` entity. Most such rules specify ports, but qBittorrent's
+namespace policy has an unrestricted `world` egress rule. Its own build record
+says gateway-only and fail-closed egress are unverified, and the README gates
+torrent startup on that review; the pod currently has zero torrents.
+
 **Action:** compare every live endpoint/namespace with rendered policy coverage.
 Replace broad internet permissions where feasible with required ports and
 reviewed destinations. Separate app, database, and proxy permissions instead of
