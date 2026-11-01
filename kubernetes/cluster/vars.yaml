@@ -1,7 +1,9 @@
 ---
-talos_version: v1.14.1
-talos_iso_filename: metal-amd64-v1.14.1.iso
-talos_iso_sha256: eb29a0a3c49b19a69a2be11e4ba06cc0837fc61a528af62fea2e803eb9e6d19f
+# Renovate only bumps patches within this minor; change minors via the Talos upgrade runbook.
+# renovate: datasource=custom.talos depName=siderolabs/talos versioning=semver
+talos_version: v1.14.5
+talos_iso_filename: metal-amd64-v1.14.5.iso
+talos_iso_sha256: 1505108d78e6260e2a586ced144b928478d70e2424b45f890f5f18a82d30f754
 talos_proxmox_iso_storage: proxmox-iso
 talos_proxmox_bridge: vmbr0
 talos_cluster_name: homelab
@@ -38,7 +40,7 @@ talos_nodes:
     vcpu: 3
     memory_mib: 10240
     allowed_memory_mib: [3072, 4096, 8192, 10240]
-    disk_gib: 80
+    disk_gib: 100
     storage: moredata
   - name: k8s-w-2
     host: pve-g3-2
@@ -50,7 +52,7 @@ talos_nodes:
     vcpu: 2
     memory_mib: 8192
     allowed_memory_mib: [2048, 2288, 2560, 3072, 3584, 4608, 8192]
-    disk_gib: 50
+    disk_gib: 70
     storage: local-lvm
 
 # Static addresses are outside OPNsense's active 192.168.1.2-99 DHCP pool.
