@@ -12,6 +12,9 @@ Postgres. The server requests the worker's Intel GPU, and the restored
 production configuration uses QSV. This is a single failure domain; Postgres
 is in-pod and server/ML cannot scale independently. Jellyfin uses a different
 host GPU. Machine learning reuses the local model-cache claim from the test.
+The server has a read-only root filesystem with explicit `/tmp` and library
+mounts. Keep PostgreSQL's root filesystem writable: its pinned image entrypoint
+copies configuration into `/etc/postgresql/postgresql.conf` during startup.
 
 `production-storage.yaml` defines a retained NFS PV for the existing TrueNAS
 library and an annotated local-path PostgreSQL PVC. The NAS export allows the
