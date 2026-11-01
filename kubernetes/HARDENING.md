@@ -35,11 +35,13 @@ unrelated APIs, NAS exports, node management addresses, or production
 credentials. Verify the actual network mode and trust restrictions in Forgejo.
 
 **Progress (2026-11-01):** the live Cilium policy validates and is enforced;
-public HTTPS works from both runner and DinD, while Hubble records egress drops
-to the Kubernetes API. The runner has no service-account token mount. Workflow
-trust and checkout remain unverified: Forgejo is CrashLooping because the new
-image cannot create its s6 lock on the read-only root filesystem. Public web
-egress is still open to any public host on ports 80 and 443.
+public HTTPS works from runner and DinD, while Hubble records egress drops to
+the Kubernetes API. The runner has no service-account token mount. After
+Forgejo recovered from a failed image-digest update, a scheduled
+`rfd-notify-cron` task ran with all eight in-container executions exiting
+successfully. Checkout completion, Forgejo's recorded final result, runner
+registration scope, and workflow trigger/secret policy still need verification.
+Public web egress is open to any public host on ports 80 and 443.
 
 ## 2. Protect secret-bearing backups and test credential recovery
 
