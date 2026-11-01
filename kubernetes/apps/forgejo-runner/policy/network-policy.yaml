@@ -30,6 +30,7 @@ spec:
               - matchName: registry-1.docker.io
               - matchName: auth.docker.io
               - matchName: ghcr.io
+              - matchName: pkg-containers.githubusercontent.com
               - matchName: production.cloudfront.docker.com
               - matchName: forums.redflagdeals.com
               - matchName: gotify.davegallant.ca
@@ -62,6 +63,7 @@ spec:
         - matchName: registry-1.docker.io
         - matchName: auth.docker.io
         - matchName: ghcr.io
+        - matchName: pkg-containers.githubusercontent.com
         - matchName: production.cloudfront.docker.com
         - matchName: forums.redflagdeals.com
         - matchName: gotify.davegallant.ca
