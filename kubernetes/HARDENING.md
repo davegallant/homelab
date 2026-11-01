@@ -34,14 +34,26 @@ workflows complete checkout and execution, and demonstrate jobs cannot reach
 unrelated APIs, NAS exports, node management addresses, or production
 credentials. Verify the actual network mode and trust restrictions in Forgejo.
 
-**Progress (2026-11-01):** the live Cilium policy validates and is enforced;
-public HTTPS works from runner and DinD, while Hubble records egress drops to
-the Kubernetes API. The runner has no service-account token mount. After
-Forgejo recovered from a failed image-digest update, a scheduled
-`rfd-notify-cron` task ran with all eight in-container executions exiting
-successfully. Checkout completion, Forgejo's recorded final result, runner
-registration scope, and workflow trigger/secret policy still need verification.
-Public web egress is open to any public host on ports 80 and 443.
+**Progress (2026-11-01):** the live Cilium policy is synced and healthy. It
+allows DNS, internal Forgejo polling, and public TCP 443 while blocking private
+address ranges; Hubble recorded a policy drop when both the runner container
+and an actual DinD job tried to reach the Kubernetes API. The runner pod has no
+service-account token volume. Two trusted Docker workflows completed
+concurrently, including checkout; after removing public TCP 80, fresh tasks
+were also dispatched and observed on the runner. The instance-wide runner
+registration was removed and replaced with a registration scoped to user
+`dave`. This includes all repositories Dave owns, so new repositories still
+need workflow review. The current private workflow repositories have no
+collaborators, do not use pull-request triggers, and registration is disabled.
+Their external actions are SHA-pinned, and the rfd-notify push trigger is
+restricted to `main`.
+
+The Forgejo backup `forgejo-daily-20261101050044` completed with both Forgejo
+namespaces, Secrets, and runner data included. It has not been restored, and
+fresh runner registration recovery has not been exercised. Keep Secrets in
+backups. Public HTTPS egress still permits any public hostname on TCP 443; do
+not expose long-lived or broadly scoped credentials to jobs. Exact FQDN-based
+egress restrictions remain open.
 
 ## 2. Protect secret-bearing backups and test credential recovery
 
