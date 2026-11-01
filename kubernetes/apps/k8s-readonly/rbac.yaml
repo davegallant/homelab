@@ -5,10 +5,11 @@
 # applying - it is the security boundary for the whole proxy.
 #
 # ALLOWED: get/list/watch only, on the resources needed for a Velero/PV
-# audit. NOT allowed, deliberately: secrets, serviceaccounts, pods/exec,
-# pods/log, pods/attach, pods/proxy, nodes/proxy, and any create, update,
-# patch, delete, or watch on anything else. A token leak therefore gives
-# read-only cluster state, never secrets and never a write.
+# audit. Pod logs are get-only via the pods/log subresource. NOT allowed,
+# deliberately: secrets, serviceaccounts, pods/exec, pods/attach, pods/proxy,
+# nodes/proxy, and any create, update, patch, delete, or watch on anything
+# else. A token leak therefore gives read-only cluster state, never Secrets
+# or a write.
 #
 # Defense in depth, in order: (1) this RBAC, (2) kubectl proxy's default
 # filter (no --disable-filter, so writes are rejected by the proxy
@@ -34,6 +35,9 @@ rules:
   - apiGroups: [""]
     resources: [persistentvolumes, persistentvolumeclaims, namespaces, pods, services, nodes, events]
     verbs: [get, list, watch]
+  - apiGroups: [""]
+    resources: [pods/log]
+    verbs: [get]
   # Workloads: read-only, for the audit's pod/deployment context.
   - apiGroups: [apps]
     resources: [deployments, statefulsets, daemonsets, replicasets]
