@@ -99,9 +99,13 @@ credentials if unauthorized backup exposure is established.
 **Progress (2026-11-01):** none of the 45 current Applications used Argo CD's
 built-in `default` project. It now denies all repositories, destinations, and
 resource kinds, and the Ansible project playbook guards against future use.
-All 45 Applications remained Synced and Healthy after the change. Argo CD still
-has only its built-in full-admin login; routine least-privilege identities,
-MFA, and the read-only API proxy scope remain to review.
+All 45 Applications remained Synced and Healthy after the change. The
+[read-only API proxy](apps/k8s-readonly/README.md) returned pod logs and
+persistent volumes through its tailnet route and denied `/api/v1/secrets` with
+403. Its ServiceAccount can get `pods/log`, but cannot read Secrets or create
+Pods, exec, attach, or port-forward. Log text may still contain credentials if
+an application writes them. Argo CD still has only its built-in full-admin
+login; routine least-privilege identities and MFA remain to review.
 
 **Action:** separate narrowly scoped platform projects from application projects;
 remove unnecessary application destinations from the platform project. Review
