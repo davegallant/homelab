@@ -63,28 +63,33 @@ exercised. Keep Secrets in backups until the remaining recovery checks pass.
 
 ## 2. Protect secret-bearing backups and test credential recovery
 
-**Progress (2026-11-01):** a Secrets-only backup restore recovered
+**Progress (2026-11-01):** all 28 Velero `BackupRepository` resources report
+`Ready`. The 64-character Kopia password from Ansible Vault matches the live
+`velero-repo-credentials` Secret. Existing isolated restore drills have read
+Kopia-backed volumes successfully. A Secrets-only backup restore recovered
 `forgejo-runner-config` and `forgejo-runner-configfile` into an isolated
 namespace; their data matched the live Secret objects exactly. The temporary
 namespace and snapshot were removed after verification. The full scheduled
-backup `forgejo-daily-20261101144323` also completed with the Secrets and
-`runner-data` included. Full backup restore and fresh-registration-to-chart
-recovery remain untested.
+backup `forgejo-daily-20261101144323` completed with both Forgejo namespaces,
+Secrets, and `runner-data` included. Full backup restore and
+fresh-registration-to-chart recovery remain untested. This confirms the
+current Kopia credential works, but the history of any password migration and
+the encryption/retention of off-site copies still need verification.
 
-**Action:** migrate each existing Kopia repository to a strong Vault-held
-password with a tested restore before updating the shared Velero credential;
-do not replace the Secret directly. Then verify the fresh-registration-to-chart
-recovery path for Forgejo Runner. Until it is proven, keep Secrets included in
-`forgejo-daily`; do not mistake Kopia volume encryption for encryption of
-Velero's Kubernetes resource archive. Verify Drive copy encryption and
-retention, Garage key permissions, and offsite recovery-key access. Talos
-`secretbox` is effective for API Secrets in etcd, but etcd and VM snapshots
-still carry sensitive state and need the Talos cluster credentials to recover
-them.
+**Action:** keep the shared Kopia password in Vault and do not replace its
+Kubernetes Secret by itself. Before any future credential change, rehearse
+against an isolated repository copy, verify a restore, and take a fresh
+backup. Verify Drive copy encryption and retention, Garage key permissions,
+and offsite recovery-key access. Keep Secrets included in `forgejo-daily` until
+the fresh-registration-to-chart recovery path is proven; do not mistake Kopia
+volume encryption for encryption of Velero's Kubernetes resource archive.
+Talos `secretbox` is effective for API Secrets in etcd, but etcd and VM
+snapshots still carry sensitive state and need the Talos cluster credentials
+to recover them.
 
-**Acceptance:** an isolated restore validates a migrated Kopia repository,
-Forgejo database data, and Vault-sourced credentials. Test fresh runner
-registration against the deployed chart before excluding Forgejo Secrets.
+**Acceptance:** an isolated restore validates Kopia-backed data, Forgejo
+database data, and Vault-sourced credentials. Test fresh runner registration
+against the deployed chart before excluding Forgejo Secrets.
 Backup readers and writers have only necessary permissions. Record who can
 decrypt each backup layer and how keys survive loss of the operator Mac. Rotate
 credentials if unauthorized backup exposure is established.
