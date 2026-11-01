@@ -90,6 +90,8 @@ server:
     limits:
       memory: 256Mi
 redis:
+  # Redis does not call the Kubernetes API.
+  automountServiceAccountToken: false
   image:
     repository: docker.io/library/redis
     tag: 8.10.3-alpine@sha256:21090af93f8324db2f0f0f4f38a7c60369d47d917e000c3423d89d2ae2883537
