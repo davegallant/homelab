@@ -14,6 +14,13 @@ searxng:
     limits:
       cpu: "1"
       memory: 1Gi
+  initContainerResources:
+    requests:
+      cpu: 5m
+      memory: 16Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
 
 valkey:
   image: docker.io/valkey/valkey:9@sha256:3add1a336a920ea54770a001ab6feb3da5fceea96a40373a3a2cd469b815f0b7
