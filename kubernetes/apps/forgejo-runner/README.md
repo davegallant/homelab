@@ -21,10 +21,10 @@
   and share a worker with production workloads. Treat privileged DinD as a
   reviewed exception; a tainted worker would reduce sharing but would not
   create a separate cluster boundary.
-- Public web egress is required for external actions and package downloads.
-  The proposed policy limits its ports and blocks private address ranges, but
-  it does not restrict which public hostnames workflows can contact. Do not
-  expose long-lived or broadly scoped credentials to jobs.
+- Public egress is limited to TCP 443 and blocks private address ranges.
+  Workflow observations showed no public TCP 80 connections. The policy still
+  permits any public hostname; do not expose long-lived or broadly scoped
+  credentials to jobs.
 
 ## Apply and verify
 
