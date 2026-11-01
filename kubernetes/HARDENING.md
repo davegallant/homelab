@@ -161,7 +161,12 @@ need explicit egress review. Fourteen namespaces have at least one egress rule
 to the `world` entity. Most such rules specify ports, but qBittorrent's
 namespace policy has an unrestricted `world` egress rule. Its own build record
 says gateway-only and fail-closed egress are unverified, and the README gates
-torrent startup on that review; the pod currently has zero torrents.
+torrent startup on that review; the pod currently has zero torrents. A fresh
+monitor job passed its policy, Argo health, and Mullvad-exit checks, and a
+direct request from the qBittorrent pod also reported a Mullvad exit. The
+packet proof did not run: SSH authentication to `root@opnsense` failed at the
+capture-readiness gate, before any probe traffic. Thus normal egress is
+verified, but fail-closed behavior is not.
 
 **Action:** compare every live endpoint/namespace with rendered policy coverage.
 Replace broad internet permissions where feasible with required ports and
