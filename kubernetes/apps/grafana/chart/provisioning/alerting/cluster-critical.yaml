@@ -215,6 +215,76 @@ groups:
           service: kubernetes
         isPaused: false
 
+      - uid: k8s_node_var_inode_critical
+        title: Kubernetes node /var critically low on inodes
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: victoriametrics
+            model:
+              datasource:
+                type: prometheus
+                uid: victoriametrics
+              editorMode: code
+              expr: >-
+                100 * (1 - (node_filesystem_files_free{job="node-exporter", cluster="homelab",
+                mountpoint="/var", fstype!="rootfs"} / node_filesystem_files{job="node-exporter",
+                cluster="homelab", mountpoint="/var", fstype!="rootfs"}))
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: false
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 90
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: A Kubernetes node /var filesystem is over 90% inode use.
+          description: '{{ $labels.node }} ({{ $labels.instance }}) /var inode use has been above 90% for at least five minutes.'
+        labels:
+          severity: critical
+          service: kubernetes
+        isPaused: false
+
       - uid: k8s_container_restart_burst
         title: Kubernetes container restart burst
         condition: C

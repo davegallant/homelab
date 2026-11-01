@@ -16,9 +16,13 @@ endpoint change. Loki has no application authentication.
 2. Generate a known log entry and query Loki for that entry with its namespace,
    pod and container labels. Readiness alone does not prove ingestion.
 3. Check filesystem free blocks **and inodes** before adding sources. Small
-   chunk files can exhaust inodes while substantial space remains.
-4. After a Loki restart, wait for `/ready` and check WAL recovery errors and
-   fresh ingestion. Review retention behavior against actual stored chunks.
+   chunk files can exhaust inodes while substantial space remains. Grafana's
+   `/var` inode alerts warn above 80% and go critical above 90% for five
+   minutes. They monitor the whole node filesystem, including Loki's local-path
+   PVC on `k8s-w-1`; they do not report per-PVC usage.
+4. Loki retains logs for 744 hours (31 days). Review retention behavior against
+   actual stored chunks. After a Loki restart, wait for `/ready` and check WAL
+   recovery errors and fresh ingestion.
 5. Verify logs from both Kubernetes and an LXC shipper after a backend move.
 
 Use `ansible/playbooks/talos-cluster/verify-alloy.yml` for the repository's
