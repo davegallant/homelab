@@ -234,8 +234,14 @@ when there is a maintained trust policy for the images actually used.
 Healthy. The three nodes consistently report Kubernetes 1.37.2, Talos 1.14.3,
 and containerd 2.3.7; Cilium is pinned at 1.20.4. The checked-in cluster
 variables still specify Talos 1.14.1 and its ISO, so desired upgrade inputs
-and live state differ. Vendor support for the current Kubernetes/Talos/Cilium
-combination has not been verified.
+and live state differ. Sidero's [Talos 1.14 support matrix](https://docs.siderolabs.com/talos/v1.14/getting-started/support-matrix)
+includes Kubernetes 1.37 and Proxmox. Cilium 1.20.4's [Kubernetes support
+matrix](https://docs.cilium.io/en/stable/network/kubernetes/requirements/)
+guarantees e2e testing through Kubernetes 1.36; its documentation says
+compatibility with newer Kubernetes
+versions depends on Kubernetes backward compatibility. Thus Talos 1.14.3 is
+within its published matrix, while the Kubernetes 1.37.2/Cilium 1.20.4 pairing
+is not explicitly e2e-guaranteed by Cilium.
 
 **Action:** reconcile live state with rendered configuration and update stale
 records. Verify the actual Kubernetes/Cilium/Talos support matrix against vendor
