@@ -22,6 +22,34 @@ class InventoryTests(unittest.TestCase):
         pod = checker.load_documents(FIXTURES / "compliant-pod.yaml")[0]
         self.assertEqual(checker.inspect_document(pod), [])
 
+    def test_service_account_can_disable_pod_token_automount(self):
+        checker = self.load_checker()
+        documents = [
+            {
+                "apiVersion": "v1",
+                "kind": "ServiceAccount",
+                "metadata": {"name": "app", "namespace": "sample"},
+                "automountServiceAccountToken": False,
+            },
+            {
+                "apiVersion": "apps/v1",
+                "kind": "Deployment",
+                "metadata": {"name": "web", "namespace": "sample"},
+                "spec": {
+                    "template": {
+                        "spec": {
+                            "serviceAccountName": "app",
+                            "containers": [],
+                        }
+                    }
+                },
+            },
+        ]
+
+        findings = checker.inspect_documents(documents)
+
+        self.assertFalse(any("automountServiceAccountToken" in finding for finding in findings))
+
     def test_regular_and_init_container_findings_are_reported(self):
         pod = self.read_fixture("violating-pod.yaml")
         findings = self.load_checker().inspect_document(pod)

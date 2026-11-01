@@ -150,9 +150,10 @@ def render_pods(document):
     return rendered
 
 
-def inspect_document(document, exceptions=None):
+def inspect_document(document, exceptions=None, service_accounts=None):
     """Return requested hardening findings for every Pod template in a document."""
     exceptions = exceptions or set()
+    service_accounts = service_accounts or {}
     findings = []
     for metadata, pod_spec in workload_pod_spec(document):
         document_meta = document.get("metadata", {})
@@ -161,7 +162,12 @@ def inspect_document(document, exceptions=None):
         pod_security = pod_spec.get("securityContext", {}) or {}
         prefix = "{}/{}".format(namespace, name)
 
-        if pod_spec.get("automountServiceAccountToken") is not False:
+        service_account_name = pod_spec.get("serviceAccountName", "default")
+        service_account_automount = service_accounts.get((namespace, service_account_name))
+        if (
+            pod_spec.get("automountServiceAccountToken") is not False
+            and service_account_automount is not False
+        ):
             findings.append("{} pod automountServiceAccountToken".format(prefix))
 
         for group in CONTAINER_GROUPS:
@@ -189,6 +195,28 @@ def inspect_document(document, exceptions=None):
         if namespace in exceptions:
             findings = ["{} [exception]".format(item) if item.startswith(prefix) else item for item in findings]
     return findings
+
+
+def inspect_documents(documents, exceptions=None):
+    """Inspect workloads with ServiceAccount token settings from the same render."""
+    service_accounts = {}
+    for document in documents:
+        if document.get("kind") != "ServiceAccount":
+            continue
+        metadata = document.get("metadata", {})
+        namespace = metadata.get("namespace", "default")
+        name = metadata.get("name", "default")
+        service_accounts[(namespace, name)] = document.get("automountServiceAccountToken")
+
+    return [
+        finding
+        for document in documents
+        for finding in inspect_document(
+            document,
+            exceptions=exceptions,
+            service_accounts=service_accounts,
+        )
+    ]
 
 
 def run_self_test():
