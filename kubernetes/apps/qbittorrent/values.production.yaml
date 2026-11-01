@@ -1,5 +1,5 @@
 ---
-# WebUI-only build, Gateway-only inbound. Sidecars (tailscale + caddy) removed 2026-10-28; WebUI via central tailnet-gateway. No peer Service or egress gateway policy is enabled.
+# WebUI-only build, Gateway-only inbound. Sidecars (tailscale + caddy) removed 2026-10-28; WebUI via central tailnet-gateway. No peer Service is enabled; egress gateway policy is managed separately.
 controllers:
   qbittorrent:
     type: deployment
@@ -31,6 +31,7 @@ controllers:
           runAsNonRoot: true
           runAsUser: 1000
           runAsGroup: 1000
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
@@ -127,6 +128,12 @@ persistence:
         app:
           - path: /run
             subPath: run
+  tmp:
+    type: emptyDir
+    advancedMounts:
+      qbittorrent:
+        app:
+          - path: /tmp
   config:
     type: persistentVolumeClaim
     existingClaim: qbittorrent-config
