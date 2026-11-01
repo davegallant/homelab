@@ -7,8 +7,12 @@ configs:
     application.resourceTrackingMethod: annotation
     timeout.reconciliation: 120s
     timeout.reconciliation.jitter: 60s
+    accounts.muse: apiKey
   rbac:
     policy.default: ""
+    policy.csv: |
+      g, admin, role:admin
+      g, muse, role:readonly
 dex:
   enabled: false
 applicationSet:
