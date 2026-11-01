@@ -108,6 +108,15 @@ blanket setting that prevents those components starting.
 test pod is rejected in ordinary namespaces. Verify uploads, media processing,
 database startup, and restores under the new filesystem/user settings.
 
+**Status (2026-11-01):** all ordinary application namespaces now enforce
+Restricted, including Speedtest Tracker. Its restored database started and
+retained all results, its login page and Ookla server lookup worked, and an
+unsafe Pod was rejected. The app runs non-root with all capabilities dropped;
+its root filesystem remains writable because the image's s6 startup requires
+`/run` to retain UID 82 ownership. Read-only root filesystems remain in place
+for its database and Apprise containers. Other app-specific functional checks
+are recorded in [SECURITY.md](SECURITY.md).
+
 ## 7. Make security expectations enforceable before deployment
 
 **Action:** add manifest rendering and policy checks to review: required digests,
