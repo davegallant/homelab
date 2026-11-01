@@ -1,3 +1,4 @@
+import importlib.util
 import subprocess
 import sys
 import tempfile
@@ -7,9 +8,20 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 SCRIPT = REPO / "scripts" / "check-rendered-pod-security.py"
+SPEC = importlib.util.spec_from_file_location("rendered_pod_security", SCRIPT)
+RENDERED_CHECKER = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(RENDERED_CHECKER)
 
 
 class RenderedPodSecurityTests(unittest.TestCase):
+    def test_image_requires_version_tag_and_sha256_digest(self):
+        digest = "a" * 64
+        self.assertTrue(RENDERED_CHECKER.image_is_pinned("registry.example/app:1.2.3@sha256:" + digest))
+        self.assertFalse(RENDERED_CHECKER.image_is_pinned("registry.example/app:1.2.3"))
+        self.assertFalse(RENDERED_CHECKER.image_is_pinned("registry.example/app@sha256:" + digest))
+        self.assertFalse(RENDERED_CHECKER.image_is_pinned("registry.example/app:1.2.3@sha256:xyz"))
+        self.assertFalse(RENDERED_CHECKER.image_is_pinned("registry.example/app:latest@sha256:" + digest))
+
     def test_restricted_rendered_workload_with_missing_controls_fails(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
