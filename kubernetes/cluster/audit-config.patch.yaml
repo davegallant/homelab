@@ -1,0 +1,92 @@
+apiVersion: v1alpha1
+kind: KubeAuditPolicyConfig
+configuration:
+  apiVersion: audit.k8s.io/v1
+  kind: Policy
+  omitStages:
+    - RequestReceived
+  rules:
+    - level: None
+      userGroups:
+        - system:authenticated
+        - system:unauthenticated
+      nonResourceURLs:
+        - /healthz*
+        - /livez*
+        - /readyz*
+        - /metrics
+    - level: Metadata
+      resources:
+        - group: ""
+          resources:
+            - secrets
+            - configmaps
+    - level: Metadata
+      resources:
+        - group: rbac.authorization.k8s.io
+          resources:
+            - roles
+            - rolebindings
+            - clusterroles
+            - clusterrolebindings
+    - level: Metadata
+      resources:
+        - group: admissionregistration.k8s.io
+          resources:
+            - validatingwebhookconfigurations
+            - mutatingwebhookconfigurations
+            - validatingadmissionpolicies
+            - validatingadmissionpolicybindings
+    - level: Metadata
+      resources:
+        - group: ""
+          resources:
+            - pods/exec
+            - pods/attach
+            - pods/portforward
+            - pods/proxy
+            - pods/ephemeralcontainers
+            - pods/log
+            - nodes/proxy
+    - level: Metadata
+      userGroups:
+        - system:masters
+    - level: None
+      userGroups:
+        - system:serviceaccounts
+        - system:nodes
+        - system:kube-controller-manager
+        - system:kube-scheduler
+      verbs:
+        - get
+        - list
+        - watch
+        - update
+        - patch
+      resources:
+        - group: coordination.k8s.io
+          resources:
+            - leases
+    - level: Metadata
+      verbs:
+        - create
+        - update
+        - patch
+        - delete
+        - deletecollection
+    - level: None
+      userGroups:
+        - system:serviceaccounts
+        - system:nodes
+        - system:kube-controller-manager
+        - system:kube-scheduler
+      verbs:
+        - get
+        - list
+        - watch
+    - level: Metadata
+---
+apiVersion: v1alpha1
+kind: KubeAPIServerConfig
+extraArgs:
+  audit-log-path: "-"
