@@ -53,16 +53,23 @@ collaborators, do not use pull-request triggers, and registration is disabled.
 Their external actions are SHA-pinned, and the rfd-notify push trigger is
 restricted to `main`.
 
-The Forgejo backup `forgejo-daily-20261101050044` completed with both Forgejo
-namespaces, Secrets, and runner data included. It has not been restored, and
-fresh runner registration recovery has not been exercised. Keep Secrets in
-backups until those recovery checks pass.
+The full scheduled backup `forgejo-daily-20261101144323` completed with both
+Forgejo namespaces, Secrets, and runner data included. Its full restore has
+not been tested. A separate Secrets-only snapshot was restored into an isolated
+namespace; both runner Secret objects matched the live Secret data exactly.
+That drill namespace and temporary backup were deleted. The restored Secret
+was not used to start a runner, and fresh registration recovery has not been
+exercised. Keep Secrets in backups until the remaining recovery checks pass.
 
 ## 2. Protect secret-bearing backups and test credential recovery
 
-**Progress (2026-11-01):** the latest Forgejo backup includes the runner
-configuration Secrets and `runner-data`; the backup completed, but there has
-been no isolated restore or fresh-registration recovery test.
+**Progress (2026-11-01):** a Secrets-only backup restore recovered
+`forgejo-runner-config` and `forgejo-runner-configfile` into an isolated
+namespace; their data matched the live Secret objects exactly. The temporary
+namespace and snapshot were removed after verification. The full scheduled
+backup `forgejo-daily-20261101144323` also completed with the Secrets and
+`runner-data` included. Full backup restore and fresh-registration-to-chart
+recovery remain untested.
 
 **Action:** migrate each existing Kopia repository to a strong Vault-held
 password with a tested restore before updating the shared Velero credential;
