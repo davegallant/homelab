@@ -262,6 +262,13 @@ risks and require a quorum-aware placement plan.
 
 ## 10. Apply the same boundaries to remaining LXCs
 
+**Progress (2026-11-01):** the tracked Compose files contain no
+`privileged: true`, Docker socket mounts, or explicit device mappings. Host
+networking is used by primary and secondary AdGuard, Gatus, and UpSnap; UpSnap
+adds `NET_RAW`. The VPS Gerbil service adds `NET_ADMIN` and `SYS_MODULE` for
+its reviewed tunnel role. This is a source inventory only; it does not prove
+the live containers or Proxmox LXC privilege settings match.
+
 **Action:** preserve the Docker firewall block and test it externally after
 Docker/UFW upgrades. Prefer per-source/per-port exceptions over widening all
 published ports. Inventory privileged containers, host networking, Docker socket
