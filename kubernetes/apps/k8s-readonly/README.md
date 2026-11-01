@@ -15,8 +15,11 @@ connectivity failure without reviewing the security boundary.
 Verify through ordinary trusted hostname HTTPS from each intended client:
 
 - GET persistent volumes, persistent volume claims and Velero backups succeeds.
+- GET pod logs succeeds. Logs can contain credentials if an application writes
+  them; this permission does not grant access to Secret objects.
 - GET Secrets and POST namespaces fails.
-- ServiceAccount authorization denies Secret reads, Pod creation and exec.
+- ServiceAccount authorization denies Secret reads, Pod creation, exec,
+  attach, proxy, and port-forward.
 
 A root-path 403 is expected; this service has no dashboard page. A route marked
 Accepted or a successful forced-address request does not prove client DNS,
