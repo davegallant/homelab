@@ -56,6 +56,12 @@ resources:
     cpu: "2"
     memory: 2Gi
 
+initContainers:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
 persistence:
   enabled: true
   # This PVC was manually created with metadata annotation
