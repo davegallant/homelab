@@ -11,13 +11,12 @@ controllers:
   beszel:
     type: deployment
     strategy: Recreate
-    replicas: 0
     pod:
       automountServiceAccountToken: false
       nodeSelector:
-        kubernetes.io/hostname: k8s-w-2
+        kubernetes.io/hostname: k8s-w-1
       annotations:
-        backup.velero.io/backup-volumes: data,caddy-state
+        backup.velero.io/backup-volumes: data
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
@@ -86,7 +85,6 @@ service:
 persistence:
   data:
     type: persistentVolumeClaim
-    forceRename: beszel-data-w2
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 1Gi
@@ -99,14 +97,12 @@ persistence:
 
   tailscale-state:
     type: persistentVolumeClaim
-    forceRename: beszel-tailscale-state-w2
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 1Gi
     annotations:
       volumeType: local
   caddy-state:
-    forceRename: beszel-caddy-state-w2
     annotations:
       volumeType: local
     type: persistentVolumeClaim
