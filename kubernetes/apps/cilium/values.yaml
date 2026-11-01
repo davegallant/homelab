@@ -31,7 +31,7 @@ operator:
       cpu: 50m
       memory: 96Mi
     limits:
-      cpu: 250m
+      cpu: "1"
       memory: 192Mi
   unmanagedPodWatcher:
     restart: true
@@ -107,7 +107,7 @@ hubble:
         cpu: 25m
         memory: 64Mi
       limits:
-        cpu: 250m
+        cpu: "1"
         memory: 128Mi
     nodeSelector:
       kubernetes.io/hostname: k8s-cp-1
@@ -128,7 +128,7 @@ hubble:
           cpu: 25m
           memory: 64Mi
         limits:
-          cpu: 100m
+          cpu: 500m
           memory: 128Mi
     frontend:
       resources:
@@ -136,7 +136,7 @@ hubble:
           cpu: 10m
           memory: 32Mi
         limits:
-          cpu: 100m
+          cpu: 250m
           memory: 64Mi
   metrics:
     enabled:

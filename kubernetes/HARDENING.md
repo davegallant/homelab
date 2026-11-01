@@ -287,9 +287,12 @@ controller 47m/434Mi, repo server 79m/102Mi, notifications 2m/103Mi, Redis
 all 45 child Applications remained Synced and Healthy. NFS CSI sidecars were
 capped at 100m CPU and its NFS containers at 250m after three-day maxima stayed
 below 14m CPU and 53 MiB memory; all three node plugins and the controller
-rolled out Ready. Cilium operator, Hubble relay, and UI CPU limits were set from
-p95 usage (10m, 1m, and under 1m); their Deployments rolled out Healthy without
-restarting Cilium agents. The latest live audit has 24 platform entries still
+rolled out Ready. Cilium's agent and Envoy dataplane have no CPU limits. The
+operator and Hubble relay/UI retain scheduling requests and memory caps, with
+CPU ceilings widened to 1 core for operator/relay, 500m for the UI backend, and
+250m for the frontend after the earlier ceilings were too tight for bursty
+control and observability work. The supporting Deployments rolled out Healthy
+without restarting Cilium agents. The latest live audit has 24 platform entries still
 missing at least one limit, in Cilium agents/Envoy/init containers, CoreDNS and
 control-plane static Pods, and Velero. These CNI, control-plane, and backup
 workloads remain individually reviewed; they do not receive blanket limits.
