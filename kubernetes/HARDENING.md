@@ -121,6 +121,19 @@ Retain tested emergency access before restricting administrators.
 
 ## 4. Close management-plane and tailnet lateral paths
 
+**Progress (2026-11-01):** the live Headscale database policy contains the same
+broad member rules as the checked-in policy. It allows every
+`autogroup:member` device to reach
+all Tailnet IPs and ports, and permits those member devices to use Tailscale
+SSH as `root` on both member and tagged nodes. Tagged-service ACL tests cover
+several restricted sources, but they do not narrow member access. The live
+cluster API Service is ClusterIP; the Tailnet Gateway is a LoadBalancer on
+`192.168.1.185:443`, and the control-plane node is `192.168.1.210`. No
+CiliumHostPolicy CRD is installed; the only CiliumClusterwideNetworkPolicy is
+`tailnet-gateway-entry`. A safe Tailnet ACL reduction still needs a verified
+mapping of Dave’s administrator devices so routine member access and root SSH
+can be narrowed without cutting off recovery.
+
 **Action:** separate administrator devices from ordinary member clients; narrow
 root SSH and management destinations. Verify LAN/router/Proxmox firewall rules
 for Kubernetes API, Talos API, kubelet, etcd, NFS, and Cilium overlay traffic.
