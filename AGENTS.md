@@ -260,6 +260,13 @@ secret.
 - Talos enforces the cluster-wide Pod Security baseline. A sidecar needing
   `NET_ADMIN`, `NET_RAW`, or `/dev/net/tun` requires a separately reviewed
   policy exception.
+- Renovate manages Talos patch pins in `kubernetes/cluster/vars.yaml` within
+  the current minor, updating the version, ISO filename, and ISO SHA256
+  together. This changes rebuild inputs only; it does not upgrade live nodes.
+  For an OS upgrade, follow the Talos runbook, upgrade workers before the
+  control plane, verify each node, then reconcile the pins and regenerate
+  configs as directed there. Minor upgrades remain manual and must step through
+  each minor.
 - Headscale's `given_name` controls the MagicDNS label. Homepage now runs on
   Talos; its LXC playbook and LXC rollback path are retired.
 - Homepage's local PVCs and Pod are pinned to `k8s-w-1`. Proxmox VM backups

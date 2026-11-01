@@ -126,10 +126,14 @@ control-plane reboot — there is no control-plane HA.
    advertised on GPU workers, Gateway reachable, and NFS mounts
    working (host-specific allowlists must include every node address,
    including w-1's `.152` — see the addresses paragraph above).
-7. Only after all nodes are upgraded and verified, bump `vars.yaml`
-   (`talos_version`, `talos_iso_filename`, `talos_iso_sha256`) so a
-   future rebuild does not reinstall the old version, regenerate
-   configs with the new-minor talosctl, reapply, and review the resulting rebuild inputs. Push only on explicit request.
+7. Renovate proposes same-minor patch updates to the rebuild pins in
+   `vars.yaml`, keeping `talos_version`, `talos_iso_filename`, and
+   `talos_iso_sha256` in sync. Review and merge those pin updates separately;
+   they do not upgrade live nodes. For a manual OS upgrade, reconcile the pins
+   to the installed release after all nodes are verified, regenerate configs
+   with the matching `talosctl`, reapply, and review the rebuild inputs.
+   Minor upgrades remain manual and must step through each minor. Push only on
+   explicit request.
 
 ### Kubernetes upgrade (separate from Talos)
 
