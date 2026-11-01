@@ -10,7 +10,30 @@
   "schedule": [
     "on the 1st day of the month"
   ],
+  "customDatasources": {
+    "talos": {
+      "defaultRegistryUrlTemplate": "https://api.github.com/repos/siderolabs/talos/releases?per_page=100",
+      "format": "json",
+      "transformTemplates": [
+        "{\"releases\": $map($filter($, function($release) { $not($release.draft) and $not($release.prerelease) and $substring($release.tag_name, 0, $length($match(currentValue, /^v\\d+\\.\\d+\\./)[0].match)) = $match(currentValue, /^v\\d+\\.\\d+\\./)[0].match and $count($filter($release.assets, function($asset) { $asset.name = 'metal-amd64.iso' and $exists($asset.digest) })) > 0 }), function($release) { {\"version\": $release.tag_name, \"digest\": $substring($filter($release.assets, function($asset) { $asset.name = 'metal-amd64.iso' })[0].digest, 7), \"releaseTimestamp\": $release.published_at} })}"
+      ]
+    }
+  },
   "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Keep the Talos patch version, ISO filename, and ISO checksum in sync",
+      "managerFilePatterns": [
+        "/^kubernetes/cluster/vars\\.yaml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=custom\\.talos depName=siderolabs/talos versioning=semver\\n(?<indent>[ ]*)talos_version: (?<currentValue>v[0-9]+\\.[0-9]+\\.[0-9]+)\\n[ ]*talos_iso_filename: metal-amd64-v[0-9]+\\.[0-9]+\\.[0-9]+\\.iso\\n[ ]*talos_iso_sha256: (?<currentDigest>[a-f0-9]{64})"
+      ],
+      "autoReplaceStringTemplate": "# renovate: datasource=custom.talos depName=siderolabs/talos versioning=semver\\n{{{indent}}}talos_version: {{{newValue}}}\\n{{{indent}}}talos_iso_filename: metal-amd64-{{{newValue}}}.iso\\n{{{indent}}}talos_iso_sha256: {{{newDigest}}}",
+      "datasourceTemplate": "custom.talos",
+      "depNameTemplate": "siderolabs/talos",
+      "versioningTemplate": "semver"
+    },
     {
       "customType": "regex",
       "description": "Version pins annotated with a renovate: comment",
