@@ -7,6 +7,34 @@
 # per-PVC directories (RomM/Navidrome tier), with its own design.
 storageClass:
   create: false
+controller:
+  resources:
+    csiProvisioner:
+      limits:
+        cpu: 100m
+    csiResizer:
+      limits:
+        cpu: 100m
+    csiSnapshotter:
+      limits:
+        cpu: 100m
+    livenessProbe:
+      limits:
+        cpu: 100m
+    nfs:
+      limits:
+        cpu: 250m
+node:
+  resources:
+    livenessProbe:
+      limits:
+        cpu: 100m
+    nfs:
+      limits:
+        cpu: 250m
+    nodeDriverRegistrar:
+      limits:
+        cpu: 100m
 image:
   nfs:
     tag: v4.13.6@sha256:40663419bac36836b8e4ef6929199e35920e28f6a74a46892e1c125ea5f0ce0b
