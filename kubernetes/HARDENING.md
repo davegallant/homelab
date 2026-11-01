@@ -96,6 +96,13 @@ credentials if unauthorized backup exposure is established.
 
 ## 3. Reduce deployment and administrator blast radius
 
+**Progress (2026-11-01):** none of the 45 current Applications used Argo CD's
+built-in `default` project. It now denies all repositories, destinations, and
+resource kinds, and the Ansible project playbook guards against future use.
+All 45 Applications remained Synced and Healthy after the change. Argo CD still
+has only its built-in full-admin login; routine least-privilege identities,
+MFA, and the read-only API proxy scope remain to review.
+
 **Action:** separate narrowly scoped platform projects from application projects;
 remove unnecessary application destinations from the platform project. Review
 who can change Applications, AppProjects, repository credentials, namespace
