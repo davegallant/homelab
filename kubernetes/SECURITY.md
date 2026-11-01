@@ -21,8 +21,12 @@ application data volume.
 Audiobookshelf runs as UID 1000/GID 950, with its existing SQLite database and
 metadata on the local PVCs and its NFS library ownership unchanged.
 k8s-readonly intentionally mounts its read-only service-account token for
-Kubernetes API access. Tailnet Gateway still has Restricted `warn`/`audit`; its
-namespace labels are managed through its Argo application.
+Kubernetes API access. Alloy enforces Restricted: its node-local discovery
+uses the Kubernetes API rather than hostPath mounts, and it needs its scoped
+service-account token for pod logs, node metrics and kubelet scraping.
+Tailnet Gateway enforces Baseline with Restricted `warn`/`audit`; its current
+userspace Tailscale pod drops all capabilities and does not use host networking
+or `/dev/net/tun`. The namespace is managed through its Argo application.
 FlareSolverr and the qBittorrent egress monitor are hardened for Restricted
 admission. FlareSolverr uses a non-root init container to copy its
 startup-patched Chromium driver into a writable `emptyDir`; the monitor needs
@@ -127,8 +131,10 @@ Restricted:
 |---|---|---|
 | Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Isolated restore passed: 14,581 results, 2 users, HTTP 200, and 3/3 Ready. | Keep Baseline as a reviewed exception. A Restricted rootless probe failed because s6 needs `SETGID` for user switching, and config files need a one-time ownership migration. Revisit with a maintainable startup path or an image that supports non-root execution. |
 
-Platform namespaces Alloy and Loki also remain Baseline with Restricted
-warn/audit; review them separately from ordinary applications. The qBittorrent,
+Loki remains Baseline with Restricted warn/audit because its Loki container
+currently runs as UID 0. Its data PVC is local-path backed, so moving to a
+non-root UID requires a planned ownership migration and restore validation.
+Do not change its namespace policy until that work is complete. The qBittorrent,
 Prowlarr, and Miniflux drill namespaces were removed after successful isolated
 recovery checks; Velero restore records remain. Miniflux's v4 restore recovered
 499,615,433 bytes, including 24 feeds and 4,192 entries. The restored Miniflux
