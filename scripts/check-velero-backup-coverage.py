@@ -11,6 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 APPLICATIONS_DIR = ROOT / "kubernetes/apps/argocd/applications"
 SCHEDULES_DIR = ROOT / "kubernetes/apps/velero-schedules"
 POLICY_ANNOTATION = "homelab.davegallant.ca/backup-policy"
+# Platform namespaces do not have an ordinary homelab Application, but still
+# need explicit backup coverage when they hold recoverable application data.
+PLATFORM_BACKUP_NAMESPACES = {"monitoring"}
 
 
 def fail(message: str) -> None:
@@ -61,7 +64,11 @@ for name, app in apps.items():
     if app["policy"] == "not-required" and has_schedule:
         fail(f"{name} declares no backup schedule but {namespace} is targeted by {schedule_targets[namespace]}")
 
-unmatched = set(schedule_targets) - {app["namespace"] for app in apps.values()}
+unmatched = (
+    set(schedule_targets)
+    - {app["namespace"] for app in apps.values()}
+    - PLATFORM_BACKUP_NAMESPACES
+)
 if unmatched:
     fail(f"Schedules target namespaces without an ordinary homelab Application: {', '.join(sorted(unmatched))}")
 
