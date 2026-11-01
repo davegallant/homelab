@@ -137,27 +137,29 @@ Restricted:
 Loki remains Baseline with Restricted warn/audit because its Loki container
 currently runs as UID 0. Its data PVC is local-path backed, so moving to a
 non-root UID requires a planned ownership migration and restore validation.
-An isolated restore trial on 2026-11-01 was canceled at 54,969,680 of
-1,085,182,436 bytes after `k8s-w-1` reported CRI and kubelet health-check
-timeouts and workloads on that worker failed probes. Those workloads and
-production Loki recovered after the restore stopped; Loki returned `/ready`.
-No rootless settings were tested. The partial restore volumes remain
-`Released` with `Retain`; retry only with a lower-impact restore plan and a
-worker health gate. Follow-up Restore requests mapped to `k8s-w-2` initially
-stayed `New`, including a config-map-only control. Restarting the Velero server
-unblocked reconciliation; the control restore and manifest-only Loki restore
-completed. The reason the original controller stopped reconciling remains
-unknown. The first manifest-only Loki restore omitted the PV resource, so it
-did not trigger a PVR. The next isolated restore used one-file concurrency and
-was canceled at 95,957,782 of 1,085,182,436 bytes after very low throughput; a
-1.217 GB ROMM PVR using default concurrency completed in 87 seconds. The current
-Loki restore uses default concurrency on `k8s-w-2`. Its PVR remained Prepared
-until the w2 Velero node-agent restarted, then began transferring; the reason
-for the stale PVR state is unknown. The restore is still in progress, and
-production Loki remains untouched. The rendered rootless Loki Pod passed
-server-side Restricted admission, and an unsafe privileged probe was rejected
-in a temporary Restricted namespace. Do not change Loki's namespace policy
-until the volume restore and rootless runtime validation complete.
+An isolated restore on `k8s-w-1` created a chunk tree with roughly 376,000
+directories. During that restore, several workloads on w1, including production
+Loki, hit liveness timeouts and restarted. The worker remained Ready. Probe
+timeouts had also occurred before the restore, so the restore likely aggravated
+an existing sensitivity; no Loki spec or PVC changes were made. All affected
+workloads recovered, and Loki returned `/ready`. The partial test volumes are
+retained as Released PVs. The current restore is isolated on `k8s-w-2` with
+parallel file download set to 4; it is progressing without new probe failures,
+and production Loki is Ready 2/2. Do not change Loki's namespace policy until
+the restore and rootless runtime validation complete.
+
+Follow-up Restore requests mapped to `k8s-w-2` initially stayed `New`,
+including a config-map-only control. Restarting the Velero server unblocked
+reconciliation; the control restore and manifest-only Loki restore completed.
+The reason the original controller stopped reconciling remains unknown. The
+first manifest-only Loki restore omitted the PV resource, so it did not trigger
+a PVR. A one-file concurrency restore was canceled at 95,957,782 of
+1,085,182,436 bytes after very low throughput; a 1.217 GB ROMM PVR using
+default concurrency completed in 87 seconds. The next Loki PVR remained
+Prepared until its node-agent restarted; the reason for the stale PVR state is
+unknown. The rendered rootless Loki Pod passed server-side Restricted
+admission, and an unsafe privileged probe was rejected in a temporary
+Restricted namespace.
 The qBittorrent,
 Prowlarr, and Miniflux drill namespaces were removed after successful isolated
 recovery checks; Velero restore records remain. Miniflux's v4 restore recovered
