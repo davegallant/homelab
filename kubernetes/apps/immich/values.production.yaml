@@ -194,11 +194,13 @@ controllers:
             cpu: 500m
             memory: 256Mi
       postgres:
+        # This image's entrypoint copies its generated config to
+        # /etc/postgresql/postgresql.conf at startup. Keep root writable until
+        # that path has a safe, separately tested writable mount.
         securityContext:
           runAsNonRoot: true
           runAsUser: 999
           runAsGroup: 999
-          readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
           capabilities:
             drop:
@@ -281,18 +283,6 @@ persistence:
       immich:
         server:
           - path: /tmp
-  postgres-tmp:
-    type: emptyDir
-    advancedMounts:
-      immich:
-        postgres:
-          - path: /tmp
-  postgres-run:
-    type: emptyDir
-    advancedMounts:
-      immich:
-        postgres:
-          - path: /var/run/postgresql
   model-cache-local:
     type: persistentVolumeClaim
     # Reuse the populated test cache instead of creating a second 1.7 GiB copy.
