@@ -8,7 +8,7 @@ reverse the cutover without Dave's explicit authorization.
 
 ## Runtime
 
-- Official Forgejo chart 7.1.14, Forgejo 17.0.1 rootless image pinned by digest.
+- Official Forgejo chart 17.3.2, Forgejo 17.0.1 rootless image pinned by digest.
 - Forgejo and its init containers run as UID/GID 1000 with privilege escalation
   disabled, all capabilities dropped, RuntimeDefault seccomp, and a read-only
   root filesystem. The namespace enforces Restricted Pod Security.
@@ -30,6 +30,10 @@ reverse the cutover without Dave's explicit authorization.
   dependency.
 - `forgejo-external` and `forgejo-newt-external` are provisioned outside
   Argo CD from Vault. Keep secret values out of Git and command output.
+- The Forgejo admin credential is stored in Ansible Vault and provisioned by
+  `ansible/playbooks/talos-cluster/forgejo-admin-secret.yml` as
+  `forgejo-admin-external`. The chart applies that value to the admin account
+  on pod recreation; retrieve it through the Vault workflow when needed.
 - Host and Docker runners remain on the LXC; migrating the Forgejo server
   did not migrate its runners. Ansible workflows use the `tailscale` label
   and Docker workflows use `docker`.

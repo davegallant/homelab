@@ -1,4 +1,4 @@
-# Forgejo production values for forgejo-helm/forgejo 7.1.14.
+# Forgejo production values for forgejo-helm/forgejo 17.3.2.
 # Rootless operation passed an isolated Velero restore and startup drill on
 # 2026-10-31. Git-over-SSH remains disabled; the service is HTTPS-only.
 #
@@ -87,8 +87,9 @@ serviceAccount:
 
 gitea:
   admin:
-    # Preserve the existing account password during chart upgrades and pod restarts.
-    passwordMode: initialOnlyNoReset
+    username: gitea_admin
+    existingSecret: forgejo-admin-external
+    passwordMode: keepUpdated
   podAnnotations:
     backup.velero.io/backup-volumes: data
   config:
