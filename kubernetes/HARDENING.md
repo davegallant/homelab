@@ -34,6 +34,13 @@ workflows complete checkout and execution, and demonstrate jobs cannot reach
 unrelated APIs, NAS exports, node management addresses, or production
 credentials. Verify the actual network mode and trust restrictions in Forgejo.
 
+**Progress (2026-11-01):** the live Cilium policy validates and is enforced;
+public HTTPS works from both runner and DinD, while Hubble records egress drops
+to the Kubernetes API. The runner has no service-account token mount. Workflow
+trust and checkout remain unverified: Forgejo is CrashLooping because the new
+image cannot create its s6 lock on the read-only root filesystem. Public web
+egress is still open to any public host on ports 80 and 443.
+
 ## 2. Protect secret-bearing backups and test credential recovery
 
 **Action:** migrate each existing Kopia repository to a strong Vault-held
