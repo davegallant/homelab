@@ -148,11 +148,16 @@ stayed `New`, including a config-map-only control. Restarting the Velero server
 unblocked reconciliation; the control restore and manifest-only Loki restore
 completed. The reason the original controller stopped reconciling remains
 unknown. The first manifest-only Loki restore omitted the PV resource, so it
-did not trigger a PVR. A corrected isolated restore including the Pod, PVCs,
-and PV is now restoring the Loki data volume on `k8s-w-2` with one-file
-concurrency. Its PVR is active at 89,357,719 of 1,085,182,436 bytes; production
-Loki remains untouched. Do not change Loki's namespace policy until the volume
-restore and rootless validation complete.
+did not trigger a PVR. The next isolated restore used one-file concurrency and
+was canceled at 95,957,782 of 1,085,182,436 bytes after very low throughput; a
+1.217 GB ROMM PVR using default concurrency completed in 87 seconds. The current
+Loki restore uses default concurrency on `k8s-w-2`. Its PVR remained Prepared
+until the w2 Velero node-agent restarted, then began transferring; the reason
+for the stale PVR state is unknown. The restore is still in progress, and
+production Loki remains untouched. The rendered rootless Loki Pod passed
+server-side Restricted admission, and an unsafe privileged probe was rejected
+in a temporary Restricted namespace. Do not change Loki's namespace policy
+until the volume restore and rootless runtime validation complete.
 The qBittorrent,
 Prowlarr, and Miniflux drill namespaces were removed after successful isolated
 recovery checks; Velero restore records remain. Miniflux's v4 restore recovered
