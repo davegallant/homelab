@@ -307,24 +307,25 @@ without restarting Cilium agents. The latest live audit has 24 platform entries 
 missing at least one limit, in Cilium agents/Envoy/init containers, CoreDNS and
 control-plane static Pods, and Velero. These CNI, control-plane, and backup
 workloads remain individually reviewed; they do not receive blanket limits.
-Grafana has alerts for node memory, `/var` fullness,
-restart bursts, and crash loops. The daily `backup-watchdog` completed
-successfully today, but no independent missed-run alert or inode-pressure alert
-was found in the tracked configuration.
+Tracked Grafana alerts cover node memory, `/var` byte use, restart bursts,
+crash loops, and `/var` inode use at 80%/90%. The inode rules are not live until
+the Grafana Application is synced. The daily `backup-watchdog` completed
+successfully today, but there is no independent missed-run alert in the tracked
+configuration.
 
 The metadata policy and Loki export have been verified live. Continue checking
 Loki retention and inode capacity as the new audit stream accumulates.
 
 **Action:** review Loki retention and inode capacity as the audit stream
-accumulates. Alert on failed backups, disk/inode pressure, certificate expiry,
+accumulates. Add independent alerts for failed backups, certificate expiry,
 and unexpected privilege changes. Add measured requests, limits,
 ephemeral-storage budgets, and namespace quotas; include DinD consumption.
 Keep Loki capacity/inode checks before increasing ingestion.
 
-**Acceptance:** generate a harmless denied operation and verify the event/alert;
-rehearse a database restore and node loss. Control-plane HA is a later resilience
-investment: three control planes on only two physical hosts still share failure
-risks and require a quorum-aware placement plan.
+**Acceptance:** after Grafana sync, confirm the inode rules load and retain
+node-specific values. Rehearse a database restore and node loss. Control-plane HA
+is a later resilience investment: three control planes on only two physical
+hosts still share failure risks and require a quorum-aware placement plan.
 
 ## 10. Apply the same boundaries to remaining LXCs
 
