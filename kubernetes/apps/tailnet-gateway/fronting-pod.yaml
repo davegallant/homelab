@@ -1,7 +1,6 @@
 ---
-# Gate 2 staging source only. Kustomize excludes this Deployment until
-# Gateway and route verification passes. The user-space Tailscale process
-# forwards TCP 443 to the reserved Gateway address.
+# The user-space Tailscale process forwards TCP 443 to the in-cluster Gateway
+# Service. This avoids hairpinning through the Gateway's LAN VIP.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -18,6 +17,8 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: tailnet-gateway-fronting
+      annotations:
+        checksum/serve-config: 281e62e3d3ddb713594c6b6d8d63d5a0a9421543ea3b5754e0efd90e6821b202
     spec:
       nodeSelector:
         kubernetes.io/hostname: k8s-w-1
@@ -101,7 +102,7 @@ data:
     {
       "TCP": {
         "443": {
-          "TCPForward": "192.168.1.185:443"
+          "TCPForward": "cilium-gateway-tailnet-gateway.tailnet-gateway.svc.cluster.local:443"
         }
       }
     }

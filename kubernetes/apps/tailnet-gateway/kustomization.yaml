@@ -7,3 +7,4 @@ resources:
   - entry-policy.yaml
   - gateway.yaml
   - headplane-route.yaml
+  - fronting-pod.yaml

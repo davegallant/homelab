@@ -1,7 +1,6 @@
 ---
-# Gate 2 staging candidate. This policy is not itself an enforcement proof.
-# Selects shared ingress identity on every node, not just this Gateway.
-# Requires review of all existing allow policies and live identity tests.
+# Selects the shared ingress identity on every node, not just this Gateway.
+# Keep this allow scoped to the fronting pod and HTTPS only.
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
 metadata:
@@ -16,14 +15,6 @@ spec:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: tailnet-gateway
             k8s:app.kubernetes.io/name: tailnet-gateway-fronting
-      toPorts:
-        - ports:
-            - port: "443"
-              protocol: TCP
-    # Gatus runs on the LAN and its HTTP probes reach the Gateway VIP directly.
-    # Permit only that host to check HTTPS routes; other LAN clients stay denied.
-    - fromCIDRSet:
-        - cidr: 192.168.1.52/32
       toPorts:
         - ports:
             - port: "443"
