@@ -39,7 +39,7 @@ controllers:
         image:
           repository: docker.io/linuxserver/speedtest-tracker
           tag: 1.15.1
-          digest: sha256:8d3c2826b708c18be7fb46c1afebc6bb3b1ab7c519473df1be89f5ecaa8bb31f
+          digest: sha256:14d56d7c4ff0af18f0a09be8494352ba40d23196e78c5f812cee69afaa1edc45
         command:
           - /bin/sh
           - -ec
@@ -78,7 +78,7 @@ controllers:
         image:
           repository: docker.io/linuxserver/speedtest-tracker
           tag: 1.15.1
-          digest: sha256:8d3c2826b708c18be7fb46c1afebc6bb3b1ab7c519473df1be89f5ecaa8bb31f
+          digest: sha256:14d56d7c4ff0af18f0a09be8494352ba40d23196e78c5f812cee69afaa1edc45
         envFrom:
           - secretRef:
               name: speedtest-tracker-external
