@@ -210,10 +210,12 @@ are recorded in [SECURITY.md](SECURITY.md).
 **Progress (2026-11-01):** `scripts/check-pod-security.py` can inspect
 rendered manifests and emit sanitized Pods for server-side admission checks.
 Its four built-in fixtures pass, including a deliberately violating Pod and
-platform exception cases. The checker is not invoked by `just lint`, and this
-checkout has no tracked GitHub or Forgejo workflow definitions, so these
-checks are not shown to run automatically on changes. No general rendered
-manifest validation or required-image-digest check is wired into local lint.
+platform exception cases. `just lint` now runs the checker self-test. It also
+validates backup coverage for ordinary applications and the explicitly backed
+up `monitoring` platform namespace. This checkout has no tracked GitHub or
+Forgejo workflow definitions, so these checks are not shown to run automatically
+on changes. General rendered-manifest validation and required-image-digest
+checks are not wired into local lint.
 
 **Action:** add manifest rendering and policy checks to review: required digests,
 no unintended privileged/host namespace settings, appropriate service accounts,

@@ -46,7 +46,11 @@ controllers:
           - /bin/sh
           - -ec
         args:
-          - mkdir -p /storage/app /storage/app/public /storage/framework/cache/data /storage/framework/sessions /storage/framework/views /storage/logs && cp -R /etc/nginx/. /nginx-config/
+          - >-
+            mkdir -p /storage/app /storage/app/public
+            /storage/framework/cache/data /storage/framework/sessions
+            /storage/framework/views /storage/logs &&
+            cp -R /etc/nginx/. /nginx-config/
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true

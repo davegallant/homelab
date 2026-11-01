@@ -118,7 +118,8 @@
     - ansible.builtin.include_tasks:
         file: ../../tasks/docker-compose-up.yml
 
-    - name: Restart Gatus when its config changes
+    # Keep this restart before tailnet proxy setup after the Compose stack is up.
+    - name: Restart Gatus when its config changes # noqa: no-handler
       community.docker.docker_container:
         name: gatus
         state: started

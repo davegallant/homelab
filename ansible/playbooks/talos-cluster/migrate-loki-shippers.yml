@@ -12,9 +12,10 @@
         backup: true
       no_log: true
       register: alloy_loki_config
+      notify: Restart Alloy when configuration changes
 
+  handlers:
     - name: Restart Alloy when configuration changes
       ansible.builtin.systemd:
         name: alloy
         state: restarted
-      when: alloy_loki_config.changed
