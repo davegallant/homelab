@@ -20,7 +20,32 @@ spec:
               protocol: TCP
           rules:
             dns:
-              - matchPattern: "*"
+              - matchName: forgejo.forgejo.svc.cluster.local
+              - matchName: forgejo.forgejo.svc.cluster.local.forgejo-runner.svc.cluster.local
+              - matchName: forgejo.forgejo.svc.cluster.local.svc.cluster.local
+              - matchName: forgejo.forgejo.svc.cluster.local.cluster.local
+              - matchName: data.forgejo.org
+              - matchName: github.com
+              - matchName: codeload.github.com
+              - matchName: registry-1.docker.io
+              - matchName: auth.docker.io
+              - matchName: production.cloudfront.docker.com
+              - matchName: forums.redflagdeals.com
+              - matchName: gotify.davegallant.ca
+              - matchName: pypi.org
+              - matchName: files.pythonhosted.org
+              - matchName: raw.githubusercontent.com
+              - matchName: releases.astral.sh
+              - matchName: www.gasbuddy.com
+              - matchPattern: "*.*.forgejo-runner.svc.cluster.local"
+              - matchPattern: "*.*.*.forgejo-runner.svc.cluster.local"
+              - matchPattern: "*.*.*.*.forgejo-runner.svc.cluster.local"
+              - matchPattern: "*.*.svc.cluster.local"
+              - matchPattern: "*.*.*.svc.cluster.local"
+              - matchPattern: "*.*.*.*.svc.cluster.local"
+              - matchPattern: "*.*.cluster.local"
+              - matchPattern: "*.*.*.cluster.local"
+              - matchPattern: "*.*.*.*.cluster.local"
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: forgejo

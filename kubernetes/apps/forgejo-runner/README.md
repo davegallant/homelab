@@ -23,9 +23,9 @@
   create a separate cluster boundary.
 - Public egress is limited to TCP 443 for the explicit FQDNs in
   `policy/network-policy.yaml`; direct public IPs and unlisted HTTPS hosts are
-  denied. DNS queries to cluster DNS are visible through Cilium's DNS proxy.
-  DNS query names are temporarily unrestricted while FQDN-based egress is
-  validated. Do not expose long-lived or broadly scoped credentials to jobs.
+  denied. The DNS proxy permits only those external names plus the Kubernetes
+  search-suffix queries and Forgejo service name needed by the pod resolver.
+  Do not expose long-lived or broadly scoped credentials to jobs.
 
 ## Apply and verify
 
