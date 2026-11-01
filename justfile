@@ -9,6 +9,7 @@ default:
 
 # Lint YAML, Ansible content and shell scripts
 lint:
+    python3 scripts/check-pod-security.py --self-test
     yamllint -c .yamllint.yaml ansible/ kubernetes/ .github/
     python3 scripts/check-velero-backup-coverage.py
     cd ansible && ANSIBLE_VAULT_PASSWORD_FILE="${ANSIBLE_VAULT_PASSWORD_FILE:-$PWD/.vault_pass}" ansible-lint
