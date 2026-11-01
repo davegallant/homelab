@@ -24,9 +24,12 @@ k8s-readonly intentionally mounts its read-only service-account token for
 Kubernetes API access. Alloy enforces Restricted: its node-local discovery
 uses the Kubernetes API rather than hostPath mounts, and it needs its scoped
 service-account token for pod logs, node metrics and kubelet scraping.
-Tailnet Gateway enforces Baseline with Restricted `warn`/`audit`; its current
-userspace Tailscale pod drops all capabilities and does not use host networking
-or `/dev/net/tun`. The namespace is managed through its Argo application.
+Tailnet Gateway enforces Restricted. Its userspace Tailscale pod runs as
+UID/GID 1000 with a read-only root filesystem, RuntimeDefault seccomp, all
+capabilities dropped, and no service-account token. Its local-path Tailscale
+identity remains excluded from Velero; the state volume was migrated offline
+to UID/GID 1000. Tailscale reports online and a Beszel request returned HTTP
+200 through the gateway after the rollout.
 FlareSolverr and the qBittorrent egress monitor are hardened for Restricted
 admission. FlareSolverr uses a non-root init container to copy its
 startup-patched Chromium driver into a writable `emptyDir`; the monitor needs
