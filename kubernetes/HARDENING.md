@@ -301,6 +301,15 @@ restart bursts, and crash loops. The daily `backup-watchdog` completed
 successfully today, but no independent missed-run alert or inode-pressure alert
 was found in the tracked configuration.
 
+Talos's live API server audit policy records all requests at Metadata level, and
+the audit event counter reports 7.69 million events. On the control plane,
+ten rotated files are each about 100 MiB and the active file is about 45 MiB;
+the oldest retained file is roughly seven hours old. They live on the 24 GiB
+`/var` volume (about 15.8 GiB free). Alloy does not mount the host audit-log
+directory, so these events are not shipped with the pod logs. Auditing is on,
+but useful retention and central search are missing; review a lower-volume
+policy and a supported export path before changing the single control plane.
+
 **Action:** verify effective API audit policy and export useful authentication,
 Secret-access metadata, RBAC, admission, exec, and policy-change events without
 logging secret bodies. Alert on failed backups, disk/inode pressure, certificate
