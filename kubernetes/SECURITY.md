@@ -49,11 +49,14 @@ The namespace enforces Restricted after an isolated restore recovered 69,524,529
 bytes and passed admission with the restored config. The current egress monitor
 Job passes Restricted; one failed pre-enforcement Job Pod remains as evidence.
 Prowlarr's app
-also runs as UID/GID 1000 with all capabilities dropped; its non-root init
-container prepares `/run` and copies the startup-patched Chromium driver into
-writable `emptyDir` volumes. Its namespace enforces Restricted after an
-isolated restore recovered 136,087,005 bytes and passed admission with the
-restored config.
+also runs as UID/GID 1000 with all capabilities dropped and a read-only root
+filesystem. `/config`, `/run`, and `/tmp` are explicit writable mounts; its
+non-root init container prepares `/run` and copies the startup-patched
+Chromium driver into writable `emptyDir` volumes. After rollout, writes to
+`/tmp` and `/config` succeeded and a write to `/etc` was denied; the local and
+tailnet WebUI returned HTTP 302, and both app containers were Ready. Its
+namespace enforces Restricted after an isolated restore recovered 136,087,005
+bytes and passed admission with the restored config.
 
 Lidarr, Radarr, and Sonarr run their pinned images' application binaries
 directly as UID/GID 1000, with all capabilities dropped and a read-only root
