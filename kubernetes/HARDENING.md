@@ -226,6 +226,13 @@ when there is a maintained trust policy for the images actually used.
 
 ## 8. Reconcile versions, drift, and operational security records
 
+**Progress (2026-11-01):** all 45 live Argo Applications are Synced and
+Healthy. The three nodes consistently report Kubernetes 1.37.2, Talos 1.14.3,
+and containerd 2.3.7; Cilium is pinned at 1.20.4. The checked-in cluster
+variables still specify Talos 1.14.1 and its ISO, so desired upgrade inputs
+and live state differ. Vendor support for the current Kubernetes/Talos/Cilium
+combination has not been verified.
+
 **Action:** reconcile live state with rendered configuration and update stale
 records. Verify the actual Kubernetes/Cilium/Talos support matrix against vendor
 documentation before upgrades; an observed working pairing is not proof of
