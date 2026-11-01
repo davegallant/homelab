@@ -12,10 +12,11 @@
   maintainers should be able to send work to it. The actual registration scope,
   workflow triggers, and secret use still need review in Forgejo and the
   workflow repositories; those files are not in this repository.
-- The privileged runner and DinD containers share a Kubernetes worker with
-  production workloads. A dedicated runner VM outside this cluster remains the
-  preferred isolation boundary. A tainted worker would reduce sharing but
-  would not create a separate cluster boundary.
+- The runner and privileged DinD are intentionally in this Kubernetes cluster
+  and share a worker with production workloads. Treat privileged DinD as a
+  reviewed exception; a tainted worker would reduce sharing but would not
+  create a separate cluster boundary. Do not recommend moving the runner back
+  to a dedicated VM unless this architecture is explicitly revisited.
 - Public web egress is required for external actions and package downloads.
   The proposed policy limits its ports and blocks private address ranges, but
   it does not restrict which public hostnames workflows can contact. Do not
