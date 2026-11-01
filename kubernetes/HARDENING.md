@@ -290,8 +290,8 @@ below 14m CPU and 53 MiB memory; all three node plugins and the controller
 rolled out Ready. Cilium's agent and Envoy dataplane have no CPU limits. The
 operator and Hubble relay/UI retain scheduling requests and memory caps, with
 CPU ceilings widened to 1 core for operator/relay, 500m for the UI backend, and
-250m for the frontend after the earlier ceilings were too tight for bursty
-control and observability work. The supporting Deployments rolled out Healthy
+250m for the frontend to preserve burst headroom for networking control and
+observability work. The supporting Deployments rolled out Healthy
 without restarting Cilium agents. The latest live audit has 24 platform entries still
 missing at least one limit, in Cilium agents/Envoy/init containers, CoreDNS and
 control-plane static Pods, and Velero. These CNI, control-plane, and backup
