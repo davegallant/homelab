@@ -23,8 +23,9 @@
   create a separate cluster boundary.
 - Public egress is limited to TCP 443 and blocks private address ranges.
   Workflow observations showed no public TCP 80 connections. The policy still
-  permits any public hostname; do not expose long-lived or broadly scoped
-  credentials to jobs.
+  permits any public hostname; DNS queries are temporarily visible through
+  Cilium's DNS proxy to inventory required names before narrowing egress. Do not
+  expose long-lived or broadly scoped credentials to jobs.
 
 ## Apply and verify
 
