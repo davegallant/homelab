@@ -10,6 +10,11 @@ application Secrets from Vault. Argo CD reads desired application state from
 recovery mirror. Argo CD polls for commits; every application sync requires
 manual approval. There is no automated sync, pruning, or deletion finalizer.
 
+Every Application must use an explicit restricted AppProject. The built-in
+`default` project denies all repositories, destinations, and resources; the
+project playbook checks for Applications still using it before applying the
+restriction.
+
 The installation is a single controller, repo server, API server and Redis.
 Dex and notifications are disabled; ApplicationSet has zero replicas.
 All images have version and digest pins. The server remains a ClusterIP
