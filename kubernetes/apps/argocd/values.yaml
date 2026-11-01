@@ -19,6 +19,13 @@ applicationSet:
   replicas: 0
 notifications:
   enabled: true
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 256Mi
   argocdUrl: https://argocd.tail.davegallant.ca
   secret:
     create: false
@@ -63,6 +70,7 @@ controller:
       cpu: 50m
       memory: 512Mi
     limits:
+      cpu: "1"
       memory: 1Gi
 repoServer:
   replicas: 1
@@ -71,6 +79,7 @@ repoServer:
       cpu: 25m
       memory: 128Mi
     limits:
+      cpu: "1"
       memory: 512Mi
 server:
   replicas: 1
@@ -88,6 +97,7 @@ server:
       cpu: 25m
       memory: 64Mi
     limits:
+      cpu: 250m
       memory: 256Mi
 redis:
   # Redis does not call the Kubernetes API.
@@ -100,4 +110,5 @@ redis:
       cpu: 10m
       memory: 32Mi
     limits:
+      cpu: 100m
       memory: 128Mi
