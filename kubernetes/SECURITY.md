@@ -6,14 +6,13 @@ resources to establish enforcement; a tracked deny rule alone is insufficient.
 
 ## Pod Security rollout (Kubernetes v1.37)
 
-Restricted `warn` and `audit` are staged on ordinary application namespaces,
-pinned to `v1.37`; Baseline enforcement remains while rendered and running
-workloads are remediated. Headplane, k8s-readonly, LubeLogger,
+Restricted `warn` and `audit` are pinned to `v1.37`, and ordinary application
+namespaces enforce Restricted. Headplane, k8s-readonly, LubeLogger,
 Audiobookshelf, BentoPDF, Beszel, Changedetection, Forgejo, Grafana, Homepage,
 Immich, Invidious, Jellyfin, Kiwix, Lidarr, Maloja, Miniflux, Navidrome,
-Paperless, Prowlarr, qBittorrent, Radarr, RomM, SearXNG, Seerr, Sonarr, and
-Umami enforce Restricted. Confirm live namespace labels before changing this
-inventory.
+Paperless, Prowlarr, qBittorrent, Radarr, RomM, SearXNG, Seerr, Sonarr,
+Speedtest Tracker, and Umami enforce Restricted. Confirm live namespace labels
+before changing this inventory.
 An unsafe test Pod was rejected by Audiobookshelf's Restricted enforcement;
 its existing workloads remained Ready.
 LubeLogger runs as UID 1000 and keeps its existing DataProtection keyring on the
@@ -34,11 +33,10 @@ FlareSolverr and the qBittorrent egress monitor are hardened for Restricted
 admission. FlareSolverr uses a non-root init container to copy its
 startup-patched Chromium driver into a writable `emptyDir`; the monitor needs
 its scoped service-account token to check the protected Cilium policy and Argo
-Application. The LinuxServer Speedtest Tracker container now drops all
-capabilities except the set its s6 startup and user switch require. Its
-namespace remains Baseline as a reviewed image exception. RomM now runs both
-containers without capabilities, as non-root users, with read-only root
-filesystems and explicit writable volumes. Its namespace enforces Restricted.
+Application. Speedtest Tracker now runs its app as UID/GID 82 with all
+capabilities dropped. RomM runs both containers without capabilities, as
+non-root users, with read-only root filesystems and explicit writable volumes.
+Its namespace enforces Restricted.
 qBittorrent's app
 and bootstrap init container run
 as UID/GID 1000 with all capabilities dropped. The init container creates a
@@ -71,23 +69,21 @@ non-root PostgreSQL process could not overwrite the prior root-owned SQL dump.
 The hook now writes a mode-0600 temporary dump and renames it into place. A live
 `pg_dump` probe succeeded, and `speedtest-hardening-20261031-retry` completed
 with 53/53 items, all three volume backups complete, and no failed hooks.
-Speedtest Tracker now has a read-only app root filesystem with explicit `/run`,
-`/tmp`, Laravel cache, and Laravel storage volumes. Its small non-root init
-container creates Laravel's required storage directories. The dedicated
-`speedtest-hardening-20261031-retry` backup restored all three data volumes in
-an isolated drill; PostgreSQL recovered, the app read 14,581 results and 2
-users, the login page returned HTTP 200, and all three containers were Ready.
-The pinned LinuxServer image's s6 startup launches nginx and PHP-FPM masters as
-root and uses six additional capabilities; running the full image as non-root
-failed because its startup scripts require group switching. Keep the namespace
-at Baseline as a reviewed image exception until a maintainable rootless startup
-path is available. An isolated Restricted probe ran as UID/GID 911/1001 with
-all capabilities dropped except the Restricted-allowed `NET_BIND_SERVICE`, a
-read-only root filesystem, and a user-owned `/run`. The image still exited
-because s6 could not set supplementary groups without `SETGID`; restored
-config files also needed ownership migration before UID 911 could read the
-certificate and logs. Bypassing s6 startup would require replacing its init,
-queue, and scheduler handling, so the namespace remains Baseline.
+The `speedtest-hardening-20261031-retry` backup restored all three data volumes
+in an isolated drill; PostgreSQL recovered, the previous app read 14,581
+results and 2 users, and the login page returned HTTP 200. The LinuxServer
+image's s6 startup needed root and extra capabilities, so it was replaced with
+the pinned `ghcr.io/alexjustesen/docker-speedtest-tracker:1.15.1` image. Its
+non-root init seeds a writable NGINX config `emptyDir`; Laravel storage and
+cache also use explicit writable volumes. s6 requires `/run` to retain the
+image's UID ownership, so the app root filesystem stays writable. The app runs
+as UID/GID 82 with all capabilities dropped, no privilege escalation, and
+RuntimeDefault seccomp; PostgreSQL and Apprise retain read-only root
+filesystems. A restored copy read 14,598 results, initialized without pending
+migrations, served HTTP 200, fetched Ookla server data, and ran 3/3 under
+Restricted. Production now enforces Restricted; all three containers are
+Ready, the login endpoint returns HTTP 200, and PostgreSQL contains 14,606
+results. An unsafe privileged Pod was rejected by Restricted admission.
 
 RomM's app runs as UID/GID 1000 and MariaDB as UID/GID 999; both drop all
 capabilities and use read-only root filesystems. RuntimeDefault seccomp, no
@@ -124,15 +120,11 @@ rootless app started against the restored SQLite database and returned HTTP
 200. All chart init containers passed Restricted admission, an unsafe Pod was
 rejected, and the production namespace now enforces Restricted.
 
-## Remaining ordinary namespace gates
+## Namespace enforcement status
 
-Live namespace labels are the source of truth. Speedtest Tracker is the only
-ordinary namespace that still enforces Baseline while warning and auditing
-Restricted:
-
-| Namespace | Current hardening | Remaining gate |
-|---|---|---|
-| Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Isolated restore passed: 14,581 results, 2 users, HTTP 200, and 3/3 Ready. | Keep Baseline as a reviewed exception. A Restricted rootless probe failed because s6 needs `SETGID` for user switching, and config files need a one-time ownership migration. Revisit with a maintainable startup path or an image that supports non-root execution. |
+All ordinary application namespaces enforce Restricted. The reviewed privileged
+exceptions remain Cilium, Intel GPU, local-path storage, Velero, and the
+Forgejo runner; platform namespaces retain their existing policy labels.
 
 Loki's first w1 isolated restore created a large chunk tree. During that restore,
 several w1 workloads, including Loki, hit liveness timeouts and restarted. The
