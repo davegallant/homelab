@@ -152,10 +152,15 @@ rejected an unsafe privileged Pod. Loki accepted a synthetic log push (HTTP
 204), returned that entry from a query, and also returned older logs from the
 restored backup. The `OnRootMismatch` policy avoids repeating the full
 permission scan after the volume root is prepared. Production Loki remains
-unchanged and Ready 2/2; its pre-change daily backup completed with a 1.136 GB
-live PVC backup. Velero's one backup warning concerned an obsolete Succeeded Pod
-whose volume was skipped. Next, migrate the production data volume under a
-controlled Loki stop, then apply the Restricted namespace policy and chart.
+unchanged and Ready 2/2. Its pre-change daily backup completed with a 1.136 GB
+live PVC backup; Velero's one warning concerned an obsolete Succeeded Pod whose
+volume was skipped. A fresh manual backup was attempted before migration, but
+while its PVB ran on w1, Loki restarted and w1 briefly went NotReady;
+metrics-server also timed out scraping that node's kubelet. The PVB was
+canceled, leaving the completed daily backup intact. These probe failures
+predated the manual backup, so it likely aggravated existing w1 instability.
+Do not proceed with the production migration until w1 is stable and a fresh
+backup can complete without disrupting Loki.
 
 Follow-up Restore requests mapped to `k8s-w-2` initially stayed `New`,
 including a config-map-only control. Restarting the Velero server unblocked
