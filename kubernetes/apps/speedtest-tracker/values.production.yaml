@@ -37,14 +37,14 @@ controllers:
     initContainers:
       prepare-writable-paths:
         image:
-          repository: docker.io/linuxserver/speedtest-tracker
+          repository: ghcr.io/alexjustesen/docker-speedtest-tracker
           tag: 1.15.1
-          digest: sha256:14d56d7c4ff0af18f0a09be8494352ba40d23196e78c5f812cee69afaa1edc45
+          digest: sha256:53177596e0ca033fc05f35706f84de5bbf7f35a04c5f06240356597241485c3b
         command:
           - /bin/sh
           - -ec
         args:
-          - mkdir -p /storage/app /storage/framework/cache/data /storage/framework/sessions /storage/framework/views /storage/logs
+          - mkdir -p /storage/app /storage/app/public /storage/framework/cache/data /storage/framework/sessions /storage/framework/views /storage/logs && cp -R /etc/nginx/. /nginx-config/
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
@@ -64,27 +64,26 @@ controllers:
       app:
         securityContext:
           allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 82
+          runAsGroup: 82
+          # s6-overlay requires /run to retain the image's UID ownership.
+          # Kubernetes emptyDir mounts are root-owned, so this image needs
+          # its root filesystem writable while remaining Restricted-compliant.
+          readOnlyRootFilesystem: false
           capabilities:
             drop:
               - ALL
-            add:
-              - CHOWN
-              - DAC_OVERRIDE
-              - FOWNER
-              - KILL
-              - SETGID
-              - SETUID
+          seccompProfile:
+            type: RuntimeDefault
         image:
-          repository: docker.io/linuxserver/speedtest-tracker
+          repository: ghcr.io/alexjustesen/docker-speedtest-tracker
           tag: 1.15.1
-          digest: sha256:14d56d7c4ff0af18f0a09be8494352ba40d23196e78c5f812cee69afaa1edc45
+          digest: sha256:53177596e0ca033fc05f35706f84de5bbf7f35a04c5f06240356597241485c3b
         envFrom:
           - secretRef:
               name: speedtest-tracker-external
         env:
-          PUID: "1000"
-          PGID: "1000"
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
           DB_PORT: "5432"
@@ -95,7 +94,7 @@ controllers:
             enabled: true
             type: HTTP
             path: /admin/login
-            port: 80
+            port: 8080
             spec:
               periodSeconds: 5
               timeoutSeconds: 3
@@ -104,7 +103,7 @@ controllers:
             enabled: true
             type: HTTP
             path: /admin/login
-            port: 80
+            port: 8080
             spec:
               periodSeconds: 10
               timeoutSeconds: 3
@@ -112,7 +111,7 @@ controllers:
           liveness:
             enabled: true
             type: TCP
-            port: 80
+            port: 8080
             spec:
               periodSeconds: 30
               timeoutSeconds: 3
@@ -233,14 +232,17 @@ service:
     ports:
       http:
         port: 80
+        targetPort: 8080
 
 persistence:
-  app-run:
+  nginx-config:
     type: emptyDir
     advancedMounts:
       speedtest-tracker:
         app:
-          - path: /run
+          - path: /etc/nginx
+        prepare-writable-paths:
+          - path: /nginx-config
   app-tmp:
     type: emptyDir
     advancedMounts:
@@ -252,13 +254,13 @@ persistence:
     advancedMounts:
       speedtest-tracker:
         app:
-          - path: /app/www/bootstrap/cache
+          - path: /var/www/html/bootstrap/cache
   app-storage:
     type: emptyDir
     advancedMounts:
       speedtest-tracker:
         app:
-          - path: /app/www/storage
+          - path: /var/www/html/storage
         prepare-writable-paths:
           - path: /storage
   db-run:
