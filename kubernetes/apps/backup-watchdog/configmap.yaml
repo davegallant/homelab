@@ -214,7 +214,11 @@ data:
             if not has_annotation and not default_fs_any:
                 warnings.append(f"{ns}: no eligible volumes (no annotation, schedule does not default to fs backup), no PVB check (backup {bname} Completed)")
                 continue
-            mine = [p for p in pvbs if (p.get("metadata", {}) or {}).get("labels", {}).get("velero.io/backup-name") == bname and (p.get("spec", {}).get("pod", {}) or {}).get("namespace") == ns]
+            mine = [
+                p for p in pvbs
+                if (p.get("metadata", {}) or {}).get("labels", {}).get("velero.io/backup-name") == bname
+                and (p.get("spec", {}).get("pod", {}) or {}).get("namespace") == ns
+            ]
             by_volume = {}
             for p in mine:
                 vol = (p.get("spec", {}) or {}).get("volume")
@@ -250,7 +254,11 @@ data:
                     total = progress.get("totalBytes")
                     return total > 0 if total is not None else bool(status.get("snapshotID"))
                 ok = any(proves_backup(p) for p in matches)
-                if not ok and matches and any(p.get("status", {}).get("phase") != "Completed" or (((p.get("status", {}) or {}).get("progress", {}) or {}).get("totalBytes") == 0) for p in matches):
+                if not ok and matches and any(
+                    p.get("status", {}).get("phase") != "Completed"
+                    or (((p.get("status", {}) or {}).get("progress", {}) or {}).get("totalBytes") == 0)
+                    for p in matches
+                ):
                     continue
                 if not ok:
                     gaps.append(f"{ns}: PVC {claim} (volume {volname or '?'}) has no Completed PVB with bytes or snapshot ID in backup {bname}")

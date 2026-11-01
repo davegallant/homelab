@@ -218,7 +218,18 @@
       block:
         - name: Wait for node-exporter series from all three nodes
           ansible.builtin.command:
-            argv: [kubectl, -n, grafana, exec, deployment/grafana, -c, grafana, --, curl, -fsS, "http://victoriametrics.monitoring.svc.cluster.local:8428/api/v1/query?query=count(node_uname_info)"]
+            argv:
+              - kubectl
+              - -n
+              - grafana
+              - exec
+              - deployment/grafana
+              - -c
+              - grafana
+              - --
+              - curl
+              - -fsS
+              - "http://victoriametrics.monitoring.svc.cluster.local:8428/api/v1/query?query=count(node_uname_info)"
           register: monitoring_vm_nodes
           changed_when: false
           until: >-
@@ -230,7 +241,18 @@
 
         - name: Wait for kube-state-metrics series
           ansible.builtin.command:
-            argv: [kubectl, -n, grafana, exec, deployment/grafana, -c, grafana, --, curl, -fsS, "http://victoriametrics.monitoring.svc.cluster.local:8428/api/v1/query?query=count(kube_pod_info)"]
+            argv:
+              - kubectl
+              - -n
+              - grafana
+              - exec
+              - deployment/grafana
+              - -c
+              - grafana
+              - --
+              - curl
+              - -fsS
+              - "http://victoriametrics.monitoring.svc.cluster.local:8428/api/v1/query?query=count(kube_pod_info)"
           register: monitoring_vm_ksm
           changed_when: false
           until: >-
@@ -242,7 +264,18 @@
 
         - name: Wait for kubelet series from all three nodes
           ansible.builtin.command:
-            argv: [kubectl, -n, grafana, exec, deployment/grafana, -c, grafana, --, curl, -fsS, "http://victoriametrics.monitoring.svc.cluster.local:8428/api/v1/query?query=count(kubelet_running_pods)"]
+            argv:
+              - kubectl
+              - -n
+              - grafana
+              - exec
+              - deployment/grafana
+              - -c
+              - grafana
+              - --
+              - curl
+              - -fsS
+              - "http://victoriametrics.monitoring.svc.cluster.local:8428/api/v1/query?query=count(kubelet_running_pods)"
           register: monitoring_vm_kubelet
           changed_when: false
           until: >-
@@ -254,7 +287,18 @@
 
         - name: Wait for cAdvisor container series
           ansible.builtin.command:
-            argv: [kubectl, -n, grafana, exec, deployment/grafana, -c, grafana, --, curl, -fsS, "http://victoriametrics.monitoring.svc.cluster.local:8428/api/v1/query?query=count(container_cpu_usage_seconds_total)"]
+            argv:
+              - kubectl
+              - -n
+              - grafana
+              - exec
+              - deployment/grafana
+              - -c
+              - grafana
+              - --
+              - curl
+              - -fsS
+              - "http://victoriametrics.monitoring.svc.cluster.local:8428/api/v1/query?query=count(container_cpu_usage_seconds_total)"
           register: monitoring_vm_cadvisor
           changed_when: false
           until: >-

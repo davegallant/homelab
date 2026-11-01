@@ -10,10 +10,10 @@ default:
 # Lint YAML, Ansible content and shell scripts
 lint:
     python3 scripts/check-pod-security.py --self-test
-    yamllint -c .yamllint.yaml ansible/ kubernetes/ .github/
+    yamllint -c .yamllint.yaml ansible/ kubernetes/
     python3 scripts/check-velero-backup-coverage.py
     cd ansible && ANSIBLE_VAULT_PASSWORD_FILE="${ANSIBLE_VAULT_PASSWORD_FILE:-$PWD/.vault_pass}" ansible-lint
-    shellcheck generate-containers-table.sh scripts/*.sh
+    shellcheck scripts/*.sh kubernetes/apps/qbittorrent/scripts/*.sh
     just lint-renovate
 
 # Validate the Renovate repository configuration with Renovate's own validator

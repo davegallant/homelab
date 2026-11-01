@@ -125,7 +125,8 @@
           register: alloy_apply_daemonset
           changed_when: "'created' in alloy_apply_daemonset.stdout or 'configured' in alloy_apply_daemonset.stdout"
 
-        - name: Restart Alloy after configuration changes
+        # Restart before the rollout wait so its gate covers the new config.
+        - name: Restart Alloy after configuration changes # noqa: no-handler
           ansible.builtin.command:
             argv: [kubectl, -n, alloy, rollout, restart, daemonset/alloy]
           changed_when: true

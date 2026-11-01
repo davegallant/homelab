@@ -1,5 +1,7 @@
 ---
-# WebUI-only build, Gateway-only inbound. Sidecars (tailscale + caddy) removed 2026-10-28; WebUI via central tailnet-gateway. No peer Service is enabled; egress gateway policy is managed separately.
+# WebUI-only build, Gateway-only inbound. Sidecars (tailscale + caddy) were
+# removed 2026-10-28; WebUI access uses the central tailnet-gateway. No peer
+# Service is enabled; egress gateway policy is managed separately.
 controllers:
   qbittorrent:
     type: deployment
