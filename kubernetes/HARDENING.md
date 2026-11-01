@@ -21,14 +21,12 @@ Docker host networking here means the DinD/pod network namespace, not
 automatically the Talos host. Unprivileged job containers do not remove the
 privileged daemon's attack surface.
 
-**Action:** keep the runner in this cluster as the current chosen architecture;
-do not treat moving it back to a dedicated VM as the next hardening step unless
-that architecture is revisited. Treat privileged DinD as a reviewed exception.
-Restrict registration and workflow triggers to trusted repositories and
-maintainers, prevent untrusted PR jobs receiving secrets, use short-lived job
-credentials, cap concurrency and daemon resources, and inventory egress from
-both the runner pod and DinD job containers. Review tracked runner values and
-network policy against live state. A dedicated tainted worker would reduce
+**Action:** keep the runner in this cluster. Treat privileged DinD as a reviewed
+exception. Restrict registration and workflow triggers to trusted repositories
+and maintainers, prevent untrusted PR jobs receiving secrets, use short-lived
+job credentials, cap concurrency and daemon resources, and inventory egress
+from both the runner pod and DinD job containers. Review tracked runner values
+and network policy against live state. A dedicated tainted worker would reduce
 sharing but would not create a separate cluster boundary.
 
 **Acceptance:** inspect rendered and live runner pods, prove real trusted
