@@ -22,14 +22,26 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: k8s-w-1
       automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: tailscale
           image: ghcr.io/tailscale/tailscale:v1.104.4@sha256:ed6480b33c6eb67c9cbd203ed42b9fb57e361986725b6856def71b7a3d9e276c
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
             capabilities:
               drop:
                 - ALL
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
           envFrom:
             - secretRef:
                 name: tailnet-gateway-tailscale-auth
@@ -59,6 +71,10 @@ spec:
           volumeMounts:
             - name: tailscale-state
               mountPath: /var/lib/tailscale
+            - name: tailscale-runtime
+              mountPath: /var/run/tailscale
+            - name: tmp
+              mountPath: /tmp
             - name: tailscale-config
               mountPath: /etc/tailscale/serve-config.json
               subPath: serve-config.json
@@ -67,6 +83,10 @@ spec:
         - name: tailscale-state
           persistentVolumeClaim:
             claimName: tailnet-gateway-tailscale
+        - name: tailscale-runtime
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
         - name: tailscale-config
           configMap:
             name: tailnet-gateway-tailscale
