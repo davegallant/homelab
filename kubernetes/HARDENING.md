@@ -213,7 +213,8 @@ Immich PostgreSQL and Speedtest Tracker; the Alloy exception is recorded in
 
 **Progress (2026-11-01):** `just lint` renders all Argo applications whose
 namespaces enforce Restricted Pod Security, then checks every rendered
-container and init container for the requested hardening controls. Remote Helm
+container and init container for the requested hardening controls and requires
+both a version tag and a SHA-256 digest on each image. Remote Helm
 charts are rendered at their pinned chart versions; local charts and Kustomize
 sources are rendered from the checkout. Exact remaining exceptions and their
 reasons live in `pod-security-exceptions.yaml`; stale exceptions also fail the
@@ -221,15 +222,14 @@ check. Four checker fixtures pass, including a deliberately violating Pod and
 platform exception cases. Lint also validates backup coverage for ordinary
 applications and the explicitly backed up `monitoring` platform namespace.
 This checkout has no tracked GitHub or Forgejo workflow definitions, so these
-checks are local and are not shown to run automatically on changes. Required
-image-digest checks are not wired into lint.
+checks are local and are not shown to run automatically on changes.
 
-**Action:** add manifest rendering and policy checks to review: required digests,
-no unintended privileged/host namespace settings, appropriate service accounts,
-resource budgets, and expected isolation. Use native admission policies where
-sufficient; introduce a policy engine only when it adds needed functionality.
-Start in audit mode, with explicit platform exceptions. Scan image vulnerabilities
-and prioritize reachable high-impact findings; pinning alone does not patch them.
+**Action:** extend the local checks to cover unintended privileged/host namespace
+settings, appropriate service accounts, resource budgets, and expected isolation.
+Use native admission policies where sufficient; introduce a policy engine only
+when it adds needed functionality. Start in audit mode, with explicit platform
+exceptions. Scan image vulnerabilities and prioritize reachable high-impact
+findings; pinning alone does not patch them.
 
 **Acceptance:** deliberate bad fixtures fail validation; existing workloads and
 recovery jobs pass with documented exceptions. Signature verification can follow

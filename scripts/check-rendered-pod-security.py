@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render Argo-managed workloads in Restricted namespaces and inspect their Pods."""
+"""Render Argo workloads in Restricted namespaces and inspect Pod security."""
 
 import argparse
 import importlib.util
@@ -113,6 +113,7 @@ def inspect(root):
     restricted = restricted_namespaces(root)
     findings = []
     rendered_apps = []
+    rendered_images = []
     with tempfile.TemporaryDirectory(prefix="pod-security-helm-") as temporary:
         env = os.environ.copy()
         env.update(
@@ -140,8 +141,15 @@ def inspect(root):
                         continue
                     rendered.extend(render_source(root, source, namespace, app["metadata"]["name"], values_sources, env))
                 findings.extend(inspect_documents(rendered))
+                for document in rendered:
+                    for _metadata, pod_spec in _CHECKER.workload_pod_spec(document):
+                        for group in _CHECKER.CONTAINER_GROUPS:
+                            for container in pod_spec.get(group, []) or []:
+                                rendered_images.append(
+                                    (app["metadata"]["name"], group, container.get("name", "unnamed"), container.get("image", ""))
+                                )
                 rendered_apps.append(app["metadata"]["name"])
-    return rendered_apps, findings
+    return rendered_apps, findings, rendered_images
 
 
 def check_exceptions(root, findings):
@@ -158,18 +166,35 @@ def check_exceptions(root, findings):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
+    parser.add_argument(
+        "--audit-image-digests",
+        action="store_true",
+        help="list rendered container images missing a version tag or SHA-256 digest",
+    )
     args = parser.parse_args()
     try:
         root = args.root.resolve()
-        apps, findings = inspect(root)
+        apps, findings, images = inspect(root)
         findings, stale_exceptions = check_exceptions(root, findings)
     except (OSError, RuntimeError, yaml.YAMLError) as error:
         print("Pod security render failed: {}".format(error), file=sys.stderr)
         return 2
     print("Rendered {} applications in Restricted namespaces".format(len(apps)))
+    if args.audit_image_digests:
+        missing = [item for item in images if not image_is_pinned(item[3])]
+        print("Rendered containers: {}; missing version tag or SHA-256 digest: {}".format(len(images), len(missing)))
+        for app_name, group, container_name, image in sorted(missing):
+            print("{}/{} {}: {}".format(app_name, group, container_name, image or "<image missing>"))
+        return 0
+    missing_images = [item for item in images if not image_is_pinned(item[3])]
     if findings:
         for finding in sorted(set(findings)):
             print(finding)
+    for app_name, group, container_name, image in sorted(missing_images):
+        print("{}/{} {} image lacks a version tag or SHA-256 digest: {}".format(
+            app_name, group, container_name, image or "<image missing>"
+        ))
+    if findings or missing_images:
         return 1
     if stale_exceptions:
         print("Unused Pod security exceptions:", file=sys.stderr)
@@ -178,6 +203,17 @@ def main():
         return 1
     print("Rendered workloads pass the requested Pod security controls")
     return 0
+
+
+def image_is_pinned(image):
+    """Require both a non-empty image tag and a well-formed SHA-256 digest."""
+    if "@sha256:" not in image:
+        return False
+    name, digest = image.rsplit("@sha256:", 1)
+    tag = name.rsplit("/", 1)[-1].rsplit(":", 1)
+    valid_digest = len(digest) == 64 and all(character in "0123456789abcdefABCDEF" for character in digest)
+    valid_tag = len(tag) == 2 and bool(tag[1]) and tag[1].lower() != "latest"
+    return valid_digest and valid_tag
 
 
 if __name__ == "__main__":
