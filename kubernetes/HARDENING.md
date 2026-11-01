@@ -275,8 +275,14 @@ both limits on rendered Restricted workloads. The qBittorrent egress monitor
 init peaked below 1m CPU in the retained three-day metrics window; a 10m limit
 is now set, and its next scheduled job completed with the expected policy,
 Argo, and Mullvad checks. The cluster has no ResourceQuota or LimitRange
-objects. Many platform containers still lack CPU and/or memory limits. Grafana
-has alerts for node memory, `/var` fullness,
+objects. A live audit found 49 platform container/init-container entries
+missing at least one limit across 36 Running Pods, including Argo CD, Cilium,
+NFS CSI, Velero, and control-plane static Pods. Three-day p95 usage was reviewed.
+The local-path provisioner was the first target: p95 was 0.4m CPU and 31 MiB
+memory, so its Deployment now has 250m and 256Mi limits reapplied by the install
+playbook. CNI, CSI, backup agents, and control-plane components remain
+individually reviewed rather than receiving blanket limits. Grafana has alerts
+for node memory, `/var` fullness,
 restart bursts, and crash loops. The daily `backup-watchdog` completed
 successfully today, but no independent missed-run alert or inode-pressure alert
 was found in the tracked configuration.

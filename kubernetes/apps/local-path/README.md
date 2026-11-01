@@ -8,6 +8,9 @@ The persistent base directory must exist before helper pods create volume
 subdirectories. New volumes do not require per-volume machine-config entries.
 Retain-policy deletion leaves data on disk; cleanup is a separate decision.
 PVC request increases do not enforce directory quotas or grow a filesystem.
+The provisioner Deployment has measured CPU and memory requests and limits in
+`resources.patch.json`; the install playbook reapplies them after the pinned
+upstream manifest.
 
 ## Verification
 

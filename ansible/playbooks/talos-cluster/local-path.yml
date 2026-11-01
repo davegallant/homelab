@@ -121,6 +121,20 @@
           register: local_path_manifest_apply
           changed_when: "'created' in local_path_manifest_apply.stdout or 'configured' in local_path_manifest_apply.stdout"
 
+        - name: Apply local-path provisioner resource budgets
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - local-path-storage
+              - patch
+              - deployment
+              - local-path-provisioner
+              - --type=strategic
+              - --patch-file
+              - "{{ local_path_apps_dir }}/resources.patch.json"
+          changed_when: true
+
         - name: Re-assert the provisioner namespace labels
           ansible.builtin.command:
             argv:
