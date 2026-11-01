@@ -266,18 +266,17 @@ stop-on-failure rules and local-PV recovery constraints.
 DiskPressure false; current memory use is 54–71%. All regular containers in
 Restricted namespaces have CPU and memory limits; the remaining gaps there
 were five init containers without CPU limits, three of which also lacked memory
-limits. CPU and memory limits are now set for the Forgejo init containers; CPU
-limits are set for qBittorrent bootstrap and Speedtest Tracker preparation.
-Forgejo, qBittorrent, and Speedtest Tracker rolled out Healthy. A subsequent
-live audit found the SearXNG cache init container, which was absent from the
-earlier live inventory; it now has explicit limits in the local chart. `just
-lint` checks rendered Restricted workloads for CPU and memory limits. The
-SearXNG rollout is pending. The
-qBittorrent egress monitor init peaked below 1m CPU in the retained three-day
-metrics window; a 10m limit is now set, and its next scheduled job completed
-with the expected policy, Argo, and Mullvad checks. The cluster has no
-ResourceQuota or LimitRange objects. Many platform containers still lack
-CPU and/or memory limits. Grafana has alerts for node memory, `/var` fullness,
+limits. The Forgejo, qBittorrent, and Speedtest Tracker gaps are fixed and
+rolled out Healthy. A subsequent live audit found the SearXNG cache init
+container, absent from the earlier inventory; it now has explicit limits and
+rolled out Healthy too. The current live audit found no missing CPU or memory
+limits across 36 Running Pods in Restricted namespaces. `just lint` enforces
+both limits on rendered Restricted workloads. The qBittorrent egress monitor
+init peaked below 1m CPU in the retained three-day metrics window; a 10m limit
+is now set, and its next scheduled job completed with the expected policy,
+Argo, and Mullvad checks. The cluster has no ResourceQuota or LimitRange
+objects. Many platform containers still lack CPU and/or memory limits. Grafana
+has alerts for node memory, `/var` fullness,
 restart bursts, and crash loops. The daily `backup-watchdog` completed
 successfully today, but no independent missed-run alert or inode-pressure alert
 was found in the tracked configuration.
