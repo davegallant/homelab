@@ -19,6 +19,9 @@ using Ansible Vault. `qbittorrent_webui_password` is the PBKDF2 hash;
 Neither credential is committed. The bootstrap Secret is copied only when
 the config file is absent. The notification script is projected from a
 Secret at mode 0644, and the repository malware script is projected at 0750.
+The app runs as UID/GID 1000 with all capabilities dropped and a read-only
+root filesystem. `/config`, `/mnt/torrents`, `/run`, and `/tmp` are explicit
+writable mounts; `/scripts` is read-only.
 
 Dracula is downloaded from pinned revision
 `9020f6eb457087270179beb86d45914d434adb6b` during bootstrap. A marker prevents
