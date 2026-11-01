@@ -74,7 +74,13 @@ The pinned LinuxServer image's s6 startup launches nginx and PHP-FPM masters as
 root and uses six additional capabilities; running the full image as non-root
 failed because its startup scripts require group switching. Keep the namespace
 at Baseline as a reviewed image exception until a maintainable rootless startup
-path is available.
+path is available. An isolated Restricted probe ran as UID/GID 911/1001 with
+all capabilities dropped except the Restricted-allowed `NET_BIND_SERVICE`, a
+read-only root filesystem, and a user-owned `/run`. The image still exited
+because s6 could not set supplementary groups without `SETGID`; restored
+config files also needed ownership migration before UID 911 could read the
+certificate and logs. Bypassing s6 startup would require replacing its init,
+queue, and scheduler handling, so the namespace remains Baseline.
 
 RomM's app runs as UID/GID 1000 and MariaDB as UID/GID 999; both drop all
 capabilities and use read-only root filesystems. RuntimeDefault seccomp, no
@@ -119,7 +125,7 @@ Restricted:
 
 | Namespace | Current hardening | Remaining gate |
 |---|---|---|
-| Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Isolated restore passed: 14,581 results, 2 users, HTTP 200, and 3/3 Ready. | Keep Baseline as a reviewed exception; the pinned image's s6 startup runs root-owned service masters and uses six additional capabilities. Revisit if a maintainable rootless path becomes available. |
+| Speedtest Tracker | App root filesystem is read-only; app workers drop to the image's `abc` user. Database and Apprise are non-root. Isolated restore passed: 14,581 results, 2 users, HTTP 200, and 3/3 Ready. | Keep Baseline as a reviewed exception. A Restricted rootless probe failed because s6 needs `SETGID` for user switching, and config files need a one-time ownership migration. Revisit with a maintainable startup path or an image that supports non-root execution. |
 
 Platform namespaces Alloy and Loki also remain Baseline with Restricted
 warn/audit; review them separately from ordinary applications. The qBittorrent,
