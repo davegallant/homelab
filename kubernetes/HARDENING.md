@@ -262,18 +262,16 @@ stop-on-failure rules and local-PV recovery constraints.
 
 ## 9. Detect abuse and resource exhaustion
 
-**Audit follow-up (2026-11-01):** the audit-policy and stdout-export configuration
-is drafted and locally validated, but is **not confirmed active**. Before applying,
-all three nodes were Ready and Loki/Alloy were healthy. Applying the audit-only
-Talos config caused the API at `192.168.1.210:6443` to refuse connections. I
-reapplied the protected pre-change control-plane config using `--mode=no-reboot`,
-but API access did not recover during this session. Talos services reported
-Running; kubelet logs showed static control-plane containers restarting/exited.
-The audit probe was correctly denied, but its Loki event could not be checked.
-Treat the cluster as degraded until API recovery is confirmed. Do not retry the
-audit apply. A control-plane reboot requires Dave's explicit approval under the
-Talos operating instructions. See the audit plan for the command sequence and
-failed gate evidence.
+**Audit progress (2026-11-01):** the metadata-only policy and stdout export in
+`cluster/audit-config.patch.yaml` are active on the control plane. Applying the
+audit-only patch with `--mode no-reboot` restarted kube-apiserver and briefly
+interrupted API access; it recovered without a node reboot. All three nodes are
+Ready, the API readiness check passes, Alloy is 3/3 Ready, Loki is ready, and
+all Argo Applications are Synced and Healthy. An unauthenticated GET to a
+nonexistent Secret path returned 401 and appeared in Loki as a `Metadata` audit
+event through Alloy. The event has no request or response object. The existing
+`/var/log/audit/kube/kube-apiserver.log` remained at 88,090,292 bytes after the
+change; rotated audit files were preserved.
 
 **Progress (2026-11-01):** the three nodes are Ready, with MemoryPressure and
 DiskPressure false; current memory use is 54–71%. All regular containers in
@@ -314,19 +312,12 @@ restart bursts, and crash loops. The daily `backup-watchdog` completed
 successfully today, but no independent missed-run alert or inode-pressure alert
 was found in the tracked configuration.
 
-Talos's live API server audit policy records all requests at Metadata level, and
-the audit event counter reports 7.69 million events. On the control plane,
-ten rotated files are each about 100 MiB and the active file is about 45 MiB;
-the oldest retained file is roughly seven hours old. They live on the 24 GiB
-`/var` volume (about 15.8 GiB free). Alloy does not mount the host audit-log
-directory, so these events are not shipped with the pod logs. Auditing is on,
-but useful retention and central search are missing; review a lower-volume
-policy and a supported export path before changing the single control plane.
+The metadata policy and Loki export have been verified live. Continue checking
+Loki retention and inode capacity as the new audit stream accumulates.
 
-**Action:** verify effective API audit policy and export useful authentication,
-Secret-access metadata, RBAC, admission, exec, and policy-change events without
-logging secret bodies. Alert on failed backups, disk/inode pressure, certificate
-expiry, and unexpected privilege changes. Add measured requests, limits,
+**Action:** review Loki retention and inode capacity as the audit stream
+accumulates. Alert on failed backups, disk/inode pressure, certificate expiry,
+and unexpected privilege changes. Add measured requests, limits,
 ephemeral-storage budgets, and namespace quotas; include DinD consumption.
 Keep Loki capacity/inode checks before increasing ingestion.
 
