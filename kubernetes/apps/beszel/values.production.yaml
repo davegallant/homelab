@@ -100,8 +100,6 @@ persistence:
     storageClass: local-path
     accessMode: ReadWriteOnce
     size: 1Gi
-    annotations:
-      volumeType: local
   caddy-state:
     annotations:
       volumeType: local
