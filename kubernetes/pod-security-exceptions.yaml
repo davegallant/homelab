@@ -1,0 +1,10 @@
+exceptions:
+  k8s-readonly/k8s-readonly pod automountServiceAccountToken: >-
+    The read-only API proxy needs its scoped ServiceAccount token to list Pods
+    and stream logs; it cannot read Secrets.
+  immich/immich containers:postgres readOnlyRootFilesystem: >-
+    PostgreSQL startup needs writable image paths; its data remains on the
+    dedicated persistent volume.
+  speedtest-tracker/speedtest-tracker containers:app readOnlyRootFilesystem: >-
+    The upstream s6 image needs writable runtime paths; its writable mounts
+    are defined in the chart values.
