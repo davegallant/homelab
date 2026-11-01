@@ -86,6 +86,9 @@ serviceAccount:
   automountServiceAccountToken: false
 
 gitea:
+  admin:
+    # Preserve the existing account password during chart upgrades and pod restarts.
+    passwordMode: initialOnlyNoReset
   podAnnotations:
     backup.velero.io/backup-volumes: data
   config:
