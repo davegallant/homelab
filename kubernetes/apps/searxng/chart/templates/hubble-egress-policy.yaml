@@ -5,11 +5,17 @@ metadata:
   name: exact-hubble-egress
   namespace: searxng
 spec:
-  description: Exact forwarded Hubble egress tuples captured on 2026-10-24.
+  description: Search engine HTTPS and exact forwarded Hubble egress tuples captured on 2026-10-24.
   endpointSelector:
     matchLabels:
       k8s:app.kubernetes.io/name: searxng
   egress:
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
     - toCIDR:
         - 72.11.149.242/32
       toPorts:
