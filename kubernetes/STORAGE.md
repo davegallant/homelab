@@ -103,6 +103,7 @@ claim or its on-disk directory.
 
 ## Related operations
 
+- [Move a stateful workload between Talos workers](LOCAL-PV-MIGRATION.md)
 - [Provisioner verification](apps/local-path/README.md)
 - [Backups and restore drills](BACKUPS.md)
 - [NFS CSI](apps/nfs-csi/README.md)
