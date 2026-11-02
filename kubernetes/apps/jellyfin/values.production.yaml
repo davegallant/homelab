@@ -195,7 +195,7 @@ rawResources:
         annotations:
           argocd.argoproj.io/sync-options: ServerSideApply=false,Force=true,Replace=true
       spec:
-        description: Allow Jellyfin DNS tracking and HTTPS to TMDb metadata, TMDb artwork, OpenSubtitles, and OMDb.
+        description: Allow Jellyfin DNS tracking and HTTPS to TMDb metadata, TMDb artwork, OpenSubtitles, OMDb, and Jellyfin repository.
         endpointSelector:
           matchLabels:
             k8s:app.kubernetes.io/name: jellyfin
@@ -225,6 +225,7 @@ rawResources:
               - matchName: www.opensubtitles.com
               - matchName: dl.opensubtitles.com
               - matchName: www.omdbapi.com
+              - matchName: repo.jellyfin.org
             toPorts:
               - ports:
                   - port: "443"
