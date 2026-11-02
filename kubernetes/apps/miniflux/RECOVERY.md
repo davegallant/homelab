@@ -15,6 +15,16 @@ record history; it is an emergency mechanism, not an automatic data rollback.
 Restoring production data and reconciling Git/Argo requires a deliberate
 app-specific procedure and has not yet been automated.
 
+List candidate pre-sync recovery points with:
+
+```sh
+just presync-points miniflux
+```
+
+The list shows backup name, previous revision and expiry. Entries are
+candidates, not proof the gate passed or that a restore will work; verify the
+volume, dump hook and revision before using one.
+
 ## Isolated logical restore drill
 
 On 2026-11-02, backup `miniflux-presync-preparation-20261102` was restored into

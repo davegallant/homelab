@@ -49,6 +49,10 @@ run playbook="main" *args:
     fi
     ansible-playbook "$PLAYBOOK_PATH" -i inventory --vault-password-file "${ANSIBLE_VAULT_PASSWORD_FILE:-.vault_pass}" "$@"
 
+# List candidate pre-sync recovery points
+presync-points app="miniflux":
+    python3 kubernetes/apps/presync-gate/recovery_points.py {{app}}
+
 # Edit Ansible Vault secrets
 edit-secrets:
     cd ansible && ansible-vault edit group_vars/all/secrets.yaml --vault-password-file "${ANSIBLE_VAULT_PASSWORD_FILE:-.vault_pass}"
