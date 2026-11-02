@@ -33,6 +33,8 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: kube-system
     - server: https://kubernetes.default.svc
+      namespace: miniflux
+    - server: https://kubernetes.default.svc
       namespace: monitoring
     - server: https://kubernetes.default.svc
       namespace: velero

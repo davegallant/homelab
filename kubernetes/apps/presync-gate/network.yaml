@@ -1,0 +1,37 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: presync-miniflux-egress
+  namespace: miniflux
+spec:
+  description: Allow the Miniflux pre-sync gate to reach Kubernetes and Argo.
+  endpointSelector:
+    matchLabels:
+      homelab.davegallant.ca/presync-gate: miniflux
+  ingress:
+    - {}
+  egress:
+    - toEntities: [kube-apiserver]
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+            - port: "6443"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+    - toCIDR:
+        - 192.168.1.185/32
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

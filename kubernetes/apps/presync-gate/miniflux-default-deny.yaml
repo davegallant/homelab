@@ -6,7 +6,12 @@ metadata:
   namespace: miniflux
 spec:
   description: Default deny with cluster DNS, same-namespace access, and explicit internal-range denies.
-  endpointSelector: {}
+  # The pre-sync gate has its own narrowly scoped API/Argo policy.
+  endpointSelector:
+    matchExpressions:
+      - key: homelab.davegallant.ca/presync-gate
+        operator: NotIn
+        values: [miniflux]
   ingress:
     - fromEndpoints:
         - matchLabels:

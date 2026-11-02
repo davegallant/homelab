@@ -13,6 +13,7 @@ lint:
     python3 scripts/check-rendered-pod-security.py
     yamllint -c .yamllint.yaml ansible/ kubernetes/
     python3 scripts/check-velero-backup-coverage.py
+    python3 scripts/check_presync_annotation.py
     cd ansible && ANSIBLE_VAULT_PASSWORD_FILE="${ANSIBLE_VAULT_PASSWORD_FILE:-$PWD/.vault_pass}" ansible-lint
     shellcheck scripts/*.sh kubernetes/apps/qbittorrent/scripts/*.sh
     just lint-renovate
