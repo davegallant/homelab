@@ -21,7 +21,7 @@ spec:
         # depend on the raw data directory being consistent.
         backup.velero.io/backup-volumes: data
         pre.hook.backup.velero.io/container: miniflux-db
-        pre.hook.backup.velero.io/command: '["/bin/sh", "-c", "umask 077; PGPASSWORD=\"$POSTGRES_PASSWORD\" pg_dump -h 127.0.0.1 -U \"$POSTGRES_USER\" -d {{ .Values.db.name }} > \"$PGDATA/dump.sql.tmp\" && mv -f \"$PGDATA/dump.sql.tmp\" \"$PGDATA/dump.sql\""]'
+        pre.hook.backup.velero.io/command: '["/bin/sh", "-c", "umask 077; tmp=$(mktemp \"$PGDATA/dump.sql.tmp.XXXXXXXX\") || exit 1; trap ''rm -f \"$tmp\"'' EXIT; PGPASSWORD=\"$POSTGRES_PASSWORD\" pg_dump -h 127.0.0.1 -U \"$POSTGRES_USER\" -d {{ .Values.db.name }} > \"$tmp\" && mv -f \"$tmp\" \"$PGDATA/dump.sql\""]'
         pre.hook.backup.velero.io/timeout: 180s
     spec:
       automountServiceAccountToken: false
