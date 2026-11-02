@@ -359,8 +359,10 @@ rawResources:
           - toFQDNs:
               # The Invidious Companion calls youtubei on www.youtube.com and
               # retrieves video streams from Google Video; the main app also
-              # fetches thumbnails from i.ytimg.com.
+              # fetches thumbnails from i.ytimg.com and channel avatars from
+              # yt3.ggpht.com.
               - matchName: i.ytimg.com
+              - matchName: yt3.ggpht.com
               - matchName: www.youtube.com
               # The Companion's PO-token validation uses YouTube's search flow,
               # which also reaches www.google.com.
