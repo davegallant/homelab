@@ -10,10 +10,14 @@ revision and its pinned PostgreSQL image with a pre-sync backup.
 A full Argo sync with the pre-sync gate enabled stops if the last successful
 revision does not match live resources. After a partial failed sync, do not
 repeatedly retry the full sync. Preserve the backup, inspect the actual live
-state and choose a recovery point. A selective sync bypasses hooks and does not
-record history; it is an emergency mechanism, not an automatic data rollback.
-Restoring production data and reconciling Git/Argo requires a deliberate
-app-specific procedure and has not yet been automated.
+state and choose a recovery point. A selective sync bypasses the pre-sync hooks,
+so neither the gate nor its recovery-history update runs; it does not restore
+database data or provide automatic data rollback. Use it only as an emergency
+deployment action, with the implications understood. Production data rollback
+and Git/Argo reconciliation remain unimplemented and must be handled manually
+with an app-specific recovery plan.
+The isolated restore drill below validates a recovery point; it is not a
+production rollback procedure.
 
 List candidate pre-sync recovery points with:
 

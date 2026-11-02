@@ -1,0 +1,163 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: miniflux-presync-backup
+  namespace: miniflux
+  labels:
+    velero.io/exclude-from-backup: 'true'
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 2400
+  template:
+    metadata:
+      labels:
+        velero.io/exclude-from-backup: 'true'
+        homelab.davegallant.ca/presync-gate: miniflux
+    spec:
+      restartPolicy: Never
+      serviceAccountName: presync-miniflux
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      hostAliases:
+      - ip: 192.168.1.185
+        hostnames:
+        - argocd.tail.davegallant.ca
+      initContainers:
+      - name: install-argocd-client
+        image: quay.io/argoproj/argocd:v3.5.6@sha256:8e5cc5bb008df8a09dba439462e58c94c55b7735888d3ebde0c25fc05e4e5335
+        command:
+        - sh
+        - -c
+        - cp /usr/local/bin/argocd /tools/argocd
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+            ephemeral-storage: 300Mi
+          limits:
+            cpu: 500m
+            memory: 128Mi
+            ephemeral-storage: 500Mi
+        volumeMounts:
+        - name: tools
+          mountPath: /tools
+      containers:
+      - name: backup
+        workingDir: /app
+        image: docker.io/library/python:3.15.2-slim-trixie@sha256:c4158543ecb725b99e57d129dfd43d761d4c43e4577b5e23326aabb223cf7f4e
+        command:
+        - python3
+        - -c
+        - 'import os, ssl, subprocess
+
+          from pathlib import Path
+
+          from presync_coverage import baseline_revision
+
+          from presync_orchestration import KubernetesAPI
+
+          p=Path("/var/run/secrets/kubernetes.io/serviceaccount")
+
+          api=KubernetesAPI("https://kubernetes.default.svc",(p/"token").read_text().strip(),ssl.create_default_context(cafile=str(p/"ca.crt")))
+
+          schedule=api.request("GET","/apis/velero.io/v1/namespaces/velero/schedules/miniflux-daily")
+
+          assert schedule["spec"]["template"]["includedNamespaces"]==["miniflux"]
+
+          app=api.request("GET","/apis/argoproj.io/v1alpha1/namespaces/argocd/applications/miniflux")
+
+          revision=baseline_revision(app)
+
+          assert revision
+
+          r=subprocess.run(["argocd","app","diff","miniflux","--revision",revision,"--server",os.environ["ARGOCD_SERVER"]],capture_output=True,timeout=180)
+
+          if r.returncode: raise RuntimeError("Argo baseline comparison failed: exit
+          %d" % r.returncode)
+
+          print("Gate pod can reach Kubernetes API and perform a scoped TLS Argo baseline
+          comparison")
+
+          '
+        env:
+        - name: PATH
+          value: /tools:/usr/local/bin:/usr/bin:/bin
+        - name: HOME
+          value: /tmp
+        - name: PYTHONDONTWRITEBYTECODE
+          value: '1'
+        - name: ARGOCD_SERVER
+          value: argocd.tail.davegallant.ca:443
+        - name: ARGOCD_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: presync-miniflux-argocd
+              key: token
+        - name: PRESYNC_NAMESPACE
+          value: miniflux
+        - name: PRESYNC_APPLICATION
+          value: miniflux
+        - name: PRESYNC_SCHEDULE
+          value: miniflux-daily
+        - name: PRESYNC_CLAIMS
+          value: miniflux-postgres
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+            ephemeral-storage: 100Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+            ephemeral-storage: 500Mi
+        volumeMounts:
+        - name: tools
+          mountPath: /tools
+          readOnly: true
+        - name: code
+          mountPath: /app
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+        - name: api-token
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          readOnly: true
+      volumes:
+      - name: api-token
+        projected:
+          sources:
+          - serviceAccountToken:
+              path: token
+              expirationSeconds: 3600
+          - configMap:
+              name: kube-root-ca.crt
+              items:
+              - key: ca.crt
+                path: ca.crt
+      - name: tools
+        emptyDir:
+          sizeLimit: 300Mi
+      - name: tmp
+        emptyDir:
+          sizeLimit: 100Mi
+      - name: code
+        configMap:
+          name: presync-miniflux-code

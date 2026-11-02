@@ -21,6 +21,7 @@ spec:
     spec:
       restartPolicy: Never
       serviceAccountName: presync-miniflux
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -101,7 +102,21 @@ spec:
               readOnly: true
             - name: tmp
               mountPath: /tmp
+            - name: api-token
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              readOnly: true
       volumes:
+        - name: api-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  expirationSeconds: 3600
+              - configMap:
+                  name: kube-root-ca.crt
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
         - name: tools
           emptyDir:
             sizeLimit: 300Mi
