@@ -16,5 +16,3 @@ db:
   resources:
     requests:
       cpu: 20m
-preSyncBackup:
-  enabled: true

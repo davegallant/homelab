@@ -42,24 +42,6 @@ check. The pinned Miniflux 2.3.4 image started against that logical restore and
 its `/healthcheck` returned HTTP 200. The drill namespace and its separate PV
 were removed afterward; the production PVC remained bound to its original PV.
 
-On 2026-11-02, the first real pre-sync run created `presync-miniflux-srb6v`
-before syncing revision
-[`209436ed`](https://github.com/davegallant/homelab/commit/209436ed3ae07341aa2a51a590991b533b39ce6c).
-The backup recorded previous revision
-[`cc11b088`](https://github.com/davegallant/homelab/commit/cc11b088a112c4e34dac27716a7756a18c1c5b48),
-completed without errors, and its PodVolumeBackup covered the exact bound
-`miniflux-postgres` claim and `data` volume with 643708366 bytes. The dump hook
-completed. The backup was restored into an isolated namespace with a new
-local-path PVC; its PodVolumeRestore completed with the same byte count. The
-restored DB authenticated over TCP with the Vault-backed DB credentials, and
-the 140734213-byte `dump.sql` loaded into a fresh `template0` database with
-`ON_ERROR_STOP`. That database contained one user, 24 feeds, 3997 entries and
-one schema-version row. Velero completed the isolated restore in 45 seconds.
-The drill namespace and PV were removed afterward; the production PVC remained
-bound to its original PV. This validates the exact pre-sync backup and its
-logical dump. The separate drill above validates Miniflux application startup
-against a restored database.
-
 For another drill, first inspect the selected backup's resource inventory and
 pod labels: do not restore identity-bearing sidecars or routes. Create a new
 namespace with restricted Pod Security and default-deny network isolation;
