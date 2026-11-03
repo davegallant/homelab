@@ -4,29 +4,15 @@ kind: Application
 metadata:
   name: presync-gate
   namespace: argocd
-  annotations:
-    homelab.davegallant.ca/pre-sync-backup: enabled
 spec:
   project: homelab-platform
-  sources:
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate/chart
-      helm:
-        valuesObject:
-          application: presync-gate
-          targetNamespace: presync-gate
-          gateNamespace: presync-gate
-          scheduleName: ''
-          requiredHooks: []
-          excludedVolumes: []
-          defaultVolumesToFsBackup: false
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/presync-gate
   destination:
     server: https://kubernetes.default.svc
-    namespace: presync-gate
+    namespace: miniflux
   syncPolicy:
     syncOptions:
       - ServerSideApply=true

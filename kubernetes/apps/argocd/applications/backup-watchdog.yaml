@@ -4,26 +4,12 @@ kind: Application
 metadata:
   name: backup-watchdog
   namespace: argocd
-  annotations:
-    homelab.davegallant.ca/pre-sync-backup: enabled
 spec:
   project: homelab-platform
-  sources:
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/backup-watchdog
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate/chart
-      helm:
-        valuesObject:
-          application: backup-watchdog
-          targetNamespace: velero
-          gateNamespace: presync-gate
-          scheduleName: ''
-          requiredHooks: []
-          excludedVolumes: []
-          defaultVolumesToFsBackup: false
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/backup-watchdog
   destination:
     server: https://kubernetes.default.svc
     namespace: velero

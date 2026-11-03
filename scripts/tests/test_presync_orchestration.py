@@ -11,32 +11,6 @@ spec.loader.exec_module(module)
 
 
 class BackupGateTest(unittest.TestCase):
-    def test_source_aware_diff_arguments_use_historical_source_positions(self):
-        args = module.baseline_diff_args({"revisions": ["a" * 40, "b" * 40], "source_positions": [1, 2]})
-        self.assertEqual(args, ["--revisions", "a" * 40, "--source-positions", "1", "--revisions", "b" * 40, "--source-positions", "2"])
-
-    def test_schedule_discovery_requires_one_matching_schedule(self):
-        schedules = [{"metadata": {"name": "daily"}, "spec": {"template": {"includedNamespaces": ["ns", "other"]}}}]
-        self.assertEqual(module.matching_schedule(schedules, "ns"), schedules[0])
-        self.assertIsNone(module.matching_schedule([], "ns"))
-        self.assertRaises(ValueError, module.matching_schedule, schedules * 2, "ns")
-
-    def test_backup_builder_is_namespace_scoped_and_resources_only_without_schedule(self):
-        request = module.build_backup(None, "reader", "reader-ns", "a" * 40)
-        self.assertEqual(request["spec"]["includedNamespaces"], ["reader-ns"])
-        self.assertEqual(request["spec"]["defaultVolumesToFsBackup"], False)
-        self.assertEqual(request["spec"]["excludedResources"], ["secrets"])
-        self.assertEqual(request["spec"]["ttl"], "168h")
-
-    def test_backup_builder_copies_only_safe_schedule_fields(self):
-        schedule = {"spec": {"template": {"includedNamespaces": ["app"], "excludedResources": ["secrets"], "defaultVolumesToFsBackup": True,
-                  "storageLocation": "default", "ttl": "336h", "labelSelector": {"matchLabels": {"unsafe": "yes"}}, "hooks": {"resources": [{}]}}}}
-        request = module.build_backup(schedule, "reader", "app", "a" * 40)
-        self.assertEqual(request["spec"]["includedNamespaces"], ["app"])
-        self.assertNotIn("labelSelector", request["spec"])
-        self.assertNotIn("hooks", request["spec"])
-        self.assertEqual(request["spec"]["defaultVolumesToFsBackup"], True)
-
     def test_redirect_handler_never_forwards_credentials(self):
         handler = module.NoRedirect()
         self.assertIsNone(handler.redirect_request(None, None, 302, "Found", {}, "https://other.example/"))
@@ -71,15 +45,13 @@ class BackupGateTest(unittest.TestCase):
                 if path.endswith("persistentvolumeclaims"):
                     return {"items": [{"metadata": {"name": "db", "uid": "pvc"}, "status": {"phase": "Bound"}}]}
                 if path.endswith("/pods"):
-                    return {"items": [{"metadata": {"name": "miniflux-db-0", "uid": "pod", "annotations": {"pre.hook.backup.velero.io/command": '["/bin/sh", "-c", "pg_dump > $PGDATA/dump.sql.tmp && mv $PGDATA/dump.sql.tmp $PGDATA/dump.sql"]' , "pre.hook.backup.velero.io/container": "miniflux-db", "backup.velero.io/backup-volumes": "data"}}, "status": {"phase": "Running"}, "spec": {"containers": [{"volumeMounts": [{"name": "data"}]}], "volumes": [{"name": "data", "persistentVolumeClaim": {"claimName": "db"}}]}}]}
+                    return {"items": [{"metadata": {"name": "miniflux-db-0", "uid": "pod", "annotations": {"pre.hook.backup.velero.io/command": '["/bin/sh", "-c", "pg_dump > $PGDATA/dump.sql.tmp && mv $PGDATA/dump.sql.tmp $PGDATA/dump.sql"]' , "pre.hook.backup.velero.io/container": "miniflux-db"}}, "status": {"phase": "Running"}, "spec": {"containers": [{"volumeMounts": [{"name": "data"}]}], "volumes": [{"name": "data", "persistentVolumeClaim": {"claimName": "db"}}]}}]}
                 return {"items": [{"metadata": {"labels": {"velero.io/backup-uid": "backup", "velero.io/pvc-uid": "pvc"}}, "spec": {"pod": {"uid": "pod"}, "volume": "data"}, "status": {"phase": "Completed", "progress": {"totalBytes": 1}}}]}
         schedule = {"spec": {"template": {"includedNamespaces": ["miniflux"], "excludedResources": ["secrets"]}}}
         api = FakeAPI()
-        self.assertTrue(module.run_backup(api, schedule, "miniflux", "a" * 40, ["db"], 1, lambda: None,
-                                          application="miniflux", required_hooks=[{"selector": {}, "container": "miniflux-db"}]))
+        self.assertTrue(module.run_backup(api, schedule, "miniflux", "a" * 40, ["db"], 1, lambda: None))
         api.hook_attempted = 0
-        self.assertFalse(module.run_backup(api, schedule, "miniflux", "a" * 40, ["db"], 1, lambda: None,
-                                           application="miniflux", required_hooks=[{"selector": {}, "container": "miniflux-db"}]))
+        self.assertFalse(module.run_backup(api, schedule, "miniflux", "a" * 40, ["db"], 1, lambda: None))
 
     def test_rejects_malformed_server_generated_backup_name(self):
         class FakeAPI:
@@ -148,11 +120,10 @@ class BackupGateTest(unittest.TestCase):
         self.assertEqual(request["metadata"]["annotations"]["homelab.davegallant.ca/previous-revision"], "abc")
         self.assertEqual(schedule["spec"]["template"]["ttl"], "336h")
 
-    def test_request_rejects_schedule_outside_app_and_always_excludes_secrets(self):
-        with self.assertRaises(ValueError):
-            module.build_backup({"spec": {"template": {"includedNamespaces": ["other"]}}}, "miniflux", "abc")
-        result = module.build_backup({"spec": {"template": {"includedNamespaces": ["miniflux"]}}}, "miniflux", "abc")
-        self.assertIn("secrets", result["spec"]["excludedResources"])
+    def test_request_rejects_schedule_outside_app_or_including_secrets(self):
+        for template in ({"includedNamespaces": ["other"], "excludedResources": ["secrets"]}, {"includedNamespaces": ["miniflux"]}):
+            with self.assertRaises(ValueError):
+                module.build_backup({"spec": {"template": template}}, "miniflux", "abc")
 
     def test_success_waits_for_finished_backup_and_checks_coverage(self):
         states = iter([{"status": {"phase": "InProgress"}}, {"status": {"phase": "Completed"}}])

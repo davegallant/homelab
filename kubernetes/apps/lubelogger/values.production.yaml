@@ -12,7 +12,6 @@ controllers:
         # Velero backs up the live app data volume; the rollback PVC
         # remains excluded by omission.
         backup.velero.io/backup-volumes: data-local
-        backup.velero.io/backup-volumes-excludes: "data"
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000

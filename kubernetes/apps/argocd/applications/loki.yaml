@@ -5,29 +5,15 @@ metadata:
   name: loki
   namespace: argocd
   annotations:
-    homelab.davegallant.ca/pre-sync-backup: enabled
     homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
-  sources:
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/loki/chart
-      helm:
-        releaseName: loki
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate/chart
-      helm:
-        valuesObject:
-          application: loki
-          targetNamespace: loki
-          gateNamespace: presync-gate
-          scheduleName: loki-daily
-          requiredHooks: []
-          excludedVolumes:
-            - tailscale-state
-          defaultVolumesToFsBackup: false
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/loki/chart
+    helm:
+      releaseName: loki
   destination:
     server: https://kubernetes.default.svc
     namespace: loki

@@ -5,7 +5,6 @@ metadata:
   name: lubelogger
   namespace: argocd
   annotations:
-    homelab.davegallant.ca/pre-sync-backup: enabled
     homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
@@ -20,19 +19,6 @@ spec:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate/chart
-      helm:
-        valuesObject:
-          application: lubelogger
-          targetNamespace: lubelogger
-          gateNamespace: presync-gate
-          scheduleName: lubelogger-backupschedule
-          requiredHooks: []
-          excludedVolumes:
-            - data
-          defaultVolumesToFsBackup: false
   destination:
     server: https://kubernetes.default.svc
     namespace: lubelogger

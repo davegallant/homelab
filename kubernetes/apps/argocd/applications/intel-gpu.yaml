@@ -4,26 +4,12 @@ kind: Application
 metadata:
   name: intel-gpu
   namespace: argocd
-  annotations:
-    homelab.davegallant.ca/pre-sync-backup: enabled
 spec:
   project: homelab-platform
-  sources:
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/intel-gpu
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate/chart
-      helm:
-        valuesObject:
-          application: intel-gpu
-          targetNamespace: intel-gpu
-          gateNamespace: presync-gate
-          scheduleName: ''
-          requiredHooks: []
-          excludedVolumes: []
-          defaultVolumesToFsBackup: false
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/intel-gpu
   destination:
     server: https://kubernetes.default.svc
     namespace: intel-gpu

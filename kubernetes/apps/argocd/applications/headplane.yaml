@@ -5,30 +5,17 @@ metadata:
   name: headplane
   namespace: argocd
   annotations:
-    homelab.davegallant.ca/pre-sync-backup: enabled
     homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
-  sources:
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/headplane/chart
-      helm:
-        releaseName: headplane
-        valueFiles:
-          - ../values.production.yaml
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate/chart
-      helm:
-        valuesObject:
-          application: headplane
-          targetNamespace: headplane
-          gateNamespace: presync-gate
-          scheduleName: headplane-daily
-          requiredHooks: []
-          excludedVolumes: []
-          defaultVolumesToFsBackup: true
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/headplane/chart
+    helm:
+      releaseName: headplane
+      valueFiles:
+        - ../values.production.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: headplane

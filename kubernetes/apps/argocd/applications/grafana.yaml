@@ -5,31 +5,15 @@ metadata:
   name: grafana
   namespace: argocd
   annotations:
-    homelab.davegallant.ca/pre-sync-backup: enabled
     homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
-  sources:
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/grafana/chart
-      helm:
-        releaseName: grafana
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate/chart
-      helm:
-        valuesObject:
-          application: grafana
-          targetNamespace: grafana
-          gateNamespace: presync-gate
-          scheduleName: grafana-daily
-          requiredHooks:
-            - selector:
-                app.kubernetes.io/name: grafana
-              container: sqlite-backup
-          excludedVolumes: []
-          defaultVolumesToFsBackup: false
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/grafana/chart
+    helm:
+      releaseName: grafana
   destination:
     server: https://kubernetes.default.svc
     namespace: grafana

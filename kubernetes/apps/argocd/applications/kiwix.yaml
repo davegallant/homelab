@@ -5,36 +5,17 @@ metadata:
   name: kiwix
   namespace: argocd
   annotations:
-    homelab.davegallant.ca/pre-sync-backup: enabled
     homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
-  sources:
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/kiwix/chart
-      helm:
-        releaseName: kiwix
-        valueFiles:
-          - ../values.production.yaml
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate/chart
-      helm:
-        valuesObject:
-          application: kiwix
-          targetNamespace: kiwix
-          gateNamespace: presync-gate
-          scheduleName: kiwix-daily
-          requiredHooks: []
-          excludedVolumes:
-            - data
-            - tailscale-state
-            - caddy-runtime
-            - tmp
-            - kiwix-caddy
-            - kiwix-tailscale
-          defaultVolumesToFsBackup: false
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/kiwix/chart
+    helm:
+      releaseName: kiwix
+      valueFiles:
+        - ../values.production.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: kiwix

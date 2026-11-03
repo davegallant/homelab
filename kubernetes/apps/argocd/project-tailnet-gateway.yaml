@@ -51,8 +51,6 @@ spec:
       namespace: tailnet-gateway
     - server: https://kubernetes.default.svc
       namespace: ""
-    - server: https://kubernetes.default.svc
-      namespace: presync-gate
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
@@ -69,5 +67,3 @@ spec:
       kind: Gateway
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-    - group: batch
-      kind: Job

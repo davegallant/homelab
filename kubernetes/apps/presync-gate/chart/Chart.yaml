@@ -1,5 +1,0 @@
-apiVersion: v2
-name: presync-gate
-description: Shared Argo CD pre-sync Velero backup gate
-type: application
-version: 0.1.0

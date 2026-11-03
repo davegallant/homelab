@@ -4,26 +4,12 @@ kind: Application
 metadata:
   name: velero-schedules
   namespace: argocd
-  annotations:
-    homelab.davegallant.ca/pre-sync-backup: enabled
 spec:
   project: homelab-velero-backup
-  sources:
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/velero-schedules
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate/chart
-      helm:
-        valuesObject:
-          application: velero-schedules
-          targetNamespace: velero
-          gateNamespace: presync-gate
-          scheduleName: ''
-          requiredHooks: []
-          excludedVolumes: []
-          defaultVolumesToFsBackup: false
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/velero-schedules
   destination:
     server: https://kubernetes.default.svc
     namespace: velero

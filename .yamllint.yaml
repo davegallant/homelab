@@ -14,7 +14,6 @@ ignore:
   - kubernetes/apps/grafana/chart/templates/
   - kubernetes/apps/loki/chart/templates/
   - kubernetes/apps/tailnet-gateway/chart/templates/
-  - kubernetes/apps/presync-gate/chart/templates/
 
 rules:
   # Playbook main.yml files start with ---; shared task files and
