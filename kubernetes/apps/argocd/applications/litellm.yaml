@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: litellm
+  namespace: argocd
+  annotations:
+    homelab.davegallant.ca/backup-policy: not-required
+spec:
+  project: homelab
+  sources:
+    - repoURL: ghcr.io/berriai
+      chart: litellm-helm
+      targetRevision: "1.106.6"
+      helm:
+        releaseName: litellm
+        skipTests: true
+        valueFiles:
+          - $values/kubernetes/apps/litellm/values.production.yaml
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: litellm
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true

@@ -1,0 +1,27 @@
+image:
+  repository: ghcr.io/davegallant/rfd-enricher
+  tag: e6f4e85957b0c8bde3ca11ddd887e7307350092a
+  digest: sha256:7926d8103a7b27d9c0d38648e08f9aa20eaf43f39659de960064638ecb468f96
+
+schedule: "*/15 * * * *"
+concurrencyPolicy: Forbid
+startingDeadlineSeconds: 300
+activeDeadlineSeconds: 600
+backoffLimit: 1
+successfulJobsHistoryLimit: 1
+failedJobsHistoryLimit: 2
+
+env:
+  RFD_FYI_ORIGIN: https://rfd.davegallant.ca
+  ENRICH_PROVIDER: litellm
+  ENRICH_MODEL: gpt-6-luna
+  ENRICH_BASE_URL: http://litellm.litellm.svc.cluster.local:4000/v1
+  ENRICH_STREAM: "true"
+
+secretEnv:
+  REFRESH_SECRET:
+    name: rfd-enrich-runtime-external
+    key: REFRESH_SECRET
+  ENRICH_API_KEY:
+    name: rfd-enrich-runtime-external
+    key: ENRICH_API_KEY
