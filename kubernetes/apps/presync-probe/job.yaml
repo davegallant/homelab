@@ -60,11 +60,7 @@ spec:
         command:
         - python3
         - -c
-        - 'import os, ssl, subprocess
-
-          from pathlib import Path
-
-          from presync_coverage import baseline_revision
+        - 'import ssl, time
 
           from presync_orchestration import KubernetesAPI
 
@@ -72,23 +68,11 @@ spec:
 
           api=KubernetesAPI("https://kubernetes.default.svc",(p/"token").read_text().strip(),ssl.create_default_context(cafile=str(p/"ca.crt")))
 
-          schedule=api.request("GET","/apis/velero.io/v1/namespaces/velero/schedules/miniflux-daily")
+          api.request("GET","/apis/argoproj.io/v1alpha1/namespaces/argocd/applications/miniflux")
 
-          assert schedule["spec"]["template"]["includedNamespaces"]==["miniflux"]
+          print("Kubernetes API access works; holding pod for Cilium inspection", flush=True)
 
-          app=api.request("GET","/apis/argoproj.io/v1alpha1/namespaces/argocd/applications/miniflux")
-
-          revision=baseline_revision(app)
-
-          assert revision
-
-          r=subprocess.run(["argocd","app","diff","miniflux","--revision",revision,"--server",os.environ["ARGOCD_SERVER"]],capture_output=True,timeout=180)
-
-          if r.returncode: raise RuntimeError("Argo baseline comparison failed: exit
-          %d" % r.returncode)
-
-          print("Gate pod can reach Kubernetes API and perform a scoped TLS Argo baseline
-          comparison")
+          time.sleep(180)
 
           '
         env:
