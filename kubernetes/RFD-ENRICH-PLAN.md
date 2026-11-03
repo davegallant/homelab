@@ -81,10 +81,11 @@
 - [x] Add `litellm` namespace with Restricted Pod Security labels through the existing Ansible namespace workflow.
 - [x] Add Argo Application and AppProject allowlists.
 - [x] Configure the chart, provider/master-key Secrets, internal service, pinned non-root image, probes, and security settings; disable bundled Postgres and migrations for the current config-only use.
+- [x] Keep LiteLLM model-catalog loading local; startup logs led to adding the explicit local-cost-map switch alongside offline mode.
 - [x] Add a Cilium default-deny policy for DNS and OpenRouter; permit only the enricher namespace/pod label on port 4000.
 - [x] Mark the stateless LiteLLM Application `backup-policy: not-required`.
 - [x] Migrate credentials to Vault and add provisioning tasks; values are never emitted in output.
-- [ ] After authorized deployment, verify `/v1/models`, a representative model request, and device-login independence.
+- [x] After authorized deployment, verify `/v1/models` and a representative model request; confirm the active OpenRouter request works without device-login files.
 
 ### Task 3: Add the enricher CronJob chart and application
 
@@ -122,12 +123,12 @@
 - Enricher secret contains the existing RFD `REFRESH_SECRET`.
 - LXC remains recoverable until 48 hours of successful Kubernetes scheduled runs are observed.
 
-- [ ] Verify intended Kubernetes API/context and all expected node names before any cluster mutation.
-- [ ] Provision namespaces, Pod Security labels, and external Secrets using the protected `gitops-secrets` playbook. Never print secret values.
-- [ ] Review Argo diffs and sync LiteLLM first; verify Ready/healthy state, `/v1/models`, one model request, and Hubble allow/deny evidence before syncing the CronJob.
-- [ ] Disable `rfd-enrich.timer` on the LXC at cutover to prevent concurrent writes, then start one Kubernetes Job manually and verify it fetched input, called LiteLLM, posted accepted tags, and exited successfully.
-- [ ] Enable/retain the 15-minute CronJob and observe 48 hours of successful scheduled runs. If a gate fails, retain the LXC and stop the retirement path.
-- [ ] After Dave explicitly authorizes shutdown/retirement, stop and disable the LXC services, verify Kubernetes remains healthy, and only then remove LXC inventory/provisioning references in a separate reviewed change.
+- [x] Verify intended Kubernetes API/context and all expected node names before any cluster mutation.
+- [x] Provision namespaces, Pod Security labels, and external Secrets using the protected `gitops-secrets` playbook. Secret values remained hidden.
+- [x] Review Argo diffs and sync LiteLLM first; verify Ready/healthy state, `/v1/models`, one model request, and live Cilium allow verdicts before syncing the CronJob.
+- [x] Disable `rfd-enrich.timer` on the LXC at cutover, then start one Kubernetes Job manually. It fetched input, called LiteLLM, posted accepted tags, and exited successfully.
+- [ ] Keep the 15-minute CronJob enabled and observe 48 hours of successful scheduled runs. If a gate fails, retain the LXC and stop the retirement path.
+- [ ] After the 48-hour gate, request final LXC shutdown/retirement approval.
 
 ## Validation Commands
 
