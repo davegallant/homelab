@@ -1,7 +1,7 @@
 # AGENTS.md
 
 Docker-based homelab managed with Ansible. Most self-hosted services run in
-Proxmox LXC containers on Ubuntu 24.04 LTS with Docker Compose. Homepage also
+Proxmox LXC containers on Debian 13 with Docker Compose. Homepage also
 has a Talos Kubernetes pilot. Networking is via Tailscale. LXC logging is
 centralized via Grafana Alloy to Loki.
 
@@ -101,8 +101,9 @@ Every service playbook follows this exact pattern:
 - **Privilege escalation**: not specified (hosts are accessed as root via Tailscale SSH)
 - **Edge hosts** (e.g. `vps`): reached over plain SSH via the operator's
   `~/.ssh/config`, not the tailnet — set `ansible_user: root` in the play,
-  allow SSH before enabling UFW, skip Alloy/Beszel (no tailnet route to
-  Loki/hub), and opt out of CI with `.no-ci`
+  allow SSH and required agent ports before enabling UFW, skip Alloy without
+  a Loki route, and opt out of CI with `.no-ci`. The VPS runs Beszel in SSH
+  mode; restrict its agent port to the hub's verified egress IP.
 - **Task directive order**: `name:` first, then module with parameters, then conditionals
 - **Hosts value**: must match the playbook directory name and the inventory hostname
 - **Use `ansible.builtin.template`** for copying compose files (even if no variables),
@@ -121,9 +122,9 @@ Every service playbook follows this exact pattern:
 
 Hosts without Docker (e.g. `cinema`) skip `install-docker.yml` and set
 `alloy_docker_discovery: false` in the play's `vars:` so Alloy ships journal
-logs only. The `vps` play additionally skips `install-alloy.yml` and
-`install-beszel-agent.yml`: it is not on the tailnet, so it cannot reach Loki
-or the Beszel hub (it is covered by a Gatus endpoint instead).
+logs only. The `vps` play skips `install-alloy.yml` because it has no route to
+Loki. It includes `install-beszel-agent.yml` in SSH mode and allows the agent
+port only from the hub's configured egress IP.
 
 ## Docker Compose Conventions
 

@@ -90,7 +90,7 @@ Fix ownership/permissions to match the originals if anything looks off
 If the VPS is lost entirely: the repo rebuilds the machine, the Drive backup
 restores the state.
 
-1. **New VPS + DNS.** Provision a fresh Ubuntu VPS. If the IP changed, update
+1. **New VPS + DNS.** Provision a fresh Debian 13 VPS. If the IP changed, update
 your `~/.ssh/config` `vps` alias (and `ssh-keygen -R` the old host key),
 and update DNS for the VPS's public hostnames.
 
