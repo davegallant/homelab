@@ -42,7 +42,7 @@
         'created' in argocd_default_project_apply.stdout or
         'configured' in argocd_default_project_apply.stdout
 
-    - name: Apply the restricted monitoring, backup, Tailnet Gateway, and pre-sync projects
+    - name: Apply the restricted monitoring, backup, and Tailnet Gateway projects
       ansible.builtin.command:
         argv:
           - kubectl
@@ -55,7 +55,6 @@
         - project-monitoring.yaml
         - project-velero-backup.yaml
         - project-tailnet-gateway.yaml
-        - project-presync-gate.yaml
       register: argocd_restricted_projects_apply
       changed_when: >-
         'created' in argocd_restricted_projects_apply.stdout or
