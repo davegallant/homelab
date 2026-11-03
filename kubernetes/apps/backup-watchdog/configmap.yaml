@@ -51,6 +51,7 @@ data:
     import sys
     import urllib.request
     import urllib.error
+    import urllib.parse
     from datetime import datetime, timezone
     STALE_HOURS = float(os.environ.get("WATCHDOG_STALE_HOURS", "36"))
     GOTIFY_URL = os.environ.get("GOTIFY_URL", "https://gotify.davegallant.ca/message")
@@ -70,14 +71,31 @@ data:
             return None
         return (now - dt).total_seconds() / 3600.0
     def api_get(path):
+        # Follow Kubernetes pagination: a list over the limit (500) returns a
+        # continue token, and ignoring it silently truncates the list. That
+        # truncated PVBs (524 total, first page 500) and false-flagged
+        # namespaces whose PVBs were on page 2. Loop until continue is empty.
         host = os.environ["KUBERNETES_SERVICE_HOST"]
         port = os.environ["KUBERNETES_SERVICE_PORT"]
         with open("/var/run/secrets/kubernetes.io/serviceaccount/token") as f:
             token = f.read().strip()
         ctx = ssl.create_default_context(cafile="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
-        req = urllib.request.Request(f"https://{host}:{port}{path}", headers={"Authorization": f"Bearer {token}", "Accept": "application/json"})
-        with urllib.request.urlopen(req, context=ctx, timeout=30) as r:
-            return json.load(r)
+        items = []
+        result = {}
+        url_path = path
+        while True:
+            req = urllib.request.Request(f"https://{host}:{port}{url_path}", headers={"Authorization": f"Bearer {token}", "Accept": "application/json"})
+            with urllib.request.urlopen(req, context=ctx, timeout=30) as r:
+                page = json.load(r)
+            result = page
+            items.extend(page.get("items", []))
+            cont = (page.get("metadata", {}) or {}).get("continue")
+            if not cont:
+                break
+            sep = "&" if "?" in path else "?"
+            url_path = f"{path}{sep}continue={urllib.parse.quote(cont)}"
+        result["items"] = items
+        return result
     def load_live():
         return {
             "pvcs": api_get("/api/v1/persistentvolumeclaims?limit=500"),
