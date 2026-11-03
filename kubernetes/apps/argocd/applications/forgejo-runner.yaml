@@ -4,6 +4,8 @@ kind: Application
 metadata:
   name: forgejo-runner
   namespace: argocd
+  annotations:
+    homelab.davegallant.ca/pre-sync-backup: enabled
 spec:
   # OFFICIAL REPO CHART (Dave-approved, 2026-10-25, Option B).
   # NOT OCI: oci://code.forgejo.org/forgejo-helm/forgejo-runner returns
@@ -28,6 +30,18 @@ spec:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       ref: values
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/presync-gate/chart
+      helm:
+        valuesObject:
+          application: forgejo-runner
+          targetNamespace: forgejo-runner
+          gateNamespace: presync-gate
+          scheduleName: forgejo-daily
+          requiredHooks: []
+          excludedVolumes: []
+          defaultVolumesToFsBackup: true
   destination:
     server: https://kubernetes.default.svc
     namespace: forgejo-runner

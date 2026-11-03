@@ -5,6 +5,7 @@ metadata:
   name: beszel
   namespace: argocd
   annotations:
+    homelab.davegallant.ca/pre-sync-backup: enabled
     homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
@@ -19,6 +20,19 @@ spec:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       ref: values
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/presync-gate/chart
+      helm:
+        valuesObject:
+          application: beszel
+          targetNamespace: beszel
+          gateNamespace: presync-gate
+          scheduleName: beszel-daily
+          requiredHooks: []
+          excludedVolumes:
+            - tailscale-state
+          defaultVolumesToFsBackup: false
   destination:
     server: https://kubernetes.default.svc
     namespace: beszel

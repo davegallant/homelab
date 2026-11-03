@@ -1,0 +1,11 @@
+---
+- name: Provision the shared pre-sync Argo credential
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../../group_vars/all/secrets.yaml
+  tasks:
+    - name: Apply the pre-sync Argo credential
+      ansible.builtin.include_tasks:
+        file: presync-gate-token-tasks.yml

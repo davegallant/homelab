@@ -10,6 +10,8 @@ spec:
   destinations:
     - server: https://kubernetes.default.svc
       namespace: monitoring
+    - server: https://kubernetes.default.svc
+      namespace: presync-gate
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
     - group: apps
@@ -20,3 +22,5 @@ spec:
       kind: Service
     - group: cilium.io
       kind: CiliumNetworkPolicy
+    - group: batch
+      kind: Job

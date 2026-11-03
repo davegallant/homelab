@@ -17,34 +17,64 @@ def wait_for_backup(read_backup, verify_coverage, max_polls, pause):
     return False
 
 
-def build_backup(schedule, app, previous_revision):
-    """Create a named Velero backup request from the existing schedule."""
-    import copy
+def matching_schedule(schedules, namespace):
+    """Find the single Velero Schedule whose template includes namespace."""
+    found = [item for item in schedules if namespace in
+             item.get("spec", {}).get("template", {}).get("includedNamespaces", [])]
+    if len(found) > 1:
+        raise ValueError("more than one Velero Schedule includes the target namespace")
+    return found[0] if found else None
 
-    if not app or not previous_revision:
-        raise ValueError("application and previous revision are required")
-    spec = copy.deepcopy(schedule["spec"]["template"])
-    if spec.get("includedNamespaces") != [app] or "secrets" not in spec.get("excludedResources", []):
-        raise ValueError("schedule must cover only the app namespace and exclude secrets")
-    spec["ttl"] = "168h"
+
+def baseline_diff_args(plan):
+    """Build repeated Argo CLI flags for source-specific history revisions."""
+    args = []
+    for revision, position in zip(plan["revisions"], plan["source_positions"]):
+        args.extend(["--revisions", revision, "--source-positions", str(position)])
+    return args
+
+
+def build_backup(schedule, app, namespace, previous_revision=None, excluded_resources=()):
+    """Build a narrowly scoped pre-sync backup from an optional Schedule."""
+    if previous_revision is None:  # compatibility with the original pilot API
+        previous_revision, namespace = namespace, app
+    if not app or not namespace or not previous_revision:
+        raise ValueError("application, namespace, and previous revision are required")
+    template = (schedule or {}).get("spec", {}).get("template", {})
+    included = template.get("includedNamespaces", [])
+    if schedule and namespace not in included:
+        raise ValueError("schedule does not cover the target namespace")
+    resources = set(template.get("excludedResources", [])) | set(excluded_resources) | {"secrets"}
+    if namespace == "velero":
+        resources |= {"backups", "restores", "schedules", "podvolumebackups", "backuprepositories"}
+    spec = {
+        "includedNamespaces": [namespace],
+        "excludedResources": sorted(resources),
+        "defaultVolumesToFsBackup": bool(template.get("defaultVolumesToFsBackup", False)),
+        "snapshotVolumes": False,
+        "includeClusterResources": False,
+        "ttl": "168h",
+    }
+    spec["storageLocation"] = template.get("storageLocation") or "default"
     return {
         "apiVersion": "velero.io/v1",
         "kind": "Backup",
         "metadata": {
             "generateName": f"presync-{app}-",
             "namespace": "velero",
-            "labels": {"homelab.davegallant.ca/pre-sync-app": app},
+            "labels": {"homelab.davegallant.ca/pre-sync-app": app,
+                       "homelab.davegallant.ca/pre-sync-namespace": namespace},
             "annotations": {"homelab.davegallant.ca/previous-revision": previous_revision},
         },
         "spec": spec,
     }
 
 
-def create_backup(api, schedule, app, previous_revision):
+def create_backup(api, schedule, app, namespace, previous_revision=None, excluded_resources=()):
     """Submit a schedule-derived backup through the Kubernetes API."""
     return api.request(
         "POST", "/apis/velero.io/v1/namespaces/velero/backups",
-        build_backup(schedule, app, previous_revision),
+        build_backup(schedule, app, namespace, previous_revision, excluded_resources),
     )
 
 
@@ -94,17 +124,20 @@ def read_coverage_inputs(api, namespace, backup_name):
     return claims, pods, pvbs
 
 
-def run_backup(api, schedule, namespace, previous_revision, required_claims, max_polls, pause):
-    """Create a backup and wait for verified coverage of required claims."""
-    from presync_coverage import miniflux_dump_hook_observed, validate_coverage
+def run_backup(api, schedule, namespace, previous_revision, required_claims, max_polls, pause,
+               application=None, required_hooks=(), expected_exclusions=()):
+    """Create a backup and verify every configured namespace volume and hook."""
+    from presync_coverage import (backup_hook_policy, validate_expected_coverage,
+                                 validate_hook_status, volume_policy)
 
-    created = create_backup(api, schedule, namespace, previous_revision)
+    application = application or namespace
+    created = create_backup(api, schedule, application, namespace, previous_revision)
     name = created["metadata"]["name"]
     backup_uid = created["metadata"].get("uid")
     if not backup_uid:
         raise ValueError("backup UID missing from API response")
     import re
-    if (not isinstance(name, str) or not name.startswith("presync-" + namespace + "-")
+    if (not isinstance(name, str) or not name.startswith("presync-" + application + "-")
             or not re.fullmatch(r"[a-z0-9](?:[-a-z0-9]*[a-z0-9])?", name)):
         raise ValueError("invalid backup name returned by API")
     print(f"Created pre-sync backup: {name}; previous revision: {previous_revision}", flush=True)
@@ -117,12 +150,15 @@ def run_backup(api, schedule, namespace, previous_revision, required_claims, max
         if backup.get("metadata", {}).get("uid") != backup_uid:
             return False
         claims, pods, pvbs = read_coverage_inputs(api, namespace, name)
-        if namespace != "miniflux":
+        try:
+            policy = volume_policy(pods, claims, bool((schedule or {}).get("spec", {}).get("template", {}).get("defaultVolumesToFsBackup", False)), expected_exclusions)
+            identities = backup_hook_policy(pods, required_hooks)
+        except ValueError:
             return False
-        statefulset = api.request("GET", "/apis/apps/v1/namespaces/miniflux/statefulsets/miniflux-db")
-        annotations = statefulset.get("spec", {}).get("template", {}).get("metadata", {}).get("annotations", {})
-        return (miniflux_dump_hook_observed(backup, pods, annotations)
-                and validate_coverage(backup, required_claims, claims, pods, pvbs))
+        if required_claims and not set(required_claims).issubset({c for _, c, _ in policy["included"]}):
+            return False
+        return (validate_hook_status(backup, identities)
+                and validate_expected_coverage(backup, policy["included"], policy["excluded"], claims, pvbs))
 
     return wait_for_backup(read_backup, verify, max_polls, pause)
 
@@ -144,31 +180,32 @@ def main():
     import ssl
     import subprocess
     import time
-    from presync_coverage import baseline_revision
+    import json
+    from presync_coverage import baseline_sources
 
     namespace = os.environ["PRESYNC_NAMESPACE"]
     app = os.environ["PRESYNC_APPLICATION"]
-    schedule_name = os.environ["PRESYNC_SCHEDULE"]
-    claims = os.environ["PRESYNC_CLAIMS"].split(",")
+    schedule_name = os.environ.get("PRESYNC_SCHEDULE", "")
+    claims = [value for value in os.environ.get("PRESYNC_CLAIMS", "").split(",") if value]
+    required_hooks = json.loads(os.environ.get("PRESYNC_REQUIRED_HOOKS", "[]"))
+    excluded_volumes = json.loads(os.environ.get("PRESYNC_EXCLUDED_VOLUMES", "[]"))
     pattern = r"[a-z0-9](?:[-a-z0-9]*[a-z0-9])?"
-    if not all(re.fullmatch(pattern, value) for value in [namespace, app, schedule_name, *claims]):
-        raise ValueError("invalid app, namespace, schedule or claim name")
-    if app != namespace:
-        raise ValueError("this pilot requires matching app and namespace names")
+    if not all(re.fullmatch(pattern, value) for value in [namespace, app, *claims]):
+        raise ValueError("invalid app, namespace or claim name")
     account = Path("/var/run/secrets/kubernetes.io/serviceaccount")
     context = ssl.create_default_context(cafile=str(account / "ca.crt"))
     api = KubernetesAPI("https://kubernetes.default.svc", (account / "token").read_text().strip(), context)
     app_path = "/apis/argoproj.io/v1alpha1/namespaces/argocd/applications/" + app
-    schedule_path = "/apis/velero.io/v1/namespaces/velero/schedules/" + schedule_name
-    revision = baseline_revision(api.request("GET", app_path))
-    if not revision:
+    application = api.request("GET", app_path)
+    baseline = baseline_sources(application)
+    if not baseline:
         raise RuntimeError("unable to establish the previous revision")
 
     def compare(expected):
-        if baseline_revision(api.request("GET", app_path)) != expected:
+        if baseline_sources(api.request("GET", app_path)) != expected:
             return False
         result = subprocess.run(
-            ["argocd", "--plaintext", "app", "diff", app, "--revision", expected, "--server",
+            ["argocd", "--plaintext", "app", "diff", app, *baseline_diff_args(expected), "--server",
              os.environ["ARGOCD_SERVER"]],
             capture_output=True, timeout=180, check=False,
         )
@@ -179,10 +216,18 @@ def main():
         return result.returncode == 0
 
     def perform():
-        schedule = api.request("GET", schedule_path)
-        return run_backup(api, schedule, namespace, revision, claims, 180, lambda: time.sleep(10))
+        schedule = None
+        if schedule_name:
+            if not re.fullmatch(pattern, schedule_name):
+                raise ValueError("invalid schedule name")
+            schedule = api.request("GET", "/apis/velero.io/v1/namespaces/velero/schedules/" + schedule_name)
+            if namespace not in schedule.get("spec", {}).get("template", {}).get("includedNamespaces", []):
+                raise ValueError("configured schedule does not include target namespace")
+        return run_backup(api, schedule, namespace, " ".join(baseline["revisions"]), claims,
+                          180, lambda: time.sleep(10), application=app,
+                          required_hooks=required_hooks, expected_exclusions=excluded_volumes)
 
-    if not run_gate(revision, compare, perform):
+    if not run_gate(baseline, compare, perform):
         raise RuntimeError("pre-sync backup gate failed; inspect backup and baseline")
     print("Pre-sync backup coverage and baseline verified", flush=True)
 

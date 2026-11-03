@@ -10,7 +10,11 @@ spec:
   destinations:
     - server: https://kubernetes.default.svc
       namespace: velero
+    - server: https://kubernetes.default.svc
+      namespace: presync-gate
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
     - group: velero.io
       kind: Schedule
+    - group: batch
+      kind: Job

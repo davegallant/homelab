@@ -1,0 +1,160 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: presync-gate-registry
+  namespace: presync-gate
+data:
+  applications.yaml: "applications:\n  argocd:\n    project: homelab-platform\n  \
+    \  application: argocd\n    targetNamespace: argocd\n    gateNamespace: presync-gate\n\
+    \    scheduleName: ''\n    requiredHooks: []\n    excludedVolumes:\n    - argocd-caddy\n\
+    \    - argocd-tailscale\n    defaultVolumesToFsBackup: false\n  audiobookshelf:\n\
+    \    project: homelab\n    application: audiobookshelf\n    targetNamespace: audiobookshelf\n\
+    \    gateNamespace: presync-gate\n    scheduleName: audiobookshelf-daily\n   \
+    \ requiredHooks: []\n    excludedVolumes:\n    - audiobooks\n    - config\n  \
+    \  - metadata\n    - podcasts\n    defaultVolumesToFsBackup: false\n  backup-watchdog:\n\
+    \    project: homelab-platform\n    application: backup-watchdog\n    targetNamespace:
+    velero\n    gateNamespace: presync-gate\n    scheduleName: ''\n    requiredHooks:
+    []\n    excludedVolumes: []\n    defaultVolumesToFsBackup: false\n  bentopdf:\n\
+    \    project: homelab\n    application: bentopdf\n    targetNamespace: bentopdf\n\
+    \    gateNamespace: presync-gate\n    scheduleName: bentopdf-daily\n    requiredHooks:
+    []\n    excludedVolumes: []\n    defaultVolumesToFsBackup: false\n  beszel:\n\
+    \    project: homelab\n    application: beszel\n    targetNamespace: beszel\n\
+    \    gateNamespace: presync-gate\n    scheduleName: beszel-daily\n    requiredHooks:
+    []\n    excludedVolumes:\n    - tailscale-state\n    defaultVolumesToFsBackup:
+    false\n  changedetection:\n    project: homelab\n    application: changedetection\n\
+    \    targetNamespace: changedetection\n    gateNamespace: presync-gate\n    scheduleName:
+    changedetection-backupschedule\n    requiredHooks: []\n    excludedVolumes:\n\
+    \    - datastore\n    defaultVolumesToFsBackup: false\n  cilium:\n    project:
+    homelab-platform\n    application: cilium\n    targetNamespace: cilium-system\n\
+    \    gateNamespace: presync-gate\n    scheduleName: ''\n    requiredHooks: []\n\
+    \    excludedVolumes: []\n    defaultVolumesToFsBackup: false\n  csi-driver-nfs:\n\
+    \    project: homelab-platform\n    application: csi-driver-nfs\n    targetNamespace:
+    kube-system\n    gateNamespace: presync-gate\n    scheduleName: ''\n    requiredHooks:
+    []\n    excludedVolumes: []\n    defaultVolumesToFsBackup: false\n  forgejo-backup:\n\
+    \    project: homelab-velero-backup\n    application: forgejo-backup\n    targetNamespace:
+    velero\n    gateNamespace: presync-gate\n    scheduleName: ''\n    requiredHooks:
+    []\n    excludedVolumes: []\n    defaultVolumesToFsBackup: false\n  forgejo-runner-policy:\n\
+    \    project: homelab-platform\n    application: forgejo-runner-policy\n    targetNamespace:
+    forgejo-runner\n    gateNamespace: presync-gate\n    scheduleName: 'forgejo-daily'\n\
+    \    requiredHooks: []\n    excludedVolumes: []\n    defaultVolumesToFsBackup:
+    true\n  forgejo-runner:\n    project: homelab-platform\n    application: forgejo-runner\n\
+    \    targetNamespace: forgejo-runner\n    gateNamespace: presync-gate\n    scheduleName:
+    forgejo-daily\n    requiredHooks: []\n    excludedVolumes: []\n    defaultVolumesToFsBackup:
+    true\n  forgejo:\n    project: homelab-platform\n    application: forgejo\n  \
+    \  targetNamespace: forgejo\n    gateNamespace: presync-gate\n    scheduleName:
+    forgejo-daily\n    requiredHooks: []\n    excludedVolumes: []\n    defaultVolumesToFsBackup:
+    true\n  grafana:\n    project: homelab\n    application: grafana\n    targetNamespace:
+    grafana\n    gateNamespace: presync-gate\n    scheduleName: grafana-daily\n  \
+    \  requiredHooks:\n    - selector:\n        app.kubernetes.io/name: grafana\n\
+    \      container: sqlite-backup\n    excludedVolumes: []\n    defaultVolumesToFsBackup:
+    false\n  headplane:\n    project: homelab\n    application: headplane\n    targetNamespace:
+    headplane\n    gateNamespace: presync-gate\n    scheduleName: headplane-daily\n\
+    \    requiredHooks: []\n    excludedVolumes: []\n    defaultVolumesToFsBackup:
+    true\n  homepage:\n    project: homelab\n    application: homepage\n    targetNamespace:
+    homepage\n    gateNamespace: presync-gate\n    scheduleName: homepage-daily\n\
+    \    requiredHooks: []\n    excludedVolumes:\n    - homepage-caddy\n    - homepage-tailscale\n\
+    \    defaultVolumesToFsBackup: true\n  immich:\n    project: homelab\n    application:
+    immich\n    targetNamespace: immich\n    gateNamespace: presync-gate\n    scheduleName:
+    immich-daily\n    requiredHooks:\n    - selector:\n        app.kubernetes.io/name:
+    immich\n      container: postgres\n    excludedVolumes:\n    - library-production\n\
+    \    - model-cache-local\n    defaultVolumesToFsBackup: false\n  intel-gpu:\n\
+    \    project: homelab-platform\n    application: intel-gpu\n    targetNamespace:
+    intel-gpu\n    gateNamespace: presync-gate\n    scheduleName: ''\n    requiredHooks:
+    []\n    excludedVolumes: []\n    defaultVolumesToFsBackup: false\n  invidious:\n\
+    \    project: homelab\n    application: invidious\n    targetNamespace: invidious\n\
+    \    gateNamespace: presync-gate\n    scheduleName: invidious-daily\n    requiredHooks:\n\
+    \    - selector:\n        app.kubernetes.io/name: invidious\n      container:
+    db\n    excludedVolumes:\n    - companion-cache\n    - db-data\n    - invidious-db-rollback-w1\n\
+    \    defaultVolumesToFsBackup: false\n  jellyfin:\n    project: homelab\n    application:
+    jellyfin\n    targetNamespace: jellyfin\n    gateNamespace: presync-gate\n   \
+    \ scheduleName: jellyfin-daily\n    requiredHooks: []\n    excludedVolumes:\n\
+    \    - media\n    defaultVolumesToFsBackup: false\n  k8s-readonly:\n    project:
+    homelab\n    application: k8s-readonly\n    targetNamespace: k8s-readonly\n  \
+    \  gateNamespace: presync-gate\n    scheduleName: ''\n    requiredHooks: []\n\
+    \    excludedVolumes: []\n    defaultVolumesToFsBackup: false\n  kiwix:\n    project:
+    homelab\n    application: kiwix\n    targetNamespace: kiwix\n    gateNamespace:
+    presync-gate\n    scheduleName: kiwix-daily\n    requiredHooks: []\n    excludedVolumes:\n\
+    \    - data\n    - tailscale-state\n    - caddy-runtime\n    - tmp\n    - kiwix-caddy\n\
+    \    - kiwix-tailscale\n    defaultVolumesToFsBackup: false\n  kube-state-metrics:\n\
+    \    project: homelab-platform\n    application: kube-state-metrics\n    targetNamespace:
+    monitoring\n    gateNamespace: presync-gate\n    scheduleName: 'victoriametrics-daily'\n\
+    \    requiredHooks: []\n    excludedVolumes: []\n    defaultVolumesToFsBackup:
+    false\n  lidarr:\n    project: homelab\n    application: lidarr\n    targetNamespace:
+    lidarr\n    gateNamespace: presync-gate\n    scheduleName: lidarr-daily\n    requiredHooks:
+    []\n    excludedVolumes:\n    - media\n    - music\n    - lidarr-config\n    defaultVolumesToFsBackup:
+    false\n  loki:\n    project: homelab\n    application: loki\n    targetNamespace:
+    loki\n    gateNamespace: presync-gate\n    scheduleName: loki-daily\n    requiredHooks:
+    []\n    excludedVolumes:\n    - tailscale-state\n    defaultVolumesToFsBackup:
+    false\n  lubelogger:\n    project: homelab\n    application: lubelogger\n    targetNamespace:
+    lubelogger\n    gateNamespace: presync-gate\n    scheduleName: lubelogger-backupschedule\n\
+    \    requiredHooks: []\n    excludedVolumes:\n    - data\n    defaultVolumesToFsBackup:
+    false\n  maloja:\n    project: homelab\n    application: maloja\n    targetNamespace:
+    maloja\n    gateNamespace: presync-gate\n    scheduleName: maloja-backupschedule\n\
+    \    requiredHooks: []\n    excludedVolumes:\n    - data\n    defaultVolumesToFsBackup:
+    false\n  metrics-server:\n    project: homelab-platform\n    application: metrics-server\n\
+    \    targetNamespace: kube-system\n    gateNamespace: presync-gate\n    scheduleName:
+    ''\n    requiredHooks: []\n    excludedVolumes: []\n    defaultVolumesToFsBackup:
+    false\n  miniflux:\n    project: homelab\n    application: miniflux\n    targetNamespace:
+    miniflux\n    gateNamespace: presync-gate\n    scheduleName: miniflux-daily\n\
+    \    requiredHooks:\n    - selector:\n        app.kubernetes.io/name: miniflux-db\n\
+    \      container: miniflux-db\n    excludedVolumes: []\n    defaultVolumesToFsBackup:
+    false\n  navidrome:\n    project: homelab\n    application: navidrome\n    targetNamespace:
+    navidrome\n    gateNamespace: presync-gate\n    scheduleName: navidrome-daily\n\
+    \    requiredHooks: []\n    excludedVolumes:\n    - data\n    - library\n    defaultVolumesToFsBackup:
+    false\n  node-exporter:\n    project: homelab-platform\n    application: node-exporter\n\
+    \    targetNamespace: monitoring\n    gateNamespace: presync-gate\n    scheduleName:
+    'victoriametrics-daily'\n    requiredHooks: []\n    excludedVolumes: []\n    defaultVolumesToFsBackup:
+    false\n  paperless-ngx:\n    project: homelab\n    application: paperless-ngx\n\
+    \    targetNamespace: paperless-ngx\n    gateNamespace: presync-gate\n    scheduleName:
+    paperless-ngx-daily\n    requiredHooks:\n    - selector:\n        app.kubernetes.io/name:
+    paperless-ngx\n      container: app\n    excludedVolumes:\n    - consume\n   \
+    \ - data\n    - export\n    - media\n    - redis-data\n    defaultVolumesToFsBackup:
+    false\n  presync-gate:\n    project: homelab-platform\n    application: presync-gate\n\
+    \    targetNamespace: presync-gate\n    gateNamespace: presync-gate\n    scheduleName:
+    ''\n    requiredHooks: []\n    excludedVolumes: []\n    defaultVolumesToFsBackup:
+    false\n  prowlarr:\n    project: homelab\n    application: prowlarr\n    targetNamespace:
+    prowlarr\n    gateNamespace: presync-gate\n    scheduleName: prowlarr-daily\n\
+    \    requiredHooks: []\n    excludedVolumes:\n    - prowlarr-config\n    defaultVolumesToFsBackup:
+    false\n  qbittorrent-egress:\n    project: qbittorrent-egress\n    application:
+    qbittorrent-egress\n    targetNamespace: cilium-system\n    gateNamespace: presync-gate\n\
+    \    scheduleName: ''\n    requiredHooks: []\n    excludedVolumes: []\n    defaultVolumesToFsBackup:
+    false\n  qbittorrent:\n    project: homelab\n    application: qbittorrent\n  \
+    \  targetNamespace: qbittorrent\n    gateNamespace: presync-gate\n    scheduleName:
+    qbittorrent-daily\n    requiredHooks: []\n    excludedVolumes:\n    - downloads\n\
+    \    defaultVolumesToFsBackup: false\n  radarr:\n    project: homelab\n    application:
+    radarr\n    targetNamespace: radarr\n    gateNamespace: presync-gate\n    scheduleName:
+    radarr-daily\n    requiredHooks: []\n    excludedVolumes:\n    - media\n    -
+    radarr-config\n    defaultVolumesToFsBackup: false\n  romm:\n    project: homelab\n\
+    \    application: romm\n    targetNamespace: romm\n    gateNamespace: presync-gate\n\
+    \    scheduleName: romm-daily\n    requiredHooks:\n    - selector:\n        app.kubernetes.io/name:
+    romm\n      container: db\n    excludedVolumes:\n    - library\n    - romm-caddy-state-w1\n\
+    \    - romm-tailscale-state-w1\n    defaultVolumesToFsBackup: false\n  seerr:\n\
+    \    project: homelab\n    application: seerr\n    targetNamespace: seerr\n  \
+    \  gateNamespace: presync-gate\n    scheduleName: seerr-backupschedule\n    requiredHooks:
+    []\n    excludedVolumes:\n    - config\n    - seerr-caddy-state\n    - seerr-tailscale-state\n\
+    \    defaultVolumesToFsBackup: false\n  sonarr:\n    project: homelab\n    application:
+    sonarr\n    targetNamespace: sonarr\n    gateNamespace: presync-gate\n    scheduleName:
+    sonarr-daily\n    requiredHooks: []\n    excludedVolumes:\n    - media\n    -
+    sonarr-config\n    defaultVolumesToFsBackup: false\n  speedtest-tracker:\n   \
+    \ project: homelab\n    application: speedtest-tracker\n    targetNamespace: speedtest-tracker\n\
+    \    gateNamespace: presync-gate\n    scheduleName: speedtest-tracker-daily\n\
+    \    requiredHooks:\n    - selector:\n        app.kubernetes.io/name: speedtest-tracker\n\
+    \      container: db\n    excludedVolumes:\n    - apprise\n    - config\n    -
+    db-data\n    defaultVolumesToFsBackup: false\n  tailnet-gateway:\n    project:
+    homelab-tailnet-gateway\n    application: tailnet-gateway\n    targetNamespace:
+    tailnet-gateway\n    gateNamespace: presync-gate\n    scheduleName: ''\n    requiredHooks:
+    []\n    excludedVolumes:\n    - tailscale-state\n    defaultVolumesToFsBackup:
+    false\n  umami:\n    project: homelab\n    application: umami\n    targetNamespace:
+    umami\n    gateNamespace: presync-gate\n    scheduleName: umami-daily\n    requiredHooks:\n\
+    \    - selector:\n        app.kubernetes.io/name: umami\n      container: db\n\
+    \    excludedVolumes:\n    - db-data\n    defaultVolumesToFsBackup: false\n  velero-schedules:\n\
+    \    project: homelab-velero-backup\n    application: velero-schedules\n    targetNamespace:
+    velero\n    gateNamespace: presync-gate\n    scheduleName: ''\n    requiredHooks:
+    []\n    excludedVolumes: []\n    defaultVolumesToFsBackup: false\n  velero:\n\
+    \    project: homelab-platform\n    application: velero\n    targetNamespace:
+    velero\n    gateNamespace: presync-gate\n    scheduleName: ''\n    requiredHooks:
+    []\n    excludedVolumes: []\n    defaultVolumesToFsBackup: false\n  victoriametrics:\n\
+    \    project: homelab-monitoring\n    application: victoriametrics\n    targetNamespace:
+    monitoring\n    gateNamespace: presync-gate\n    scheduleName: victoriametrics-daily\n\
+    \    requiredHooks: []\n    excludedVolumes: []\n    defaultVolumesToFsBackup:
+    false\n"

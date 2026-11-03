@@ -1,0 +1,10 @@
+- name: Apply the dedicated pre-sync Argo credential
+  ansible.builtin.command:
+    argv: [kubectl, apply, --server-side, --field-manager=ansible-vault, -f, "-"]
+    stdin: >-
+      {{ {'apiVersion': 'v1', 'kind': 'Secret',
+          'metadata': {'name': 'presync-gate-argocd', 'namespace': 'presync-gate'},
+          'type': 'Opaque',
+          'data': {'token': presync_gate_argocd_token | b64encode}} | to_json }}
+  changed_when: true
+  no_log: true

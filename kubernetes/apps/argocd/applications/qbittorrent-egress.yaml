@@ -4,12 +4,26 @@ kind: Application
 metadata:
   name: qbittorrent-egress
   namespace: argocd
+  annotations:
+    homelab.davegallant.ca/pre-sync-backup: enabled
 spec:
   project: qbittorrent-egress
-  source:
-    repoURL: https://github.com/davegallant/homelab.git
-    targetRevision: main
-    path: kubernetes/apps/qbittorrent-egress/policy
+  sources:
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/qbittorrent-egress/policy
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/presync-gate/chart
+      helm:
+        valuesObject:
+          application: qbittorrent-egress
+          targetNamespace: cilium-system
+          gateNamespace: presync-gate
+          scheduleName: ''
+          requiredHooks: []
+          excludedVolumes: []
+          defaultVolumesToFsBackup: false
   destination:
     server: https://kubernetes.default.svc
     namespace: cilium-system

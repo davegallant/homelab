@@ -5,6 +5,7 @@ metadata:
   name: seerr
   namespace: argocd
   annotations:
+    homelab.davegallant.ca/pre-sync-backup: enabled
     homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
@@ -19,6 +20,21 @@ spec:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       ref: values
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/presync-gate/chart
+      helm:
+        valuesObject:
+          application: seerr
+          targetNamespace: seerr
+          gateNamespace: presync-gate
+          scheduleName: seerr-backupschedule
+          requiredHooks: []
+          excludedVolumes:
+            - config
+            - seerr-caddy-state
+            - seerr-tailscale-state
+          defaultVolumesToFsBackup: false
   destination:
     server: https://kubernetes.default.svc
     namespace: seerr

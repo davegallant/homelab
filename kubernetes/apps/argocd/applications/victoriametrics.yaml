@@ -3,14 +3,28 @@ kind: Application
 metadata:
   name: victoriametrics
   namespace: argocd
+  annotations:
+    homelab.davegallant.ca/pre-sync-backup: enabled
 spec:
   project: homelab-monitoring
-  source:
-    repoURL: https://github.com/davegallant/homelab.git
-    targetRevision: main
-    path: kubernetes/apps/victoriametrics/chart
-    helm:
-      releaseName: victoriametrics
+  sources:
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/victoriametrics/chart
+      helm:
+        releaseName: victoriametrics
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/presync-gate/chart
+      helm:
+        valuesObject:
+          application: victoriametrics
+          targetNamespace: monitoring
+          gateNamespace: presync-gate
+          scheduleName: victoriametrics-daily
+          requiredHooks: []
+          excludedVolumes: []
+          defaultVolumesToFsBackup: false
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

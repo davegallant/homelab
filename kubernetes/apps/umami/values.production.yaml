@@ -34,6 +34,7 @@ controllers:
         # consistent logical dump written into the volume first so
         # the filesystem backup carries a restorable copy.
         backup.velero.io/backup-volumes: db-data-local
+        backup.velero.io/backup-volumes-excludes: "db-data"
         pre.hook.backup.velero.io/container: db
         pre.hook.backup.velero.io/command: '["/bin/sh","-c","PGPASSWORD=$POSTGRES_PASSWORD pg_dump -U $POSTGRES_USER
           -d $POSTGRES_DB > /var/lib/postgresql/umami-backup.sql.tmp && mv -f /var/lib/postgresql/umami-backup.sql.tmp

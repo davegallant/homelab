@@ -36,6 +36,7 @@ controllers:
         # filesystem backup carries a clean database alongside the
         # live (possibly WAL-dirty) one.
         backup.velero.io/backup-volumes: data-local,media-local,consume-local,export-local
+        backup.velero.io/backup-volumes-excludes: "consume,data,export,media,redis-data"
         pre.hook.backup.velero.io/container: app
         pre.hook.backup.velero.io/command: '["/usr/bin/env","python3","-c","import sqlite3; s=sqlite3.connect(\"/usr/src/paperless/data/db.sqlite3\");
           d=sqlite3.connect(\"/usr/src/paperless/data/db-backup.sqlite3\"); s.backup(d)"]'

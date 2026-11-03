@@ -1,123 +1,384 @@
----
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
-  name: miniflux-presync-backup-scope
+  name: presync-gate-job-identity
 spec:
   failurePolicy: Fail
   matchConstraints:
     resourceRules:
-      - apiGroups: [velero.io]
-        apiVersions: [v1]
-        operations: [CREATE]
-        resources: [backups]
+    - apiGroups:
+      - batch
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - jobs
   matchConditions:
-    - name: miniflux-gate-service-account
-      expression: 'request.userInfo.username == "system:serviceaccount:miniflux:presync-miniflux"'
+  - name: presync-gate-namespace
+    expression: request.namespace == "presync-gate"
   validations:
-    - message: The Miniflux gate may only create its approved seven-day backup.
-      expression: >-
-        object.metadata.namespace == "velero" &&
-        object.spec.includedNamespaces == ["miniflux"] &&
-        object.spec.excludedResources == ["secrets"] &&
-        has(object.spec.defaultVolumesToFsBackup) && !object.spec.defaultVolumesToFsBackup &&
-        has(object.spec.snapshotVolumes) && !object.spec.snapshotVolumes &&
-        object.spec.storageLocation == "default" && object.spec.ttl == "168h" &&
-        !has(object.spec.hooks) && !has(object.spec.resourcePolicy) &&
-        !has(object.spec.includeClusterResources) &&
-        !has(object.spec.includedClusterScopedResources) &&
-        !has(object.spec.excludedClusterScopedResources) &&
-        !has(object.spec.includedNamespaceScopedResources) &&
-        !has(object.spec.excludedNamespaceScopedResources) &&
-        !has(object.spec.includedResources) &&
-        !has(object.spec.excludedNamespaces) &&
-        !has(object.spec.labelSelector) && !has(object.spec.orLabelSelectors) &&
-        !has(object.spec.orderedResources) && !has(object.spec.snapshotMoveData) &&
-        !has(object.spec.volumeSnapshotLocations) && !has(object.spec.uploaderConfig) &&
-        !has(object.spec.datamover) && !has(object.spec.volumeGroupSnapshotLabelKey)
+  - message: Only the registered Argo Application may create its pinned pre-sync Job.
+    expression: >-
+      request.namespace == "presync-gate" && request.userInfo.username == "system:serviceaccount:argocd:argocd-application-controller" &&
+
+      has(object.metadata.annotations) && "argocd.argoproj.io/tracking-id" in object.metadata.annotations &&
+
+      object.metadata.name.startsWith("presync-") && object.metadata.name.endsWith("-backup") && object.metadata.name.size() > 15 &&
+
+      object.spec.template.spec.containers.size() == 1 && object.spec.template.spec.initContainers.size() == 1 &&
+
+      object.spec.template.spec.serviceAccountName == "presync-" + object.metadata.name.substring(8, object.metadata.name.size() - 7) &&
+
+      object.spec.template.spec.containers[0].name == "backup" && object.spec.template.spec.containers[0].image ==
+
+      "docker.io/library/python:3.15.2-slim-trixie@sha256:c4158543ecb725b99e57d129dfd43d761d4c43e4577b5e23326aabb223cf7f4e" &&
+
+      object.spec.template.spec.containers[0].command == ["python3", "/app/presync_orchestration.py"] &&
+
+      object.spec.template.spec.initContainers[0].name == "install-argocd-client" && object.spec.template.spec.initContainers[0].image ==
+
+      "quay.io/argoproj/argocd:v3.5.6@sha256:8e5cc5bb008df8a09dba439462e58c94c55b7735888d3ebde0c25fc05e4e5335" &&
+
+      object.spec.template.spec.initContainers[0].command == ["sh", "-c", "cp /usr/local/bin/argocd /tools/argocd"] &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PRESYNC_APPLICATION").size() == 1 &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PRESYNC_NAMESPACE").size() == 1 &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PRESYNC_SCHEDULE").size() == 1 &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PRESYNC_REQUIRED_HOOKS").size() == 1 &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PRESYNC_EXCLUDED_VOLUMES").size() == 1 &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "ARGOCD_AUTH_TOKEN").size() == 1 &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "ARGOCD_AUTH_TOKEN")[0].valueFrom.secretKeyRef.name ==
+
+      "presync-gate-argocd" && object.spec.template.spec.containers[0].env.filter(e, e.name ==
+
+      "ARGOCD_AUTH_TOKEN")[0].valueFrom.secretKeyRef.key == "token" && object.spec.template.spec.containers[0].env.filter(e, !(e.name in
+
+      ["PATH", "HOME", "PYTHONDONTWRITEBYTECODE", "ARGOCD_SERVER", "ARGOCD_AUTH_TOKEN", "PRESYNC_NAMESPACE", "PRESYNC_APPLICATION",
+
+      "PRESYNC_SCHEDULE", "PRESYNC_REQUIRED_HOOKS", "PRESYNC_EXCLUDED_VOLUMES"])).size() == 0 && object.spec.template.spec.volumes.map(v,
+
+      v.name).all(n, n in ["api-token", "tools", "tmp", "code"]) && object.spec.template.spec.volumes.size() == 4 &&
+
+      object.metadata.annotations["argocd.argoproj.io/tracking-id"] == object.metadata.name.substring(8, object.metadata.name.size() - 7) +
+
+      ":batch/Job:presync-gate/" + object.metadata.name && (object.metadata.name.substring(8, object.metadata.name.size() - 7) + "/" +
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PRESYNC_NAMESPACE")[0].value) in ["argocd/argocd",
+
+      "audiobookshelf/audiobookshelf", "backup-watchdog/velero", "bentopdf/bentopdf", "beszel/beszel", "changedetection/changedetection",
+
+      "cilium/cilium-system", "csi-driver-nfs/kube-system", "forgejo-backup/velero", "forgejo-runner-policy/forgejo-runner",
+
+      "forgejo-runner/forgejo-runner", "forgejo/forgejo", "grafana/grafana", "headplane/headplane", "homepage/homepage", "immich/immich",
+
+      "intel-gpu/intel-gpu", "invidious/invidious", "jellyfin/jellyfin", "k8s-readonly/k8s-readonly", "kiwix/kiwix",
+
+      "kube-state-metrics/monitoring", "lidarr/lidarr", "loki/loki", "lubelogger/lubelogger", "maloja/maloja", "metrics-server/kube-system",
+
+      "miniflux/miniflux", "navidrome/navidrome", "node-exporter/monitoring", "paperless-ngx/paperless-ngx", "presync-gate/presync-gate",
+
+      "prowlarr/prowlarr", "qbittorrent-egress/cilium-system", "qbittorrent/qbittorrent", "radarr/radarr", "romm/romm", "seerr/seerr",
+
+      "sonarr/sonarr", "speedtest-tracker/speedtest-tracker", "tailnet-gateway/tailnet-gateway", "umami/umami", "velero-schedules/velero",
+
+      "velero/velero", "victoriametrics/monitoring"] && object.spec.template.spec.containers[0].env.filter(e, e.name ==
+
+      "PRESYNC_APPLICATION")[0].value == object.metadata.name.substring(8, object.metadata.name.size() - 7) &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PRESYNC_SCHEDULE")[0].value == {"argocd": "", "audiobookshelf":
+
+      "audiobookshelf-daily", "backup-watchdog": "", "bentopdf": "bentopdf-daily", "beszel": "beszel-daily", "changedetection":
+
+      "changedetection-backupschedule", "cilium": "", "csi-driver-nfs": "", "forgejo-backup": "", "forgejo-runner-policy": "forgejo-daily",
+
+      "forgejo-runner": "forgejo-daily", "forgejo": "forgejo-daily", "grafana": "grafana-daily", "headplane": "headplane-daily", "homepage":
+
+      "homepage-daily", "immich": "immich-daily", "intel-gpu": "", "invidious": "invidious-daily", "jellyfin": "jellyfin-daily",
+
+      "k8s-readonly": "", "kiwix": "kiwix-daily", "kube-state-metrics": "victoriametrics-daily", "lidarr": "lidarr-daily", "loki":
+
+      "loki-daily", "lubelogger": "lubelogger-backupschedule", "maloja": "maloja-backupschedule", "metrics-server": "", "miniflux":
+
+      "miniflux-daily", "navidrome": "navidrome-daily", "node-exporter": "victoriametrics-daily", "paperless-ngx": "paperless-ngx-daily",
+
+      "presync-gate": "", "prowlarr": "prowlarr-daily", "qbittorrent-egress": "", "qbittorrent": "qbittorrent-daily", "radarr":
+
+      "radarr-daily", "romm": "romm-daily", "seerr": "seerr-backupschedule", "sonarr": "sonarr-daily", "speedtest-tracker":
+
+      "speedtest-tracker-daily", "tailnet-gateway": "", "umami": "umami-daily", "velero-schedules": "", "velero": "", "victoriametrics":
+
+      "victoriametrics-daily"}[object.metadata.name.substring(8, object.metadata.name.size() - 7)] &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PRESYNC_REQUIRED_HOOKS")[0].value == {"argocd": "[]",
+
+      "audiobookshelf": "[]", "backup-watchdog": "[]", "bentopdf": "[]", "beszel": "[]", "changedetection": "[]", "cilium": "[]",
+
+      "csi-driver-nfs": "[]", "forgejo-backup": "[]", "forgejo-runner-policy": "[]", "forgejo-runner": "[]", "forgejo": "[]", "grafana":
+
+      "[{\"container\":\"sqlite-backup\",\"selector\":{\"app.kubernetes.io/name\":\"grafana\"}}]", "headplane": "[]", "homepage": "[]",
+
+      "immich": "[{\"container\":\"postgres\",\"selector\":{\"app.kubernetes.io/name\":\"immich\"}}]", "intel-gpu": "[]", "invidious":
+
+      "[{\"container\":\"db\",\"selector\":{\"app.kubernetes.io/name\":\"invidious\"}}]", "jellyfin": "[]", "k8s-readonly": "[]", "kiwix":
+
+      "[]", "kube-state-metrics": "[]", "lidarr": "[]", "loki": "[]", "lubelogger": "[]", "maloja": "[]", "metrics-server": "[]", "miniflux":
+
+      "[{\"container\":\"miniflux-db\",\"selector\":{\"app.kubernetes.io/name\":\"miniflux-db\"}}]", "navidrome": "[]", "node-exporter":
+
+      "[]", "paperless-ngx": "[{\"container\":\"app\",\"selector\":{\"app.kubernetes.io/name\":\"paperless-ngx\"}}]", "presync-gate": "[]",
+
+      "prowlarr": "[]", "qbittorrent-egress": "[]", "qbittorrent": "[]", "radarr": "[]", "romm":
+
+      "[{\"container\":\"db\",\"selector\":{\"app.kubernetes.io/name\":\"romm\"}}]", "seerr": "[]", "sonarr": "[]", "speedtest-tracker":
+
+      "[{\"container\":\"db\",\"selector\":{\"app.kubernetes.io/name\":\"speedtest-tracker\"}}]", "tailnet-gateway": "[]", "umami":
+
+      "[{\"container\":\"db\",\"selector\":{\"app.kubernetes.io/name\":\"umami\"}}]", "velero-schedules": "[]", "velero": "[]",
+
+      "victoriametrics": "[]"}[object.metadata.name.substring(8, object.metadata.name.size() - 7)] &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PRESYNC_EXCLUDED_VOLUMES")[0].value == {"argocd":
+
+      "[\"argocd-caddy\",\"argocd-tailscale\"]", "audiobookshelf": "[\"audiobooks\",\"config\",\"metadata\",\"podcasts\"]",
+
+      "backup-watchdog": "[]", "bentopdf": "[]", "beszel": "[\"tailscale-state\"]", "changedetection": "[\"datastore\"]", "cilium": "[]",
+
+      "csi-driver-nfs": "[]", "forgejo-backup": "[]", "forgejo-runner-policy": "[]", "forgejo-runner": "[]", "forgejo": "[]", "grafana":
+
+      "[]", "headplane": "[]", "homepage": "[\"homepage-caddy\",\"homepage-tailscale\"]", "immich":
+
+      "[\"library-production\",\"model-cache-local\"]", "intel-gpu": "[]", "invidious":
+
+      "[\"companion-cache\",\"db-data\",\"invidious-db-rollback-w1\"]", "jellyfin": "[\"media\"]", "k8s-readonly": "[]", "kiwix":
+
+      "[\"data\",\"tailscale-state\",\"caddy-runtime\",\"tmp\",\"kiwix-caddy\",\"kiwix-tailscale\"]", "kube-state-metrics": "[]", "lidarr":
+
+      "[\"media\",\"music\",\"lidarr-config\"]", "loki": "[\"tailscale-state\"]", "lubelogger": "[\"data\"]", "maloja": "[\"data\"]",
+
+      "metrics-server": "[]", "miniflux": "[]", "navidrome": "[\"data\",\"library\"]", "node-exporter": "[]", "paperless-ngx":
+
+      "[\"consume\",\"data\",\"export\",\"media\",\"redis-data\"]", "presync-gate": "[]", "prowlarr": "[\"prowlarr-config\"]",
+
+      "qbittorrent-egress": "[]", "qbittorrent": "[\"downloads\"]", "radarr": "[\"media\",\"radarr-config\"]", "romm":
+
+      "[\"library\",\"romm-caddy-state-w1\",\"romm-tailscale-state-w1\"]", "seerr":
+
+      "[\"config\",\"seerr-caddy-state\",\"seerr-tailscale-state\"]", "sonarr": "[\"media\",\"sonarr-config\"]", "speedtest-tracker":
+
+      "[\"apprise\",\"config\",\"db-data\"]", "tailnet-gateway": "[\"tailscale-state\"]", "umami": "[\"db-data\"]", "velero-schedules": "[]",
+
+      "velero": "[]", "victoriametrics": "[]"}[object.metadata.name.substring(8, object.metadata.name.size() - 7)] &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PATH").size() == 1 &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PATH")[0].value == "/tools:/usr/local/bin:/usr/bin:/bin" &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "HOME").size() == 1 &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "HOME")[0].value == "/tmp" &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PYTHONDONTWRITEBYTECODE").size() == 1 &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PYTHONDONTWRITEBYTECODE")[0].value == "1" &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "ARGOCD_SERVER").size() == 1 &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "ARGOCD_SERVER")[0].value == "argocd-server.argocd.svc:8080" &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PRESYNC_SCHEDULE").size() == 1 &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PRESYNC_SCHEDULE")[0].value == {"argocd": "", "audiobookshelf":
+
+      "audiobookshelf-daily", "backup-watchdog": "", "bentopdf": "bentopdf-daily", "beszel": "beszel-daily", "changedetection":
+
+      "changedetection-backupschedule", "cilium": "", "csi-driver-nfs": "", "forgejo-backup": "", "forgejo-runner-policy": "forgejo-daily",
+
+      "forgejo-runner": "forgejo-daily", "forgejo": "forgejo-daily", "grafana": "grafana-daily", "headplane": "headplane-daily", "homepage":
+
+      "homepage-daily", "immich": "immich-daily", "intel-gpu": "", "invidious": "invidious-daily", "jellyfin": "jellyfin-daily",
+
+      "k8s-readonly": "", "kiwix": "kiwix-daily", "kube-state-metrics": "victoriametrics-daily", "lidarr": "lidarr-daily", "loki":
+
+      "loki-daily", "lubelogger": "lubelogger-backupschedule", "maloja": "maloja-backupschedule", "metrics-server": "", "miniflux":
+
+      "miniflux-daily", "navidrome": "navidrome-daily", "node-exporter": "victoriametrics-daily", "paperless-ngx": "paperless-ngx-daily",
+
+      "presync-gate": "", "prowlarr": "prowlarr-daily", "qbittorrent-egress": "", "qbittorrent": "qbittorrent-daily", "radarr":
+
+      "radarr-daily", "romm": "romm-daily", "seerr": "seerr-backupschedule", "sonarr": "sonarr-daily", "speedtest-tracker":
+
+      "speedtest-tracker-daily", "tailnet-gateway": "", "umami": "umami-daily", "velero-schedules": "", "velero": "", "victoriametrics":
+
+      "victoriametrics-daily"}[object.metadata.name.substring(8, object.metadata.name.size() - 7)] &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PRESYNC_REQUIRED_HOOKS").size() == 1 &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PRESYNC_REQUIRED_HOOKS")[0].value == {"argocd": "[]",
+
+      "audiobookshelf": "[]", "backup-watchdog": "[]", "bentopdf": "[]", "beszel": "[]", "changedetection": "[]", "cilium": "[]",
+
+      "csi-driver-nfs": "[]", "forgejo-backup": "[]", "forgejo-runner-policy": "[]", "forgejo-runner": "[]", "forgejo": "[]", "grafana":
+
+      "[{\"container\":\"sqlite-backup\",\"selector\":{\"app.kubernetes.io/name\":\"grafana\"}}]", "headplane": "[]", "homepage": "[]",
+
+      "immich": "[{\"container\":\"postgres\",\"selector\":{\"app.kubernetes.io/name\":\"immich\"}}]", "intel-gpu": "[]", "invidious":
+
+      "[{\"container\":\"db\",\"selector\":{\"app.kubernetes.io/name\":\"invidious\"}}]", "jellyfin": "[]", "k8s-readonly": "[]", "kiwix":
+
+      "[]", "kube-state-metrics": "[]", "lidarr": "[]", "loki": "[]", "lubelogger": "[]", "maloja": "[]", "metrics-server": "[]", "miniflux":
+
+      "[{\"container\":\"miniflux-db\",\"selector\":{\"app.kubernetes.io/name\":\"miniflux-db\"}}]", "navidrome": "[]", "node-exporter":
+
+      "[]", "paperless-ngx": "[{\"container\":\"app\",\"selector\":{\"app.kubernetes.io/name\":\"paperless-ngx\"}}]", "presync-gate": "[]",
+
+      "prowlarr": "[]", "qbittorrent-egress": "[]", "qbittorrent": "[]", "radarr": "[]", "romm":
+
+      "[{\"container\":\"db\",\"selector\":{\"app.kubernetes.io/name\":\"romm\"}}]", "seerr": "[]", "sonarr": "[]", "speedtest-tracker":
+
+      "[{\"container\":\"db\",\"selector\":{\"app.kubernetes.io/name\":\"speedtest-tracker\"}}]", "tailnet-gateway": "[]", "umami":
+
+      "[{\"container\":\"db\",\"selector\":{\"app.kubernetes.io/name\":\"umami\"}}]", "velero-schedules": "[]", "velero": "[]",
+
+      "victoriametrics": "[]"}[object.metadata.name.substring(8, object.metadata.name.size() - 7)] &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PRESYNC_EXCLUDED_VOLUMES").size() == 1 &&
+
+      object.spec.template.spec.containers[0].env.filter(e, e.name == "PRESYNC_EXCLUDED_VOLUMES")[0].value == {"argocd":
+
+      "[\"argocd-caddy\",\"argocd-tailscale\"]", "audiobookshelf": "[\"audiobooks\",\"config\",\"metadata\",\"podcasts\"]",
+
+      "backup-watchdog": "[]", "bentopdf": "[]", "beszel": "[\"tailscale-state\"]", "changedetection": "[\"datastore\"]", "cilium": "[]",
+
+      "csi-driver-nfs": "[]", "forgejo-backup": "[]", "forgejo-runner-policy": "[]", "forgejo-runner": "[]", "forgejo": "[]", "grafana":
+
+      "[]", "headplane": "[]", "homepage": "[\"homepage-caddy\",\"homepage-tailscale\"]", "immich":
+
+      "[\"library-production\",\"model-cache-local\"]", "intel-gpu": "[]", "invidious":
+
+      "[\"companion-cache\",\"db-data\",\"invidious-db-rollback-w1\"]", "jellyfin": "[\"media\"]", "k8s-readonly": "[]", "kiwix":
+
+      "[\"data\",\"tailscale-state\",\"caddy-runtime\",\"tmp\",\"kiwix-caddy\",\"kiwix-tailscale\"]", "kube-state-metrics": "[]", "lidarr":
+
+      "[\"media\",\"music\",\"lidarr-config\"]", "loki": "[\"tailscale-state\"]", "lubelogger": "[\"data\"]", "maloja": "[\"data\"]",
+
+      "metrics-server": "[]", "miniflux": "[]", "navidrome": "[\"data\",\"library\"]", "node-exporter": "[]", "paperless-ngx":
+
+      "[\"consume\",\"data\",\"export\",\"media\",\"redis-data\"]", "presync-gate": "[]", "prowlarr": "[\"prowlarr-config\"]",
+
+      "qbittorrent-egress": "[]", "qbittorrent": "[\"downloads\"]", "radarr": "[\"media\",\"radarr-config\"]", "romm":
+
+      "[\"library\",\"romm-caddy-state-w1\",\"romm-tailscale-state-w1\"]", "seerr":
+
+      "[\"config\",\"seerr-caddy-state\",\"seerr-tailscale-state\"]", "sonarr": "[\"media\",\"sonarr-config\"]", "speedtest-tracker":
+
+      "[\"apprise\",\"config\",\"db-data\"]", "tailnet-gateway": "[\"tailscale-state\"]", "umami": "[\"db-data\"]", "velero-schedules": "[]",
+
+      "velero": "[]", "victoriametrics": "[]"}[object.metadata.name.substring(8, object.metadata.name.size() - 7)]
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
 metadata:
-  name: miniflux-presync-backup-scope
+  name: presync-gate-job-identity
 spec:
-  policyName: miniflux-presync-backup-scope
-  validationActions: [Deny]
+  policyName: presync-gate-job-identity
+  validationActions:
+  - Deny
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
-  name: miniflux-presync-pod-identity
+  name: presync-gate-backup-scope
 spec:
   failurePolicy: Fail
   matchConstraints:
     resourceRules:
-      - apiGroups: [""]
-        apiVersions: [v1]
-        operations: [CREATE, UPDATE]
-        resources: [pods]
+    - apiGroups:
+      - velero.io
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      resources:
+      - backups
   matchConditions:
-    - name: miniflux-pods
-      expression: 'request.namespace == "miniflux"'
+  - name: presync-gate-writer
+    expression: request.userInfo.username.startsWith("system:serviceaccount:presync-gate:presync-")
   validations:
-    - message: The Miniflux pre-sync label and service account are reserved for the gate Job.
-      expression: >-
-        (!(has(object.metadata.labels) &&
-           "homelab.davegallant.ca/presync-gate" in object.metadata.labels &&
-           object.metadata.labels["homelab.davegallant.ca/presync-gate"] == "miniflux") &&
-         object.spec.serviceAccountName != "presync-miniflux") ||
-        (has(object.metadata.labels) &&
-         "homelab.davegallant.ca/presync-gate" in object.metadata.labels &&
-         object.metadata.labels["homelab.davegallant.ca/presync-gate"] == "miniflux" &&
-         object.spec.serviceAccountName == "presync-miniflux" &&
-         (request.userInfo.username == "system:serviceaccount:kube-system:job-controller" ||
-          request.userInfo.username == "system:kube-controller-manager") &&
-         has(object.metadata.ownerReferences) &&
-         object.metadata.ownerReferences.exists(o,
-           o.apiVersion == "batch/v1" && o.kind == "Job" &&
-           o.name == "miniflux-presync-backup" && has(o.controller) && o.controller))
+  - message: Pre-sync Jobs may create only their registered seven-day namespace backup.
+    expression: >-
+      object.metadata.namespace == "velero" && has(object.metadata.labels) && "homelab.davegallant.ca/pre-sync-app" in object.metadata.labels
+
+      && "homelab.davegallant.ca/pre-sync-namespace" in object.metadata.labels && request.userInfo.username ==
+
+      "system:serviceaccount:presync-gate:presync-" + object.metadata.labels["homelab.davegallant.ca/pre-sync-app"] &&
+
+      (object.metadata.labels["homelab.davegallant.ca/pre-sync-app"] + "/" +
+
+      object.metadata.labels["homelab.davegallant.ca/pre-sync-namespace"]) in ["argocd/argocd", "audiobookshelf/audiobookshelf",
+
+      "backup-watchdog/velero", "bentopdf/bentopdf", "beszel/beszel", "changedetection/changedetection", "cilium/cilium-system",
+
+      "csi-driver-nfs/kube-system", "forgejo-backup/velero", "forgejo-runner-policy/forgejo-runner", "forgejo-runner/forgejo-runner",
+
+      "forgejo/forgejo", "grafana/grafana", "headplane/headplane", "homepage/homepage", "immich/immich", "intel-gpu/intel-gpu",
+
+      "invidious/invidious", "jellyfin/jellyfin", "k8s-readonly/k8s-readonly", "kiwix/kiwix", "kube-state-metrics/monitoring",
+
+      "lidarr/lidarr", "loki/loki", "lubelogger/lubelogger", "maloja/maloja", "metrics-server/kube-system", "miniflux/miniflux",
+
+      "navidrome/navidrome", "node-exporter/monitoring", "paperless-ngx/paperless-ngx", "presync-gate/presync-gate", "prowlarr/prowlarr",
+
+      "qbittorrent-egress/cilium-system", "qbittorrent/qbittorrent", "radarr/radarr", "romm/romm", "seerr/seerr", "sonarr/sonarr",
+
+      "speedtest-tracker/speedtest-tracker", "tailnet-gateway/tailnet-gateway", "umami/umami", "velero-schedules/velero", "velero/velero",
+
+      "victoriametrics/monitoring"] && object.spec.includedNamespaces ==
+
+      [object.metadata.labels["homelab.davegallant.ca/pre-sync-namespace"]] && has(object.spec.excludedResources) &&
+
+      ((object.metadata.labels["homelab.davegallant.ca/pre-sync-namespace"] == "velero" && object.spec.excludedResources ==
+
+      ["backuprepositories", "backups", "podvolumebackups", "restores", "schedules", "secrets"]) ||
+
+      (object.metadata.labels["homelab.davegallant.ca/pre-sync-namespace"] != "velero" && object.spec.excludedResources == ["secrets"])) &&
+
+      has(object.spec.defaultVolumesToFsBackup) && ((object.metadata.labels["homelab.davegallant.ca/pre-sync-app"] in
+
+      ["forgejo-runner-policy", "forgejo-runner", "forgejo", "headplane", "homepage"] && object.spec.defaultVolumesToFsBackup) ||
+
+      (object.metadata.labels["homelab.davegallant.ca/pre-sync-app"] in ["forgejo-runner-policy", "forgejo-runner", "forgejo", "headplane",
+
+      "homepage"] == false && !object.spec.defaultVolumesToFsBackup)) && has(object.spec.snapshotVolumes) && !object.spec.snapshotVolumes &&
+
+      has(object.spec.includeClusterResources) && !object.spec.includeClusterResources && object.spec.storageLocation == "default" &&
+
+      object.spec.ttl == "168h" && !has(object.spec.hooks) && !has(object.spec.resourcePolicy) &&
+
+      !has(object.spec.includedClusterScopedResources) && !has(object.spec.excludedClusterScopedResources) &&
+
+      !has(object.spec.includedNamespaceScopedResources) && !has(object.spec.excludedNamespaceScopedResources) &&
+
+      !has(object.spec.includedResources) && !has(object.spec.excludedNamespaces) && !has(object.spec.labelSelector) &&
+
+      !has(object.spec.orLabelSelectors) && !has(object.spec.orderedResources) && !has(object.spec.snapshotMoveData) &&
+
+      !has(object.spec.volumeSnapshotLocations) && !has(object.spec.uploaderConfig) && !has(object.spec.datamover) &&
+
+      !has(object.spec.volumeGroupSnapshotLabelKey)
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
 metadata:
-  name: miniflux-presync-pod-identity
+  name: presync-gate-backup-scope
 spec:
-  policyName: miniflux-presync-pod-identity
-  validationActions: [Deny]
----
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingAdmissionPolicy
-metadata:
-  name: miniflux-presync-job-identity
-spec:
-  failurePolicy: Fail
-  matchConstraints:
-    resourceRules:
-      - apiGroups: [batch]
-        apiVersions: [v1]
-        operations: [CREATE, UPDATE]
-        resources: [jobs]
-  matchConditions:
-    - name: miniflux-jobs
-      expression: 'request.namespace == "miniflux"'
-  validations:
-    - message: Only Argo CD may create or update the reserved Miniflux pre-sync Job.
-      expression: >-
-        (object.metadata.name != "miniflux-presync-backup" &&
-         (!has(object.spec.template.spec.serviceAccountName) ||
-          object.spec.template.spec.serviceAccountName != "presync-miniflux") &&
-         !(has(object.spec.template.metadata.labels) &&
-           "homelab.davegallant.ca/presync-gate" in object.spec.template.metadata.labels &&
-           object.spec.template.metadata.labels["homelab.davegallant.ca/presync-gate"] == "miniflux")) ||
-        (object.metadata.name == "miniflux-presync-backup" &&
-         has(object.spec.template.spec.serviceAccountName) &&
-         object.spec.template.spec.serviceAccountName == "presync-miniflux" &&
-         request.userInfo.username == "system:serviceaccount:argocd:argocd-application-controller")
----
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingAdmissionPolicyBinding
-metadata:
-  name: miniflux-presync-job-identity
-spec:
-  policyName: miniflux-presync-job-identity
-  validationActions: [Deny]
+  policyName: presync-gate-backup-scope
+  validationActions:
+  - Deny

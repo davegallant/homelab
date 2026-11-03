@@ -8,11 +8,58 @@ configs:
     timeout.reconciliation: 120s
     timeout.reconciliation.jitter: 60s
     accounts.muse: apiKey
+    accounts.presync-gate: apiKey
   rbac:
     policy.default: ""
     policy.csv: |
       g, admin, role:admin
       g, muse, role:readonly
+      g, presync-gate, role:presync-gate
+      p, role:presync-gate, applications, get, homelab-platform/argocd, allow
+      p, role:presync-gate, applications, get, homelab/audiobookshelf, allow
+      p, role:presync-gate, applications, get, homelab-platform/backup-watchdog, allow
+      p, role:presync-gate, applications, get, homelab/bentopdf, allow
+      p, role:presync-gate, applications, get, homelab/beszel, allow
+      p, role:presync-gate, applications, get, homelab/changedetection, allow
+      p, role:presync-gate, applications, get, homelab-platform/cilium, allow
+      p, role:presync-gate, applications, get, homelab-platform/csi-driver-nfs, allow
+      p, role:presync-gate, applications, get, homelab-velero-backup/forgejo-backup, allow
+      p, role:presync-gate, applications, get, homelab-platform/forgejo-runner-policy, allow
+      p, role:presync-gate, applications, get, homelab-platform/forgejo-runner, allow
+      p, role:presync-gate, applications, get, homelab-platform/forgejo, allow
+      p, role:presync-gate, applications, get, homelab/grafana, allow
+      p, role:presync-gate, applications, get, homelab/headplane, allow
+      p, role:presync-gate, applications, get, homelab/homepage, allow
+      p, role:presync-gate, applications, get, homelab/immich, allow
+      p, role:presync-gate, applications, get, homelab-platform/intel-gpu, allow
+      p, role:presync-gate, applications, get, homelab/invidious, allow
+      p, role:presync-gate, applications, get, homelab/jellyfin, allow
+      p, role:presync-gate, applications, get, homelab/k8s-readonly, allow
+      p, role:presync-gate, applications, get, homelab/kiwix, allow
+      p, role:presync-gate, applications, get, homelab-platform/kube-state-metrics, allow
+      p, role:presync-gate, applications, get, homelab/lidarr, allow
+      p, role:presync-gate, applications, get, homelab/loki, allow
+      p, role:presync-gate, applications, get, homelab/lubelogger, allow
+      p, role:presync-gate, applications, get, homelab/maloja, allow
+      p, role:presync-gate, applications, get, homelab-platform/metrics-server, allow
+      p, role:presync-gate, applications, get, homelab/miniflux, allow
+      p, role:presync-gate, applications, get, homelab/navidrome, allow
+      p, role:presync-gate, applications, get, homelab-platform/node-exporter, allow
+      p, role:presync-gate, applications, get, homelab/paperless-ngx, allow
+      p, role:presync-gate, applications, get, homelab-platform/presync-gate, allow
+      p, role:presync-gate, applications, get, homelab/prowlarr, allow
+      p, role:presync-gate, applications, get, qbittorrent-egress/qbittorrent-egress, allow
+      p, role:presync-gate, applications, get, homelab/qbittorrent, allow
+      p, role:presync-gate, applications, get, homelab/radarr, allow
+      p, role:presync-gate, applications, get, homelab/romm, allow
+      p, role:presync-gate, applications, get, homelab/seerr, allow
+      p, role:presync-gate, applications, get, homelab/sonarr, allow
+      p, role:presync-gate, applications, get, homelab/speedtest-tracker, allow
+      p, role:presync-gate, applications, get, homelab-tailnet-gateway/tailnet-gateway, allow
+      p, role:presync-gate, applications, get, homelab/umami, allow
+      p, role:presync-gate, applications, get, homelab-velero-backup/velero-schedules, allow
+      p, role:presync-gate, applications, get, homelab-platform/velero, allow
+      p, role:presync-gate, applications, get, homelab-monitoring/victoriametrics, allow
 dex:
   enabled: false
 applicationSet:

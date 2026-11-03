@@ -17,6 +17,7 @@ controllers:
         kubernetes.io/hostname: k8s-w-2
       annotations:
         backup.velero.io/backup-volumes: data,caddy-state
+        backup.velero.io/backup-volumes-excludes: "tailscale-state"
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
