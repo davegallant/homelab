@@ -1,0 +1,104 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: homelab-presync-gate
+  namespace: argocd
+spec:
+  description: Pre-sync backup infrastructure and its constrained namespace-scoped access
+  sourceRepos:
+    - https://github.com/davegallant/homelab.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: argocd
+    - server: https://kubernetes.default.svc
+      namespace: audiobookshelf
+    - server: https://kubernetes.default.svc
+      namespace: bentopdf
+    - server: https://kubernetes.default.svc
+      namespace: beszel
+    - server: https://kubernetes.default.svc
+      namespace: changedetection
+    - server: https://kubernetes.default.svc
+      namespace: cilium-system
+    - server: https://kubernetes.default.svc
+      namespace: forgejo
+    - server: https://kubernetes.default.svc
+      namespace: forgejo-runner
+    - server: https://kubernetes.default.svc
+      namespace: grafana
+    - server: https://kubernetes.default.svc
+      namespace: headplane
+    - server: https://kubernetes.default.svc
+      namespace: homepage
+    - server: https://kubernetes.default.svc
+      namespace: immich
+    - server: https://kubernetes.default.svc
+      namespace: intel-gpu
+    - server: https://kubernetes.default.svc
+      namespace: invidious
+    - server: https://kubernetes.default.svc
+      namespace: jellyfin
+    - server: https://kubernetes.default.svc
+      namespace: k8s-readonly
+    - server: https://kubernetes.default.svc
+      namespace: kiwix
+    - server: https://kubernetes.default.svc
+      namespace: kube-system
+    - server: https://kubernetes.default.svc
+      namespace: lidarr
+    - server: https://kubernetes.default.svc
+      namespace: loki
+    - server: https://kubernetes.default.svc
+      namespace: lubelogger
+    - server: https://kubernetes.default.svc
+      namespace: maloja
+    - server: https://kubernetes.default.svc
+      namespace: miniflux
+    - server: https://kubernetes.default.svc
+      namespace: monitoring
+    - server: https://kubernetes.default.svc
+      namespace: navidrome
+    - server: https://kubernetes.default.svc
+      namespace: paperless-ngx
+    - server: https://kubernetes.default.svc
+      namespace: presync-gate
+    - server: https://kubernetes.default.svc
+      namespace: prowlarr
+    - server: https://kubernetes.default.svc
+      namespace: qbittorrent
+    - server: https://kubernetes.default.svc
+      namespace: radarr
+    - server: https://kubernetes.default.svc
+      namespace: romm
+    - server: https://kubernetes.default.svc
+      namespace: seerr
+    - server: https://kubernetes.default.svc
+      namespace: sonarr
+    - server: https://kubernetes.default.svc
+      namespace: speedtest-tracker
+    - server: https://kubernetes.default.svc
+      namespace: tailnet-gateway
+    - server: https://kubernetes.default.svc
+      namespace: umami
+    - server: https://kubernetes.default.svc
+      namespace: velero
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: admissionregistration.k8s.io
+      kind: ValidatingAdmissionPolicy
+    - group: admissionregistration.k8s.io
+      kind: ValidatingAdmissionPolicyBinding
+  namespaceResourceWhitelist:
+    - group: ''
+      kind: ServiceAccount
+    - group: ''
+      kind: ConfigMap
+    - group: rbac.authorization.k8s.io
+      kind: Role
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+    - group: batch
+      kind: Job
+    - group: cilium.io
+      kind: CiliumNetworkPolicy

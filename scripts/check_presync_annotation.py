@@ -45,6 +45,32 @@ def registry_matches(application, registry):
     return entry == expected and values == {key: value for key, value in expected.items() if key != "project"}
 
 
+def project_covers_registry(project, registry):
+    """Check that the dedicated gate project can deploy only its required resource types."""
+    if project.get("metadata", {}).get("name") != registry.get("presync-gate", {}).get("project"):
+        return False
+    spec = project.get("spec", {})
+    destinations = {item.get("namespace") for item in spec.get("destinations", [])}
+    required_namespaces = {entry["targetNamespace"] for entry in registry.values()} | {"presync-gate"}
+    if not required_namespaces.issubset(destinations):
+        return False
+    cluster_resources = {
+        (item.get("group", ""), item.get("kind"))
+        for item in spec.get("clusterResourceWhitelist", [])
+    }
+    namespaced_resources = {
+        (item.get("group", ""), item.get("kind"))
+        for item in spec.get("namespaceResourceWhitelist", [])
+    }
+    return (
+        {("", "Namespace"), ("admissionregistration.k8s.io", "ValidatingAdmissionPolicy"),
+         ("admissionregistration.k8s.io", "ValidatingAdmissionPolicyBinding")}.issubset(cluster_resources)
+        and {("", "ServiceAccount"), ("", "ConfigMap"), ("rbac.authorization.k8s.io", "Role"),
+             ("rbac.authorization.k8s.io", "RoleBinding"), ("batch", "Job"),
+             ("cilium.io", "CiliumNetworkPolicy")}.issubset(namespaced_resources)
+    )
+
+
 def render_gate(application, source, root):
     chart = (root / source["path"]).resolve()
     if not chart.is_relative_to(root.resolve()):
@@ -100,6 +126,10 @@ def main():
     apps = root / "kubernetes/apps/argocd/applications"
     registry_resource = yaml.safe_load((root / "kubernetes/apps/presync-gate/applications.yaml").read_text())
     registry = yaml.safe_load(registry_resource["data"]["applications.yaml"])["applications"]
+    project = yaml.safe_load((root / "kubernetes/apps/argocd/project-presync-gate.yaml").read_text())
+    if not project_covers_registry(project, registry):
+        print("Pre-sync gate AppProject does not cover the registered namespaces/resources", file=sys.stderr)
+        return 1
     failed = []
     for path in sorted(apps.glob("*.yaml")):
         app = yaml.safe_load(path.read_text())

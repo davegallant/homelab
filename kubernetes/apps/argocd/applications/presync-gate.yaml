@@ -7,7 +7,7 @@ metadata:
   annotations:
     homelab.davegallant.ca/pre-sync-backup: enabled
 spec:
-  project: homelab-platform
+  project: homelab-presync-gate
   sources:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main

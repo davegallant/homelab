@@ -3,6 +3,8 @@ from pathlib import Path
 import tempfile
 import unittest
 
+import yaml
+
 FILE = Path(__file__).parents[1] / "check_presync_annotation.py"
 spec = importlib.util.spec_from_file_location("check_presync_annotation", FILE)
 checker = importlib.util.module_from_spec(spec)
@@ -10,6 +12,13 @@ spec.loader.exec_module(checker)
 
 
 class PreSyncAnnotationTest(unittest.TestCase):
+    def test_dedicated_project_covers_every_registered_namespace_and_gate_job(self):
+        root = Path(__file__).parents[2]
+        registry_resource = yaml.safe_load((root / "kubernetes/apps/presync-gate/applications.yaml").read_text())
+        registry = yaml.safe_load(registry_resource["data"]["applications.yaml"])["applications"]
+        project = yaml.safe_load((root / "kubernetes/apps/argocd/project-presync-gate.yaml").read_text())
+        self.assertTrue(checker.project_covers_registry(project, registry))
+
     def test_gate_source_is_detected_in_single_or_multi_source_application(self):
         source = {"repoURL": "repo", "targetRevision": "main", "path": "kubernetes/apps/presync-gate/chart"}
         app = {"spec": {"sources": [{"repoURL": "app", "path": "workload"}, source]}}

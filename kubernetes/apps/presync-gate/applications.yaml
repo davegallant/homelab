@@ -109,7 +109,7 @@ data:
     paperless-ngx-daily\n    requiredHooks:\n    - selector:\n        app.kubernetes.io/name:
     paperless-ngx\n      container: app\n    excludedVolumes:\n    - consume\n   \
     \ - data\n    - export\n    - media\n    - redis-data\n    defaultVolumesToFsBackup:
-    false\n  presync-gate:\n    project: homelab-platform\n    application: presync-gate\n\
+    false\n  presync-gate:\n    project: homelab-presync-gate\n    application: presync-gate\n\
     \    targetNamespace: presync-gate\n    gateNamespace: presync-gate\n    scheduleName:
     ''\n    requiredHooks: []\n    excludedVolumes: []\n    defaultVolumesToFsBackup:
     false\n  prowlarr:\n    project: homelab\n    application: prowlarr\n    targetNamespace:
