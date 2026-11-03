@@ -25,6 +25,9 @@ spec:
               - matchName: forgejo.forgejo.svc.cluster.local.svc.cluster.local
               - matchName: forgejo.forgejo.svc.cluster.local.cluster.local
               - matchName: data.forgejo.org
+              - matchName: forgejo.davegallant.ca
+              - matchName: deb.debian.org
+              - matchName: security.debian.org
               - matchName: github.com
               - matchName: codeload.github.com
               - matchName: registry-1.docker.io
@@ -58,6 +61,8 @@ spec:
               protocol: TCP
     - toFQDNs:
         - matchName: data.forgejo.org
+        - matchName: forgejo.davegallant.ca
+        - matchName: deb.debian.org
         - matchName: github.com
         - matchName: codeload.github.com
         - matchName: registry-1.docker.io
@@ -74,5 +79,14 @@ spec:
         - matchName: www.gasbuddy.com
       toPorts:
         - ports:
+            - port: "443"
+              protocol: TCP
+    - toFQDNs:
+        - matchName: deb.debian.org
+        - matchName: security.debian.org
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
             - port: "443"
               protocol: TCP
