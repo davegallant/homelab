@@ -87,7 +87,7 @@ kubectl --context "$CTX" -n "$TARGET_NS" create secret generic homepage-environm
 ```
 
 Modify the restored claims to use `local-path`. The modifier removes the saved
-static PV binding and adds the Velero-supported local volume annotation. A merge patch also works when Velero has removed the last existing PVC annotation:
+static PV binding and adds the Velero-supported local volume annotation:
 
 ```bash
 CTX=homelab
@@ -106,9 +106,15 @@ data:
           groupResource: persistentvolumeclaims
           resourceNameRegex: '^homepage-(config|caddy|tailscale)$'
           namespaces: [homepage]
-        mergePatches:
-          - patchData: |
-              {"metadata":{"annotations":{"volumeType":"local"}},"spec":{"volumeName":null,"storageClassName":"local-path"}}
+        patches:
+          - operation: remove
+            path: /spec/volumeName
+          - operation: replace
+            path: /spec/storageClassName
+            value: local-path
+          - operation: add
+            path: /metadata/annotations/volumeType
+            value: local
 YAML
 kubectl --context "$CTX" -n velero exec deployment/velero -- /velero restore create \
   homepage-drill-restore --from-backup "$BACKUP" \

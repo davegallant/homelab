@@ -76,15 +76,8 @@ spec:
       namespace: k8s-readonly
     - server: https://kubernetes.default.svc
       namespace: headplane
-  roles:
-    - name: presync-miniflux
-      description: Read-only comparison of the Miniflux application.
-      policies:
-        - p, proj:homelab:presync-miniflux, applications, get, homelab/miniflux, allow
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
-    - group: batch
-      kind: Job
     - group: apps
       kind: Deployment
     - group: apps
