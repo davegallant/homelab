@@ -22,16 +22,16 @@ Preserve the current LAN IP for `cinema`, `mullvad-toronto`, and
 
 | Service | Old CT | Replacement CT | Current state | Open items |
 |---|---|---|---|---|
-| bedrock | `pve-g3-1` CT 120, Ubuntu 26.04.1; LXC running, app stopped | `pve-g3-1` CT 103, Debian 13.6 / `192.168.1.7` / `100.100.0.6`; LXC and app running | Phase 2 data copy matched before startup: 12,412 manifest entries, 10,740 files, 661,109,595 bytes, matching file hashes, owners, groups, and modes. New Bedrock container is healthy on the live `2026.10.2` image. Alloy marker log was found in Loki. Dave selected the new-IP method: keep `192.168.1.7`; cutover verification remains pending. | No client-facing route was found and no in-game LAN client test has been done; LAN clients need to use `192.168.1.7`. Live Headscale policy already permits `tag:monitored` to `tag:loki:3100`; CT 103 is enrolled as `bedrock-debian` with `tag:monitored`, managed by `headscale_node_tags`. CT 120 remains running with its app stopped. |
+| bedrock | `pve-g3-1` CT 120, Ubuntu 26.04.1; stopped intact after cutover | `pve-g3-1` CT 103, Debian 13.6 / `192.168.1.7` / `100.100.0.6`; LXC and app running | Phase 2 data copy matched before startup: 12,412 manifest entries, 10,740 files, 661,109,595 bytes, matching file hashes, owners, groups, and modes. New Bedrock container is healthy on the live `2026.10.2` image. Alloy marker log was found in Loki. Cut over to the new LAN IP `192.168.1.7`; Bedrock status query passed (`version=1.26.61`). | No client-facing hostname/route was found. A real player client confirmation on `192.168.1.7` remains pending. Headscale identity is `bedrock` with `tag:monitored`; stopped CT 120 remains available as `bedrock-rollback`. Live policy permits `tag:monitored` to `tag:loki:3100`. CT 120 and its data remain intact. |
 
 ## Confirmed running Ubuntu LXC candidates
 
-These containers were observed running Ubuntu 26.04. They have not been
-migrated. The Alloy column is a read-only live service check.
+These containers were observed running Ubuntu 26.04 in the inventory snapshot.
+The Alloy column records that snapshot; see the status column for later changes.
 
 | Service | Proxmox host | CT | OS | Alloy | Migration status |
 |---|---|---:|---|---|---|
-| bedrock | pve-g3-1 | 120 | Ubuntu 26.04 | active, enabled | Migration in progress; see above. CT 120 remains running with its app stopped. |
+| bedrock | pve-g3-1 | 120 | Ubuntu 26.04 | active, enabled at snapshot | Cut over; old CT 120 stopped intact. See above. |
 | adguard-home | pve-g3-2 | 126 | Ubuntu 26.04 | active, enabled | Candidate; Phase 0/go required |
 | gatus | pve-g3-2 | 131 | Ubuntu 26.04 | active, enabled | Candidate; Phase 0/go required |
 | gotify | pve-g3-2 | 136 | Ubuntu 26.04 | active, enabled | Candidate; Phase 0/go required |
