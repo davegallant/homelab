@@ -8,6 +8,10 @@ exceptions:
   speedtest-tracker/speedtest-tracker containers:app readOnlyRootFilesystem: >-
     The upstream s6 image needs writable runtime paths; its writable mounts
     are defined in the chart values.
+  litellm/litellm containers:litellm readOnlyRootFilesystem: >-
+    The official LiteLLM chart documents that Prisma installs dependencies
+    into writable image paths during startup. This deployment uses the
+    upstream non-root image and drops all capabilities.
 live_only_exceptions:
   "alloy/* pod automountServiceAccountToken": >-
     Alloy reads pod metadata and streams pod logs through the Kubernetes API;

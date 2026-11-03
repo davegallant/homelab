@@ -1,0 +1,15 @@
+image:
+  repository: ghcr.io/davegallant/rfd-enricher
+  tag: local
+  digest: sha256:REPLACE_AFTER_IMAGE_PUBLISH
+
+schedule: "*/15 * * * *"
+concurrencyPolicy: Forbid
+startingDeadlineSeconds: 300
+activeDeadlineSeconds: 600
+backoffLimit: 1
+successfulJobsHistoryLimit: 1
+failedJobsHistoryLimit: 2
+
+env: {}
+secretEnv: {}

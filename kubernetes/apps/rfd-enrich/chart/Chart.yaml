@@ -1,0 +1,6 @@
+apiVersion: v2
+name: rfd-enrich
+description: Scheduled RedFlagDeals enrichment job
+type: application
+version: 0.1.0
+appVersion: "1"

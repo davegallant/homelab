@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rfd-enrich
+  namespace: argocd
+  annotations:
+    homelab.davegallant.ca/backup-policy: not-required
+spec:
+  project: homelab
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/rfd-enrich/chart
+    helm:
+      releaseName: rfd-enrich
+      valueFiles:
+        - ../values.production.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: rfd-enrich
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true

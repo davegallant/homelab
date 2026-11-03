@@ -1,0 +1,101 @@
+nameOverride: litellm
+replicaCount: 1
+
+image:
+  repository: ghcr.io/berriai/litellm-non_root
+  tag: v1.106.6@sha256:6363e53f135dafbf4a68fac25f77aec3f2b99be37665e8c5f623a952637c220b
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  automount: false
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [ALL]
+
+environmentSecrets:
+  - litellm-provider-external
+masterkeySecretName: litellm-masterkey-external
+masterkeySecretKey: masterkey
+
+proxy_config:
+  model_list:
+    - model_name: gpt-6-luna
+      litellm_params:
+        model: openrouter/openai/gpt-6-luna
+        api_key: os.environ/OPENROUTER_API_KEY
+  litellm_settings:
+    drop_params: true
+
+envVars:
+  LITELLM_OFFLINE_MODE: "true"
+
+service:
+  type: ClusterIP
+  port: 4000
+
+db:
+  deployStandalone: false
+
+migrationJob:
+  enabled: false
+
+redis:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
+
+extraResources:
+  - apiVersion: cilium.io/v2
+    kind: CiliumNetworkPolicy
+    metadata:
+      name: litellm-default-deny
+      namespace: litellm
+    spec:
+      description: Allow only DNS, OpenRouter HTTPS, and the enricher proxy client.
+      endpointSelector: {}
+      ingress:
+        - fromEndpoints:
+            - matchLabels:
+                k8s:io.kubernetes.pod.namespace: rfd-enrich
+                app.kubernetes.io/name: rfd-enrich
+          toPorts:
+            - ports:
+                - port: "4000"
+                  protocol: TCP
+      egress:
+        - toEndpoints:
+            - matchLabels:
+                k8s:io.kubernetes.pod.namespace: kube-system
+                k8s:k8s-app: kube-dns
+          toPorts:
+            - ports:
+                - port: "53"
+                  protocol: UDP
+                - port: "53"
+                  protocol: TCP
+              rules:
+                dns:
+                  - matchName: openrouter.ai
+        - toFQDNs:
+            - matchName: openrouter.ai
+          toPorts:
+            - ports:
+                - port: "443"
+                  protocol: TCP

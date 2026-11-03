@@ -60,6 +60,8 @@ def render_source(root, source, namespace, app_name, values_sources, env):
     if chart or (path_value and (root / path_value / "Chart.yaml").is_file()):
         chart_ref = chart or str(root / path_value)
         command = ["helm", "template", helm.get("releaseName", app_name), chart_ref, "--namespace", namespace]
+        if helm.get("skipTests"):
+            command.append("--skip-tests")
         if chart:
             repository = source["repoURL"]
             if repository.startswith("oci://") or not urlparse(repository).scheme:
@@ -104,6 +106,8 @@ def render_source(root, source, namespace, app_name, values_sources, env):
         return []
     parsed = [item for item in yaml.safe_load_all(output) if isinstance(item, dict)]
     for item in parsed:
+        if item.get("kind") == "ServiceAccount":
+            item.setdefault("metadata", {}).setdefault("namespace", namespace)
         if item.get("kind") in {"Pod", "Deployment", "StatefulSet", "DaemonSet", "Job", "CronJob", "ReplicaSet", "ReplicationController"}:
             item.setdefault("metadata", {}).setdefault("namespace", namespace)
     return parsed
