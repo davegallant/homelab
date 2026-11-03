@@ -37,7 +37,7 @@
 		{
 			"action": "accept",
 			"proto":  "tcp",
-			"src":    ["100.100.0.33", "100.100.0.34"],
+			"src":    ["100.100.0.10", "100.100.0.11"],
 			"dst":    ["100.100.0.8:443"],
 		},
 		// Muse can read Gatus health status over its tailnet HTTPS endpoint.
@@ -136,31 +136,33 @@
 			"accept": ["100.100.0.7:53", "{{ headscale_primary_dns_ip }}:53"],
 			"deny":   ["100.100.0.8:53"],
 		},
+		{% if headscale_include_beszel_agent_tests | default(true) %}
 		{
 			"src":    "tag:beszel-agent",
 			"proto":  "tcp",
 			"accept": ["100.100.0.8:443", "100.100.0.7:53", "{{ headscale_primary_dns_ip }}:53"],
 			"deny":   ["tag:loki:3100", "tag:pangolin:443"],
 		},
+		{% endif %}
 		{
-			"src":    "100.100.0.33",
+			"src":    "100.100.0.10",
 			"proto":  "tcp",
 			"accept": ["100.100.0.8:443"],
 			"deny":   ["100.100.0.8:80", "100.100.0.8:444", "100.100.0.22:443", "100.100.0.7:443", "100.100.0.1:443"],
 		},
 		{
-			"src":    "100.100.0.34",
+			"src":    "100.100.0.11",
 			"proto":  "tcp",
 			"accept": ["100.100.0.8:443"],
 			"deny":   ["100.100.0.8:80", "100.100.0.8:444", "100.100.0.22:443", "100.100.0.7:443", "100.100.0.1:443"],
 		},
 		{
-			"src":   "100.100.0.33",
+			"src":   "100.100.0.10",
 			"proto": "udp",
 			"deny":  ["100.100.0.8:443"],
 		},
 		{
-			"src":   "100.100.0.34",
+			"src":   "100.100.0.11",
 			"proto": "udp",
 			"deny":  ["100.100.0.8:443"],
 		},
@@ -241,11 +243,13 @@
 			"dst":  ["dave@", "tag:external", "tag:pangolin", "tag:monitored", "tag:loki"],
 			"deny": ["root"],
 		},
+		{% if headscale_include_beszel_agent_tests | default(true) %}
 		{
 			"src":  "tag:beszel-agent",
 			"dst":  ["dave@", "tag:external", "tag:beszel-agent", "tag:pangolin", "tag:monitored", "tag:loki"],
 			"deny": ["root"],
 		},
+		{% endif %}
 		{
 			"src":    "dave@",
 			"dst":    ["tag:external", "tag:pangolin", "tag:monitored", "tag:loki"],

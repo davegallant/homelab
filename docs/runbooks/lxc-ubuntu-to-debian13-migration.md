@@ -31,6 +31,10 @@ Current progress is tracked in
 - Cut over to the replacement's new LAN IP by default. Preserve the current
   LAN IP for `cinema`, `mullvad-toronto`, and `mullvad-tokyo`; do not apply the
   new-IP default to those services.
+- Preserve both the current LAN IP and MAC for `mullvad-toronto` and
+  `mullvad-tokyo`. Use a generated MAC and temporary DHCP IP while the two
+  containers coexist; transfer the original MAC only after stopping the old
+  LXC.
 - AdGuard Home is another address-preservation exception: keep
   `192.168.1.77` and its OPNsense-reserved MAC. Use a different MAC/IP while
   testing the replacement; reuse the old MAC only after the old LXC is stopped
@@ -62,10 +66,10 @@ Current progress is tracked in
   `/etc/locale.gen`, and run `locale-gen en_CA.UTF-8`. Verify a plain interactive
   `ssh root@<SERVICE>` login has no locale warnings. The shared
   `install-common-packages.yml` task now manages this for service playbooks.
-- The root login shell on `pve-g3-2` is fish. Bash-only shell options such as
-  `set -o pipefail` fail there. For a remote pipeline, invoke Bash explicitly
-  or run the pipeline locally; verify the copied data after any ambiguous
-  command result.
+- The root login shells on `pve-g3-1` and `pve-g3-2` are fish. Bash-only shell
+  options and unescaped Bash variables fail there. For remote pipelines or
+  shell scripts, invoke Bash explicitly or run the pipeline locally; verify
+  state after any ambiguous command result.
 - When an OPNsense DHCP reservation binds a required address to a MAC, do not
   attach that MAC to the replacement while the old LXC is still connected.
   Use a temporary MAC and DHCP address during coexistence, then reuse the old
@@ -77,6 +81,27 @@ Current progress is tracked in
   working. Do not mistake that for a Proxmox ACL failure. Compare SSH key
   fingerprints before changing `authorized_keys`; an agent host-key-binding
   warning is non-fatal when SSH later reports successful authentication.
+- A Secure Enclave SSH key managed by Secretive may be Touch ID protected.
+  Non-interactive SSH can report `signing failed ... agent refused operation`
+  even when the server accepts the public key and the network path is working.
+  Retry from an interactive terminal so the operator can approve the signing
+  request. Do not change the key's Touch ID policy or weaken host-key checking.
+- Never stream a Headscale auth key through an allocated SSH PTY: terminal
+  echo can expose it before a remote `stty -echo` runs. Transfer it with `scp`
+  to a mode-0600 file under `/run` on the verified Proxmox host, then use
+  `pct push <CTID> <HOST_FILE> /run/tailscale-authkey --perms 0600 --user 0
+  --group 0`. Run `tailscale up --auth-key=file:/run/tailscale-authkey`; verify
+  the key is consumed and the node has the expected name, IP, and tags, then
+  remove the temporary key files from the operator, host, and LXC.
+- A Newt-backed Pangolin route can briefly return 503 immediately after the
+  replacement stack starts while Newt's target health check is still unhealthy.
+  Inspect the Newt target's health transition and recheck the public endpoint
+  after it reports healthy. Do not restart a healthy app or invent a route
+  change to clear the transient 503.
+- Gotify and iGotify have IP-pinned Headscale policy entries for their Beszel
+  hub access. After enrollment, replace the old service IPs in every matching
+  allow rule and policy test, then run `just run main --limit vps --tags
+  headscale_policy` and verify the live policy contains the new addresses.
 - A read-only CLI syntax error has no infrastructure effect: read that
   subcommand's help, correct the query, and continue. Reserve HALT AND PRESERVE
   for failed mutations, failed verification, or state that cannot be
@@ -100,6 +125,11 @@ Current progress is tracked in
   evidence through separate status/log queries that contain no key; do not
   hide all diagnostics behind a failing `no_log` assertion. A task marked
   `changed` is not proof that Tailscale enrollment succeeded.
+- The Beszel package may try to start before its credentials are configured and
+  log a missing-key failure. The shared task resets that failed state, writes
+  the protected config, and restarts the agent. Verify the final service is
+  active and has a live hub connection; the package's first-start log alone is
+  not the final result.
 - Headscale pre-auth keys use Headscale's user ID, not a node's `user.id`.
   For AdGuard, the old tagged node reported special user ID `2147455555`, but
   `headscale users list` showed the actual key owner `dave` as ID `1`; using the
@@ -117,6 +147,26 @@ Current progress is tracked in
   endpoint. For AdGuard, `loki` resolved to `100.100.0.1`; probing an assumed
   address produced an ACL rejection unrelated to Alloy. Confirm a recent Loki
   stream with the replacement's host label to prove ingestion.
+
+## Mullvad exit-node variation
+
+`mullvad-toronto` and `mullvad-tokyo` are manually managed Tailscale exit-node
+LXCs, not Docker Compose services. Their LAN identity selects the Mullvad
+egress path. Preserve the live IP and MAC, pass through `/dev/net/tun`, and
+enable persistent IPv4 and IPv6 forwarding. During Phase 1, install Tailscale
+but leave it logged out so the old and replacement containers never register
+the same final Headscale name simultaneously.
+
+At cutover, stop the old LXC before assigning its MAC to the replacement. Let
+DHCP restore the original IP, then verify DNS and
+`https://am.i.mullvad.net/connected` from the replacement before enrolling it.
+Remove the exact old Headscale node, enroll the replacement under the final
+service name as the existing user-owned node, and advertise it with
+`--advertise-exit-node`. Approve both `0.0.0.0/0` and `::/0` using
+`headscale nodes approve-routes`. Verify Tailscale reports `ExitNodeOption: true`
+and Headscale shows both routes as serving; the Mullvad endpoint must report the
+expected city. These LXCs have no application data to copy. Record their
+existing Alloy and Beszel status rather than assuming either agent is installed.
 
 ## Phase 0: read-only inventory
 
@@ -247,6 +297,10 @@ Start only after Dave confirms Phase 2 verification. Keep the replacement's new
 LAN IP and update the service route or clients to use it, except for `cinema`,
 `mullvad-toronto`, and `mullvad-tokyo`, which retain their current LAN IP. The
 old LXC must be stopped after cutover and remain intact.
+
+For Mullvad exit-node LXCs, use the Mullvad exit-node variation above: the old
+container must be stopped before transferring its MAC, and the replacement must
+receive the original DHCP address before it advertises the exit-node routes.
 
 For the tailnet Caddy pattern used by UpSnap:
 
