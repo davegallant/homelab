@@ -18,6 +18,7 @@ spec:
       labels:
         app.kubernetes.io/name: tailnet-gateway-fronting
       annotations:
+        backup.velero.io/backup-volumes-excludes: tailscale-state
         checksum/serve-config: 281e62e3d3ddb713594c6b6d8d63d5a0a9421543ea3b5754e0efd90e6821b202
     spec:
       nodeSelector:

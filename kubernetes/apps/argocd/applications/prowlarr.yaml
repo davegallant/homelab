@@ -5,6 +5,7 @@ metadata:
   name: prowlarr
   namespace: argocd
   annotations:
+    homelab.davegallant.ca/pre-sync-backup: enabled
     homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
@@ -19,6 +20,19 @@ spec:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       ref: values
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/presync-gate/chart
+      helm:
+        valuesObject:
+          application: prowlarr
+          targetNamespace: prowlarr
+          gateNamespace: presync-gate
+          scheduleName: prowlarr-daily
+          requiredHooks: []
+          excludedVolumes:
+            - prowlarr-config
+          defaultVolumesToFsBackup: false
   destination:
     server: https://kubernetes.default.svc
     namespace: prowlarr

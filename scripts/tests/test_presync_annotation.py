@@ -10,6 +10,23 @@ spec.loader.exec_module(checker)
 
 
 class PreSyncAnnotationTest(unittest.TestCase):
+    def test_gate_source_is_detected_in_single_or_multi_source_application(self):
+        source = {"repoURL": "repo", "targetRevision": "main", "path": "kubernetes/apps/presync-gate/chart"}
+        app = {"spec": {"sources": [{"repoURL": "app", "path": "workload"}, source]}}
+        self.assertEqual(checker.gate_source(app), source)
+        app["spec"] = {"source": source}
+        self.assertEqual(checker.gate_source(app), source)
+        app["spec"] = {"source": {"path": "workload"}}
+        self.assertIsNone(checker.gate_source(app))
+
+    def test_application_values_must_match_central_registry(self):
+        app = {"metadata": {"name": "demo"}, "spec": {"project": "homelab", "destination": {"namespace": "demo"},
+               "sources": [{"path": "kubernetes/apps/presync-gate/chart", "helm": {"valuesObject": {"application": "demo", "targetNamespace": "demo", "gateNamespace": "presync-gate", "requiredHooks": [], "excludedVolumes": [], "scheduleName": "", "defaultVolumesToFsBackup": False}}}]}}
+        registry = {"demo": {"project": "homelab", "application": "demo", "targetNamespace": "demo", "gateNamespace": "presync-gate", "requiredHooks": [], "excludedVolumes": [], "scheduleName": "", "defaultVolumesToFsBackup": False}}
+        self.assertTrue(checker.registry_matches(app, registry))
+        registry["demo"]["targetNamespace"] = "other"
+        self.assertFalse(checker.registry_matches(app, registry))
+
     def test_opt_in_must_match_rendered_gate(self):
         app = {"metadata": {"annotations": {"homelab.davegallant.ca/pre-sync-backup": "enabled"}}}
         self.assertTrue(checker.valid(app, True))

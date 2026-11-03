@@ -76,6 +76,8 @@ spec:
       namespace: k8s-readonly
     - server: https://kubernetes.default.svc
       namespace: headplane
+    - server: https://kubernetes.default.svc
+      namespace: presync-gate
   roles:
     - name: presync-miniflux
       description: Read-only comparison of the Miniflux application.
@@ -101,3 +103,5 @@ spec:
     # rawResource in its values (Phase 4 pattern).
     - group: cilium.io
       kind: CiliumNetworkPolicy
+    - group: batch
+      kind: Job

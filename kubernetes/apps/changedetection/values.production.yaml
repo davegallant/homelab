@@ -13,6 +13,7 @@ controllers:
         # Opt-in filesystem backup of the app config volume only;
         # the Schedule is opt-in.
         backup.velero.io/backup-volumes: datastore-local
+        backup.velero.io/backup-volumes-excludes: "datastore"
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch

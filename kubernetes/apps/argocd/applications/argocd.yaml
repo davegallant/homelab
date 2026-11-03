@@ -4,6 +4,8 @@ kind: Application
 metadata:
   name: argocd
   namespace: argocd
+  annotations:
+    homelab.davegallant.ca/pre-sync-backup: enabled
 spec:
   project: homelab-platform
   sources:
@@ -36,6 +38,20 @@ spec:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       path: kubernetes/apps/argocd/applications
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/presync-gate/chart
+      helm:
+        valuesObject:
+          application: argocd
+          targetNamespace: argocd
+          gateNamespace: presync-gate
+          scheduleName: ''
+          requiredHooks: []
+          excludedVolumes:
+            - argocd-caddy
+            - argocd-tailscale
+          defaultVolumesToFsBackup: false
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

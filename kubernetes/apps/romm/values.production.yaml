@@ -36,6 +36,7 @@ controllers:
         # a consistent logical dump into the database volume so the
         # filesystem backup carries a restorable copy.
         backup.velero.io/backup-volumes: mysql-data-local,config-local,resources-local,redis-data-local
+        backup.velero.io/backup-volumes-excludes: "library"
         pre.hook.backup.velero.io/container: db
         pre.hook.backup.velero.io/command: '["/bin/sh","-c","mariadb-dump --single-transaction -u root
           -p$MARIADB_ROOT_PASSWORD romm > /var/lib/mysql/romm-backup.sql"]'

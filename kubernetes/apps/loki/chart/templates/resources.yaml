@@ -67,6 +67,7 @@ spec:
         app.kubernetes.io/name: loki
       annotations:
         backup.velero.io/backup-volumes: data
+        backup.velero.io/backup-volumes-excludes: tailscale-state
     spec:
       nodeSelector:
         kubernetes.io/hostname: k8s-w-1

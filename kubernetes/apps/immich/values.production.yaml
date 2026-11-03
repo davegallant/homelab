@@ -22,6 +22,7 @@ controllers:
           type: RuntimeDefault
       annotations:
         backup.velero.io/backup-volumes: postgres-production
+        backup.velero.io/backup-volumes-excludes: "library-production,model-cache-local"
         pre.hook.backup.velero.io/container: postgres
         pre.hook.backup.velero.io/command: >-
           ["/bin/sh","-c","pg_dump --clean --if-exists -U $POSTGRES_USER -d

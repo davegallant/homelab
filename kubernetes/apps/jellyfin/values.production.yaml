@@ -8,6 +8,7 @@ controllers:
       automountServiceAccountToken: false
       annotations:
         backup.velero.io/backup-volumes: config
+        backup.velero.io/backup-volumes-excludes: "media"
       nodeSelector:
         kubernetes.io/hostname: k8s-w-1
       securityContext:

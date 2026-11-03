@@ -5,6 +5,7 @@ metadata:
   name: navidrome
   namespace: argocd
   annotations:
+    homelab.davegallant.ca/pre-sync-backup: enabled
     homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
@@ -19,6 +20,20 @@ spec:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       ref: values
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/presync-gate/chart
+      helm:
+        valuesObject:
+          application: navidrome
+          targetNamespace: navidrome
+          gateNamespace: presync-gate
+          scheduleName: navidrome-daily
+          requiredHooks: []
+          excludedVolumes:
+            - data
+            - library
+          defaultVolumesToFsBackup: false
   destination:
     server: https://kubernetes.default.svc
     namespace: navidrome

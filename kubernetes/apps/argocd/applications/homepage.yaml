@@ -5,17 +5,32 @@ metadata:
   name: homepage
   namespace: argocd
   annotations:
+    homelab.davegallant.ca/pre-sync-backup: enabled
     homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
-  source:
-    repoURL: https://github.com/davegallant/homelab.git
-    targetRevision: main
-    path: kubernetes/apps/homepage/chart
-    helm:
-      releaseName: homepage
-      valueFiles:
-        - ../values.production.yaml
+  sources:
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/homepage/chart
+      helm:
+        releaseName: homepage
+        valueFiles:
+          - ../values.production.yaml
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/presync-gate/chart
+      helm:
+        valuesObject:
+          application: homepage
+          targetNamespace: homepage
+          gateNamespace: presync-gate
+          scheduleName: homepage-daily
+          requiredHooks: []
+          excludedVolumes:
+            - homepage-caddy
+            - homepage-tailscale
+          defaultVolumesToFsBackup: true
   destination:
     server: https://kubernetes.default.svc
     namespace: homepage

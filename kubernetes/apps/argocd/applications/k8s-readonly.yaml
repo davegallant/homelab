@@ -5,6 +5,7 @@ metadata:
   name: k8s-readonly
   namespace: argocd
   annotations:
+    homelab.davegallant.ca/pre-sync-backup: enabled
     homelab.davegallant.ca/backup-policy: not-required
 spec:
   project: homelab
@@ -19,6 +20,18 @@ spec:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       ref: values
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/presync-gate/chart
+      helm:
+        valuesObject:
+          application: k8s-readonly
+          targetNamespace: k8s-readonly
+          gateNamespace: presync-gate
+          scheduleName: ''
+          requiredHooks: []
+          excludedVolumes: []
+          defaultVolumesToFsBackup: false
   destination:
     server: https://kubernetes.default.svc
     namespace: k8s-readonly
