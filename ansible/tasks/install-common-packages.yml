@@ -15,20 +15,6 @@
     enabled: true
     state: started
 
-- name: Disable MOTD help text to suppress Ubuntu MOTD links
-  ansible.builtin.file:
-    path: /etc/update-motd.d/10-help-text
-    mode: "0644"
-    state: file
-  when: ansible_facts['os_family'] == 'Debian'
-
-- name: Remove APT Ubuntu Pro/ESM nag (empty 20apt-esm-hook.conf)
-  ansible.builtin.copy:
-    dest: /etc/apt/apt.conf.d/20apt-esm-hook.conf
-    content: ""
-    mode: "0644"
-  when: ansible_facts['os_family'] == 'Debian'
-
 - name: Remove rsyslog (journald handles logging)
   ansible.builtin.apt:
     name: rsyslog

@@ -11,7 +11,7 @@ set -euo pipefail
 
 # --- config you may want to tweak ---
 NODE=""                                                              # leave empty to pick interactively
-TEMPLATE="proxmox-iso:vztmpl/ubuntu-26.04-standard_26.04-1_amd64.tar.zst"  # leave empty to pick interactively
+TEMPLATE="proxmox-iso:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst"  # leave empty to pick interactively
 STORAGE="local-lvm"                                                  # leave empty to pick interactively
 BRIDGE="vmbr0"
 MEMORY=2048

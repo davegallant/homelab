@@ -17,7 +17,7 @@
 set -uo pipefail
 
 CONFIG="${HOME:-/root}/config"
-# /tmp is a RAM-backed tmpfs on Ubuntu and can be smaller than the SQLite DBs.
+# Stage under /var/tmp so backups do not depend on the size of /tmp.
 STAGING="$(mktemp -d /var/tmp/vps-backup.XXXXXX)"
 
 backup_failed() {

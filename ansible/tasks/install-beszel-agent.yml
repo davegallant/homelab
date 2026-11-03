@@ -28,6 +28,38 @@
     group: beszel
     mode: "0600"
   no_log: true
+  when: (beszel_agent_mode | default('websocket')) == 'websocket'
+
+- name: Configure beszel-agent credentials for SSH mode
+  ansible.builtin.copy:
+    dest: /etc/beszel-agent.conf
+    content: |
+      KEY={{ beszel_key }}
+    owner: beszel
+    group: beszel
+    mode: "0600"
+  no_log: true
+  when: (beszel_agent_mode | default('websocket')) == 'ssh'
+
+- name: Create beszel-agent systemd override directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/beszel-agent.service.d
+    state: directory
+    mode: "0755"
+  when: (beszel_agent_mode | default('websocket')) == 'ssh'
+
+- name: Configure beszel-agent for SSH mode
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/beszel-agent.service.d/10-ssh-mode.conf
+    content: |
+      [Service]
+      Environment="LISTEN=45876"
+      UnsetEnvironment=HUB_URL TOKEN
+    owner: root
+    group: root
+    mode: "0644"
+  no_log: true
+  when: (beszel_agent_mode | default('websocket')) == 'ssh'
 
 - name: Reset failed state from the package's own first-boot start attempt
   ansible.builtin.command:

@@ -60,9 +60,14 @@
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-common-packages.yml
 
-    # No install-alloy.yml / install-beszel-agent.yml: this host is not on the
-    # tailnet, so it cannot reach Loki or the Beszel hub. It is monitored via
-    # the Gatus pangolin endpoint instead.
+    # Alloy still cannot reach Loki from this off-tailnet host. Beszel uses
+    # SSH mode, with its agent port restricted to the hub's verified egress IP.
+
+    - name: Install Beszel agent in SSH mode
+      ansible.builtin.include_tasks:
+        file: ../../tasks/install-beszel-agent.yml
+      vars:
+        beszel_agent_mode: ssh
 
     - name: Create pangolin config directories
       ansible.builtin.file:
@@ -123,9 +128,15 @@
         rule: allow
         port: "22"
         proto: tcp
-    # This host is reached over plain SSH (no Tailscale), so 22 is the only
-    # way in. It must be open BEFORE the deny policy loads. Do not move this
-    # below "Enable UFW".
+
+    - name: Allow Beszel agent from its hub
+      community.general.ufw:
+        rule: allow
+        from_ip: "{{ beszel_hub_egress_ip }}"
+        port: "45876"
+        proto: tcp
+    # This host is reached over plain SSH (no Tailscale). Keep SSH and the
+    # source-restricted Beszel agent rule BEFORE the deny policy loads.
 
     - name: Enable UFW
       community.general.ufw:

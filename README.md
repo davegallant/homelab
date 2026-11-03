@@ -2,7 +2,7 @@
 
 This repo contains [Ansible playbooks](./ansible/playbooks/) and kubernetes manifests that provision and manage a fully self-hosted homelab running on [Proxmox](https://proxmox.com).
 
-Services run on either Ubuntu LXC containers managed by Ansible or on a three-node Talos Kubernetes cluster managed through Argo CD. [Headscale](https://headscale.net) (self-hosted Tailscale control plane) handles networking, and [Grafana Alloy](https://grafana.com/docs/alloy/) ships logs to Loki.
+Services run on either Debian 13 LXC containers managed by Ansible or on a three-node Talos Kubernetes cluster managed through Argo CD. [Headscale](https://headscale.net) (self-hosted Tailscale control plane) handles networking, and [Grafana Alloy](https://grafana.com/docs/alloy/) ships logs to Loki.
 
 ---
 
