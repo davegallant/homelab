@@ -35,6 +35,7 @@
       adguard-home: [tag:monitored]
       audiobookshelf: [tag:monitored, tag:pangolin]
       bedrock: [tag:monitored]
+      bedrock-debian: [tag:monitored]
       bento-pdf: [tag:monitored, tag:pangolin]
       forgejo: [tag:monitored, tag:pangolin]
       gatus: [tag:gatus]

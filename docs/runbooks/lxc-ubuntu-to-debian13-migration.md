@@ -29,6 +29,42 @@ Current progress is tracked in
   specific change. Repo changes to Ansible playbooks are separate from a
   migration phase unless Dave explicitly includes them.
 
+## Proven operational pitfalls
+
+- The repo's default `ansible/.vault_pass` may be a mode `0600` regular file,
+  not an executable script. Ansible accepts it with `--vault-password-file`,
+  as the repo's `just` recipes do. Do not require `test -x`; do not make
+  temporary playbook creation conditional on that check.
+- Use `ssh root@<PVE_HOST> pct exec <CTID> -- ...` as the stable path into a
+  newly created LXC. The service playbook may enable UFW with deny-incoming
+  before the replacement joins Tailscale, so direct SSH to its LAN IP may stop
+  working. Do not mistake that for a Proxmox ACL failure. Compare SSH key
+  fingerprints before changing `authorized_keys`; an agent host-key-binding
+  warning is non-fatal when SSH later reports successful authentication.
+- A read-only CLI syntax error has no infrastructure effect: read that
+  subcommand's help, correct the query, and continue. Reserve HALT AND PRESERVE
+  for failed mutations, failed verification, or state that cannot be
+  established safely. Do not repeat a failed mutation without Dave's go.
+- Headscale 0.29.7 `preauthkeys list` has no `--user` option. List keys without
+  that filter and select only safe metadata client-side; never print the key
+  field. Confirm the exact user ID and tag from live Headscale state before
+  creating a one-use key.
+- If a one-use Headscale key is created with `--tags tag:<service-role>`, do
+  not also pass `--advertise-tags` to `tailscale up`. Headscale's empty
+  `tagOwners` entries reject a node's separate tag request even when the
+  registration key already carries that tag. Check the key's `acl_tags`, then
+  verify the enrolled node's tag and Tailscale IP. Add any temporary hostname
+  to `headscale_node_tags` before running the managed policy/tag play.
+- `alloy.service` being active does not prove Loki ingestion. If the rendered
+  Loki destination is tailnet-only, confirm the replacement is enrolled with
+  a tag the live ACL permits, that `loki` resolves from the replacement, and
+  that a recent stream for its hostname appears in Loki. Do not change the
+  ACL when the existing tag rule already grants this path.
+- Keep auth-key creation and use under `no_log`. Preserve useful failure
+  evidence through separate status/log queries that contain no key; do not
+  hide all diagnostics behind a failing `no_log` assertion. A task marked
+  `changed` is not proof that Tailscale enrollment succeeded.
+
 ## Phase 0: read-only inventory
 
 Read the repo's `AGENTS.md`, the service's inventory entry, its playbook and
@@ -140,6 +176,11 @@ enabled, and active; confirm the rendered Loki URL without exposing credentials;
 check Loki `/ready`; then query recent streams for the new host label. A running
 service or reachable Loki endpoint alone does not prove ingestion.
 
+If the Loki endpoint is tailnet-only, enroll the replacement before expecting
+Alloy to ship. Inspect the existing node's Headscale tag and live ACL first;
+use the managed tag for the new temporary hostname and keep the one-use key out
+of output and files. Do not rely on installing Alloy alone.
+
 ## Phase 3: route cutover
 
 Start only after Dave confirms Phase 2 verification and chooses a cutover method.
@@ -147,10 +188,12 @@ The old LXC must be stopped after cutover and remain intact.
 
 For the tailnet Caddy pattern used by UpSnap:
 
-1. Enroll the replacement in Headscale using a short-lived, one-use pre-auth
-   key with the verified service tags. Pass the key through a protected
-   variable/stdin path; never print it. Install Tailscale through the documented
-   package process and verify the assigned tailnet IP.
+1. If Phase 2 did not already enroll the replacement for Alloy, enroll it in
+   Headscale using a short-lived, one-use pre-auth key with the verified
+   service tags. Pass the key through a protected variable/stdin path; never
+   print it. If the key carries the tags, omit `--advertise-tags` from
+   `tailscale up`. Install Tailscale through the documented package process
+   and verify the assigned tailnet IP.
 2. Run only the existing `tailnet_caddy` role against the new inventory target,
    overriding `ansible_host` with the verified new LAN IP. Keep all secret tasks
    under their existing `no_log` handling.
