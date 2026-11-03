@@ -29,9 +29,31 @@ spec:
               protocol: UDP
             - port: "53"
               protocol: TCP
-    - toCIDR:
-        - 192.168.1.185/32
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: argocd
+            k8s:app.kubernetes.io/name: argocd-server
       toPorts:
         - ports:
-            - port: "443"
+            - port: "8080"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: presync-miniflux-argocd-ingress
+  namespace: argocd
+spec:
+  description: Allow the Miniflux pre-sync gate to compare the previous Argo application revision.
+  endpointSelector:
+    matchLabels:
+      k8s:app.kubernetes.io/name: argocd-server
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: miniflux
+            k8s:homelab.davegallant.ca/presync-gate: miniflux
+      toPorts:
+        - ports:
+            - port: "8080"
               protocol: TCP

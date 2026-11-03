@@ -24,10 +24,6 @@ spec:
         fsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
-      hostAliases:
-      - ip: 192.168.1.185
-        hostnames:
-        - argocd.tail.davegallant.ca
       initContainers:
       - name: install-argocd-client
         image: quay.io/argoproj/argocd:v3.5.6@sha256:8e5cc5bb008df8a09dba439462e58c94c55b7735888d3ebde0c25fc05e4e5335
@@ -82,7 +78,7 @@ spec:
 
           result = subprocess.run(
               [
-                  "argocd", "app", "diff", "miniflux", "--revision", revision,
+                  "argocd", "--plaintext", "app", "diff", "miniflux", "--revision", revision,
                   "--server", os.environ["ARGOCD_SERVER"],
               ],
               capture_output=True,
@@ -103,7 +99,7 @@ spec:
         - name: PYTHONDONTWRITEBYTECODE
           value: '1'
         - name: ARGOCD_SERVER
-          value: argocd.tail.davegallant.ca:443
+          value: argocd-server.argocd.svc:8080
         - name: ARGOCD_AUTH_TOKEN
           valueFrom:
             secretKeyRef:
