@@ -5,7 +5,6 @@ metadata:
   name: lidarr
   namespace: argocd
   annotations:
-    homelab.davegallant.ca/pre-sync-backup: enabled
     homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
@@ -20,21 +19,6 @@ spec:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate/chart
-      helm:
-        valuesObject:
-          application: lidarr
-          targetNamespace: lidarr
-          gateNamespace: presync-gate
-          scheduleName: lidarr-daily
-          requiredHooks: []
-          excludedVolumes:
-            - media
-            - music
-            - lidarr-config
-          defaultVolumesToFsBackup: false
   destination:
     server: https://kubernetes.default.svc
     namespace: lidarr

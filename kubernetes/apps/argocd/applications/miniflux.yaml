@@ -9,29 +9,14 @@ metadata:
     homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
-  sources:
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/miniflux/chart
-      helm:
-        releaseName: miniflux
-        valueFiles:
-          - ../values.production.yaml
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate/chart
-      helm:
-        valuesObject:
-          application: miniflux
-          targetNamespace: miniflux
-          gateNamespace: presync-gate
-          scheduleName: miniflux-daily
-          requiredHooks:
-            - selector:
-                app.kubernetes.io/name: miniflux-db
-              container: miniflux-db
-          excludedVolumes: []
-          defaultVolumesToFsBackup: false
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/miniflux/chart
+    helm:
+      releaseName: miniflux
+      valueFiles:
+        - ../values.production.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: miniflux

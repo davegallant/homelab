@@ -1,11 +1,16 @@
+---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: presync-gate-egress
-  namespace: presync-gate
+  name: presync-miniflux-egress
+  namespace: miniflux
 spec:
-  description: Allow pre-sync Jobs to reach Kubernetes, DNS, and the Argo CD API.
-  endpointSelector: {}
+  description: Allow the Miniflux pre-sync gate to reach Kubernetes and Argo.
+  endpointSelector:
+    matchLabels:
+      homelab.davegallant.ca/presync-gate: miniflux
+  ingress:
+    - {}
   egress:
     - toEntities: [kube-apiserver]
       toPorts:
@@ -36,17 +41,18 @@ spec:
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: presync-gate-argocd-ingress
+  name: presync-miniflux-argocd-ingress
   namespace: argocd
 spec:
-  description: Allow the gate namespace to compare Argo Application baselines.
+  description: Allow the Miniflux pre-sync gate to compare the previous Argo application revision.
   endpointSelector:
     matchLabels:
       k8s:app.kubernetes.io/name: argocd-server
   ingress:
     - fromEndpoints:
         - matchLabels:
-            k8s:io.kubernetes.pod.namespace: presync-gate
+            k8s:io.kubernetes.pod.namespace: miniflux
+            k8s:homelab.davegallant.ca/presync-gate: miniflux
       toPorts:
         - ports:
             - port: "8080"

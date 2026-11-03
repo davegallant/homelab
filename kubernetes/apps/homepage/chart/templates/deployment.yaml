@@ -16,7 +16,6 @@ spec:
         app.kubernetes.io/name: homepage
       annotations:
         checksum/config: {{ .Values.configChecksum | default (printf "%s%s%s" .Values.configFiles.servicesYaml .Values.configFiles.settingsYaml .Values.configFiles.proxyAgentCjs | sha256sum) | quote }}
-        backup.velero.io/backup-volumes: homepage-config
         {{- with .Values.restartTimestamp }}
         kubectl.kubernetes.io/restartedAt: {{ . | quote }}
         {{- end }}

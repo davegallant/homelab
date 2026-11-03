@@ -26,7 +26,6 @@ controllers:
         # libraries are excluded by omission (TrueNAS snapshots +
         # Drive sync protect them, never Velero).
         backup.velero.io/backup-volumes: config-local,metadata-local
-        backup.velero.io/backup-volumes-excludes: "audiobooks,config,metadata,podcasts"
     containers:
       app:
         securityContext:

@@ -4,8 +4,6 @@ kind: Application
 metadata:
   name: node-exporter
   namespace: argocd
-  annotations:
-    homelab.davegallant.ca/pre-sync-backup: enabled
 spec:
   project: homelab-platform
   sources:
@@ -19,18 +17,6 @@ spec:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate/chart
-      helm:
-        valuesObject:
-          application: node-exporter
-          targetNamespace: monitoring
-          gateNamespace: presync-gate
-          scheduleName: 'victoriametrics-daily'
-          requiredHooks: []
-          excludedVolumes: []
-          defaultVolumesToFsBackup: false
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

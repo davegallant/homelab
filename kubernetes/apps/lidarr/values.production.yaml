@@ -38,7 +38,6 @@ controllers:
         # NFS media tree is excluded by omission (TrueNAS snapshots
         # + Drive sync protect it, never Velero).
         backup.velero.io/backup-volumes: config-local
-        backup.velero.io/backup-volumes-excludes: "media,music"
     containers:
       app:
         securityContext:

@@ -4,8 +4,6 @@ kind: Application
 metadata:
   name: metrics-server
   namespace: argocd
-  annotations:
-    homelab.davegallant.ca/pre-sync-backup: enabled
 spec:
   project: homelab-platform
   sources:
@@ -19,18 +17,6 @@ spec:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate/chart
-      helm:
-        valuesObject:
-          application: metrics-server
-          targetNamespace: kube-system
-          gateNamespace: presync-gate
-          scheduleName: ''
-          requiredHooks: []
-          excludedVolumes: []
-          defaultVolumesToFsBackup: false
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system

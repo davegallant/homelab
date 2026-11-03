@@ -21,7 +21,6 @@ controllers:
         # NFS library is excluded by omission (TrueNAS snapshots +
         # Drive sync protect it, never Velero).
         backup.velero.io/backup-volumes: data-local
-        backup.velero.io/backup-volumes-excludes: "data,library"
       securityContext:
         seccompProfile:
           type: RuntimeDefault

@@ -5,7 +5,6 @@ metadata:
   name: radarr
   namespace: argocd
   annotations:
-    homelab.davegallant.ca/pre-sync-backup: enabled
     homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
@@ -20,20 +19,6 @@ spec:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate/chart
-      helm:
-        valuesObject:
-          application: radarr
-          targetNamespace: radarr
-          gateNamespace: presync-gate
-          scheduleName: radarr-daily
-          requiredHooks: []
-          excludedVolumes:
-            - media
-            - radarr-config
-          defaultVolumesToFsBackup: false
   destination:
     server: https://kubernetes.default.svc
     namespace: radarr

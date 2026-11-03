@@ -33,7 +33,3 @@ server:
           - method:
               type: Exact
               service: session.SessionService
-          - method:
-              type: Exact
-              service: account.AccountService
-              method: CreateToken

@@ -5,7 +5,6 @@ metadata:
   name: speedtest-tracker
   namespace: argocd
   annotations:
-    homelab.davegallant.ca/pre-sync-backup: enabled
     homelab.davegallant.ca/backup-policy: scheduled
 spec:
   project: homelab
@@ -20,24 +19,6 @@ spec:
     - repoURL: https://github.com/davegallant/homelab.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/davegallant/homelab.git
-      targetRevision: main
-      path: kubernetes/apps/presync-gate/chart
-      helm:
-        valuesObject:
-          application: speedtest-tracker
-          targetNamespace: speedtest-tracker
-          gateNamespace: presync-gate
-          scheduleName: speedtest-tracker-daily
-          requiredHooks:
-            - selector:
-                app.kubernetes.io/name: speedtest-tracker
-              container: db
-          excludedVolumes:
-            - apprise
-            - config
-            - db-data
-          defaultVolumesToFsBackup: false
   destination:
     server: https://kubernetes.default.svc
     namespace: speedtest-tracker

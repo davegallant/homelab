@@ -12,7 +12,6 @@ controllers:
       annotations:
         # Opt-in filesystem backup of the app config volume only.
         backup.velero.io/backup-volumes: config-local
-        backup.velero.io/backup-volumes-excludes: "config"
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
