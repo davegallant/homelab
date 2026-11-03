@@ -14,6 +14,12 @@ UTC timestamps on 2026-11-03. No other containers were changed for this survey.
 |---|---|---:|---|---|---|
 | upsnap | pve-g3-2 | 101 | Debian 13 trixie / `192.168.1.64` / `100.100.0.5` | Cut over; UpSnap and Caddy healthy; Alloy active and recent logs present in Loki; Gatus HTTPS probe returned 200 after policy update. Wake test deferred; latest device record showed `hephaestus` offline. | CT 102 `upsnap`, Ubuntu 24.04.5, stopped and intact. Headscale MagicDNS name is `upsnap-rollback`; old tailnet IP `100.100.0.19` remains allowed for rollback. |
 
+## In-progress migration
+
+| Service | Old CT | Replacement CT | Current state | Open items |
+|---|---|---|---|---|
+| bedrock | `pve-g3-1` CT 120, Ubuntu 26.04.1; LXC running, app stopped | `pve-g3-1` CT 103, Debian 13.6 / `192.168.1.7` / `100.100.0.6`; LXC and app running | Phase 2 data copy matched before startup: 12,412 manifest entries, 10,740 files, 661,109,595 bytes, matching file hashes, owners, groups, and modes. New Bedrock container is healthy on the live `2026.10.2` image. Alloy marker log was found in Loki. No cutover. | No client-facing route was found and no in-game LAN client test has been done. Live Headscale policy already permits `tag:monitored` to `tag:loki:3100`; CT 103 is enrolled as `bedrock-debian` with `tag:monitored`, managed by `headscale_node_tags`. |
+
 ## Confirmed running Ubuntu LXC candidates
 
 These containers were observed running Ubuntu 26.04. They have not been
@@ -21,7 +27,7 @@ migrated. The Alloy column is a read-only live service check.
 
 | Service | Proxmox host | CT | OS | Alloy | Migration status |
 |---|---|---:|---|---|---|
-| bedrock | pve-g3-1 | 120 | Ubuntu 26.04 | active, enabled | Candidate; Phase 0/go required |
+| bedrock | pve-g3-1 | 120 | Ubuntu 26.04 | active, enabled | Migration in progress; see above. CT 120 remains running with its app stopped. |
 | adguard-home | pve-g3-2 | 126 | Ubuntu 26.04 | active, enabled | Candidate; Phase 0/go required |
 | gatus | pve-g3-2 | 131 | Ubuntu 26.04 | active, enabled | Candidate; Phase 0/go required |
 | gotify | pve-g3-2 | 136 | Ubuntu 26.04 | active, enabled | Candidate; Phase 0/go required |
