@@ -111,8 +111,9 @@ runner:
         # Job containers stay unprivileged; the DinD pod sidecar is privileged.
         privileged: false
         network: host
+        # Provide the DinD client certificates to trusted image-build jobs.
         # Chart 0.7.5 uses a string for container.options.
-        options: ""
+        options: "--volume /certs/client:/certs/client:ro"
 
 # Resources: pilot, small jobs only. Runner pod itself is light;
 # job containers run inside DinD and count against the node's actual
