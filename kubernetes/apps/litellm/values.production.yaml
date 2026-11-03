@@ -39,6 +39,7 @@ proxy_config:
 
 envVars:
   LITELLM_OFFLINE_MODE: "true"
+  LITELLM_LOCAL_MODEL_COST_MAP: "true"
 
 service:
   type: ClusterIP

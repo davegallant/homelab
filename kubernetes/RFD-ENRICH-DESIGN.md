@@ -71,6 +71,9 @@ deployment; no componentized gateway/backend/UI topology is needed.
   versions; do not use a moving tag. Keep the proxy config-driven and DB-less
   if the live request path confirms no UI, virtual keys, or spend tracking are
   needed; disable the chart's bundled Postgres and migrations in that case.
+  Set offline mode and use LiteLLM's bundled model cost map; live startup
+  showed a catalog DNS attempt despite offline mode, so the explicit local-map
+  switch prevents that unnecessary egress.
 - Mount LiteLLM config from a ConfigMap and secrets from Kubernetes Secrets
   provisioned from Ansible Vault. Set `OPENROUTER_API_KEY` and
   `LITELLM_MASTER_KEY` in the LiteLLM namespace; copy only the master key as
