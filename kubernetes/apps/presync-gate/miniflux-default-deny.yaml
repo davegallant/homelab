@@ -9,7 +9,7 @@ spec:
   # The pre-sync gate has its own narrowly scoped API/Argo policy.
   endpointSelector:
     matchExpressions:
-      - key: homelab.davegallant.ca/presync-gate
+      - key: k8s:homelab.davegallant.ca/presync-gate
         operator: NotIn
         values: [miniflux]
   ingress:
