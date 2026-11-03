@@ -16,7 +16,9 @@ Preserve the current LAN IP for `cinema`, `mullvad-toronto`, and
 
 | Service | Proxmox host | New CT | New OS / LAN IP / tailnet IP | Status | Rollback |
 |---|---|---:|---|---|---|
-| upsnap | pve-g3-2 | 101 | Debian 13 trixie / `192.168.1.64` / `100.100.0.5` | Cut over; UpSnap and Caddy healthy; Alloy active and recent logs present in Loki; Gatus HTTPS probe returned 200 after policy update. Wake test deferred; latest device record showed `hephaestus` offline. | CT 102 `upsnap`, Ubuntu 24.04.5, stopped and intact. Headscale MagicDNS name is `upsnap-rollback`; old tailnet IP `100.100.0.19` remains allowed for rollback. |
+| upsnap | pve-g3-2 | 101 | Debian 13 trixie / `192.168.1.64` / `100.100.0.5` | Cut over; UpSnap and Caddy healthy; Alloy active and recent logs present in Loki; Gatus HTTPS probe returned 200 after policy update. Wake test deferred; latest device record showed `hephaestus` offline. | Old CT 102 was removed by Dave. CT ID 102 has since been reused for the Gatus replacement. The old UpSnap Tailnet node/IP remains in Headscale policy state pending separate cleanup. |
+| gatus | pve-g3-2 | 102 | Debian 13.6 / `192.168.1.32` / `100.100.0.7` | Cut over to `gatus.tail.davegallant.ca`; HTTPS certificate validates and API returns 200 with 38/38 checks passing. Secondary AdGuard answers DNS on `.7`. Alloy is active and recent Gatus logs are present in Loki. Headscale identity is `gatus` (node ID 77). | Old CT 131, Ubuntu 26.04.1, stopped intact with its data. Old Headscale node ID 11 was removed. |
+| adguard-home | pve-g3-2 | 104 | Debian 13.6 / `192.168.1.77` / `100.100.0.9` | Cut over; reserved MAC retained. Authoritative copy matched: 7 files, sizes, ownership/modes, and SHA-256 hashes. AdGuard container running with host networking; LAN and tailnet DNS work over UDP/TCP; LAN and tailnet UI HTTPS return 302 with valid TLS. Gatus CT 102 resolves through the new primary resolver. Alloy is active and fresh `adguard-home` streams are queryable in Loki. Headscale identity `adguard-home`, node ID 78, `tag:monitored`; managed primary/secondary DNS and policy updated. Shared Ansible package task now generates `en_CA.UTF-8`; plain SSH login is clean. | Old CT 126, Ubuntu 26.04.1, stopped intact with its data and Compose file. Old Headscale node ID 24 was removed. No wake/device action applies. |
 
 ## In-progress migration
 
@@ -32,8 +34,8 @@ The Alloy column records that snapshot; see the status column for later changes.
 | Service | Proxmox host | CT | OS | Alloy | Migration status |
 |---|---|---:|---|---|---|
 | bedrock | pve-g3-1 | 120 | Ubuntu 26.04 | active, enabled at snapshot | Cut over; old CT 120 stopped intact. See above. |
-| adguard-home | pve-g3-2 | 126 | Ubuntu 26.04 | active, enabled | Candidate; Phase 0/go required |
-| gatus | pve-g3-2 | 131 | Ubuntu 26.04 | active, enabled | Candidate; Phase 0/go required |
+| adguard-home | pve-g3-2 | 126 | Ubuntu 26.04.1 | active, enabled | Migrated to Debian 13 CT 104 at reserved `.77`; old CT stopped intact and old Headscale node removed. See completed migration. |
+| gatus | pve-g3-2 | 131 | Ubuntu 26.04.1 | active, enabled at inventory snapshot | Migrated to CT 102; old CT 131 stopped intact. See completed migration. |
 | gotify | pve-g3-2 | 136 | Ubuntu 26.04 | active, enabled | Candidate; Phase 0/go required |
 | igotify | pve-g3-2 | 143 | Ubuntu 26.04 | active, enabled | Candidate; Phase 0/go required |
 

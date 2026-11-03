@@ -4,9 +4,15 @@
       - curl
       - gpg
       - neovim
+      - locales
       - ripgrep
       - ufw
       - unattended-upgrades
+    state: present
+
+- name: Ensure en_CA.UTF-8 locale is generated
+  community.general.locale_gen:
+    name: en_CA.UTF-8
     state: present
 
 - name: Enable unattended-upgrades
