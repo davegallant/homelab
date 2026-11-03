@@ -172,10 +172,6 @@ def main():
              os.environ["ARGOCD_SERVER"]],
             capture_output=True, timeout=180, check=False,
         )
-        if result.returncode:
-            detail = result.stderr.decode(errors="replace")
-            detail = detail.replace(os.environ["ARGOCD_AUTH_TOKEN"], "[redacted]")
-            print(f"Argo baseline diff failed ({result.returncode}): {detail[:500]}", flush=True)
         return result.returncode == 0
 
     def perform():
