@@ -36,6 +36,7 @@
       audiobookshelf: [tag:monitored, tag:pangolin]
       bedrock: [tag:monitored]
       bento-pdf: [tag:monitored, tag:pangolin]
+      cinema: [tag:monitored]
       forgejo: [tag:monitored, tag:pangolin]
       gatus: [tag:gatus]
       gotify: [tag:monitored, tag:pangolin]
@@ -104,13 +105,6 @@
         mode: "0640"
       register: headscale_config
 
-    - name: Copy Headscale policy
-      ansible.builtin.template:
-        src: policy.headscale.hujson.j2
-        dest: "~/config/headscale/policy.hujson"
-        mode: "0640"
-      tags: [headscale_policy]
-
     - name: Copy traefik static config
       ansible.builtin.template:
         src: traefik_config.yml.j2
@@ -158,6 +152,29 @@
         cmd: docker exec headscale headscale nodes list -o json
       register: headscale_nodes
       changed_when: false
+      no_log: true
+      tags: [headscale_policy]
+
+    - name: Determine whether Beszel agent policy tests apply
+      ansible.builtin.set_fact:
+        headscale_include_beszel_agent_tests: >-
+          {{
+            (
+              headscale_node_tags | dict2items
+              | selectattr('value', 'contains', 'tag:beszel-agent')
+              | map(attribute='key')
+              | list
+              | intersect(headscale_nodes.stdout | from_json | map(attribute='name') | list)
+              | length
+            ) > 0
+          }}
+      tags: [headscale_policy]
+
+    - name: Copy Headscale policy
+      ansible.builtin.template:
+        src: policy.headscale.hujson.j2
+        dest: "~/config/headscale/policy.hujson"
+        mode: "0640"
       tags: [headscale_policy]
 
     - name: Read the Gatus Headscale node
