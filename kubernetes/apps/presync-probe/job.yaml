@@ -62,6 +62,8 @@ spec:
         - -c
         - 'import ssl, time
 
+          from pathlib import Path
+
           from presync_orchestration import KubernetesAPI
 
           p=Path("/var/run/secrets/kubernetes.io/serviceaccount")
