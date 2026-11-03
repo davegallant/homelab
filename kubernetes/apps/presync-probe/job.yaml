@@ -60,23 +60,41 @@ spec:
         command:
         - python3
         - -c
-        - 'import ssl, time
-
+        - |
+          import os, ssl, subprocess
           from pathlib import Path
 
+          from presync_coverage import baseline_revision
           from presync_orchestration import KubernetesAPI
 
-          p=Path("/var/run/secrets/kubernetes.io/serviceaccount")
+          p = Path("/var/run/secrets/kubernetes.io/serviceaccount")
+          api = KubernetesAPI(
+              "https://kubernetes.default.svc",
+              (p / "token").read_text().strip(),
+              ssl.create_default_context(cafile=str(p / "ca.crt")),
+          )
+          app = api.request(
+              "GET",
+              "/apis/argoproj.io/v1alpha1/namespaces/argocd/applications/miniflux",
+          )
+          revision = baseline_revision(app)
+          assert revision
 
-          api=KubernetesAPI("https://kubernetes.default.svc",(p/"token").read_text().strip(),ssl.create_default_context(cafile=str(p/"ca.crt")))
-
-          api.request("GET","/apis/argoproj.io/v1alpha1/namespaces/argocd/applications/miniflux")
-
-          print("Kubernetes API access works; holding pod for Cilium inspection", flush=True)
-
-          time.sleep(180)
-
-          '
+          result = subprocess.run(
+              [
+                  "argocd", "app", "diff", "miniflux", "--revision", revision,
+                  "--server", os.environ["ARGOCD_SERVER"],
+              ],
+              capture_output=True,
+              timeout=180,
+          )
+          if result.returncode:
+              detail = result.stderr.decode(errors="replace")
+              detail = detail.replace(os.environ["ARGOCD_AUTH_TOKEN"], "[redacted]")
+              raise RuntimeError(
+                  "Argo diff exit %d: %s" % (result.returncode, detail[:500])
+              )
+          print("Kubernetes API and scoped Argo baseline diff succeeded", flush=True)
         env:
         - name: PATH
           value: /tools:/usr/local/bin:/usr/bin:/bin
