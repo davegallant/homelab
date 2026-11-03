@@ -95,7 +95,7 @@ dns:
       value: "100.100.0.8"
   nameservers:
     global:
-      - 100.100.0.24
+      - {{ headscale_primary_dns_ip }}
       - {{ headscale_secondary_dns_ip }}
 
 unix_socket: /var/run/headscale/headscale.sock

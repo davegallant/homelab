@@ -31,6 +31,10 @@ Current progress is tracked in
 - Cut over to the replacement's new LAN IP by default. Preserve the current
   LAN IP for `cinema`, `mullvad-toronto`, and `mullvad-tokyo`; do not apply the
   new-IP default to those services.
+- AdGuard Home is another address-preservation exception: keep
+  `192.168.1.77` and its OPNsense-reserved MAC. Use a different MAC/IP while
+  testing the replacement; reuse the old MAC only after the old LXC is stopped
+  at cutover.
 
 ## Proven operational pitfalls
 
@@ -38,6 +42,35 @@ Current progress is tracked in
   not an executable script. Ansible accepts it with `--vault-password-file`,
   as the repo's `just` recipes do. Do not require `test -x`; do not make
   temporary playbook creation conditional on that check.
+- A fresh Debian 13 template can have package indexes that refer to package
+  versions no longer present on the mirror. `install-docker.yml` installs
+  Python before its later APT cache update, so an initial install can fail with
+  mirror 404s. With Dave's in-the-moment go, run `apt-get update` once inside
+  the replacement and retry the installer once. If the retry fails, preserve
+  the output and stop; do not clean the APT cache. This was reproduced on
+  AdGuard CT 104 on 2026-11-03: the update succeeded and the single retry
+  completed.
+- A DHCP-configured LXC may not have its address during the first immediate
+  `ip` check after `pct start`. Check the guest's `dhclient` journal and
+  interface state before concluding DHCP failed. On AdGuard CT 104, OPNsense
+  assigned `192.168.1.99` one second after the initial check.
+- Debian LXCs must have the operator's SSH locale generated. The SSH client
+  sends `LC_CTYPE`/`LC_COLLATE` as accepted by sshd; if those locales are not
+  installed, Bash prints repeated `setlocale` warnings at login. Verify with
+  `locale -a`, `/etc/locale.gen`, and `sshd -T | grep acceptenv`. Ensure the
+  `locales` package is installed, enable `en_CA.UTF-8 UTF-8` in
+  `/etc/locale.gen`, and run `locale-gen en_CA.UTF-8`. Verify a plain interactive
+  `ssh root@<SERVICE>` login has no locale warnings. The shared
+  `install-common-packages.yml` task now manages this for service playbooks.
+- The root login shell on `pve-g3-2` is fish. Bash-only shell options such as
+  `set -o pipefail` fail there. For a remote pipeline, invoke Bash explicitly
+  or run the pipeline locally; verify the copied data after any ambiguous
+  command result.
+- When an OPNsense DHCP reservation binds a required address to a MAC, do not
+  attach that MAC to the replacement while the old LXC is still connected.
+  Use a temporary MAC and DHCP address during coexistence, then reuse the old
+  MAC only after stopping the old LXC at cutover. Verify that OPNsense assigns
+  the required address before starting the replacement's DNS service there.
 - Use `ssh root@<PVE_HOST> pct exec <CTID> -- ...` as the stable path into a
   newly created LXC. The service playbook may enable UFW with deny-incoming
   before the replacement joins Tailscale, so direct SSH to its LAN IP may stop
@@ -67,6 +100,23 @@ Current progress is tracked in
   evidence through separate status/log queries that contain no key; do not
   hide all diagnostics behind a failing `no_log` assertion. A task marked
   `changed` is not proof that Tailscale enrollment succeeded.
+- Headscale pre-auth keys use Headscale's user ID, not a node's `user.id`.
+  For AdGuard, the old tagged node reported special user ID `2147455555`, but
+  `headscale users list` showed the actual key owner `dave` as ID `1`; using the
+  node ID for key creation failed before producing a key. Confirm the user with
+  `headscale users list`, create the one-use tagged key for that user, and verify
+  the enrolled node's final name, tailnet IP, and tags.
+- When a replacement receives a reused Tailnet IP, its SSH host key is expected
+  to differ from the retired container. Verify the replacement's public-key
+  fingerprint through the Proxmox console before refreshing the operator's
+  `known_hosts` entry; never disable strict host-key checking.
+- Caddy may initially return a TLS handshake error while its DNS-01 certificate
+  request is still running. Read Caddy logs and wait for `certificate obtained
+  successfully`, then verify the hostname with a normal trusted HTTPS request.
+- Resolve the configured Loki hostname from the replacement before probing the
+  endpoint. For AdGuard, `loki` resolved to `100.100.0.1`; probing an assumed
+  address produced an ACL rejection unrelated to Alloy. Confirm a recent Loki
+  stream with the replacement's host label to prove ingestion.
 
 ## Phase 0: read-only inventory
 
@@ -122,10 +172,13 @@ otherwise follow the project's documented Debian 13 Docker installation. Do
 not change Ubuntu APT sources or convert the old container. If APT or Ansible
 fails, preserve the failure output and stop under the operating rules above.
 
-Copy the Compose file and create an empty destination data directory using the
-paths and settings captured in Phase 0. Keep the app stopped and do not copy
-data yet. Verify Docker and host networking if the service requires it. Stop
-and report the new CT ID/IP for Dave's Phase 1 review.
+Copy the Compose file and create empty production data directories using the
+paths and settings captured in Phase 0. Keep the production app stopped. If
+Dave explicitly approves a pre-copy to reduce cutover time, copy the live data
+to separate staging directories and test only from that staged copy on the
+temporary address. A live pre-copy is not authoritative and must not be
+reported as an exact match. Verify Docker and host networking if the service
+requires it. Stop and report the new CT ID/IP for Dave's Phase 1 review.
 
 ## Phase 2: copy data and verify the replacement
 
@@ -134,7 +187,9 @@ Start only after Dave approves Phase 2.
 1. Reconfirm the old stack and data source paths from Phase 0. Stop only the
    old app stack with `docker compose down` inside the old LXC; leave the old
    LXC itself running for now.
-2. Copy the data with numeric ownership, ACLs, and extended attributes. For
+2. Copy the authoritative data with numeric ownership, ACLs, and extended
+   attributes into the clean production paths. If an approved live pre-copy
+   exists, do not use its test directories as the final destination. For
    example, once the exact hosts and paths are verified:
 
    ```sh
@@ -179,10 +234,12 @@ enabled, and active; confirm the rendered Loki URL without exposing credentials;
 check Loki `/ready`; then query recent streams for the new host label. A running
 service or reachable Loki endpoint alone does not prove ingestion.
 
-If the Loki endpoint is tailnet-only, enroll the replacement before expecting
-Alloy to ship. Inspect the existing node's Headscale tag and live ACL first;
-use the managed tag for the new temporary hostname and keep the one-use key out
-of output and files. Do not rely on installing Alloy alone.
+If the Loki endpoint is tailnet-only and the old service identity must remain
+active until cutover, install and configure Alloy in Phase 2 but report Loki
+ingestion as pending. Do not enroll a temporary or rollback-named Headscale
+node just to test shipping. At cutover, remove the verified old Headscale node
+first, then enroll the replacement under the final service name and tag; verify
+Loki ingestion immediately afterward. Do not rely on installing Alloy alone.
 
 ## Phase 3: route cutover
 
@@ -205,9 +262,10 @@ For the tailnet Caddy pattern used by UpSnap:
 3. Before DNS changes, request the service domain directly at the new tailnet
    IP with `curl --resolve`; verify certificate, UI, and API health.
 4. If the MagicDNS name is moving between nodes, read the live Headscale node
-   list and resolve exact IDs by name. Rename the old node's MagicDNS
-   `given_name` to a rollback name first, then rename the new node to the
-   service name. Do not guess IDs. Verify with `tailscale dns query <FQDN> A`.
+   list and resolve the exact old node ID by name. Remove the old Headscale
+   node first, then enroll the replacement with the final service name and
+   managed tag. Do not create rollback names or guess node IDs. Verify with
+   `tailscale dns query <FQDN> A`.
 5. Before the DNS move, inspect managed ACLs for clients such as Gatus that
    connect to a pinned tailnet IP. Add the new IP to both the relevant allow
    rule and its policy test, retaining the old IP for rollback. Apply only the
