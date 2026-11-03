@@ -8,6 +8,10 @@ Inventory snapshot: 2026-11-02 America/Toronto, read-only `pct list` and
 `/etc/os-release` checks on `pve-g3-1` and `pve-g3-2`. The Proxmox hosts reported
 UTC timestamps on 2026-11-03. No other containers were changed for this survey.
 
+Cutover addressing preference: use the replacement's new LAN IP by default.
+Preserve the current LAN IP for `cinema`, `mullvad-toronto`, and
+`mullvad-tokyo`.
+
 ## Completed migration
 
 | Service | Proxmox host | New CT | New OS / LAN IP / tailnet IP | Status | Rollback |
@@ -18,7 +22,7 @@ UTC timestamps on 2026-11-03. No other containers were changed for this survey.
 
 | Service | Old CT | Replacement CT | Current state | Open items |
 |---|---|---|---|---|
-| bedrock | `pve-g3-1` CT 120, Ubuntu 26.04.1; LXC running, app stopped | `pve-g3-1` CT 103, Debian 13.6 / `192.168.1.7` / `100.100.0.6`; LXC and app running | Phase 2 data copy matched before startup: 12,412 manifest entries, 10,740 files, 661,109,595 bytes, matching file hashes, owners, groups, and modes. New Bedrock container is healthy on the live `2026.10.2` image. Alloy marker log was found in Loki. No cutover. | No client-facing route was found and no in-game LAN client test has been done. Live Headscale policy already permits `tag:monitored` to `tag:loki:3100`; CT 103 is enrolled as `bedrock-debian` with `tag:monitored`, managed by `headscale_node_tags`. |
+| bedrock | `pve-g3-1` CT 120, Ubuntu 26.04.1; LXC running, app stopped | `pve-g3-1` CT 103, Debian 13.6 / `192.168.1.7` / `100.100.0.6`; LXC and app running | Phase 2 data copy matched before startup: 12,412 manifest entries, 10,740 files, 661,109,595 bytes, matching file hashes, owners, groups, and modes. New Bedrock container is healthy on the live `2026.10.2` image. Alloy marker log was found in Loki. Dave selected the new-IP method: keep `192.168.1.7`; cutover verification remains pending. | No client-facing route was found and no in-game LAN client test has been done; LAN clients need to use `192.168.1.7`. Live Headscale policy already permits `tag:monitored` to `tag:loki:3100`; CT 103 is enrolled as `bedrock-debian` with `tag:monitored`, managed by `headscale_node_tags`. CT 120 remains running with its app stopped. |
 
 ## Confirmed running Ubuntu LXC candidates
 

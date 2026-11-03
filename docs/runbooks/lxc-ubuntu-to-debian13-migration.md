@@ -28,6 +28,9 @@ Current progress is tracked in
   hosts, the VPS, or the Loki sidecar unless Dave explicitly approves the
   specific change. Repo changes to Ansible playbooks are separate from a
   migration phase unless Dave explicitly includes them.
+- Cut over to the replacement's new LAN IP by default. Preserve the current
+  LAN IP for `cinema`, `mullvad-toronto`, and `mullvad-tokyo`; do not apply the
+  new-IP default to those services.
 
 ## Proven operational pitfalls
 
@@ -183,8 +186,10 @@ of output and files. Do not rely on installing Alloy alone.
 
 ## Phase 3: route cutover
 
-Start only after Dave confirms Phase 2 verification and chooses a cutover method.
-The old LXC must be stopped after cutover and remain intact.
+Start only after Dave confirms Phase 2 verification. Keep the replacement's new
+LAN IP and update the service route or clients to use it, except for `cinema`,
+`mullvad-toronto`, and `mullvad-tokyo`, which retain their current LAN IP. The
+old LXC must be stopped after cutover and remain intact.
 
 For the tailnet Caddy pattern used by UpSnap:
 
@@ -212,10 +217,9 @@ For the tailnet Caddy pattern used by UpSnap:
    Then stop the old LXC from its verified Proxmox host. Do not delete it or its
    data. If Dave deferred the wake test, report that acceptance item as pending.
 
-Dave chooses between changing the old IP, keeping the new IP and moving DNS or
-proxy routing, or continuing the test period. Do not infer his choice. If DNS,
-proxy ownership, ACLs, or authentication are unclear, stop and ask with the
-observed state.
+If a route or client configuration is needed to use the selected address,
+update only the observed service route. If DNS, proxy ownership, ACLs, or
+authentication are unclear, stop and ask with the observed state.
 
 ## Receipt
 
