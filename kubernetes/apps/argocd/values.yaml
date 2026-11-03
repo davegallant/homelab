@@ -46,7 +46,7 @@ configs:
       p, role:presync-gate, applications, get, homelab/navidrome, allow
       p, role:presync-gate, applications, get, homelab-platform/node-exporter, allow
       p, role:presync-gate, applications, get, homelab/paperless-ngx, allow
-      p, role:presync-gate, applications, get, homelab-presync-gate/presync-gate, allow
+      p, role:presync-gate, applications, get, homelab-platform/presync-gate, allow
       p, role:presync-gate, applications, get, homelab/prowlarr, allow
       p, role:presync-gate, applications, get, qbittorrent-egress/qbittorrent-egress, allow
       p, role:presync-gate, applications, get, homelab/qbittorrent, allow

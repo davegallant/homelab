@@ -60,7 +60,6 @@ Use the intended context:
 kubectl --context "$CTX" apply -f kubernetes/apps/argocd/project-monitoring.yaml
 kubectl --context "$CTX" apply -f kubernetes/apps/argocd/project-velero-backup.yaml
 kubectl --context "$CTX" apply -f kubernetes/apps/argocd/project-tailnet-gateway.yaml
-kubectl --context "$CTX" apply -f kubernetes/apps/argocd/project-presync-gate.yaml
 kubectl --context "$CTX" apply -f kubernetes/apps/argocd/applications/argocd.yaml
 ```
 
