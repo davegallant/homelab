@@ -127,6 +127,7 @@
         - project-monitoring.yaml
         - project-velero-backup.yaml
         - project-tailnet-gateway.yaml
+        - project-presync-gate.yaml
         - platform-project.yaml
       register: argocd_restricted_projects_apply
       changed_when: >-
