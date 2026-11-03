@@ -168,7 +168,7 @@ def main():
         if baseline_revision(api.request("GET", app_path)) != expected:
             return False
         result = subprocess.run(
-            ["argocd", "--plaintext", "app", "diff", app, "--revision", expected, "--server",
+            ["argocd", "app", "diff", app, "--revision", expected, "--server",
              os.environ["ARGOCD_SERVER"]],
             capture_output=True, timeout=180, check=False,
         )

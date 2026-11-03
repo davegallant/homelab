@@ -15,6 +15,9 @@ spec:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: tailnet-gateway
             k8s:app.kubernetes.io/name: tailnet-gateway-fronting
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: miniflux
+            k8s:homelab.davegallant.ca/presync-gate: miniflux
       toPorts:
         - ports:
             - port: "443"
