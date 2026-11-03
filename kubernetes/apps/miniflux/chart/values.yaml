@@ -78,6 +78,3 @@ backup:
   enabled: true
   schedule: "40 3 * * *"
   ttl: 336h
-
-preSyncBackup:
-  enabled: false

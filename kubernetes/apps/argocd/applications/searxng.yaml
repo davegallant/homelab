@@ -5,7 +5,6 @@ metadata:
   name: searxng
   namespace: argocd
   annotations:
-    homelab.davegallant.ca/pre-sync-backup: disabled
     homelab.davegallant.ca/backup-policy: not-required
 spec:
   project: homelab
