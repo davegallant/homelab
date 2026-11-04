@@ -35,6 +35,7 @@ spec:
                   - immich
                   - changedetection
                   - argocd
+                  - arca
                   - beszel
                   - k8s-readonly
                   - prowlarr
