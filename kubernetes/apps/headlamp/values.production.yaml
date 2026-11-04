@@ -11,6 +11,11 @@
 # egress DNS + kube-apiserver) is a follow-up once v1 is proven.
 # OIDC Secret disabled: the chart defaults to creating one, and
 # Secret is not in the homelab project's namespace whitelist.
+# Pod Security: the namespace is restricted:v1.37 (see namespace.yaml).
+# The chart's default securityContext is non-empty, so the template
+# uses it verbatim and never applies its own restricted fallback.
+# Set the full set explicitly here, or pod creation is forbidden
+# for allowPrivilegeEscalation, capabilities, and seccompProfile.
 config:
   inCluster: true
   unsafeUseServiceAccountToken: false
@@ -22,6 +27,17 @@ clusterRoleBinding:
 service:
   type: ClusterIP
   port: 80
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  privileged: false
+  runAsUser: 100
+  runAsGroup: 101
+  seccompProfile:
+    type: RuntimeDefault
+  capabilities:
+    drop:
+      - ALL
 resources:
   requests:
     cpu: 50m
