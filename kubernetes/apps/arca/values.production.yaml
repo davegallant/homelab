@@ -1,7 +1,7 @@
 image:
   repository: forgejo.davegallant.ca/dave/arca
-  tag: "18911ea823d69ecc5860ff8260af81d327851717"
-  digest: "sha256:b8cb5f60538f55502ff2650563a4459978148d347ecf8065e01c859bb752e91d"
+  tag: "4844aed904910b92b305c16da53c37ccbc60bfd0"
+  digest: "sha256:3aaa7ed6953b550da6b124fb03f80f0b70a62b889ee34a2a082fbf960331502b"
 
 imagePullSecret: arca-registry-external
 replicaCount: 1
