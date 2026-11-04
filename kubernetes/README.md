@@ -15,6 +15,7 @@ recovery guidance.
 |---|---|
 | Inspect VM sizing, networking, and recovery constraints | [Cluster](cluster/README.md) |
 | Update applications or recover Argo CD | [Release management](apps/argocd/MANAGEMENT.md), [Argo CD](apps/argocd/README.md) |
+| Add a new application | [New-application checklist](apps/argocd/MANAGEMENT.md#adding-a-new-application) |
 | Restore a namespace or rehearse Homepage recovery | [Backups and restore drill](BACKUPS.md) |
 | Add any volume to any app | [Storage - canonical rule, read first](STORAGE.md) |
 | Move stateful app data between workers | [Local-PV migration runbook](LOCAL-PV-MIGRATION.md) |

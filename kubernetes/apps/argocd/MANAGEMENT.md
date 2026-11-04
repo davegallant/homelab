@@ -37,6 +37,96 @@ Storage objects outside the charts are
 not adopted or recreated. Namespace Pod Security labels are preserved.
 Use server-side apply for the platform charts, including their large CRDs.
 
+## Adding a new application
+
+This checklist exists because the Headlamp onboarding (2026-11-04) tripped
+on steps that were only documented in scattered file headers, not in one
+place. Work through it in order; each step's failure mode is listed so a
+failed sync is diagnosed instead of retried blindly.
+
+1. Application definition. Add `kubernetes/apps/argocd/applications/<service>.yaml`
+   with the `homelab` project (or the narrowest project that fits), the
+   destination namespace, manual sync, no prune, and no deletion finalizer.
+   Declare `homelab.davegallant.ca/backup-policy` as `scheduled` or
+   `not-required`; `just lint` checks that decision against the central
+   Schedule inventory. If the chart comes from an upstream Helm repository,
+   that repository must be in the project's `sourceRepos`.
+2. Namespace, before any sync. Argo CD does not create the destination
+   namespace: no Application here uses `CreateNamespace=true`, and the
+   `homelab` project's `clusterResourceWhitelist` is empty, so Argo CD
+   cannot create Namespaces (or ClusterRoles) for it. A sync into a missing
+   namespace fails with `namespaces "<name>" not found` and Argo CD does
+   not retry it on its own; sync again only after the namespace exists.
+   Create `kubernetes/apps/<service>/namespace.yaml` with the restricted
+   Pod Security labels for the cluster's Kubernetes version (currently
+   `restricted` with `enforce`/`audit`/`warn` at `v1.37`), then provision
+   it by one of the established mechanisms — do not assume one is universal:
+   hand-apply with `kubectl --context "$CTX" apply -f` (the k8s-readonly
+   precedent, documented in that file's header), the
+   `gitops_pod_security_namespaces` loop in
+   `ansible/playbooks/talos-cluster/gitops-secrets.yml`, or an
+   Argo-managed kustomization/policy Application that includes the file
+   (tailnet-gateway, intel-gpu, forgejo-runner). A `namespace.yaml` sitting
+   beside a chart is not Argo-managed unless a kustomization or policy
+   Application includes it.
+3. Chart values and Pod Security. If the namespace is `restricted`, the
+   pod's container securityContext must satisfy it in full:
+   `allowPrivilegeEscalation: false`, `capabilities.drop: ["ALL"]`,
+   `seccompProfile.type: RuntimeDefault`, and `runAsNonRoot: true`.
+   Do not trust a chart's defaults here: a non-empty default
+   securityContext is used verbatim by the template, so a chart's own
+   restricted fallback (which only applies when the value is empty) never
+   runs, and pod creation is forbidden with a `FailedCreate` naming the
+   missing fields. Verify the rendered pod template, not just the values
+   file. The same whitelist logic applies to other rendered kinds: a chart
+   that creates a Secret by default (for example an OIDC Secret) fails
+   under a project whose namespace whitelist excludes Secret, so disable
+   unused Secret creation in values; likewise, do not enable a
+   ClusterRoleBinding unless the app genuinely needs one — prefer
+   per-user token RBAC (see step 7).
+4. Tailnet Gateway route, if the app is tailnet-only. Add the namespace to
+   the Gateway listener's `allowedRoutes.namespaces` selector in
+   `kubernetes/apps/tailnet-gateway/gateway.yaml` (Gate 0 widening), add
+   the HTTPRoute file under `kubernetes/apps/tailnet-gateway/` and list it
+   in that directory's `kustomization.yaml`, and add the route namespace
+   to the `homelab-tailnet-gateway` project's destinations. The route's
+   backend Service must listen on pod IP, not loopback only.
+5. Projects are applied, not synced. AppProjects are not reconciled by an
+   Argo CD sync; apply them with `kubectl --context "$CTX" apply -f
+   kubernetes/apps/argocd/project*.yaml` from the repo root, and confirm
+   destinations, `sourceRepos`, and namespace/cluster resource whitelists
+   cover every rendered kind and destination before syncing.
+6. Sync order, manual, no prune, no force: `argocd` first (to register the
+   new Application), then `tailnet-gateway` (to create the route), then
+   the application itself. Verify Synced/Healthy at each step; a
+   tailnet-gateway sync that failed before the namespace existed stays
+   failed until it is explicitly retried, and its route stays Missing.
+7. Headscale DNS, if the app gets a `*.tail.davegallant.ca` hostname.
+   MagicDNS for the Gateway is not a wildcard: it is a per-hostname
+   `extra_records` list in `ansible/playbooks/vps/headscale_config.yaml.j2`,
+   each entry pointing at `100.100.0.8`. Add the app's record there,
+   validate the rendered config with `headscale configtest` (using a
+   `.yaml` filename), then apply it with the VPS Ansible run, which
+   restarts Headscale only when the config changed. Pull remote `main`
+   before running Ansible: a stale local template renders no change, so
+   Headscale never restarts and the record never goes live. Verify from
+   the operator's machine with `dig +short <app>.tail.davegallant.ca`
+   (expected answer `100.100.0.8`, using a working hostname as a control).
+   An empty dig answer while other hostnames resolve means the server has
+   no record; flushing the local DNS cache cannot fix that. Flush only
+   after dig works, if a browser still fails on a cached NXDOMAIN.
+8. Login identity, if the app authenticates by token. Create the identity
+   out of band, never in Git: a ServiceAccount, a ClusterRoleBinding to
+   the `view` ClusterRole (never `cluster-admin`), and a short-lived
+   token (`kubectl create token <sa> -n <namespace> --duration=24h`).
+   Log in with that token and verify read-only behaviour (edit, delete,
+   and scale forbidden) before declaring the app usable.
+9. Monitoring is manual, not discovered. Gatus endpoints are configured
+   per service in `ansible/playbooks/gatus/config/config.yaml`; a new
+   app does not appear in Gatus until an endpoint entry is added and the
+   Gatus config is redeployed. Absence from Gatus is not, by itself,
+   evidence that the app is down.
+
 ## Repository path cutover
 
 When moving this tree from its former location under Ansible, publish the
