@@ -66,8 +66,8 @@ controllers:
           - '--accept-hosts=^(localhost|127\.0\.0\.1|\[::1\]|k8s-readonly\.tail\.davegallant\.ca)$'
         resources:
           requests:
-            cpu: 50m
-            memory: 128Mi
+            cpu: 10m
+            memory: 100Mi
           limits:
             cpu: 500m
             memory: 512Mi
