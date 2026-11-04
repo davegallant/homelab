@@ -179,3 +179,7 @@ endpoints:
   - name: headplane
     url: "{{ headplane_url }}/admin"
     <<: *defaults
+
+  - name: headlamp
+    url: "https://headlamp.{{ headscale_magic_dns_domain }}/"
+    <<: *defaults
