@@ -22,8 +22,13 @@ reverse the cutover without Dave's explicit authorization.
 - [Public Forgejo](https://forgejo.davegallant.ca) uses the existing
   Pangolin Newt identity. The separate Newt Deployment connects to the
   same-namespace `forgejo:3000` Service. Cilium permits its TCP 3000 traffic.
-- Git operations use HTTPS; Git-over-SSH is not exposed.
-- The embedded SSH server is disabled; the service remains HTTPS-only.
+- Git operations use HTTPS publicly; Git-over-SSH is tailnet-only (2026-11-04).
+- The embedded SSH server listens on 2222 (rootless, UID 1000). It is reached
+  only via the tailnet-gateway fronting node on 2222, which forwards directly
+  to forgejo-ssh. It is NOT exposed via Pangolin. On a tailnet Mac, use an
+  SSH config entry mapping forgejo.davegallant.ca to
+  tailnet-gateway.tail.davegallant.ca:2222, then clone as
+  git@forgejo.davegallant.ca:user/repo.git.
 - The Forgejo server egress policy allows repository mirror traffic only to
   `github.com` and `git.ryujinx.app` (including GitHub subdomains) over TCP
   443. Add a host only when a failed mirror and Hubble event establish the

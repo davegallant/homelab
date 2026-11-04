@@ -1,6 +1,8 @@
 ---
 # The user-space Tailscale process forwards TCP 443 to the in-cluster Gateway
 # Service. This avoids hairpinning through the Gateway's LAN VIP.
+# It also forwards TCP 2222 directly to forgejo-ssh (2026-11-04, tailnet-only
+# Forgejo git SSH), bypassing the Gateway HTTP listener.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -103,6 +105,9 @@ data:
       "TCP": {
         "443": {
           "TCPForward": "cilium-gateway-tailnet-gateway.tailnet-gateway.svc.cluster.local:443"
+        },
+        "2222": {
+          "TCPForward": "forgejo-ssh.forgejo.svc.cluster.local:2222"
         }
       }
     }
