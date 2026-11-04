@@ -55,6 +55,9 @@ and policy resources.
 Headplane provides a tailnet-only admin UI for the existing VPS Headscale
 server; see [its runbook](apps/headplane/README.md).
 
+Arca runs as a tailnet-only web archiver with local SQLite/archive storage;
+see [its runbook](apps/arca/README.md).
+
 ## Platform
 
 - [Argo CD](apps/argocd/README.md): application reconciliation and recovery.

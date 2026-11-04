@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arca
+  labels:
+    app.kubernetes.io/name: arca
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: arca
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: arca
+      annotations:
+        backup.velero.io/backup-volumes: data
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: {{ .Values.nodeHostname | quote }}
+      securityContext:
+        fsGroup: {{ .Values.uid }}
+        fsGroupChangePolicy: OnRootMismatch
+        runAsNonRoot: true
+        runAsUser: {{ .Values.uid }}
+        runAsGroup: {{ .Values.uid }}
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecret | quote }}
+      containers:
+        - name: arca
+          image: >-
+            {{ printf "%s:%s@%s" .Values.image.repository .Values.image.tag
+            (required "image.digest is required after publishing" .Values.image.digest) }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ARCA_DIR
+              value: /data
+            - name: CHROMIUM_BIN
+              value: /usr/bin/chromium
+            - name: HOME
+              value: /tmp
+            - name: XDG_CACHE_HOME
+              value: /tmp/.cache
+            - name: XDG_CONFIG_HOME
+              value: /tmp/.config
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 24
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: {{ .Values.uid }}
+            runAsGroup: {{ .Values.uid }}
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: arca-data
+        - name: tmp
+          emptyDir:
+            sizeLimit: 1Gi

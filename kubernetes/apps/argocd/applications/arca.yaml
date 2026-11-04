@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: arca
+  namespace: argocd
+  annotations:
+    homelab.davegallant.ca/backup-policy: scheduled
+spec:
+  project: homelab
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/arca/chart
+    helm:
+      releaseName: arca
+      valueFiles:
+        - ../values.production.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arca
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true
