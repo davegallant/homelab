@@ -50,20 +50,20 @@ spec:
               containerPort: 3000
               protocol: TCP
           startupProbe:
-            exec:
-              command: ["/bin/hp_healthcheck"]
+            tcpSocket:
+              port: http
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 30
           readinessProbe:
-            exec:
-              command: ["/bin/hp_healthcheck"]
+            tcpSocket:
+              port: http
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
           livenessProbe:
-            exec:
-              command: ["/bin/hp_healthcheck"]
+            tcpSocket:
+              port: http
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 3
