@@ -1,0 +1,26 @@
+---
+# Headlamp — tailnet-only cluster UI via the Cilium Gateway.
+# Auth: token login ONLY. No OIDC (no IdP in the homelab).
+# The pod ServiceAccount gets NO ClusterRoleBinding (see below):
+# users authenticate with their own token and Headlamp enforces
+# that token's RBAC. Log in with a short-lived viewer token
+# (view ClusterRole), never an admin token.
+# No CiliumNetworkPolicy in v1: with no policy selecting the pod,
+# Gateway ingress and API/DNS egress are allowed by default.
+# A restrictive policy (ingress from the Gateway entity to 4466,
+# egress DNS + kube-apiserver) is a follow-up once v1 is proven.
+config:
+  inCluster: true
+  unsafeUseServiceAccountToken: false
+clusterRoleBinding:
+  create: false
+service:
+  type: ClusterIP
+  port: 80
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi

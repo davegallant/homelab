@@ -52,6 +52,7 @@ spec:
                   - maloja
                   - speedtest-tracker
                   - headplane
+                  - headlamp
       tls:
         mode: Terminate
         certificateRefs:
