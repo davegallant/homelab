@@ -1,6 +1,10 @@
 # Forgejo production values for forgejo-helm/forgejo 17.3.2.
 # Rootless operation passed an isolated Velero restore and startup drill on
-# 2026-10-31. Git-over-SSH remains disabled; the service is HTTPS-only.
+# 2026-10-31. Git-over-SSH is tailnet-only (2026-11-04): the built-in SSH
+# server listens on 2222, reached via the tailnet-gateway fronting node
+# (100.100.0.8:2222, forwarded directly to forgejo-ssh, not via the
+# Gateway HTTP listener). It is NOT public via Pangolin; the public web
+# route remains HTTPS-only.
 #
 # STORAGE TEST (2026-10-24): persistence uses the manually created
 # forgejo-data-local PVC, annotated with volumeType: local before
@@ -82,7 +86,7 @@ service:
     port: 3000
   ssh:
     type: ClusterIP
-    port: 22
+    port: 2222
 
 ingress:
   enabled: false
@@ -103,9 +107,10 @@ gitea:
       ROOT: /data/git/repositories
     server:
       HTTP_PORT: 3000
-      SSH_PORT: 22
-      SSH_LISTEN_PORT: 22
-      START_SSH_SERVER: "false"
+      SSH_DOMAIN: forgejo.davegallant.ca
+      SSH_PORT: 2222
+      SSH_LISTEN_PORT: 2222
+      START_SSH_SERVER: "true"
     database:
       DB_TYPE: sqlite3
       PATH: /data/gitea/gitea.db
@@ -226,6 +231,17 @@ extraDeploy:
           toPorts:
             - ports:
                 - port: "3000"
+                  protocol: TCP
+        # Tailnet SSH (2026-11-04): only the tailnet-gateway fronting pod
+        # may reach Forgejo on 2222. It forwards TCP 2222 directly to
+        # forgejo-ssh, bypassing the Gateway HTTP listener.
+        - fromEndpoints:
+            - matchLabels:
+                k8s:io.kubernetes.pod.namespace: tailnet-gateway
+                k8s:app.kubernetes.io/name: tailnet-gateway-fronting
+          toPorts:
+            - ports:
+                - port: "2222"
                   protocol: TCP
       egress:
         - toEndpoints:
