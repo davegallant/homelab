@@ -9,9 +9,14 @@
 # Gateway ingress and API/DNS egress are allowed by default.
 # A restrictive policy (ingress from the Gateway entity to 4466,
 # egress DNS + kube-apiserver) is a follow-up once v1 is proven.
+# OIDC Secret disabled: the chart defaults to creating one, and
+# Secret is not in the homelab project's namespace whitelist.
 config:
   inCluster: true
   unsafeUseServiceAccountToken: false
+  oidc:
+    secret:
+      create: false
 clusterRoleBinding:
   create: false
 service:
