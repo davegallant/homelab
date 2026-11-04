@@ -38,8 +38,8 @@ talos_nodes:
     mac: BC:24:11:5B:26:C6
     extra_addresses: ["192.168.1.152"]
     vcpu: 3
-    memory_mib: 10240
-    allowed_memory_mib: [3072, 4096, 8192, 10240]
+    memory_mib: 12288
+    allowed_memory_mib: [3072, 4096, 8192, 10240, 12288]
     disk_gib: 100
     storage: moredata
   - name: k8s-w-2
@@ -49,7 +49,7 @@ talos_nodes:
     address: 192.168.1.212
     previous_address: 192.168.1.7
     mac: BC:24:11:9F:DF:4D
-    vcpu: 2
+    vcpu: 3
     memory_mib: 8192
     allowed_memory_mib: [2048, 2288, 2560, 3072, 3584, 4608, 8192]
     disk_gib: 70
