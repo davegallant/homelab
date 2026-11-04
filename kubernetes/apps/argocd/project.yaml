@@ -8,6 +8,8 @@ spec:
   description: Manually approved homelab applications
   sourceRepos:
     - https://github.com/davegallant/homelab.git
+    # Headlamp chart (2026-11-04).
+    - https://kubernetes-sigs.github.io/headlamp/
     # Batch A: the bjw-s app-template chart for the simple workloads
     # (Sol review #4 — pilot on new apps, bespoke charts stay for
     # unusual topologies).
@@ -77,6 +79,8 @@ spec:
       namespace: k8s-readonly
     - server: https://kubernetes.default.svc
       namespace: headplane
+    - server: https://kubernetes.default.svc
+      namespace: headlamp
     - server: https://kubernetes.default.svc
       namespace: litellm
     - server: https://kubernetes.default.svc
