@@ -125,7 +125,24 @@ failed sync is diagnosed instead of retried blindly.
    per service in `ansible/playbooks/gatus/config/config.yaml`; a new
    app does not appear in Gatus until an endpoint entry is added and the
    Gatus config is redeployed. Absence from Gatus is not, by itself,
-   evidence that the app is down.
+   evidence that the app is down. Add the entry following the existing
+   pattern, using the MagicDNS domain directly when no `<service>_url`
+   variable exists (as kiwix and arca do):
+
+   ```
+     - name: <service>
+       url: "https://<service>.{{ headscale_magic_dns_domain }}/"
+       <<: *defaults
+   ```
+
+   Then redeploy Gatus with its Ansible playbook (`hosts: gatus`); the
+   commit alone does not change the live Gatus config, just as a
+   Headscale template commit alone does not change live DNS. The
+   endpoint-default conditions require `STATUS == 200` and a response
+   under 5 seconds, so the chosen path must return 200 unauthenticated
+   (a login page qualifies). The Gatus host (`tag:gatus`) is already
+   allowed to the Gateway at `100.100.0.8:443` in the Headscale policy,
+   so a tailnet URL check needs no policy change.
 
 ## Repository path cutover
 
