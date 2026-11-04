@@ -25,6 +25,7 @@ searxng_url: "https://searxng.davegallant.ca"
 
 # Headplane admin UI; routed through the tailnet-only Kubernetes Gateway.
 headplane_url: "https://headplane.tail.davegallant.ca"
+headlamp_url: "https://headlamp.tail.davegallant.ca"
 
 # Headscale tailnet IPv4 allocation range.
 headscale_v4_prefix: "100.100.0.0/16"
