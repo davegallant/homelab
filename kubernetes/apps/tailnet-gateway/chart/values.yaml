@@ -111,3 +111,7 @@ apps:
       app.kubernetes.io/controller: speedtest-tracker
       app.kubernetes.io/instance: speedtest-tracker
       app.kubernetes.io/name: speedtest-tracker
+  - name: arca
+    port: 8099
+    selectorLabels:
+      app.kubernetes.io/name: arca

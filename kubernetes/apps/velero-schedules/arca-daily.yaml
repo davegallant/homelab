@@ -1,0 +1,22 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: arca-daily
+  namespace: velero
+  labels:
+    app.kubernetes.io/instance: arca
+    app.kubernetes.io/managed-by: ArgoCD
+    app.kubernetes.io/name: arca
+spec:
+  paused: false
+  schedule: 30 2 * * *
+  skipImmediately: false
+  template:
+    defaultVolumesToFsBackup: false
+    excludedResources:
+      - secrets
+    includedNamespaces:
+      - arca
+    snapshotVolumes: false
+    storageLocation: default
+    ttl: 336h

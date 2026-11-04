@@ -1,0 +1,20 @@
+image:
+  repository: forgejo.davegallant.ca/dave/arca
+  tag: "pending-publish"
+  digest: ""
+
+imagePullSecret: arca-registry-external
+
+replicaCount: 1
+nodeHostname: k8s-w-1
+storageSize: 5Gi
+uid: 1000
+port: 8099
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
