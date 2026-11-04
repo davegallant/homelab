@@ -144,6 +144,18 @@ failed sync is diagnosed instead of retried blindly.
    allowed to the Gateway at `100.100.0.8:443` in the Headscale policy,
    so a tailnet URL check needs no policy change.
 
+10. Homepage link, if the app should appear on the dashboard. Homepage
+    links are also manual, not discovered: add the URL variable to
+    `ansible/group_vars/all/vars.yaml`, map it in
+    `kubernetes/apps/homepage/values.ansible.yaml.j2` as
+    `HOMEPAGE_VAR_<SERVICE>_URL`, add the entry to
+    `kubernetes/apps/homepage/config/services.yaml` (following the
+    Headplane entry in the Infrastructure group), then run
+    `just run talos-cluster/gitops-secrets` and restart the Homepage
+    Deployment so its subPath mounts refresh. Homepage's ConfigMaps are
+    Ansible-managed outside Argo CD, so an Argo sync alone never adds
+    the link.
+
 ## Repository path cutover
 
 When moving this tree from its former location under Ansible, publish the
