@@ -142,15 +142,12 @@
       "pinDigests": true
     },
     {
-      "description": "Skip digest pinning for the Forgejo OCI chart",
+      "description": "Skip digest pinning for OCI charts managed by Argo CD",
       "matchManagers": [
         "argocd"
       ],
-      "matchFileNames": [
-        "kubernetes/apps/argocd/applications/forgejo.yaml"
-      ],
-      "matchPackageNames": [
-        "code.forgejo.org/forgejo-helm/forgejo"
+      "matchDatasources": [
+        "docker"
       ],
       "pinDigests": false
     },
