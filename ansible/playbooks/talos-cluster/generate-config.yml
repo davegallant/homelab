@@ -60,6 +60,8 @@
         talos_node_name: "{{ item.name }}"
         talos_node_ip: "{{ item.address }}"
         talos_extra_addresses: "{{ item.extra_addresses | default([]) }}"
+        talos_node_ip_subnet: "{{ item.kubelet_node_ip_subnet | default(talos_kubelet_node_ip_subnet) }}"
+        talos_default_route_source: "{{ item.default_route_source | default('') }}"
       loop: "{{ talos_nodes | selectattr('role', 'equalto', 'worker') | list }}"
       loop_control:
         label: "{{ item.name }}"
