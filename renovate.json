@@ -159,6 +159,13 @@
       "pinDigests": false
     },
     {
+      "description": "Temporarily skip digest pinning for the RFD Enricher image",
+      "matchPackageNames": [
+        "ghcr.io/davegallant/rfd-enricher"
+      ],
+      "pinDigests": false
+    },
+    {
       "description": "Keep the beszel agent .deb and the beszel hub image in lockstep",
       "matchPackageNames": [
         "henrygd/beszel",
