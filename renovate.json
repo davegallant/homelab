@@ -142,6 +142,19 @@
       "pinDigests": true
     },
     {
+      "description": "Skip digest pinning for the Forgejo OCI chart",
+      "matchManagers": [
+        "argocd"
+      ],
+      "matchFileNames": [
+        "kubernetes/apps/argocd/applications/forgejo.yaml"
+      ],
+      "matchPackageNames": [
+        "code.forgejo.org/forgejo-helm/forgejo"
+      ],
+      "pinDigests": false
+    },
+    {
       "description": "Temporarily skip digest pinning for the Arca image",
       "matchPackageNames": [
         "forgejo.davegallant.ca/dave/arca"
