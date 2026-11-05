@@ -82,16 +82,16 @@ Never apply a protected, redacted, or otherwise partial config as a live
 config: always start from the complete generated config and diff its
 features and documents against the live config before applying.
 
-Incident 2026-11-04: applying a config whose  contained
-only  disabled KubePrism on w-1, because KubePrism
+Incident 2026-11-04: applying a config whose machine.features contained
+only diskQuotaSupport: true disabled KubePrism on w-1, because KubePrism
 was omitted. With no listener on 127.0.0.1:7445, the w-1 Cilium agent
 could not reach the local Kubernetes API, stayed in Init, and w-1's pod
 network went down — even though the interface change that prompted the
 apply had succeeded. The fix was re-applying the complete generated
 config with KubePrism preserved, not another Cilium change.
 
-On Talos 1.14, KubePrism is a  document, not the legacy
- field. Adding the legacy field alongside
+On Talos 1.14, KubePrism is a KubePrismConfig document, not the legacy
+machine.features.kubePrism field. Adding the legacy field alongside
 that document is rejected by Talos; preserve the document instead.
 
 Related: config address order alone does not prove the live interface
