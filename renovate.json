@@ -5,7 +5,9 @@
     "helpers:pinGitHubActionDigests"
   ],
   "ignorePaths": [
-    "ansible/tasks/docker-compose-up.yml"
+    "ansible/tasks/docker-compose-up.yml",
+    "kubernetes/apps/arca/chart/values.yaml",
+    "kubernetes/apps/rfd-enrich/chart/values.yaml"
   ],
   "schedule": [
     "on the 1st day of the month"
@@ -15,7 +17,7 @@
       "defaultRegistryUrlTemplate": "https://api.github.com/repos/siderolabs/talos/releases?per_page=100",
       "format": "json",
       "transformTemplates": [
-        "{\"releases\": $map($filter($, function($release) { $not($release.draft) and $not($release.prerelease) and $substring($release.tag_name, 0, $length($match(currentValue, /^v\\d+\\.\\d+\\./)[0].match)) = $match(currentValue, /^v\\d+\\.\\d+\\./)[0].match and $count($filter($release.assets, function($asset) { $asset.name = 'metal-amd64.iso' and $exists($asset.digest) })) > 0 }), function($release) { {\"version\": $release.tag_name, \"digest\": $substring($filter($release.assets, function($asset) { $asset.name = 'metal-amd64.iso' })[0].digest, 7), \"releaseTimestamp\": $release.published_at} })}"
+        "{\"releases\": $map($filter($, function($release) { $not($release.draft) and $not($release.prerelease) and $substring($release.tag_name, 0, $length($match(\"{{{currentValue}}}\", /^v\\d+\\.\\d+\\./)[0].match)) = $match(\"{{{currentValue}}}\", /^v\\d+\\.\\d+\\./)[0].match and $count($filter($release.assets, function($asset) { $asset.name = 'metal-amd64.iso' and $exists($asset.digest) })) > 0 }), function($release) { {\"version\": $release.tag_name, \"digest\": $substring($filter($release.assets, function($asset) { $asset.name = 'metal-amd64.iso' })[0].digest, 7), \"releaseTimestamp\": $release.published_at} })}"
       ]
     }
   },
@@ -140,7 +142,7 @@
       "pinDigests": true
     },
     {
-      "description": "Skip digest pinning for the Arca image while its registry lookup is investigated",
+      "description": "Temporarily skip digest pinning for the Arca image",
       "matchPackageNames": [
         "forgejo.davegallant.ca/dave/arca"
       ],
