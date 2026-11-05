@@ -49,7 +49,8 @@ try:
     if result.get("mullvad_exit_ip") is not True:
         failures.append("public echo is not a Mullvad exit")
 except Exception as error:
-    failures.append("public echo failed: " + type(error).__name__)
+    reason = getattr(error, "reason", error)
+    failures.append("Could not reach Mullvad IP check: " + str(reason))
 
 if failures:
     payload = json.dumps({
