@@ -56,8 +56,8 @@ spec:
             timeoutSeconds: 5
             failureThreshold: 30
           readinessProbe:
-            tcpSocket:
-              port: http
+            exec:
+              command: ["/bin/hp_healthcheck"]
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
