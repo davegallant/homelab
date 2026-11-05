@@ -140,6 +140,13 @@
       "pinDigests": true
     },
     {
+      "description": "Skip digest pinning for the Arca image while its registry lookup is investigated",
+      "matchPackageNames": [
+        "forgejo.davegallant.ca/dave/arca"
+      ],
+      "pinDigests": false
+    },
+    {
       "description": "Keep the beszel agent .deb and the beszel hub image in lockstep",
       "matchPackageNames": [
         "henrygd/beszel",
