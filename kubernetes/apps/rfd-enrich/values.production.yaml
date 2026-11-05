@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/davegallant/rfd-enricher
-  tag: e6f4e85957b0c8bde3ca11ddd887e7307350092a
+  tag: e6f4e85957b0c8bde3ca11ddd887e7307350092a@sha256:7926d8103a7b27d9c0d38648e08f9aa20eaf43f39659de960064638ecb468f96
   digest: sha256:7926d8103a7b27d9c0d38648e08f9aa20eaf43f39659de960064638ecb468f96
 
 schedule: "*/15 * * * *"
