@@ -73,6 +73,33 @@ authenticated path for live nodes. `apply-config.yml` is the insecure
 4. Verify the node is Ready and its workloads return before touching
    another node.
 
+### Talos apply is a full replacement, not a patch
+
+A machine-config apply replaces the node's entire configuration. Any
+feature or document omitted from the applied config is disabled on that
+node, even if the intent was only to change one address or setting.
+Never apply a protected, redacted, or otherwise partial config as a live
+config: always start from the complete generated config and diff its
+features and documents against the live config before applying.
+
+Incident 2026-11-04: applying a config whose  contained
+only  disabled KubePrism on w-1, because KubePrism
+was omitted. With no listener on 127.0.0.1:7445, the w-1 Cilium agent
+could not reach the local Kubernetes API, stayed in Init, and w-1's pod
+network went down — even though the interface change that prompted the
+apply had succeeded. The fix was re-applying the complete generated
+config with KubePrism preserved, not another Cilium change.
+
+On Talos 1.14, KubePrism is a  document, not the legacy
+ field. Adding the legacy field alongside
+that document is rejected by Talos; preserve the document instead.
+
+Related: config address order alone does not prove the live interface
+primary. After any address change on a worker, verify the live connected
+route's preferred source (for w-1, routes to the other nodes must source
+from .211, with .152 secondary for worker egress), not just the order
+listed in the generated config.
+
 ### VM sizing change
 
 Resize workers through `resize-worker.yml` (see the sizing paragraph above).
