@@ -6,7 +6,7 @@ apiVersion: v1alpha1
 kind: KubeNodeConfig
 nodeIP:
   validSubnets:
-    - {{ talos_kubelet_node_ip_subnet }}
+    - {{ talos_node_ip_subnet | default(talos_kubelet_node_ip_subnet) }}
 ---
 cluster:
   proxy:
@@ -26,6 +26,9 @@ machine:
         routes:
           - network: 0.0.0.0/0
             gateway: {{ talos_default_gateway }}
+{% if talos_default_route_source | default('') %}
+            source: {{ talos_default_route_source }}
+{% endif %}
   files:
     - content: Talos local Homepage storage root
       permissions: 0644
