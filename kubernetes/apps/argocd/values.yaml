@@ -7,6 +7,7 @@ configs:
     application.resourceTrackingMethod: annotation
     timeout.reconciliation: 120s
     timeout.reconciliation.jitter: 60s
+    accounts.admin: apiKey
     accounts.muse: apiKey
   rbac:
     policy.default: ""
