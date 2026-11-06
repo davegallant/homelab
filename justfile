@@ -61,7 +61,7 @@ publish-tailnet-caddy:
     docker buildx build \
         --platform linux/amd64 \
         --push \
-        --tag ghcr.io/davegallant/homelab-caddy-cloudflare:2.11.6-a8737d0 \
+        --tag ghcr.io/davegallant/homelab-caddy-cloudflare:2.11.9-a8737d0 \
         --label org.opencontainers.image.source=https://github.com/davegallant/homelab \
         docker/tailnet-caddy
 

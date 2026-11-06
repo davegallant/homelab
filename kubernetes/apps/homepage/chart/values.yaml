@@ -33,7 +33,7 @@ tailscale:
 caddy:
   # Existing Secret key: cloudflare_api_token.
   existingSecret: ""
-  image: ghcr.io/davegallant/homelab-caddy-cloudflare:2.11.8-a8737d0@sha256:7dd15666a6523dec11519a022228ba9e7ffe220505359dcc5baedeb421795126
+  image: ghcr.io/davegallant/homelab-caddy-cloudflare:2.11.9-a8737d0@sha256:a5038b5a00688dfcc39ca23b558eed202a1d07eb62e85e2cc82955dbb8084324
   resources:
     requests:
       cpu: 25m

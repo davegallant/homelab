@@ -176,6 +176,18 @@ port only from the hub's configured egress IP.
 - Container image versions are pinned in each `docker-compose.yml`
 - Ansible Galaxy collections: `ansible.posix`, `community.docker`, `community.general`
 
+### Publishing the custom tailnet Caddy image
+
+For `just publish-tailnet-caddy`, read the Caddy base version from
+`docker/tailnet-caddy/Dockerfile` and keep the recipe tag's version aligned with
+it. After publishing, inspect the exact registry tag and digest; verify the
+image's `caddy version`; then update every `homelab-caddy-cloudflare` reference
+in the Ansible role and Kubernetes charts to the same `tag@sha256:digest`.
+Publishing changes the registry only. A push containing the Ansible role invokes
+the repository's Ansible deployment workflow; Homepage and Kiwix require
+separate approved Argo CD syncs after the push. Confirm the running container
+image IDs after each deployment before calling the update live.
+
 ## Adding a New Service
 
 1. Add host to `ansible/inventory` under `[homelab]` (alphabetical order)
