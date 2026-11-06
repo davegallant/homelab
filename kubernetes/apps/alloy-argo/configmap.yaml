@@ -4,6 +4,7 @@
 # in-cluster VictoriaMetrics URL from vars.yaml. alloy_loki_lan_ip (192.168.1.56) is NOT used
 # anywhere in this config (repo code search: only vars.yaml) and is dropped.
 # Rendered config.alloy is otherwise byte-identical to the live Tier 1 config.
+# Verification touch: prove the plain-directory Argo sync path without changing Alloy config content.
 ---
 apiVersion: v1
 kind: ConfigMap
