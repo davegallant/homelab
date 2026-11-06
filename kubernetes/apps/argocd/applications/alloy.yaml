@@ -1,0 +1,32 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alloy
+  namespace: argocd
+  annotations:
+    homelab.davegallant.ca/backup-policy: not-required
+spec:
+  project: homelab-platform
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/alloy-argo
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: alloy
+  # Manual sync only, like every other Application except the
+  # qbittorrent-egress guardrail. No prune, no deletion finalizer:
+  # deleting this Application preserves its workloads.
+  # FailOnSharedResource is intentionally OMITTED: the first sync must
+  # adopt the pre-existing Ansible/kubectl-created resources (Namespace,
+  # ClusterRoles/Bindings, ConfigMap, DaemonSet, CiliumNetworkPolicy),
+  # which carry no Argo tracking annotation. With FailOnSharedResource,
+  # that adoption sync would fail (forgejo-backup / velero-schedules
+  # precedent). After adoption, Argo owns them from Git.
+  # No checksum annotation on the DaemonSet: a plain-directory Argo sync
+  # does not roll pods on a ConfigMap change. After any ConfigMap sync,
+  # run: kubectl -n alloy rollout restart daemonset/alloy
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
