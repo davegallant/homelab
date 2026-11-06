@@ -88,7 +88,7 @@
         src: /mnt/wdred1:/mnt/wdred2
         fstype: fuse.mergerfs
         # yamllint disable-line rule:line-length
-        opts: defaults,nonempty,allow_other,use_ino,cache.files=off,moveonenospc=true,category.create=mfs,dropcacheonclose=true,minfreespace=250G,inodecalc=path-hash,func.getattr=newest,fsname=mergerfs
+        opts: defaults,nonempty,allow_other,use_ino,noforget,cache.files=off,moveonenospc=true,category.create=mfs,dropcacheonclose=true,minfreespace=250G,inodecalc=path-hash,func.getattr=newest,fsname=mergerfs
         state: present
 
     - name: Create Samba user
