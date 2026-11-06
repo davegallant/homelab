@@ -23,6 +23,9 @@ server:
       - matches:
           - method:
               type: Exact
+              service: account.AccountService
+          - method:
+              type: Exact
               service: application.ApplicationService
           - method:
               type: Exact
