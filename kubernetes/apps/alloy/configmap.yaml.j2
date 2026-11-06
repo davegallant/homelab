@@ -27,6 +27,17 @@ data:
         action        = "drop"
       }
 
+      // kube-apiserver audit logs are 99.9% of that pod's Loki volume
+      // (416,848 / 417,268 lines in 24h, 2026-11-05) and are not needed
+      // in Loki. The Talos audit file on cp-1 remains untouched; this
+      // only stops Alloy shipping the pod's stdout to Loki.
+      // Dropping the target here means Alloy never tails the pod.
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        regex         = "kube-apiserver-k8s-cp-1"
+        action        = "drop"
+      }
+
       rule {
         source_labels = ["__meta_kubernetes_namespace"]
         target_label  = "namespace"
@@ -55,6 +66,24 @@ data:
 
     loki.source.kubernetes "pod_logs" {
       targets    = discovery.relabel.pod_logs.output
+      forward_to = [loki.process.drop_spam.receiver]
+    }
+
+    // Tier 1 (2026-11-05): drop low-value spam before it reaches Loki.
+    // argocd-notifications-controller: 329,784 info lines/day
+    // ("Processing completed" / "Start processing"). Errors are kept.
+    // Alloy's own "opened log stream" info: ~49,902 lines/day.
+    loki.process "drop_spam" {
+      stage.match {
+        selector = `{pod=~"argocd-notifications-controller.*"} |~ "Processing completed|Start processing"`
+        action   = "drop"
+      }
+
+      stage.match {
+        selector = `{pod=~"alloy-.*"} |~ "opened log stream"`
+        action   = "drop"
+      }
+
       forward_to = [loki.write.endpoint.receiver]
     }
 
@@ -208,3 +237,4 @@ data:
       forward_to = [prometheus.remote_write.victoriametrics.receiver]
       honor_labels = true
     }
+
