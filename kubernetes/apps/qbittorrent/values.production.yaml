@@ -168,7 +168,7 @@ persistence:
     items:
       - key: block-malware.sh
         path: block-malware.sh
-        mode: 488
+        mode: 292
       - key: notify.sh
         path: notify.sh
         mode: 420
