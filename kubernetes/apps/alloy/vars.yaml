@@ -1,6 +1,0 @@
----
-# Grafana LXC's LAN address for the Loki log shipper.
-alloy_loki_lan_ip: 192.168.1.56
-# VictoriaMetrics is in the monitoring namespace; Cilium allows only Alloy
-# and Grafana to access it.
-alloy_metrics_remote_write_url: http://victoriametrics.monitoring.svc.cluster.local:8428/api/v1/write

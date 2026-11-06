@@ -1,6 +1,6 @@
 # Kubernetes logging and Loki operations
 
-The [Alloy configuration](apps/alloy/configmap.yaml.j2) discovers node-local
+The [Alloy configuration](apps/alloy-argo/configmap.yaml) discovers node-local
 pods and reads logs through the Kubernetes API. It does not collect Talos node
 service logs. LXC agents have a separate configuration under `ansible/tasks/`.
 

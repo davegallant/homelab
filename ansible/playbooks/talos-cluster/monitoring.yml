@@ -1,7 +1,7 @@
 ---
 # Cluster vitals: node-exporter + kube-state-metrics + metrics-server,
 # each from its official Helm chart (versions/repos pinned in
-# ../../../kubernetes/apps/monitoring/vars.yaml). Alloy (apply-alloy.yml)
+# ../../../kubernetes/apps/monitoring/vars.yaml). Alloy (Argo CD-managed)
 # scrapes them and remote-writes to VictoriaMetrics on the Grafana host.
 #
 # Actions (monitoring_action):
