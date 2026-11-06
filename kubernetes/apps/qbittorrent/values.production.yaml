@@ -207,6 +207,8 @@ rawResources:
                   k8s:io.kubernetes.pod.namespace: radarr
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: lidarr
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: prowlarr
             toPorts:
               - ports:
                   - port: '8080'
