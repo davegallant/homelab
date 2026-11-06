@@ -1,0 +1,59 @@
+---
+# HAND-APPLY ONLY — NEVER ARGO-SYNCED.
+# The `homelab` AppProject has an empty clusterResourceWhitelist, so
+# Argo CD cannot create ClusterRoles/ClusterRoleBindings for the
+# headlamp app. Apply this file by hand from the repo root:
+#   kubectl --context "$CTX" apply -f kubernetes/apps/headlamp/rbac-viewer-plugins.yaml
+# and hand-delete it on rollback:
+#   kubectl --context "$CTX" delete clusterrole headlamp-viewer-plugins
+#
+# This ClusterRole grants the Headlamp viewer identity READ-ONLY
+# access to what the ArgoCD and Velero plugins need. No patch,
+# create, or delete anywhere — so Headlamp's Sync/Refresh/Rollback
+# buttons have no permission behind them even if the UI shows them.
+#
+# The binding is NOT in this file: it binds this ClusterRole to
+# Dave's viewer ServiceAccount, created out of band on 2026-11-04
+# (see kubernetes/apps/argocd/MANAGEMENT.md step 8). Once the SA
+# name/namespace is confirmed, hand-apply a binding like:
+#   kubectl --context "$CTX" create clusterrolebinding headlamp-viewer-plugins \
+#     --clusterrole=headlamp-viewer-plugins \
+#     --serviceaccount=<namespace>:<sa-name>
+# (or add a ClusterRoleBinding manifest here and hand-apply it).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: headlamp-viewer-plugins
+  labels:
+    app.kubernetes.io/part-of: headlamp
+rules:
+  # ArgoCD plugin: read Applications / ApplicationSets / Projects.
+  # Patch is deliberately NOT granted: no Sync/Refresh/Rollback.
+  - apiGroups: ["argoproj.io"]
+    resources: ["applications", "applicationsets", "appprojects"]
+    verbs: ["get", "list", "watch"]
+  # ArgoCD plugin, optional: read argocd-cm for the "Open in Argo CD" link.
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["argocd-cm"]
+    verbs: ["get"]
+    # NOTE: resourceNames scoping applies cluster-wide in a ClusterRole;
+    # it only matches a ConfigMap named argocd-cm in any namespace.
+    # The live one is in namespace `argocd`.
+  # Velero plugin: read-only over Velero CRDs. datauploads /
+  # datadownloads are often velero.io/v2alpha1 depending on the
+  # Velero version (Dave's is 1.18.2); ClusterRole rules are
+  # version-agnostic, so one rule covers both.
+  - apiGroups: ["velero.io"]
+    resources:
+      - backups
+      - schedules
+      - restores
+      - backupstoragelocations
+      - volumesnapshotlocations
+      - backuprepositories
+      - podvolumebackups
+      - podvolumerestores
+      - datauploads
+      - datadownloads
+    verbs: ["get", "list", "watch"]

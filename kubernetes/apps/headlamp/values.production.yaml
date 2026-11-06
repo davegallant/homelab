@@ -16,6 +16,32 @@
 # uses it verbatim and never applies its own restricted fallback.
 # Set the full set explicitly here, or pod creation is forbidden
 # for allowPrivilegeEscalation, capabilities, and seccompProfile.
+#
+# Plugins (2026-11-06, chart 0.46.0, read-only):
+# - ArgoCD 0.1.0-alpha, from the upstream release tarball, SHA-256
+#   verified in the initContainer (release Aug 11, 2026).
+# - Velero 0.1.0, BUILT FROM SOURCE: no upstream release exists yet,
+#   so the initContainer downloads the pinned main commit
+#   c472a00b213640dff0b9a1da4672a183807566e9 (2026-11-05), verifies
+#   the codeload tarball SHA, runs npm ci + build, and gates on the
+#   built dist/main.js SHA (deterministic across rebuilds; the
+#   packaged tarball SHA is NOT, it embeds build timestamps).
+#   Verified locally 2026-11-06: npm ci 21s / 1271 pkgs, peak RSS
+#   ~1.35 GiB, node_modules 812M — hence the 2Gi build-work emptyDir
+#   and 1Gi/2Gi requests/limits on the build initContainer.
+#   When upstream cuts a Velero release, replace this with the
+#   release-tarball pattern used for ArgoCD.
+# - No Sync/Refresh/Rollback: the viewer RBAC (hand-applied, see
+#   rbac-viewer-plugins.yaml) grants get/list/watch only, no patch.
+# - InitContainers run read-only root filesystems (the repo's
+#   rendered pod-security check requires it); the build one gets
+#   an emptyDir at /tmp plus HOME/TMPDIR under /work.
+# - No Gateway/namespace/project changes. Stateless: plugins are
+#   re-installed on every pod start, no PVC, backup-policy not-required.
+# - Egress assumption (verify in pod logs after first sync): the pod
+#   must reach github.com + codeload.github.com + registry.npmjs.org.
+#   If npm ci fails on egress, the initContainer fails loudly and
+#   the pod never starts — diagnosable, no silent partial install.
 config:
   inCluster: true
   unsafeUseServiceAccountToken: false
@@ -27,6 +53,12 @@ clusterRoleBinding:
 service:
   type: ClusterIP
   port: 80
+podSecurityContext:
+  # fsGroup makes the emptyDir volumes group-writable by the
+  # initContainers and the main container (all run as 100:101).
+  # Without it the volumes are root-owned and the non-root
+  # initContainers cannot write the plugin files.
+  fsGroup: 101
 securityContext:
   allowPrivilegeEscalation: false
   runAsNonRoot: true
@@ -45,3 +77,106 @@ resources:
   limits:
     cpu: 200m
     memory: 256Mi
+# Shared plugin dir, mounted at the chart default pluginsDir
+# (/headlamp/plugins) in the main container. The two initContainers
+# below populate it; the main container only reads it.
+volumes:
+  - name: plugins
+    emptyDir:
+      sizeLimit: 10Mi
+  - name: build-work
+    emptyDir:
+      sizeLimit: 2Gi
+  - name: tmp
+    emptyDir:
+      sizeLimit: 512Mi
+volumeMounts:
+  - name: plugins
+    mountPath: /headlamp/plugins
+initContainers:
+  # ArgoCD plugin, release tarball. Runs first: if egress to
+  # github.com is broken this fails fast, before the heavy build.
+  - name: install-argocd-plugin
+    image: docker.io/library/busybox:1.37.0@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec
+    command: ["sh", "-c"]
+    args:
+      - |
+        set -eu
+        TARBALL_SHA=52eec016c40e1abe2c9a797391de0119c94f10c22005f9638389027604e8c39b
+        TARBALL_URL=https://github.com/headlamp-k8s/plugins/releases/download/argocd-0.1.0-alpha/headlamp-k8s-argocd-0.1.0-alpha.tar.gz
+        cd /plugins
+        wget -q -O headlamp-k8s-argocd-0.1.0-alpha.tar.gz "$TARBALL_URL"
+        echo "$TARBALL_SHA  headlamp-k8s-argocd-0.1.0-alpha.tar.gz" | sha256sum -c -
+        tar xzf headlamp-k8s-argocd-0.1.0-alpha.tar.gz
+        rm headlamp-k8s-argocd-0.1.0-alpha.tar.gz
+        ls -la /plugins/argocd
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 128Mi
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      runAsUser: 100
+      runAsGroup: 101
+      seccompProfile:
+        type: RuntimeDefault
+      capabilities:
+        drop:
+          - ALL
+    volumeMounts:
+      - name: plugins
+        mountPath: /plugins
+  # Velero plugin, built from a pinned main commit (no release yet).
+  # See the header: tarball SHA gate, then build, then a gate on the
+  # deterministic dist/main.js SHA before the plugin is installed.
+  - name: build-velero-plugin
+    image: docker.io/library/node:24-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8
+    command: ["sh", "-c"]
+    args:
+      - |
+        set -eu
+        SOURCE_SHA=8748eb660539f00d15dbef7d54498533da67b68071ae8297ff9fd09ec51191bf
+        MAINJS_SHA=8a78249f1e51af3154e1a45cb73c5b22d88eb5cc3f56973329d407a290796524
+        export HOME=/work TMPDIR=/work/tmp
+        mkdir -p /work/tmp
+        cd /work
+        wget -q -O plugins.tar.gz https://codeload.github.com/headlamp-k8s/plugins/tar.gz/c472a00b213640dff0b9a1da4672a183807566e9
+        echo "$SOURCE_SHA  plugins.tar.gz" | sha256sum -c -
+        tar xzf plugins.tar.gz
+        cd plugins-c472a00b213640dff0b9a1da4672a183807566e9/velero
+        npm ci --no-audit --no-fund
+        npm run build
+        echo "$MAINJS_SHA  dist/main.js" | sha256sum -c -
+        npm run package
+        tar xzf headlamp-k8s-velero-0.1.0.tar.gz -C /plugins
+        ls -la /plugins/velero
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1500m
+        memory: 2Gi
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      runAsUser: 100
+      runAsGroup: 101
+      seccompProfile:
+        type: RuntimeDefault
+      capabilities:
+        drop:
+          - ALL
+    volumeMounts:
+      - name: build-work
+        mountPath: /work
+      - name: tmp
+        mountPath: /tmp
+      - name: plugins
+        mountPath: /plugins
