@@ -3,6 +3,8 @@
 # The in-cluster VictoriaMetrics URL is used. The unused alloy_loki_lan_ip is dropped.
 # Rendered config.alloy is otherwise byte-identical to the live Tier 1 config.
 # Verification touch: prove the plain-directory Argo sync path without changing Alloy config content.
+# 2026-11-06: kube-apiserver discovery drop reverted — audit logs ship to Loki again.
+# The drop_spam stages below (argocd-notifications, Alloy opened-stream) are kept.
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -29,17 +31,6 @@ data:
       rule {
         source_labels = ["__meta_kubernetes_pod_phase"]
         regex         = "Pending"
-        action        = "drop"
-      }
-
-      // kube-apiserver audit logs are 99.9% of that pod's Loki volume
-      // (416,848 / 417,268 lines in 24h, 2026-11-05) and are not needed
-      // in Loki. The Talos audit file on cp-1 remains untouched; this
-      // only stops Alloy shipping the pod's stdout to Loki.
-      // Dropping the target here means Alloy never tails the pod.
-      rule {
-        source_labels = ["__meta_kubernetes_pod_name"]
-        regex         = "kube-apiserver-k8s-cp-1"
         action        = "drop"
       }
 
