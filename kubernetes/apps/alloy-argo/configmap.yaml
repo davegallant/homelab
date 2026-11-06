@@ -1,8 +1,6 @@
-# Alloy ConfigMap — Argo plain-manifest copy (DRAFT, not committed).
-# De-templated from kubernetes/apps/alloy/configmap.yaml.j2 at da4ed107 (Tier 1, live 2026-11-05).
-# Only change: the alloy_metrics_remote_write_url variable replaced with the
-# in-cluster VictoriaMetrics URL from vars.yaml. alloy_loki_lan_ip (192.168.1.56) is NOT used
-# anywhere in this config (repo code search: only vars.yaml) and is dropped.
+# Alloy ConfigMap — Argo plain-manifest source.
+# Based on the Alloy Tier 1 configuration at da4ed107 (live 2026-11-05).
+# The in-cluster VictoriaMetrics URL is used. The unused alloy_loki_lan_ip is dropped.
 # Rendered config.alloy is otherwise byte-identical to the live Tier 1 config.
 # Verification touch: prove the plain-directory Argo sync path without changing Alloy config content.
 ---

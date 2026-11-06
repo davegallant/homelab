@@ -1,5 +1,5 @@
-# Alloy DaemonSet — Argo plain-manifest copy (DRAFT, not committed).
-# De-templated from kubernetes/apps/alloy/daemonset.yaml.j2 at da4ed107.
+# Alloy DaemonSet — Argo plain-manifest source.
+# Based on the Alloy Tier 1 DaemonSet at da4ed107.
 # Only change: the Ansible checksum/config annotation is removed (see inline note).
 # Image, resources, probes, tolerations, EmptyDir 256Mi unchanged.
 ---
