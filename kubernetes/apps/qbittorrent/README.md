@@ -29,12 +29,13 @@ re-downloading it on every restart.
 
 ## Storage and backups
 
-Config uses a 1 GiB local-path PVC annotated `volumeType: local`. Download
-data uses a hand-applied NFS RWX PV/PVC from `192.168.1.83:/mnt/pool`, with
-the `torrents` subdirectory mounted at `/mnt/torrents`. NAS snapshots and
-offsite protection cover downloads. Config and Caddy state are opted into
-Velero; NFS and Tailscale identities are excluded. The tracked daily schedule
-runs at 04:40 UTC with a 336-hour TTL and excludes Secrets.
+Config uses a 1 GiB local-path PVC annotated `volumeType: local`. The NFS pool
+root is mounted read-only at `/mnt`, following Jellyfin's mount layout. A
+separate NFS RWX PV/PVC mounts `192.168.1.83:/mnt/pool/torrents` directly at
+`/mnt/torrents`, without a Kubernetes `subPath`. NAS snapshots and offsite
+protection cover downloads. Config and Caddy state are opted into Velero; NFS
+and Tailscale identities are excluded. The tracked daily schedule runs at
+04:40 UTC with a 336-hour TTL and excludes Secrets.
 
 Namespace and NFS PV/PVC in `storage.yaml` are hand-applied external
 resources, not Argo-owned. The chart resources use manual Argo sync without
