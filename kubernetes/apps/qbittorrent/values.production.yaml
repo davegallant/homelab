@@ -146,14 +146,21 @@ persistence:
           - path: /config
         bootstrap:
           - path: /config
+  pool:
+    type: persistentVolumeClaim
+    existingClaim: qbittorrent-pool
+    advancedMounts:
+      qbittorrent:
+        app:
+          - path: /mnt
+            readOnly: true
   downloads:
     type: persistentVolumeClaim
-    existingClaim: qbittorrent-downloads
+    existingClaim: qbittorrent-torrents
     advancedMounts:
       qbittorrent:
         app:
           - path: /mnt/torrents
-            subPath: torrents
   bootstrap-config:
     type: secret
     name: qbittorrent-config-external

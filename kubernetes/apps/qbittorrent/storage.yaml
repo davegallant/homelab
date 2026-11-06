@@ -47,3 +47,76 @@ spec:
   resources:
     requests:
       storage: 1Ti
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: qbittorrent-pool
+spec:
+  capacity:
+    storage: 1Ti
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ''
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+    - noatime
+  csi:
+    driver: nfs.csi.k8s.io
+    readOnly: true
+    volumeHandle: cinema-qbittorrent-pool
+    volumeAttributes:
+      server: 192.168.1.83
+      share: /mnt/pool
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qbittorrent-pool
+  namespace: qbittorrent
+spec:
+  accessModes:
+    - ReadOnlyMany
+  storageClassName: ''
+  volumeName: qbittorrent-pool
+  resources:
+    requests:
+      storage: 1Ti
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: qbittorrent-torrents
+spec:
+  capacity:
+    storage: 1Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ''
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+    - noatime
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: cinema-qbittorrent-torrents
+    volumeAttributes:
+      server: 192.168.1.83
+      share: /mnt/pool/torrents
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qbittorrent-torrents
+  namespace: qbittorrent
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ''
+  volumeName: qbittorrent-torrents
+  resources:
+    requests:
+      storage: 1Ti
