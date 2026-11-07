@@ -63,6 +63,21 @@ class DigestTests(unittest.TestCase):
         self.assertEqual(digest.safe_format(item, {'id': 1, 'title': 'Imaginary laptop', 'price': '$999'}),
                          ('Acme cable', 'Price not listed'))
 
+    def test_free_game_is_labelled_free(self):
+        item = {'id': 1, 'title': 'Free Game from Epic - Space Adventure'}
+        self.assertEqual(digest.safe_format(item, {'id': 1, 'title': 'Free Game - Space Adventure', 'price': 'Price not listed'}),
+                         ('Game - Space Adventure', 'Free'))
+
+    def test_free_shipping_is_not_a_free_product(self):
+        item = {'id': 1, 'title': 'Acme cable $12 with free shipping'}
+        self.assertEqual(digest.safe_format(item, {'id': 1, 'title': 'Acme cable', 'price': '$12'}),
+                         ('Acme cable', '$12'))
+
+    def test_purchase_condition_is_not_mistaken_for_price(self):
+        item = {'id': 1, 'title': 'Free fries with $3 app purchase'}
+        self.assertEqual(digest.safe_format(item, {'id': 1, 'title': 'Free fries with app purchase', 'price': '$3'}),
+                         ('Free fries with $3 app purchase', 'See offer conditions'))
+
     def test_gotify_uses_header_and_markdown_payload(self):
         with patch.object(digest, 'urlopen') as urlopen:
             urlopen.return_value.__enter__.return_value.status = 200

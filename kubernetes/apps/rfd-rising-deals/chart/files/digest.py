@@ -50,11 +50,20 @@ def validate_format(item, formatted):
 
 
 def safe_format(item, formatted):
+    source = re.sub(r'[\r\n\x00-\x1f]+', ' ', item['title']).strip()
+    if re.search(r'\b(?:purchase|spend)\b', source, re.IGNORECASE):
+        return source, 'See offer conditions'
     try:
-        return validate_format(item, formatted)
+        title, price = validate_format(item, formatted)
+        if price == 'Price not listed' and re.search(r'\bfree\s+games?\b', source, re.IGNORECASE):
+            title = re.sub(r'\bfree\s+', '', title, count=1, flags=re.IGNORECASE).strip()
+            return title, 'Free'
+        return title, price
     except (ValueError, TypeError, KeyError, AttributeError):
         # The feed remains authoritative when the model invents or changes data.
-        title = re.sub(r'[\r\n\x00-\x1f]+', ' ', item['title']).strip()
+        title = source
+        if re.search(r'\bfree\s+games?\b', source, re.IGNORECASE):
+            return re.sub(r'\bfree\s+', '', source, count=1, flags=re.IGNORECASE).strip(), 'Free'
         match = re.search(r'\$\s*\d[\d,]*(?:\.\d{1,2})?', title)
         if match:
             price = match.group(0)

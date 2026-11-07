@@ -1,4 +1,4 @@
-# RFD rising deals proof of concept
+# RFD rising deals
 
 This suspended CronWorkflow ranks recent Hot Deals by feed upvotes per hour,
 checks thread pages, and asks the existing in-cluster LiteLLM proxy to format a
