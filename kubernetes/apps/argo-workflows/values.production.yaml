@@ -16,6 +16,82 @@ controller:
   workflowDefaults:
     spec:
       serviceAccountName: argo-workflow
+      onExit: homelab-gotify-failure-notifier
+      templates:
+        - name: homelab-gotify-failure-notifier
+          steps:
+            - - name: send-failure-notification
+                template: homelab-gotify-send
+                when: "{{workflow.status}} != Succeeded"
+        - name: homelab-gotify-send
+          metadata:
+            labels:
+              app.kubernetes.io/name: argo-workflows-gotify
+          script:
+            image: docker.io/library/python:3.13.9-alpine3.22@sha256:e5fa639e49b85986c4481e28faa2564b45aa8021413f31026c3856e5911618b1
+            command: [python3]
+            source: |
+              import json
+              import os
+              import urllib.request
+
+              name = os.environ['WORKFLOW_NAME']
+              namespace = os.environ['WORKFLOW_NAMESPACE']
+              status = os.environ['WORKFLOW_STATUS']
+              duration = os.environ['WORKFLOW_DURATION']
+              ui_url = 'https://argo-workflows.tail.davegallant.ca'
+              body = {
+                  'title': f'Argo workflow {status}: {name}',
+                  'message': (
+                      f'Workflow **{namespace}/{name}** finished with status '
+                      f'**{status}** after {duration} seconds.\n\n'
+                      f'[Open Argo Workflows]({ui_url})'
+                  ),
+                  'priority': 8,
+                  'extras': {
+                      'client::display': {'contentType': 'text/markdown'}
+                  },
+              }
+              request = urllib.request.Request(
+                  'https://gotify.davegallant.ca/message',
+                  data=json.dumps(body).encode(),
+                  headers={
+                      'Content-Type': 'application/json',
+                      'X-Gotify-Key': os.environ['GOTIFY_TOKEN'],
+                      'User-Agent': 'homelab-argo-workflows/1.0',
+                  },
+                  method='POST',
+              )
+              with urllib.request.urlopen(request, timeout=20) as response:
+                  if not 200 <= response.status < 300:
+                      raise RuntimeError(f'Gotify returned HTTP {response.status}')
+          env:
+            - name: GOTIFY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: argo-workflows-gotify
+                  key: token
+            - name: WORKFLOW_NAME
+              value: "{{workflow.name}}"
+            - name: WORKFLOW_NAMESPACE
+              value: "{{workflow.namespace}}"
+            - name: WORKFLOW_STATUS
+              value: "{{workflow.status}}"
+            - name: WORKFLOW_DURATION
+              value: "{{workflow.duration}}"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            seccompProfile:
+              type: RuntimeDefault
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 200m, memory: 128Mi}
   image:
     tag: v4.1.6@sha256:a012a639ead374a4a9306093d6b29dfdc7e6c4c1a85c684582cb961a6cc8bcf3
   securityContext:
