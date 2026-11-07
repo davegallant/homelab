@@ -1,4 +1,4 @@
 schedule: "0 12 * * *"
 timezone: America/Toronto
-suspend: true
+suspend: false
 sendGotify: true
