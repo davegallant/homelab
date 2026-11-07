@@ -32,6 +32,10 @@
         icon: kubernetes
         href: "{% raw %}{{HOMEPAGE_VAR_HEADLAMP_URL}}{% endraw %}"
         description: Kubernetes dashboard
+    - Argo Workflows:
+        icon: argo-cd
+        href: "{% raw %}{{HOMEPAGE_VAR_ARGO_WORKFLOWS_URL}}{% endraw %}"
+        description: Scheduled workflows
 - Media:
     - Jellyfin:
         icon: jellyfin

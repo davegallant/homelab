@@ -61,6 +61,7 @@ see [its runbook](apps/arca/README.md).
 
 ## Platform
 
+- [Argo Workflows](apps/argo-workflows/README.md): namespace-scoped workflow orchestration.
 - [Argo CD](apps/argocd/README.md): application reconciliation and recovery.
 - [Cilium](apps/cilium/README.md): CNI, network policies, and Hubble.
 - [Monitoring](apps/monitoring/README.md): node and Kubernetes metrics.

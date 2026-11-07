@@ -1,4 +1,19 @@
 exceptions:
+  alloy/alloy pod automountServiceAccountToken: >-
+    Alloy requires its scoped API token for node-local pod discovery and logs.
+  headlamp/headlamp pod automountServiceAccountToken: >-
+    Headlamp uses in-cluster Kubernetes configuration; users authenticate with
+    their own token and the service account has no cluster role binding.
+  headlamp/headlamp containers:headlamp readOnlyRootFilesystem: >-
+    Headlamp's current chart uses a writable root filesystem; evaluate its
+    writable paths before changing the running dashboard.
+  argo-workflows/argo-workflows-crd-install pod automountServiceAccountToken: >-
+    The temporary chart hook needs its scoped installer token to apply CRDs.
+  argo-workflows/argo-workflows-server pod automountServiceAccountToken: >-
+    Argo Server uses its service account for in-cluster configuration and
+    authenticates clients using their own Kubernetes tokens.
+  argo-workflows/argo-workflows-workflow-controller pod automountServiceAccountToken: >-
+    The controller uses its namespace-scoped service account to manage workflows.
   k8s-readonly/k8s-readonly pod automountServiceAccountToken: >-
     The read-only API proxy needs its scoped ServiceAccount token to list Pods
     and stream logs; it cannot read Secrets.

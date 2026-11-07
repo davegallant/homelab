@@ -233,4 +233,3 @@ data:
       forward_to = [prometheus.remote_write.victoriametrics.receiver]
       honor_labels = true
     }
-

@@ -1,0 +1,47 @@
+singleNamespace: true
+createAggregateRoles: false
+workflow:
+  serviceAccount:
+    create: true
+crds:
+  upgradeJob:
+    image:
+      tag: v4.1.6@sha256:b9be70ef3f4a0709d771e9c098a99fd2d97be1b095c1b160c668a2fde61dc237
+    resources:
+      requests: {cpu: 50m, memory: 64Mi}
+      limits: {cpu: 500m, memory: 256Mi}
+controller:
+  clusterWorkflowTemplates:
+    enabled: false
+  workflowDefaults:
+    spec:
+      serviceAccountName: argo-workflow
+  image:
+    tag: v4.1.6@sha256:a012a639ead374a4a9306093d6b29dfdc7e6c4c1a85c684582cb961a6cc8bcf3
+  securityContext:
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    seccompProfile: {type: RuntimeDefault}
+    capabilities: {drop: [ALL]}
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
+    limits: {cpu: 1000m, memory: 512Mi}
+executor:
+  image:
+    tag: v4.1.6@sha256:28432d912a716167709429b28e2755f49416eb4754c35ca3013863fb72717a00
+server:
+  clusterWorkflowTemplates:
+    enabled: false
+  image:
+    tag: v4.1.6@sha256:acb4c1de9a9c5fa109fb3094eebbc3eac42d2dd328181b0a395488cc97de75e5
+  authModes: [client]
+  securityContext:
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    seccompProfile: {type: RuntimeDefault}
+    capabilities: {drop: [ALL]}
+  resources:
+    requests: {cpu: 50m, memory: 128Mi}
+    limits: {cpu: 500m, memory: 256Mi}

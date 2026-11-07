@@ -42,6 +42,8 @@
 #   must reach github.com + codeload.github.com + registry.npmjs.org.
 #   If npm ci fails on egress, the initContainer fails loudly and
 #   the pod never starts — diagnosable, no silent partial install.
+image:
+  tag: v0.46.0@sha256:8a0ef97527544baa2b35825940ddf4db6e2d09c30cd5aa31fd269ff604cc8b75
 config:
   inCluster: true
   unsafeUseServiceAccountToken: false
