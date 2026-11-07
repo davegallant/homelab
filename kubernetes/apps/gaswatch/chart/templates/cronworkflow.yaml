@@ -33,6 +33,8 @@ spec:
         emptyDir: {}
     templates:
       - name: run-gaswatch
+        retryStrategy:
+          limit: "0"
         inputs:
           artifacts:
             - name: source
@@ -99,8 +101,31 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.runtimeSecret }}
                   key: GASWATCH_MAX_PRICE_AGE_HOURS
+            - name: GASWATCH_DROP_CPL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret }}
+                  key: GASWATCH_DROP_CPL
+            - name: GASWATCH_DROP_LOOKBACK_HOURS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret }}
+                  key: GASWATCH_DROP_LOOKBACK_HOURS
+            - name: GASWATCH_HYSTERESIS_CPL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret }}
+                  key: GASWATCH_HYSTERESIS_CPL
+            - name: GASWATCH_QUIET_HOURS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret }}
+                  key: GASWATCH_QUIET_HOURS
             - name: GASWATCH_TIMEOUT_SECONDS
-              value: "20"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret }}
+                  key: GASWATCH_TIMEOUT_SECONDS
             - name: GASWATCH_FAVOURITE_STATION_IDS
               valueFrom:
                 secretKeyRef:
