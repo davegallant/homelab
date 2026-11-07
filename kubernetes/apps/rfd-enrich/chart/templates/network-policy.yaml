@@ -1,10 +1,13 @@
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: rfd-enrich-default-deny
+  name: rfd-enrich-egress
+  namespace: argo-workflows
 spec:
-  description: Allow DNS, the LiteLLM service, and the RFD Pages API over HTTPS.
-  endpointSelector: {}
+  description: Allow the RFD enricher to reach DNS, LiteLLM, and the RFD API.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: rfd-enrich
   ingress: []
   egress:
     - toEndpoints:

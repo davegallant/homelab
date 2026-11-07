@@ -59,6 +59,9 @@ server; see [its runbook](apps/headplane/README.md).
 Arca runs as a tailnet-only web archiver with local SQLite/archive storage;
 see [its runbook](apps/arca/README.md).
 
+RFD enrichment runs as an Argo CronWorkflow; see
+[its runbook](apps/rfd-enrich/README.md).
+
 ## Platform
 
 - [Argo Workflows](apps/argo-workflows/README.md): namespace-scoped workflow orchestration.
