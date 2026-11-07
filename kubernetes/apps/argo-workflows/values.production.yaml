@@ -30,6 +30,9 @@ controller:
           script:
             image: docker.io/library/python:3.13.9-alpine3.22@sha256:e5fa639e49b85986c4481e28faa2564b45aa8021413f31026c3856e5911618b1
             command: [python3]
+            resources:
+              requests: {cpu: 50m, memory: 64Mi}
+              limits: {cpu: 200m, memory: 128Mi}
             source: |
               import json
               import os
@@ -83,9 +86,6 @@ controller:
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
-          resources:
-            requests: {cpu: 50m, memory: 64Mi}
-            limits: {cpu: 200m, memory: 128Mi}
   image:
     tag: v4.1.6@sha256:a012a639ead374a4a9306093d6b29dfdc7e6c4c1a85c684582cb961a6cc8bcf3
   securityContext:
