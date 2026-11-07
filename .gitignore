@@ -1,6 +1,7 @@
 .vscode
 .vault_pass
 .direnv/
+__pycache__/
 logs/
 docs/
 kubernetes/receipts/
