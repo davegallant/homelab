@@ -62,6 +62,9 @@ see [its runbook](apps/arca/README.md).
 RFD enrichment runs as an Argo CronWorkflow; see
 [its runbook](apps/rfd-enrich/README.md).
 
+Gaswatch price checks run as a suspended Argo CronWorkflow pending state and
+credential handoff; see [its runbook](apps/gaswatch/README.md).
+
 ## Platform
 
 - [Argo Workflows](apps/argo-workflows/README.md): namespace-scoped workflow orchestration.

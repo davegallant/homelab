@@ -1,0 +1,22 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: argo-workflows-daily
+  namespace: velero
+  labels:
+    app.kubernetes.io/instance: gaswatch
+    app.kubernetes.io/managed-by: ArgoCD
+    app.kubernetes.io/name: gaswatch
+spec:
+  paused: false
+  schedule: 55 2 * * *
+  skipImmediately: false
+  template:
+    defaultVolumesToFsBackup: true
+    excludedResources:
+      - secrets
+    includedNamespaces:
+      - argo-workflows
+    snapshotVolumes: false
+    storageLocation: default
+    ttl: 336h

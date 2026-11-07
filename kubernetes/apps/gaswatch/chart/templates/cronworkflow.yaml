@@ -1,0 +1,125 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: gaswatch
+spec:
+  schedules:
+    - {{ .Values.schedule | quote }}
+  timezone: {{ .Values.timezone | quote }}
+  suspend: {{ .Values.suspend }}
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  workflowSpec:
+    entrypoint: run-gaswatch
+    activeDeadlineSeconds: 600
+    serviceAccountName: argo-workflow
+    podMetadata:
+      labels:
+        app.kubernetes.io/name: gaswatch
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+      seccompProfile:
+        type: RuntimeDefault
+    volumes:
+      - name: state
+        persistentVolumeClaim:
+          claimName: {{ .Values.state.claimName }}
+      - name: tmp
+        emptyDir: {}
+    templates:
+      - name: run-gaswatch
+        inputs:
+          artifacts:
+            - name: source
+              path: /workspace
+              git:
+                repo: {{ .Values.source.repoURL | quote }}
+                revision: {{ .Values.source.revision | quote }}
+                depth: 1
+                usernameSecret:
+                  name: {{ .Values.repositorySecret }}
+                  key: username
+                passwordSecret:
+                  name: {{ .Values.repositorySecret }}
+                  key: token
+        container:
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}@{{ .Values.image.digest }}"
+          imagePullPolicy: IfNotPresent
+          workingDir: /workspace
+          command: [sh, -ec]
+          args:
+            - >-
+              python -m venv /tmp/venv &&
+              /tmp/venv/bin/pip install --no-cache-dir -r requirements.txt &&
+              /tmp/venv/bin/python gaswatch.py
+          env:
+            - name: GASWATCH_STATE_FILE
+              value: /state/gaswatch-state.json
+            - name: GASWATCH_GASBUDDY_CACHE_FILE
+              value: /state/.gasbuddy-token.json
+            - name: GASWATCH_GOTIFY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret }}
+                  key: GASWATCH_GOTIFY_TOKEN
+            - name: GASWATCH_GOTIFY_URL
+              value: https://gotify.davegallant.ca
+            - name: GASWATCH_LOCATION
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret }}
+                  key: GASWATCH_LOCATION
+            - name: GASWATCH_LATITUDE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret }}
+                  key: GASWATCH_LATITUDE
+            - name: GASWATCH_LONGITUDE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret }}
+                  key: GASWATCH_LONGITUDE
+            - name: GASWATCH_RADIUS_KM
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret }}
+                  key: GASWATCH_RADIUS_KM
+            - name: GASWATCH_FUEL_GRADE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret }}
+                  key: GASWATCH_FUEL_GRADE
+            - name: GASWATCH_MAX_PRICE_AGE_HOURS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret }}
+                  key: GASWATCH_MAX_PRICE_AGE_HOURS
+            - name: GASWATCH_TIMEOUT_SECONDS
+              value: "20"
+            - name: GASWATCH_FAVOURITE_STATION_IDS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret }}
+                  key: GASWATCH_FAVOURITE_STATION_IDS
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: state
+              mountPath: /state
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

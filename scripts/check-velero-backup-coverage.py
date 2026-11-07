@@ -13,7 +13,7 @@ SCHEDULES_DIR = ROOT / "kubernetes/apps/velero-schedules"
 POLICY_ANNOTATION = "homelab.davegallant.ca/backup-policy"
 # Platform namespaces do not have an ordinary homelab Application, but still
 # need explicit backup coverage when they hold recoverable application data.
-PLATFORM_BACKUP_NAMESPACES = {"monitoring"}
+PLATFORM_BACKUP_NAMESPACES = {"monitoring", "argo-workflows"}
 
 
 def fail(message: str) -> None:
