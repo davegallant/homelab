@@ -59,11 +59,3 @@ approved.
 The gateway policy, deletion protections, monitor, packet evidence, and
 remaining network risks are documented in
 [`../qbittorrent-egress/README.md`](../qbittorrent-egress/README.md).
-
-## Build record
-
-The WebUI build verification recorded pod readiness, authenticated API
-access, the Dracula theme, and zero torrents. Sonarr's download-client API
-test returned HTTP 200 during that build; current *arr endpoint and gateway
-checks are recorded in the egress guardrail runbook. See
-[`BUILD-REPORT.md`](BUILD-REPORT.md) for the historical build details.
