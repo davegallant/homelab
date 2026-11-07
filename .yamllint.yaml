@@ -4,6 +4,8 @@ extends: default
 ignore:
   - .direnv/
   - ansible/group_vars/all/secrets.yaml
+  # Preserved command output and upstream CRDs are historical evidence.
+  - kubernetes/receipts/
   # Helm templates contain Go template directives that yamllint cannot parse;
   # validate these with helm lint and helm template instead.
   - kubernetes/apps/searxng/chart/templates/

@@ -1,0 +1,29 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-workflows
+  namespace: argocd
+spec:
+  project: homelab-platform
+  sources:
+    - repoURL: https://argoproj.github.io/argo-helm
+      chart: argo-workflows
+      targetRevision: "2.0.18"
+      helm:
+        releaseName: argo-workflows
+        valueFiles:
+          - $values/kubernetes/apps/argo-workflows/values.production.yaml
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/argo-workflows
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo-workflows
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true

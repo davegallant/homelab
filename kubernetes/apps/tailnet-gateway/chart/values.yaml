@@ -8,6 +8,12 @@
 # port. policyName is overridden for changedetection, whose live policy has a
 # separate name; renaming it is a separate change.
 apps:
+  - name: argo-workflows
+    serviceName: argo-workflows-server
+    port: 2746
+    selectorLabels:
+      app.kubernetes.io/name: argo-workflows-server
+      app.kubernetes.io/instance: argo-workflows
   - name: immich
     port: 2283
     selectorLabels:

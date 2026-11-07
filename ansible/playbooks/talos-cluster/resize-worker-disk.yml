@@ -55,7 +55,10 @@
     - name: Require the expected current size and refuse any shrink
       ansible.builtin.assert:
         that:
-          - talos_disk_resize_current_gib | int in [talos_disk_resize_nodes[0].disk_gib | int - talos_disk_resize_increment_gib | int, talos_disk_resize_nodes[0].disk_gib | int]
+          - >-
+            talos_disk_resize_current_gib | int in
+            [talos_disk_resize_nodes[0].disk_gib | int - talos_disk_resize_increment_gib | int,
+            talos_disk_resize_nodes[0].disk_gib | int]
           - talos_disk_resize_current_gib | int <= talos_disk_resize_nodes[0].disk_gib | int
         fail_msg: >-
           Refusing disk-size drift for {{ talos_disk_resize_nodes[0].name }}.

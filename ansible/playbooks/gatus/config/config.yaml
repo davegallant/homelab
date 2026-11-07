@@ -183,3 +183,6 @@ endpoints:
   - name: headlamp
     url: "https://headlamp.{{ headscale_magic_dns_domain }}/"
     <<: *defaults
+  - name: argo-workflows
+    url: "{{ argo_workflows_url }}/"
+    <<: *defaults
