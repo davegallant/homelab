@@ -5,7 +5,7 @@ image:
 
 schedule: "*/15 * * * *"
 timezone: Etc/UTC
-suspend: true
+suspend: false
 concurrencyPolicy: Forbid
 startingDeadlineSeconds: 300
 activeDeadlineSeconds: 600
