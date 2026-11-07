@@ -84,8 +84,6 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: litellm
     - server: https://kubernetes.default.svc
-      namespace: rfd-enrich
-    - server: https://kubernetes.default.svc
       namespace: arca
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
