@@ -30,6 +30,15 @@ controller:
 executor:
   image:
     tag: v4.1.6@sha256:28432d912a716167709429b28e2755f49416eb4754c35ca3013863fb72717a00
+  resources:
+    requests: {cpu: 50m, memory: 64Mi}
+    limits: {cpu: 500m, memory: 256Mi}
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    seccompProfile: {type: RuntimeDefault}
+    capabilities: {drop: [ALL]}
 server:
   clusterWorkflowTemplates:
     enabled: false

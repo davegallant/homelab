@@ -1,0 +1,60 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: rfd-rising-deals
+  namespace: argo-workflows
+spec:
+  schedules:
+    - {{ .Values.schedule | quote }}
+  timezone: {{ .Values.timezone | quote }}
+  suspend: {{ .Values.suspend }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  workflowSpec:
+    entrypoint: digest
+    activeDeadlineSeconds: 600
+    serviceAccountName: argo-workflow
+    podMetadata:
+      labels:
+        app.kubernetes.io/name: rfd-rising-deals
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 10001
+      runAsGroup: 10001
+      seccompProfile:
+        type: RuntimeDefault
+    volumes:
+      - name: script
+        configMap:
+          name: rfd-rising-deals-script
+    templates:
+      - name: digest
+        container:
+          image: {{ .Values.image | quote }}
+          command: [python3, /app/digest.py]
+          env:
+            - name: LITELLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rfd-rising-deals-litellm
+                  key: api-key
+            - name: SEND_GOTIFY
+              value: {{ .Values.sendGotify | quote }}
+            - name: GOTIFY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: rfd-rising-deals-gotify
+                  key: token
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: script
+              mountPath: /app
+              readOnly: true

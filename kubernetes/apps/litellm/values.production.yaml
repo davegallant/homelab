@@ -69,13 +69,16 @@ extraResources:
       name: litellm-default-deny
       namespace: litellm
     spec:
-      description: Allow only DNS, OpenRouter HTTPS, and the enricher proxy client.
+      description: Allow DNS, OpenRouter HTTPS, and the approved RFD clients.
       endpointSelector: {}
       ingress:
         - fromEndpoints:
             - matchLabels:
                 k8s:io.kubernetes.pod.namespace: rfd-enrich
                 app.kubernetes.io/name: rfd-enrich
+            - matchLabels:
+                k8s:io.kubernetes.pod.namespace: argo-workflows
+                app.kubernetes.io/name: rfd-rising-deals
           toPorts:
             - ports:
                 - port: "4000"

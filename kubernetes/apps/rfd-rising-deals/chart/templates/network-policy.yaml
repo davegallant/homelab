@@ -1,0 +1,38 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: rfd-rising-deals-egress
+  namespace: argo-workflows
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: rfd-rising-deals
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - {port: "53", protocol: UDP}
+            - {port: "53", protocol: TCP}
+          rules:
+            dns:
+              - matchName: rfd.davegallant.ca
+              - matchName: forums.redflagdeals.com
+              - matchName: gotify.davegallant.ca
+              - matchName: litellm.litellm.svc.cluster.local
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: litellm
+            app.kubernetes.io/name: litellm
+      toPorts:
+        - ports:
+            - {port: "4000", protocol: TCP}
+    - toFQDNs:
+        - matchName: rfd.davegallant.ca
+        - matchName: forums.redflagdeals.com
+        - matchName: gotify.davegallant.ca
+      toPorts:
+        - ports:
+            - {port: "443", protocol: TCP}

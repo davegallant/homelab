@@ -79,6 +79,8 @@ spec:
       kind: CiliumLocalRedirectPolicy
   namespaceResourceWhitelist:
     - group: argoproj.io
+      kind: CronWorkflow
+    - group: argoproj.io
       kind: Application
     - group: gateway.networking.k8s.io
       kind: Gateway
