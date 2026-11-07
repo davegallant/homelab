@@ -1,0 +1,5 @@
+apiVersion: v2
+name: rfd-rising-deals
+description: RFD rising deals workflow
+version: 0.1.0
+type: application

@@ -1,0 +1,4 @@
+schedule: "0 12 * * *"
+timezone: America/Toronto
+suspend: true
+sendGotify: true
