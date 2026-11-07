@@ -15,8 +15,13 @@ Gotify exit handler; price alerts use the existing RFD Gotify token.
 
 The Vault bridge expects `gaswatch_location`, `gaswatch_latitude`,
 `gaswatch_longitude`, `gaswatch_radius_km`, `gaswatch_fuel_grade`,
-`gaswatch_max_price_age_hours`, `gaswatch_favourite_station_ids`, and the
-existing `rfd_rising_deals_gotify_token`. Add the read-only repository token as
+`gaswatch_max_price_age_hours`, `gaswatch_drop_cpl`,
+`gaswatch_drop_lookback_hours`, `gaswatch_hysteresis_cpl`,
+`gaswatch_quiet_hours`, `gaswatch_timeout_seconds`,
+`gaswatch_favourite_station_ids`, and the existing
+`rfd_rising_deals_gotify_token`. Copy the alert tuning values and timeout from
+the current Forgejo Actions variables; set `gaswatch_quiet_hours` to an empty
+string if no quiet window is configured. Add the read-only repository token as
 `gaswatch_forgejo_read_token`. Provision the two Kubernetes Secrets with:
 
 ```sh
