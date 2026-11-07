@@ -30,6 +30,20 @@ controller:
           script:
             image: docker.io/library/python:3.13.9-alpine3.22@sha256:e5fa639e49b85986c4481e28faa2564b45aa8021413f31026c3856e5911618b1
             command: [python3]
+            env:
+              - name: GOTIFY_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: argo-workflows-gotify
+                    key: token
+              - name: WORKFLOW_NAME
+                value: "{{workflow.name}}"
+              - name: WORKFLOW_NAMESPACE
+                value: "{{workflow.namespace}}"
+              - name: WORKFLOW_STATUS
+                value: "{{workflow.status}}"
+              - name: WORKFLOW_DURATION
+                value: "{{workflow.duration}}"
             source: |
               import json
               import os
@@ -65,20 +79,6 @@ controller:
               with urllib.request.urlopen(request, timeout=20) as response:
                   if not 200 <= response.status < 300:
                       raise RuntimeError(f'Gotify returned HTTP {response.status}')
-          env:
-            - name: GOTIFY_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: argo-workflows-gotify
-                  key: token
-            - name: WORKFLOW_NAME
-              value: "{{workflow.name}}"
-            - name: WORKFLOW_NAMESPACE
-              value: "{{workflow.namespace}}"
-            - name: WORKFLOW_STATUS
-              value: "{{workflow.status}}"
-            - name: WORKFLOW_DURATION
-              value: "{{workflow.duration}}"
           securityContext:
             runAsNonRoot: true
             runAsUser: 10001
