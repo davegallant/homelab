@@ -35,8 +35,9 @@ just lint                               # yamllint + ansible-lint + shellcheck
 - **On every pull request**: `lint.yml` (`.github/workflows/`) runs yamllint,
   ansible-lint and shellcheck
 
-There are no unit tests or integration tests. CI runs the actual Ansible playbooks
-against real infrastructure. The vault password is injected from
+Python checks and tests cover repository tooling; `just lint` runs the security
+check self-test and other validation. Deployment CI runs the actual Ansible
+playbooks against real infrastructure. The vault password is injected from
 `secrets.ANSIBLE_VAULT_PASSWORD` via an executable vault password file, so it is
 never written to the runner's disk.
 
