@@ -6,7 +6,7 @@ metadata:
   annotations:
     homelab.davegallant.ca/backup-policy: not-required
 spec:
-  project: homelab
+  project: homelab-platform
   source:
     repoURL: https://github.com/davegallant/homelab.git
     targetRevision: main
@@ -17,7 +17,7 @@ spec:
         - ../values.production.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: rfd-enrich
+    namespace: argo-workflows
   syncPolicy:
     syncOptions:
       - ServerSideApply=true

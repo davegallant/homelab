@@ -4,10 +4,12 @@ image:
   digest: sha256:7926d8103a7b27d9c0d38648e08f9aa20eaf43f39659de960064638ecb468f96
 
 schedule: "*/15 * * * *"
+timezone: Etc/UTC
+suspend: true
 concurrencyPolicy: Forbid
 startingDeadlineSeconds: 300
 activeDeadlineSeconds: 600
-backoffLimit: 1
+retryLimit: 1
 successfulJobsHistoryLimit: 1
 failedJobsHistoryLimit: 2
 
