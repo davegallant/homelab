@@ -6,7 +6,7 @@ timezone: Etc/UTC
 suspend: true
 image:
   repository: ghcr.io/davegallant/rfd-notify
-  tag: "2"
+  tag: "2@sha256:2c646a4305b665966674019887612a7deea46c1082544d0b24031cbdc6db7569"
   digest: sha256:2c646a4305b665966674019887612a7deea46c1082544d0b24031cbdc6db7569
 state:
   claimName: rfd-notify-state
