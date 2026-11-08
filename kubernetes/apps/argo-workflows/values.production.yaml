@@ -11,6 +11,12 @@ crds:
       requests: {cpu: 50m, memory: 64Mi}
       limits: {cpu: 500m, memory: 256Mi}
 controller:
+  metricsConfig:
+    enabled: true
+  serviceAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+    prometheus.io/path: /metrics
   clusterWorkflowTemplates:
     enabled: false
   workflowDefaults:

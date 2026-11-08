@@ -8,6 +8,11 @@ argo-workflows-user --duration=1h` and enter it prefixed with `Bearer `.
 The user can submit workflows that execute containers in this namespace; treat
 the token as an execution credential.
 
+The workflow-controller exposes Prometheus metrics on its metrics Service.
+Alloy discovers the Service through its `prometheus.io/scrape` annotations and
+scrapes `/metrics`; Cilium allows that endpoint only from Alloy. Metrics are
+forwarded to VictoriaMetrics with the rest of the cluster metrics.
+
 The chart's CRD installer needs cluster-level CRD permissions during sync.
 Its controller and server use namespace-scoped roles. Workflow resources live
 in etcd, covered by cluster snapshots; no workflow archive or artifact store is
@@ -33,3 +38,10 @@ Gaswatch and RFD Notify use `local-path` PVCs covered by the
 `argo-workflows-daily` Velero Schedule at 02:55 UTC. The backup includes
 filesystem data and excludes Secrets. Each workload runbook documents its
 state transfer and rollback.
+
+All four CronWorkflows use `concurrencyPolicy: Forbid`: a scheduled occurrence
+is skipped while an earlier run is active, and is not queued. `Replace` would
+terminate active runs; avoid it for Gaswatch and RFD Notify because they update
+PVC-backed state. Memoization is not enabled: current workflows are single-step
+jobs with external refreshes, notifications, or mutable state, so caching a
+completed step would either be ineffective or suppress required work.

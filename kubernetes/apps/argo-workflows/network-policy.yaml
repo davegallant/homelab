@@ -5,6 +5,14 @@ metadata:
   namespace: argo-workflows
 spec:
   endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: alloy
+      toPorts:
+        - ports:
+            - port: "9090"
+              protocol: TCP
   egress:
     - toEntities:
         - kube-apiserver
