@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gaswatch-state-keeper
+  namespace: argo-workflows
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gaswatch-state-keeper
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gaswatch-state-keeper
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: state-keeper
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}@{{ .Values.image.digest }}"
+          imagePullPolicy: IfNotPresent
+          command: [python, -c, "import signal; signal.pause()"]
+          env:
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - import os; p="/state/gaswatch-state.json"; assert os.path.isfile(p) and os.path.getsize(p)>0
+            periodSeconds: 10
+            timeoutSeconds: 2
+          livenessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - import os; assert os.path.ismount("/state")
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 2
+          volumeMounts:
+            - name: state
+              mountPath: /state
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: {{ .Values.state.claimName }}

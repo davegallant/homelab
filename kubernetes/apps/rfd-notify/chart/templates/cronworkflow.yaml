@@ -1,0 +1,73 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: rfd-notify
+  namespace: argo-workflows
+spec:
+  schedules:
+{{ range .Values.schedules }}
+    - {{ . | quote }}
+{{ end }}
+  timezone: {{ .Values.timezone | quote }}
+  suspend: {{ .Values.suspend }}
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 300
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  workflowSpec:
+    entrypoint: notify
+    activeDeadlineSeconds: 300
+    serviceAccountName: argo-workflow
+    podMetadata:
+      labels:
+        app.kubernetes.io/name: rfd-notify
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 10001
+      runAsGroup: 10001
+      fsGroup: 10001
+      seccompProfile:
+        type: RuntimeDefault
+    volumes:
+      - name: config
+        configMap:
+          name: rfd-notify-config
+      - name: state
+        persistentVolumeClaim:
+          claimName: {{ .Values.state.claimName }}
+    templates:
+      - name: notify
+        retryStrategy:
+          limit: "0"
+        container:
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}@{{ .Values.image.digest }}"
+          imagePullPolicy: IfNotPresent
+          command: [/venv/bin/python, /app/rfd_notify/cli.py]
+          args: [--config, /app/config.yml, --storage-path, /state/previous_matches]
+          env:
+            - name: APPRISE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret }}
+                  key: APPRISE_URL
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: config
+              mountPath: /app/config.yml
+              subPath: config.yml
+              readOnly: true
+            - name: state
+              mountPath: /state

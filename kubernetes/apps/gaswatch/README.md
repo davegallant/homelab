@@ -6,10 +6,13 @@ Helm chart. Argo does not clone or authenticate to Forgejo.
 
 The `gaswatch-state` local-path PVC stores `gaswatch-state.json` and the
 GasBuddy token cache. Its PV is pinned to one worker and marked
-`volumeType: local` for Velero filesystem backup. The Argo Workflows daily
-schedule includes the namespace at 02:55 UTC, excludes Kubernetes Secrets, and
-retains backups for 14 days. Workflow failures use the namespace-wide Argo
+`volumeType: local` for Velero filesystem backup. A restricted state-keeper
+Deployment keeps the PVC mounted continuously so the Argo Workflows daily
+schedule can include its volume at 02:55 UTC; the schedule excludes Kubernetes
+Secrets and retains backups for 14 days. Workflow failures use the namespace-wide Argo
 Gotify exit handler; price alerts use a dedicated Gaswatch Gotify token.
+Avoid manual Gaswatch runs during 02:40–03:10 UTC while Velero copies the
+namespace volumes.
 
 The Vault bridge expects `gaswatch_location`, `gaswatch_latitude`,
 `gaswatch_longitude`, `gaswatch_radius_km`, `gaswatch_fuel_grade`,
@@ -40,9 +43,11 @@ just run talos-cluster/gitops-secrets --tags gaswatch-secrets
    copy until a successful Argo run and a Velero backup are verified.
 5. Unsuspend the CronWorkflow, verify one successful run and the state/cache
    files, then verify that a Velero backup contains the PVC data.
-6. Remove the tracked state file from the Gaswatch repository after cutover is
+6. Verify `gaswatch-state-keeper` is Ready and the first daily Velero backup
+   contains a completed, nonzero-byte `PodVolumeBackup` for the PVC.
+7. Remove the tracked state file from the Gaswatch repository after cutover is
    accepted.
-7. Delete the Gaswatch Forgejo repository after confirming the homelab copy
+8. Delete the Gaswatch Forgejo repository after confirming the homelab copy
    contains the required source and tests and the Argo schedule is healthy.
 
 To roll back before deleting the Forgejo repo, suspend Argo first, copy the PVC

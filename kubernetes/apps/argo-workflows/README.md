@@ -28,6 +28,7 @@ and server are Ready, the route is accepted, and the UI and authenticated API
 work through the tailnet URL. Recover workflow definitions from Git and etcd
 snapshots; see [cluster recovery](../../cluster/README.md).
 
-Gaswatch's `local-path` PVC is covered by the `argo-workflows-daily` Velero
-Schedule at 02:55 UTC. The backup includes filesystem data and excludes
-Secrets. The Gaswatch runbook documents its state transfer and rollback.
+Gaswatch and RFD Notify use `local-path` PVCs covered by the
+`argo-workflows-daily` Velero Schedule at 02:55 UTC. The backup includes
+filesystem data and excludes Secrets. Each workload runbook documents its
+state transfer and rollback.

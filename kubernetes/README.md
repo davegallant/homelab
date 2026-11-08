@@ -62,8 +62,12 @@ see [its runbook](apps/arca/README.md).
 RFD enrichment runs as an Argo CronWorkflow; see
 [its runbook](apps/rfd-enrich/README.md).
 
-Gaswatch price checks run as an Argo CronWorkflow; see
+Gaswatch price checks run as an Argo CronWorkflow with a persistent PVC mount
+for daily Velero coverage; see
 [its runbook](apps/gaswatch/README.md).
+
+RFD deal notifications run as an Argo CronWorkflow; see
+[their runbook](apps/rfd-notify/README.md).
 
 ## Platform
 

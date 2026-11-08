@@ -19,6 +19,7 @@ ignore:
   - kubernetes/apps/tailnet-gateway/chart/templates/
   - kubernetes/apps/rfd-rising-deals/chart/templates/
   - kubernetes/apps/gaswatch/chart/templates/
+  - kubernetes/apps/rfd-notify/chart/templates/
 
 rules:
   # Playbook main.yml files start with ---; shared task files and

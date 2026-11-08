@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rfd-notify-state-keeper
+  namespace: argo-workflows
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rfd-notify-state-keeper
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: rfd-notify-state-keeper
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: state-keeper
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}@{{ .Values.image.digest }}"
+          imagePullPolicy: IfNotPresent
+          command: [/venv/bin/python, -c, "import signal; signal.pause()"]
+          env:
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            exec:
+              command:
+                - /venv/bin/python
+                - -c
+                - import os; p="/state/previous_matches"; assert os.path.isfile(p) and os.path.getsize(p)>0
+            periodSeconds: 10
+            timeoutSeconds: 2
+          livenessProbe:
+            exec:
+              command:
+                - /venv/bin/python
+                - -c
+                - import os; assert os.path.ismount("/state")
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 2
+          volumeMounts:
+            - name: state
+              mountPath: /state
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: {{ .Values.state.claimName }}

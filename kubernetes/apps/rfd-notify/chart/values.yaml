@@ -1,0 +1,16 @@
+schedules:
+  - "*/5 0-1,4-23 * * *"
+  - "0-40/5 2 * * *"
+  - "10-55/5 3 * * *"
+timezone: Etc/UTC
+suspend: true
+image:
+  repository: ghcr.io/davegallant/rfd-notify
+  tag: "2"
+  digest: sha256:2c646a4305b665966674019887612a7deea46c1082544d0b24031cbdc6db7569
+state:
+  claimName: rfd-notify-state
+  size: 64Mi
+  storageClassName: local-path
+  volumeType: local
+runtimeSecret: rfd-notify-runtime-external
