@@ -17,9 +17,10 @@ persistent data. The namespace default egress permits DNS and Kubernetes API
 access; grant other destinations narrowly for each workload.
 
 The controller applies a default exit handler and sends a Gotify message only
-when a workflow ends Failed or Error. Provision its credential from Ansible
-Vault with `just run talos-cluster/gitops-secrets --tags
-argo-workflows-gotify-secret`. Only the notifier pod has Cilium egress to
+when a workflow ends Failed or Error. Provision its dedicated
+`argo_workflows_gotify_token` credential from Ansible Vault with
+`just run talos-cluster/gitops-secrets --tags argo-workflows-gotify-secret`.
+Only the notifier pod has Cilium egress to
 Gotify; workflow failure details are omitted from the message.
 
 Provision the namespace from `namespace.yaml` before syncing the Application.

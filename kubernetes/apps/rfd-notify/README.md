@@ -22,10 +22,11 @@ workflow. Provision it after the namespace exists with
 `just run talos-cluster/gitops-secrets --tags rfd-notify-secrets` and the
 intended `talos_kube_context` extra var.
 
-The runtime Secret's `APPRISE_URL` is built from the shared
-`rfd_notify_gotify_token` Vault value. That same value provisions the existing
-RFD rising-deals and Argo Workflows failure-notification Secrets. Gaswatch
-continues to use its separate token. Only the workflow pod can egress to DNS,
+The runtime Secret's `APPRISE_URL` is built from the
+`rfd_notify_gotify_token` Vault value, also used by RFD rising-deals. Argo
+Workflows failure notifications use a separate `argo_workflows_gotify_token`
+Vault value. Gaswatch continues to use its separate token. Only the workflow
+pod can egress to DNS,
 `forums.redflagdeals.com`, and `gotify.davegallant.ca` over HTTPS.
 Avoid manual workflow submissions from 02:40 through 03:10 UTC while Velero
 backs up the namespace and state files.
