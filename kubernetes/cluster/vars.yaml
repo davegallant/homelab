@@ -4,6 +4,8 @@
 talos_version: v1.14.5
 talos_iso_filename: metal-amd64-v1.14.5.iso
 talos_iso_sha256: 1505108d78e6260e2a586ced144b928478d70e2424b45f890f5f18a82d30f754
+# renovate: datasource=custom.kubernetes depName=kubernetes/kubernetes versioning=semver
+kubernetes_version: 1.37.2
 talos_proxmox_iso_storage: proxmox-iso
 talos_proxmox_bridge: vmbr0
 talos_cluster_name: homelab
