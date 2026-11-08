@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gaswatch-source
+  namespace: argo-workflows
+data:
+  gaswatch.py: |-
+{{ .Files.Get "files/gaswatch.py" | indent 4 }}
+  requirements.txt: |-
+{{ .Files.Get "files/requirements.txt" | indent 4 }}
