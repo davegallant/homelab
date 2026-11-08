@@ -7,8 +7,12 @@ runs the pinned upstream `ghcr.io/davegallant/rfd-notify:2` image in the
 `argo-workflows` namespace. The workflow is initially suspended for a staged
 state transfer and scheduler cutover.
 
-The configuration is stored in the chart's ConfigMap. Match history remains
-the upstream Python `shelve` database on the `rfd-notify-state` PVC. The PVC
+The expression list is kept in the live `rfd-notify-config` ConfigMap in
+`argo-workflows`; it is intentionally not stored in Git. Edit it with
+`kubectl --context homelab -n argo-workflows edit configmap rfd-notify-config`.
+The ConfigMap is included in the `argo-workflows-daily` Velero backup. New
+workflow pods read the edited ConfigMap on startup. Match history remains the
+upstream Python `shelve` database on the `rfd-notify-state` PVC. The PVC
 uses `local-path` with `volumeType: local`; it binds to one worker and is
 mounted by a restricted state-keeper Deployment so the existing
 `argo-workflows-daily` Velero schedule at 02:55 UTC can consistently see it.
@@ -156,7 +160,8 @@ failure may therefore leave the Workflow successful and will not trigger the
 global Argo failure notification.
 
 For restore, provision the Secret from Vault, restore the `argo-workflows`
-Velero backup's `rfd-notify-state` volume to a new local-path PVC with
+Velero backup's `rfd-notify-config` ConfigMap and `rfd-notify-state` volume to
+a new local-path PVC with
 `volumeType: local`, verify its worker binding, and then resume the CronWorkflow.
 If rolling back, suspend the Argo CronWorkflow, copy the latest PVC state back
 to Forgejo's `previous_matches`, verify the file opens, and only then restore
