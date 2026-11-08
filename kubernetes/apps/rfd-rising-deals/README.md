@@ -5,10 +5,11 @@ pages, and asks the existing in-cluster LiteLLM proxy to format a digest. It
 runs daily at noon America/Toronto, with overlapping runs forbidden. It does
 not persist application state. The feed is cached and may lag the forum.
 
-Production runs send the digest to Gotify. The job does not retry a Gotify
-POST, because a timeout can leave delivery uncertain. Override `sendGotify`
-to `false` for a run that only prints the digest. The chart defaults to a
-suspended schedule; production values explicitly enable it.
+Production runs send the digest to Gotify. The workflow makes one Gotify POST
+and does not retry failed runs, because a timeout can leave delivery uncertain
+and a retry could send a duplicate. Override `sendGotify` to `false` for a run
+that only prints the digest. The chart defaults to a suspended schedule;
+production values explicitly enable it.
 
 The namespace-scoped Secrets are provisioned from Vault using the
 `rfd-rising-deals-secret` tag of `gitops-secrets.yml`. The shared RFD Gotify

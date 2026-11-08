@@ -9,7 +9,7 @@ suspend: true
 concurrencyPolicy: Forbid
 startingDeadlineSeconds: 300
 activeDeadlineSeconds: 600
-retryLimit: 1
+retryLimit: 3
 successfulJobsHistoryLimit: 1
 failedJobsHistoryLimit: 2
 

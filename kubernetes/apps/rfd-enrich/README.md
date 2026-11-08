@@ -6,6 +6,9 @@ image and uses the in-cluster LiteLLM endpoint with `gpt-6-luna`. The workflow
 has no persistent volume; its refresh credentials are provisioned from Ansible
 Vault into the namespace Secret `rfd-enrich-runtime-external`.
 
+Failed enrichment attempts are retried up to three times (four attempts total),
+within the workflow's 10-minute deadline.
+
 Provision the Secret with `just run talos-cluster/gitops-secrets --tags
 rfd-enrich-secrets`. The workflow pod's Cilium policy allows DNS, the RFD API
 over HTTPS, and LiteLLM on TCP 4000. Keep the runtime Secret and workflow
