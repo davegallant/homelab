@@ -10,17 +10,19 @@ GasBuddy token cache. Its PV is pinned to one worker and marked
 `volumeType: local` for Velero filesystem backup. The Argo Workflows daily
 schedule includes the namespace at 02:55 UTC, excludes Kubernetes Secrets, and
 retains backups for 14 days. Workflow failures use the namespace-wide Argo
-Gotify exit handler; price alerts use the existing RFD Gotify token.
+Gotify exit handler; price alerts use a dedicated Gaswatch Gotify token.
 
 The Vault bridge expects `gaswatch_location`, `gaswatch_latitude`,
 `gaswatch_longitude`, `gaswatch_radius_km`, `gaswatch_fuel_grade`,
 `gaswatch_max_price_age_hours`, `gaswatch_drop_cpl`,
 `gaswatch_drop_lookback_hours`, `gaswatch_hysteresis_cpl`,
 `gaswatch_quiet_hours`, `gaswatch_timeout_seconds`,
-`gaswatch_favourite_station_ids`, and the existing
-`rfd_rising_deals_gotify_token`. Copy the alert tuning values and timeout from
+`gaswatch_favourite_station_ids`, and `gaswatch_gotify_token`. Copy the alert
+tuning values and timeout from
 the current Forgejo Actions variables; set `gaswatch_quiet_hours` to an empty
-string if no quiet window is configured. Provision the runtime Secret with:
+string if no quiet window is configured. Use a separate Gotify application
+token for Gaswatch; Argo workflow-failure notifications keep their existing
+global token. Provision the runtime Secret with:
 
 ```sh
 just run talos-cluster/gitops-secrets --tags gaswatch-secrets
