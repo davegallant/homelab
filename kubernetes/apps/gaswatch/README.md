@@ -17,11 +17,13 @@ The Vault bridge expects `gaswatch_location`, `gaswatch_latitude`,
 `gaswatch_drop_lookback_hours`, `gaswatch_hysteresis_cpl`,
 `gaswatch_quiet_hours`, `gaswatch_timeout_seconds`,
 `gaswatch_favourite_station_ids`, and `gaswatch_gotify_token`. Copy the alert
-tuning values and timeout from
-the current Forgejo Actions variables; set `gaswatch_quiet_hours` to an empty
-string if no quiet window is configured. Use a separate Gotify application
-token for Gaswatch; Argo workflow-failure notifications keep their existing
-global token. Provision the runtime Secret with:
+tuning values directly in Vault; Vault is the source of truth now that the
+standalone Forgejo repo is retired. The current alert tuning is 4.0¢/L over a
+24-hour lookback with 2.0¢/L hysteresis, quiet hours `23-7`, and a 20-second
+request timeout. Set `gaswatch_quiet_hours` to an empty string to disable quiet
+hours. Use a separate Gotify application token for Gaswatch; Argo
+workflow-failure notifications keep their existing global token. Provision
+the runtime Secret with:
 
 ```sh
 just run talos-cluster/gitops-secrets --tags gaswatch-secrets
