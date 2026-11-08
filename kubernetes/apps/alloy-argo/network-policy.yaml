@@ -5,7 +5,7 @@ metadata:
   name: default-deny
   namespace: alloy
 spec:
-  description: Default deny with Kubernetes discovery, kubelet metrics, Loki, and VictoriaMetrics.
+  description: Default deny with Kubernetes discovery, kubelet, Argo Workflows, Loki, and VictoriaMetrics.
   endpointSelector: {}
   ingress:
     - fromEntities:
@@ -77,6 +77,14 @@ spec:
       toPorts:
         - ports:
             - port: "8428"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: argo-workflows
+            k8s:app.kubernetes.io/name: argo-workflows-workflow-controller
+      toPorts:
+        - ports:
+            - port: "9090"
               protocol: TCP
     - toEndpoints:
         - matchLabels:
