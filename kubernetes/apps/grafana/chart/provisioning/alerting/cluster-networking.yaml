@@ -89,7 +89,7 @@ groups:
         isPaused: false
 
       - uid: coredns_servfail_responses
-        title: CoreDNS returned SERVFAIL responses
+        title: CoreDNS SERVFAIL rate is elevated
         condition: C
         data:
           - refId: A
@@ -103,12 +103,32 @@ groups:
                 uid: victoriametrics
               editorMode: code
               expr: >-
-                sum by (instance) (
-                  increase(coredns_dns_responses_total{
-                    job="prometheus.scrape.annotated_services",
-                    service="kube-dns",
-                    rcode="SERVFAIL"
-                  }[5m])
+                (
+                  sum by (instance) (
+                    increase(coredns_dns_responses_total{
+                      job="prometheus.scrape.annotated_services",
+                      service="kube-dns",
+                      rcode="SERVFAIL"
+                    }[5m])
+                  )
+                )
+                and on (instance)
+                (
+                  sum by (instance) (
+                    increase(coredns_dns_responses_total{
+                      job="prometheus.scrape.annotated_services",
+                      service="kube-dns",
+                      rcode="SERVFAIL"
+                    }[5m])
+                  )
+                  /
+                  sum by (instance) (
+                    increase(coredns_dns_responses_total{
+                      job="prometheus.scrape.annotated_services",
+                      service="kube-dns"
+                    }[5m])
+                  )
+                  > 0.05
                 )
               instant: true
               intervalMs: 1000
@@ -155,11 +175,12 @@ groups:
         execErrState: Error
         for: 5m
         annotations:
-          summary: CoreDNS is returning SERVFAIL responses.
+          summary: CoreDNS is returning an elevated rate of SERVFAIL responses.
           description: >-
-            CoreDNS on {{ $labels.instance }} returned more than 10 SERVFAIL
-            responses in each of the last five minutes. Check CoreDNS logs and
-            the configured upstream resolver.
+            More than 10 responses and over 5% of DNS responses from CoreDNS on
+            {{ $labels.instance }} were SERVFAIL in the last five minutes.
+            Isolated blocked-domain responses are excluded. Check CoreDNS logs
+            and the DNS resolver health checks.
         labels:
           severity: warning
           service: dns

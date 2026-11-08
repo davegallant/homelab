@@ -124,6 +124,30 @@ endpoints:
     url: "{{ adguard_home_url }}"
     <<: *defaults
 
+  - name: adguard-home-dns
+    url: "192.168.1.77"
+    interval: 1m
+    dns:
+      query-name: example.com
+      query-type: A
+    conditions:
+      - "[DNS_RCODE] == NOERROR"
+      - '[BODY] != ""'
+    alerts:
+      - type: gotify
+
+  - name: router-dns
+    url: "192.168.1.1"
+    interval: 1m
+    dns:
+      query-name: example.com
+      query-type: A
+    conditions:
+      - "[DNS_RCODE] == NOERROR"
+      - '[BODY] != ""'
+    alerts:
+      - type: gotify
+
   - name: truenas
     url: "{{ truenas_url }}"
     <<: *defaults
