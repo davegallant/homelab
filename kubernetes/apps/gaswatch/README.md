@@ -1,9 +1,8 @@
 # Gaswatch
 
 Gaswatch checks GasBuddy hourly at minute 17 UTC in the `argo-workflows`
-namespace. The CronWorkflow currently remains suspended pending the state and
-credential handoff. It runs the Python source and pinned dependencies bundled
-in this Helm chart. Argo does not clone or authenticate to Forgejo.
+namespace. It runs the Python source and pinned dependencies bundled in this
+Helm chart. Argo does not clone or authenticate to Forgejo.
 
 The `gaswatch-state` local-path PVC stores `gaswatch-state.json` and the
 GasBuddy token cache. Its PV is pinned to one worker and marked

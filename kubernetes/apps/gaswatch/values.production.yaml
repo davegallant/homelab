@@ -1,6 +1,6 @@
 schedule: "17 * * * *"
 timezone: Etc/UTC
-suspend: true
+suspend: false
 image:
   repository: docker.io/library/python
   tag: 3.13.9-alpine3.22
