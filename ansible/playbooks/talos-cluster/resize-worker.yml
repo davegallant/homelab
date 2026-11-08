@@ -30,12 +30,16 @@
       ansible.builtin.assert:
         that:
           - "('name: ' ~ talos_worker_vm.name) in talos_worker_config.stdout"
+          - talos_worker_vm.memory_mib | int in talos_worker_vm.allowed_memory_mib
           - >-
             (talos_worker_config.stdout | regex_findall('(?m)^memory: ([0-9]+)$')
             | first | int) in talos_worker_vm.allowed_memory_mib
+          - >-
+            (talos_worker_config.stdout | regex_findall('(?m)^memory: ([0-9]+)$')
+            | first | int) <= talos_worker_vm.memory_mib | int
         fail_msg: >-
-          Refusing to resize an unexpected VM or memory size on
-          {{ inventory_hostname }}.
+          Refusing to resize an unexpected VM, unapproved memory target, or
+          shrink memory on {{ inventory_hostname }}.
 
     - name: Require the memory increase plus a 2 GiB host buffer
       ansible.builtin.assert:

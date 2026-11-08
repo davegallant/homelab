@@ -1,0 +1,412 @@
+---
+- name: Resize Talos control-plane memory
+  hosts: pve-g3-1
+  gather_facts: false
+  serial: 1
+  vars_files:
+    - ../../../kubernetes/cluster/vars.yaml
+  vars:
+    talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
+    talos_private_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.local/share/homelab-talos"
+    talos_kubeconfig: >-
+      {{ lookup('ansible.builtin.env', 'KUBECONFIG')
+      | default(lookup('ansible.builtin.env', 'HOME')
+      ~ '/.local/share/homelab-talos/kubeconfig', true) }}
+  tasks:
+    - name: Select the configured control plane on this Proxmox host
+      ansible.builtin.set_fact:
+        talos_control_plane_vms: >-
+          {{ talos_nodes | selectattr('role', 'equalto', 'controlplane')
+          | selectattr('host', 'equalto', inventory_hostname) | list }}
+
+    - name: Require exactly one configured control plane
+      ansible.builtin.assert:
+        that:
+          - talos_control_plane_vms | length == 1
+        fail_msg: >-
+          Refusing to resize because {{ inventory_hostname }} does not have
+          exactly one configured Talos control plane.
+
+    - name: Set the control-plane VM facts
+      ansible.builtin.set_fact:
+        talos_control_plane_vm: "{{ talos_control_plane_vms | first }}"
+
+    - name: Require allowed memory targets in the Talos sizing inventory
+      ansible.builtin.assert:
+        that:
+          - talos_control_plane_vm.memory_mib | int in talos_control_plane_vm.allowed_memory_mib
+        fail_msg: >-
+          Refusing to resize {{ talos_control_plane_vm.name }} because its
+          target memory is missing from allowed_memory_mib in vars.yaml.
+
+    - name: Read the control-plane VM configuration
+      ansible.builtin.command:
+        argv:
+          - qm
+          - config
+          - "{{ talos_control_plane_vm.vmid }}"
+      register: talos_control_plane_config
+      changed_when: false
+
+    - name: Read current control-plane memory and CPU
+      ansible.builtin.set_fact:
+        talos_control_plane_current_memory_mib: >-
+          {{ talos_control_plane_config.stdout
+          | regex_findall('(?m)^memory: ([0-9]+)$') | first | int }}
+        talos_control_plane_current_vcpu: >-
+          {{ talos_control_plane_config.stdout
+          | regex_findall('(?m)^cores: ([0-9]+)$') | first | int }}
+
+    - name: Read the control-plane VM state
+      ansible.builtin.command:
+        argv:
+          - qm
+          - status
+          - "{{ talos_control_plane_vm.vmid }}"
+      register: talos_control_plane_status
+      changed_when: false
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Require the control-plane VM to be running before a resize
+      ansible.builtin.assert:
+        that:
+          - "'status: running' in talos_control_plane_status.stdout"
+        fail_msg: Refusing to resize a control-plane VM that is not running.
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Require expected VM identity and recorded CPU sizing
+      ansible.builtin.assert:
+        that:
+          - "('name: ' ~ talos_control_plane_vm.name) in talos_control_plane_config.stdout"
+          - talos_control_plane_current_vcpu | int == talos_control_plane_vm.vcpu | int
+          - talos_control_plane_current_memory_mib | int in talos_control_plane_vm.allowed_memory_mib
+          - talos_control_plane_current_memory_mib | int <= talos_control_plane_vm.memory_mib | int
+        fail_msg: >-
+          Refusing to resize an unexpected VM, CPU size, memory size, or shrink
+          {{ talos_control_plane_vm.name }}. Reconcile vars.yaml and the live VM first.
+
+    - name: Require explicit approval for a control-plane shutdown
+      ansible.builtin.assert:
+        that:
+          - talos_control_plane_resize_approved | default(false) | bool
+        fail_msg: >-
+          A control-plane memory change interrupts the Kubernetes API. Rerun
+          with -e talos_control_plane_resize_approved=true after approval.
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Read available Proxmox host memory
+      ansible.builtin.command:
+        argv: [cat, /proc/meminfo]
+      register: talos_control_plane_host_meminfo
+      changed_when: false
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Require the memory increase plus a 2 GiB host reserve
+      ansible.builtin.assert:
+        that:
+          - >-
+            (((talos_control_plane_host_meminfo.stdout_lines
+            | select('match', '^MemAvailable:') | first).split()[1] | int) / 1024)
+            >= (talos_control_plane_vm.memory_mib | int
+            - talos_control_plane_current_memory_mib | int + 2048)
+        fail_msg: >-
+          Insufficient available host RAM on {{ inventory_hostname }} to resize
+          {{ talos_control_plane_vm.name }} and retain the 2 GiB reserve.
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Read the Proxmox local date for the VM backup gate
+      ansible.builtin.command:
+        argv: [date, +%Y_%m_%d]
+      register: talos_control_plane_local_date
+      changed_when: false
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: List off-host VM backups
+      ansible.builtin.command:
+        argv: [pvesm, list, proxmox-backups, --content, backup]
+      register: talos_control_plane_backups
+      changed_when: false
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Require a same-day off-host backup of the control plane
+      ansible.builtin.assert:
+        that:
+          - >-
+            talos_control_plane_backups.stdout is search(
+            'vzdump-qemu-' ~ talos_control_plane_vm.vmid ~ '-'
+            ~ (talos_control_plane_local_date.stdout | trim))
+        fail_msg: >-
+          No same-day off-host backup exists for VM {{ talos_control_plane_vm.vmid }}.
+          Create and verify a backup of this VM before resizing it.
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Find a recent off-host etcd snapshot
+      ansible.builtin.command:
+        argv:
+          - find
+          - /mnt/pve/proxmox-backups/private/talos
+          - -maxdepth
+          - "1"
+          - -type
+          - f
+          - -name
+          - etcd-homelab-*.snap
+          - -mmin
+          - -1440
+          - -print
+          - -quit
+      register: talos_control_plane_etcd_snapshot
+      changed_when: false
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Require an etcd snapshot less than 24 hours old
+      ansible.builtin.assert:
+        that:
+          - talos_control_plane_etcd_snapshot.stdout | length > 0
+        fail_msg: Run talos-cluster/snapshot-etcd and verify its off-host copy before resizing.
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Verify the current Kubernetes context
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - config
+          - current-context
+      environment:
+        KUBECONFIG: "{{ talos_kubeconfig }}"
+      delegate_to: localhost
+      register: talos_control_plane_context
+      changed_when: false
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Verify the Kubernetes API is the expected cluster
+      ansible.builtin.command:
+        argv: [kubectl, cluster-info]
+      environment:
+        KUBECONFIG: "{{ talos_kubeconfig }}"
+      delegate_to: localhost
+      register: talos_control_plane_cluster_info
+      changed_when: false
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Require the expected Kubernetes API endpoint
+      ansible.builtin.assert:
+        that:
+          - talos_control_plane_context.stdout | length > 0
+          - talos_control_plane_cluster_info.stdout is search(talos_control_plane_vm.address ~ ':6443')
+        fail_msg: Refusing to resize because the current Kubernetes context is not the expected cluster.
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Read Kubernetes node readiness
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - nodes
+          - -o
+          - 'jsonpath={range .items[*]}{.metadata.name}={.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}'
+      environment:
+        KUBECONFIG: "{{ talos_kubeconfig }}"
+      delegate_to: localhost
+      register: talos_control_plane_node_readiness
+      changed_when: false
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Require the expected Talos nodes to be Ready
+      ansible.builtin.assert:
+        that:
+          - >-
+            (talos_control_plane_node_readiness.stdout_lines
+            | map('regex_replace', '=True$', '') | list | sort)
+            == (talos_nodes | map(attribute='name') | list | sort)
+          - >-
+            (talos_control_plane_node_readiness.stdout_lines
+            | select('search', '=True$') | list | length) == (talos_nodes | length)
+        fail_msg: Refusing to resize while a Talos node is not Ready or is missing.
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Read Argo CD Application health
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - applications.argoproj.io
+          - -n
+          - argocd
+          - -o
+          - 'jsonpath={range .items[*]}{.metadata.name}={.status.sync.status}/{.status.health.status}{"\n"}{end}'
+      environment:
+        KUBECONFIG: "{{ talos_kubeconfig }}"
+      delegate_to: localhost
+      register: talos_control_plane_application_health
+      changed_when: false
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Require every Argo CD Application to be Synced and Healthy
+      ansible.builtin.assert:
+        that:
+          - talos_control_plane_application_health.stdout_lines | length > 0
+          - >-
+            (talos_control_plane_application_health.stdout_lines
+            | select('search', '=Synced/Healthy$') | list | length)
+            == (talos_control_plane_application_health.stdout_lines | length)
+        fail_msg: Refusing to resize while any Argo CD Application is not Synced and Healthy.
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Verify Talos cluster health before the resize
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - health
+          - --nodes
+          - "{{ talos_control_plane_vm.address }}"
+          - --endpoints
+          - "{{ talos_control_plane_vm.address }}"
+          - --talosconfig
+          - "{{ talos_private_dir }}/base/talosconfig"
+          - --wait-timeout
+          - 5m
+      delegate_to: localhost
+      register: talos_control_plane_health_before
+      changed_when: false
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Shut down the control plane for a cold memory resize
+      ansible.builtin.command:
+        argv:
+          - qm
+          - shutdown
+          - "{{ talos_control_plane_vm.vmid }}"
+          - --timeout
+          - "120"
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+      changed_when: true
+
+    - name: Wait for the control-plane VM to stop
+      ansible.builtin.command:
+        argv:
+          - qm
+          - status
+          - "{{ talos_control_plane_vm.vmid }}"
+      register: talos_control_plane_status
+      until: "'status: stopped' in talos_control_plane_status.stdout"
+      retries: 24
+      delay: 5
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+      changed_when: false
+
+    - name: Set the control-plane memory from the Talos sizing inventory
+      ansible.builtin.command:
+        argv:
+          - qm
+          - set
+          - "{{ talos_control_plane_vm.vmid }}"
+          - --memory
+          - "{{ talos_control_plane_vm.memory_mib }}"
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+      changed_when: true
+
+    - name: Verify the configured control-plane memory before starting
+      ansible.builtin.command:
+        argv:
+          - qm
+          - config
+          - "{{ talos_control_plane_vm.vmid }}"
+      register: talos_control_plane_config_after_resize
+      changed_when: false
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Require Proxmox to report the inventory memory target
+      ansible.builtin.assert:
+        that:
+          - "('name: ' ~ talos_control_plane_vm.name) in talos_control_plane_config_after_resize.stdout"
+          - >-
+            talos_control_plane_config_after_resize.stdout is search(
+            '(?m)^memory: ' ~ (talos_control_plane_vm.memory_mib | string) ~ '$')
+        fail_msg: Proxmox did not report the requested memory; leaving the VM stopped for inspection.
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Start the resized control plane
+      ansible.builtin.command:
+        argv:
+          - qm
+          - start
+          - "{{ talos_control_plane_vm.vmid }}"
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+      changed_when: true
+
+    - name: Wait for the control-plane VM to run
+      ansible.builtin.command:
+        argv:
+          - qm
+          - status
+          - "{{ talos_control_plane_vm.vmid }}"
+      register: talos_control_plane_status
+      until: "'status: running' in talos_control_plane_status.stdout"
+      retries: 24
+      delay: 5
+      changed_when: false
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Verify Talos cluster health after the resize
+      ansible.builtin.command:
+        argv:
+          - "{{ talosctl_binary }}"
+          - health
+          - --nodes
+          - "{{ talos_control_plane_vm.address }}"
+          - --endpoints
+          - "{{ talos_control_plane_vm.address }}"
+          - --talosconfig
+          - "{{ talos_private_dir }}/base/talosconfig"
+          - --wait-timeout
+          - 10m
+      delegate_to: localhost
+      register: talos_control_plane_health_after
+      changed_when: false
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Wait for all Kubernetes nodes to become Ready
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - wait
+          - --for=condition=Ready
+          - nodes
+          - --all
+          - --timeout=10m
+      environment:
+        KUBECONFIG: "{{ talos_kubeconfig }}"
+      delegate_to: localhost
+      register: talos_control_plane_nodes_after
+      until: talos_control_plane_nodes_after.rc == 0
+      retries: 60
+      delay: 10
+      changed_when: false
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Read Argo CD Application health after the resize
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - applications.argoproj.io
+          - -n
+          - argocd
+          - -o
+          - 'jsonpath={range .items[*]}{.metadata.name}={.status.sync.status}/{.status.health.status}{"\n"}{end}'
+      environment:
+        KUBECONFIG: "{{ talos_kubeconfig }}"
+      delegate_to: localhost
+      register: talos_control_plane_application_health_after
+      until: >-
+        talos_control_plane_application_health_after.rc == 0
+        and talos_control_plane_application_health_after.stdout_lines | length > 0
+        and
+          (talos_control_plane_application_health_after.stdout_lines
+          | select('search', '=Synced/Healthy$') | list | length)
+          == (talos_control_plane_application_health_after.stdout_lines | length)
+      retries: 60
+      delay: 10
+      changed_when: false
+      when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int

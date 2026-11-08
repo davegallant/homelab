@@ -102,9 +102,35 @@ listed in the generated config.
 
 ### VM sizing change
 
-Resize workers through `resize-worker.yml` (see the sizing paragraph above).
-Check Proxmox host availability first and retain the 2 GiB host memory
-reserve. A disk resize does not relocate node-local PVCs.
+`vars.yaml` is the source of truth for Talos VM sizing. Update the affected
+node's target there before changing its Proxmox VM: `memory_mib` for RAM,
+`vcpu` for CPU, and `disk_gib` for the system disk. These are Proxmox settings,
+not fields in the generated Talos machine configuration. The memory and disk
+resize playbooks read their inventory targets, check the live VM against them,
+and refuse unrecognized drift or a memory shrink. There is no automated vCPU
+resize playbook yet.
+
+Use `resize-worker.yml` for worker memory and `resize-control-plane.yml` for
+control-plane memory. A control-plane memory change requires an explicit
+`-e talos_control_plane_resize_approved=true`; it shuts down the single control
+plane and interrupts the Kubernetes API until Talos and Kubernetes recover.
+The playbook requires the expected cluster, all nodes Ready, all Applications
+Synced/Healthy, a same-day off-host VM backup, an etcd snapshot less than 24
+hours old, and enough Proxmox memory to preserve the 2 GiB host reserve. After
+restarting, it verifies Talos health, node readiness, and Application health.
+
+For a control-plane memory resize, update `memory_mib` and
+`allowed_memory_mib` in `vars.yaml`, then run:
+
+```sh
+just run talos-cluster/snapshot-etcd
+ssh pve-g3-1 'vzdump 142 --storage proxmox-backups --mode snapshot --compress zstd'
+just run talos-cluster/resize-control-plane -e talos_control_plane_resize_approved=true
+```
+
+Use the target node's `host` and `vmid` from `vars.yaml` in the backup
+command. Do not use the all-node `backup-now` playbook when only one VM needs a
+fresh backup. A disk resize does not relocate node-local PVCs.
 
 ### Talos OS upgrade (one node at a time, workers first)
 

@@ -286,6 +286,12 @@ secret.
 - Homepage's local PVCs and Pod are pinned to `k8s-w-1`. Proxmox VM backups
   cover those disks; an off-host etcd snapshot covers cluster state. Read the
   recovery constraints in the cluster README before restoring a VM.
+- Before any Talos VM resize, update the node's desired `vcpu`, `memory_mib`,
+  or `disk_gib` in `kubernetes/cluster/vars.yaml`; keep `allowed_memory_mib`
+  aligned with the current and target memory sizes. Use the guarded resize
+  playbook for the resource being changed. Proxmox sizing is not part of the
+  generated Talos machine config. Control-plane memory changes require the
+  dedicated playbook, its health/backup gates, and explicit reboot approval.
 - Render Kubernetes Secrets from Ansible Vault into protected temporary files
   through the apply playbook. Keep secret values out of Git and command output.
 - Alloy's Talos DaemonSet reads pod logs through the Kubernetes API with a
