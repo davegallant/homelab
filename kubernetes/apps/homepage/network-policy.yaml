@@ -5,7 +5,7 @@ metadata:
   name: default-deny
   namespace: homepage
 spec:
-  description: Default deny with Homepage widget egress and restricted public ports.
+  description: Default deny with required service egress and restricted public ports.
   endpointSelector: {}
   ingress:
     - fromEndpoints:
@@ -31,12 +31,6 @@ spec:
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: homepage
-    - toEntities:
-        - world
-      toPorts:
-        - ports:
-            - port: "443"
-              protocol: TCP
     - toCIDR:
         - 192.168.1.16/32
       toPorts:

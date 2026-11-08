@@ -10,9 +10,6 @@ quicklaunch:
   hideInternetSearch: true
   hideVisitURL: true
 
-providers:
-  openweathermap: "{% raw %}{{HOMEPAGE_VAR_OPENWEATHERMAP_API_KEY}}{% endraw %}"
-
 layout:
   Infrastructure:
     style: row
