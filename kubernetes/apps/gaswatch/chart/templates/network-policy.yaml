@@ -4,7 +4,7 @@ metadata:
   name: gaswatch-egress
   namespace: argo-workflows
 spec:
-  description: Allow Gaswatch to reach DNS, Forgejo, PyPI, GasBuddy, and Gotify.
+  description: Allow Gaswatch to reach DNS, PyPI, GasBuddy, and Gotify.
   endpointSelector:
     matchLabels:
       app.kubernetes.io/name: gaswatch
@@ -22,13 +22,11 @@ spec:
               protocol: TCP
           rules:
             dns:
-              - matchName: forgejo.davegallant.ca
               - matchName: pypi.org
               - matchName: files.pythonhosted.org
               - matchName: www.gasbuddy.com
               - matchName: gotify.davegallant.ca
     - toFQDNs:
-        - matchName: forgejo.davegallant.ca
         - matchName: pypi.org
         - matchName: files.pythonhosted.org
         - matchName: www.gasbuddy.com

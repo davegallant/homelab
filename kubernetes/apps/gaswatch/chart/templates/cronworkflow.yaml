@@ -26,6 +26,9 @@ spec:
       seccompProfile:
         type: RuntimeDefault
     volumes:
+      - name: source
+        configMap:
+          name: gaswatch-source
       - name: state
         persistentVolumeClaim:
           claimName: {{ .Values.state.claimName }}
@@ -35,20 +38,6 @@ spec:
       - name: run-gaswatch
         retryStrategy:
           limit: "0"
-        inputs:
-          artifacts:
-            - name: source
-              path: /workspace
-              git:
-                repo: {{ .Values.source.repoURL | quote }}
-                revision: {{ .Values.source.revision | quote }}
-                depth: 1
-                usernameSecret:
-                  name: {{ .Values.repositorySecret }}
-                  key: username
-                passwordSecret:
-                  name: {{ .Values.repositorySecret }}
-                  key: token
         container:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}@{{ .Values.image.digest }}"
           imagePullPolicy: IfNotPresent
@@ -137,6 +126,9 @@ spec:
             capabilities:
               drop: [ALL]
           volumeMounts:
+            - name: source
+              mountPath: /workspace
+              readOnly: true
             - name: state
               mountPath: /state
             - name: tmp

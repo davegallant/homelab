@@ -1,9 +1,6 @@
 schedule: "17 * * * *"
 timezone: Etc/UTC
 suspend: true
-source:
-  repoURL: https://forgejo.davegallant.ca/dave/gaswatch.git
-  revision: 10ab68cbd02d3ab8d94a45f2032d30d8bfe0769c
 image:
   repository: docker.io/library/python
   tag: 3.13.9-alpine3.22
@@ -14,4 +11,3 @@ state:
   storageClassName: local-path
   volumeType: local
 runtimeSecret: gaswatch-runtime-external
-repositorySecret: gaswatch-repository-read
