@@ -13,6 +13,11 @@ crds:
 controller:
   metricsConfig:
     enabled: true
+    secure: false
+  podAnnotations:
+    # Metrics server TLS is configured at controller startup; bump this to roll
+    # the controller when metrics settings change.
+    homelab.davegallant.ca/metrics-config-revision: "1"
   serviceAnnotations:
     prometheus.io/scrape: "true"
     prometheus.io/port: "9090"
