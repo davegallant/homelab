@@ -10,3 +10,4 @@ resources:
   - headlamp-route.yaml
   - freshrss-route.yaml
   - invidious-route.yaml
+  - searxng-route.yaml

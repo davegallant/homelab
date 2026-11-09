@@ -1,16 +1,21 @@
----
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
   name: default-deny
-  namespace: searxng
+  namespace: {{ .Release.Namespace }}
 spec:
   description: Default deny with cluster DNS, same-namespace access, and explicit internal-range denies.
   endpointSelector: {}
   ingress:
     - fromEndpoints:
         - matchLabels:
-            k8s:io.kubernetes.pod.namespace: searxng
+            k8s:io.kubernetes.pod.namespace: {{ .Release.Namespace }}
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
   egress:
     - toEndpoints:
         - matchLabels:
@@ -24,7 +29,7 @@ spec:
               protocol: TCP
     - toEndpoints:
         - matchLabels:
-            k8s:io.kubernetes.pod.namespace: searxng
+            k8s:io.kubernetes.pod.namespace: {{ .Release.Namespace }}
   egressDeny:
     - toCIDR:
         - 192.168.1.0/24

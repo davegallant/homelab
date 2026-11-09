@@ -54,6 +54,8 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: headlamp
     - server: https://kubernetes.default.svc
+      namespace: searxng
+    - server: https://kubernetes.default.svc
       namespace: invidious
     - server: https://kubernetes.default.svc
       namespace: freshrss
