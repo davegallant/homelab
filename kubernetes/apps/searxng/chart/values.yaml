@@ -1,5 +1,5 @@
 # Default values for the searxng chart.
-# Secret-bearing values (settings.secretKey, newt credentials) ship empty and
+# Secret-bearing values (settings.secretKey) ship empty and
 # are supplied at deploy time from Ansible Vault -- see
 # ../values.secrets.yaml.j2 and playbooks/talos-cluster/searxng.yml.
 
@@ -32,8 +32,7 @@ valkey:
       cpu: 250m
       memory: 256Mi
 
-# The Newt sidecar owns the Pangolin site identity. The production values
-# enable it; keep this default disabled for chart rendering without secrets.
+# Legacy optional Newt values remain disabled in production.
 newt:
   # Existing Secret keys: PANGOLIN_ENDPOINT, NEWT_ID, NEWT_SECRET.
   existingSecret: ""

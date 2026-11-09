@@ -50,7 +50,7 @@
       muse: [tag:external]
       nanoclaw: [tag:nanoclaw]
       paperless-ngx: [tag:monitored, tag:pangolin]
-      searxng: [tag:monitored, tag:pangolin]
+      searxng: [tag:monitored]
       umami: [tag:monitored, tag:pangolin]
       upsnap: [tag:monitored]
   tasks:

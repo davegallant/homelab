@@ -1,19 +1,6 @@
 ---
-# One playbook for the whole SearXNG lifecycle on Talos. The Helm chart
-# (kubernetes/apps/searxng/chart) owns the in-cluster packaging; this
-# playbook owns the choreography Helm cannot do: Vault-rendered values,
-# functional verification, and the LXC <-> cluster cutover of the Pangolin
-# Newt identity.
-#
-# Actions (pass with -e searxng_action=<action>):
-#   stage    (default) install/upgrade the release with Newt disabled,
-#            verify it in-cluster, and take a first Velero backup.
-#   verify   re-run the in-cluster verification only.
-#   cutover  stage + verify, stop the LXC stack, enable Newt in the
-#            cluster, and gate on the public health endpoint (needs -e
-#            searxng_public_url=https://...).
-#   rollback re-assert the release with Newt disabled, restart the LXC
-#            stack, and gate on the public health endpoint.
+# Retired lifecycle playbook. Argo CD owns the SearXNG release; the only
+# supported action here is read-only verification.
 - name: Manage SearXNG on Talos Kubernetes
   hosts: localhost
   connection: local
@@ -22,7 +9,7 @@
     - ../../group_vars/all/vars.yaml
     - ../../group_vars/all/secrets.yaml
   vars:
-    searxng_action: stage
+    searxng_action: verify
     searxng_public_url: ""
     searxng_chart_dir: "{{ playbook_dir }}/../../../kubernetes/apps/searxng/chart"
   vars_prompt:
@@ -41,8 +28,8 @@
     - name: Require a known action
       ansible.builtin.assert:
         that:
-          - searxng_action in ['stage', 'verify', 'cutover', 'rollback']
-        fail_msg: "searxng_action must be one of stage, verify, cutover, rollback."
+          - searxng_action == 'verify'
+        fail_msg: "SearXNG is Argo CD managed; only searxng_action=verify is supported."
 
     - name: Require the SearXNG Vault variables
       ansible.builtin.assert:

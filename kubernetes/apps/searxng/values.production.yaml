@@ -1,11 +1,4 @@
 ---
-newt:
-  enabled: true
-  existingSecret: searxng-newt-external
-  resources:
-    requests:
-      cpu: 5m
-      memory: 24Mi
 searxng:
   resources:
     requests:
