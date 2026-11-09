@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unmanic
+  labels:
+    app.kubernetes.io/name: unmanic
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: unmanic
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: unmanic
+      annotations:
+        backup.velero.io/backup-volumes: config
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: {{ .Values.nodeHostname | quote }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ .Values.uid }}
+        runAsGroup: {{ .Values.gid }}
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: unmanic
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}@{{ .Values.image.digest }}"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: {{ .Values.uid }}
+            runAsGroup: {{ .Values.gid }}
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: PUID
+              value: {{ .Values.uid | quote }}
+            - name: PGID
+              value: {{ .Values.gid | quote }}
+            - name: UMASK
+              value: "002"
+            - name: TZ
+              value: America/Toronto
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+          startupProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+              ephemeral-storage: 1Gi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+              ephemeral-storage: 10Gi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: media
+              mountPath: /library
+              subPath: tdarr-test
+            - name: cache
+              mountPath: /tmp/unmanic
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: unmanic-config
+        - name: media
+          persistentVolumeClaim:
+            claimName: unmanic-media
+        - name: cache
+          emptyDir:
+            sizeLimit: 8Gi
+        - name: tmp
+          emptyDir:
+            sizeLimit: 512Mi

@@ -1,13 +1,12 @@
 apiVersion: velero.io/v1
 kind: Schedule
 metadata:
-  name: tdarr-daily
+  name: unmanic-daily
   namespace: velero
   labels:
-    app.kubernetes.io/instance: tdarr
+    app.kubernetes.io/instance: unmanic
     app.kubernetes.io/managed-by: ArgoCD
-    app.kubernetes.io/name: tdarr
-    helm.sh/chart: tdarr-1.0.0
+    app.kubernetes.io/name: unmanic
 spec:
   paused: false
   schedule: 30 6 * * *
@@ -17,7 +16,7 @@ spec:
     excludedResources:
       - secrets
     includedNamespaces:
-      - tdarr
+      - unmanic
     snapshotVolumes: false
     storageLocation: default
     ttl: 336h

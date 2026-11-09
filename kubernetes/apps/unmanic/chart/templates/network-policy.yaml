@@ -1,20 +1,19 @@
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: tdarr
+  name: unmanic
 spec:
-  description: Restrict Tdarr to the tailnet Gateway, cluster DNS, and the Cinema NFS export.
+  description: Restrict Unmanic to the tailnet Gateway, cluster DNS, and Cinema NFS export.
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: tdarr
-      app.kubernetes.io/instance: tdarr
+      app.kubernetes.io/name: unmanic
   ingress:
     - fromEntities:
         - host
         - ingress
       toPorts:
         - ports:
-            - port: "8265"
+            - port: "8888"
               protocol: TCP
   egress:
     - toEndpoints:
@@ -32,6 +31,12 @@ spec:
       toPorts:
         - ports:
             - port: "2049"
+              protocol: TCP
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "443"
               protocol: TCP
   egressDeny:
     - toCIDRSet:

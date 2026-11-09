@@ -1,13 +1,10 @@
----
-# Tdarr uses the same Cinema mergerfs pool as Jellyfin, but has a separate
-# writable claim for files it transcodes. Jellyfin's claim remains read-only.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: tdarr-media
+  name: unmanic-media
 spec:
   capacity:
-    storage: 1Ti # nominal; NFS reports the export's real size
+    storage: 1Ti
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
@@ -18,7 +15,7 @@ spec:
     - noatime
   csi:
     driver: nfs.csi.k8s.io
-    volumeHandle: cinema-tdarr-media
+    volumeHandle: cinema-unmanic-media
     volumeAttributes:
       server: 192.168.1.83
       share: /mnt/pool
@@ -26,13 +23,13 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: tdarr-media
-  namespace: tdarr
+  name: unmanic-media
+  namespace: unmanic
 spec:
   accessModes:
     - ReadWriteMany
   storageClassName: ""
-  volumeName: tdarr-media
+  volumeName: unmanic-media
   resources:
     requests:
       storage: 1Ti

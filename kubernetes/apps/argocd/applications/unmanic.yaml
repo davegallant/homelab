@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: tdarr
+  name: unmanic
   namespace: argocd
   annotations:
     homelab.davegallant.ca/backup-policy: scheduled
@@ -10,14 +10,14 @@ spec:
   source:
     repoURL: https://github.com/davegallant/homelab.git
     targetRevision: main
-    path: kubernetes/apps/tdarr/chart
+    path: kubernetes/apps/unmanic/chart
     helm:
-      releaseName: tdarr
+      releaseName: unmanic
       valueFiles:
         - ../values.production.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: tdarr
+    namespace: unmanic
   syncPolicy:
     syncOptions:
       - ServerSideApply=true

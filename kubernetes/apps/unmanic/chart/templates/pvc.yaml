@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: tdarr-cache
+  name: unmanic-config
   annotations:
     volumeType: local
 spec:
@@ -10,4 +10,4 @@ spec:
   storageClassName: local-path
   resources:
     requests:
-      storage: {{ .Values.transcodeCacheSize }}
+      storage: {{ .Values.storageSize }}

@@ -59,6 +59,9 @@ server; see [its runbook](apps/headplane/README.md).
 Arca runs as a tailnet-only web archiver with local SQLite/archive storage;
 see [its runbook](apps/arca/README.md).
 
+Unmanic is a tailnet-only media optimizer scoped to the isolated test copy;
+see [its runbook](apps/unmanic/README.md).
+
 RFD enrichment runs as an Argo CronWorkflow; see
 [its runbook](apps/rfd-enrich/README.md).
 

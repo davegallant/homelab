@@ -28,6 +28,7 @@ headplane_url: "https://headplane.tail.davegallant.ca"
 headlamp_url: "https://headlamp.tail.davegallant.ca"
 argo_workflows_url: "https://argo-workflows.tail.davegallant.ca"
 invidious_url: "https://invidious.tail.davegallant.ca"
+unmanic_url: "https://unmanic.tail.davegallant.ca"
 
 # Headscale tailnet IPv4 allocation range.
 headscale_v4_prefix: "100.100.0.0/16"

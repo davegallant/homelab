@@ -1,14 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: tdarr
-  labels:
-    app.kubernetes.io/name: tdarr
+  name: unmanic
 spec:
   type: ClusterIP
   selector:
-    app.kubernetes.io/name: tdarr
-    app.kubernetes.io/instance: tdarr
+    app.kubernetes.io/name: unmanic
   ports:
     - name: http
       port: {{ .Values.port }}

@@ -1,6 +1,0 @@
-apiVersion: v2
-name: tdarr
-description: Tdarr server and internal CPU worker for the Jellyfin media library
-type: application
-version: 1.0.0
-appVersion: "3.01.00"

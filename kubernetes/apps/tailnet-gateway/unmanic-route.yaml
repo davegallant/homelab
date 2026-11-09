@@ -1,8 +1,8 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: tdarr
-  namespace: tdarr
+  name: unmanic
+  namespace: unmanic
 spec:
   parentRefs:
     - name: tailnet-gateway
@@ -11,15 +11,15 @@ spec:
       namespace: tailnet-gateway
       sectionName: https
   hostnames:
-    - tdarr.tail.davegallant.ca
+    - unmanic.tail.davegallant.ca
   rules:
     - matches:
         - path:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: tdarr
+        - name: unmanic
           group: ""
           kind: Service
-          port: 8265
+          port: 8888
           weight: 1

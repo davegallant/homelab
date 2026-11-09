@@ -120,6 +120,10 @@ endpoints:
     url: "{{ jellyfin_url }}"
     <<: *defaults
 
+  - name: unmanic
+    url: "{{ unmanic_url }}"
+    <<: *defaults
+
   - name: adguard-home
     url: "{{ adguard_home_url }}"
     <<: *defaults

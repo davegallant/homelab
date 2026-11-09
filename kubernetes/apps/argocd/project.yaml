@@ -88,7 +88,7 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: freshrss
     - server: https://kubernetes.default.svc
-      namespace: tdarr
+      namespace: unmanic
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
     - group: apps
