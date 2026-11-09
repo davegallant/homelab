@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate an RFD digest and optionally deliver it to Gotify."""
+import gzip
 import json
 import os
 import re
@@ -105,7 +106,10 @@ def main():
             request = Request(item['url'], headers={'User-Agent': 'curl/8.7.1'})
             with urlopen(request, timeout=10) as response:
                 final = urlparse(response.geturl())
-                body = response.read(65536)
+                if response.headers.get('Content-Encoding') == 'gzip':
+                    body = gzip.GzipFile(fileobj=response).read(65536)
+                else:
+                    body = response.read(65536)
                 if (response.status != 200 or final.hostname != 'forums.redflagdeals.com'
                         or not re.search(rf'(?<!\d){item["id"]}(?!\d)', final.path)
                         or b'<title>' not in body.lower() or str(item['id']).encode() not in body):
@@ -115,8 +119,8 @@ def main():
             print(f"Skipping topic {item['id']}: {type(exc).__name__}", file=sys.stderr)
         if len(selected) == 5:
             break
-    if len(selected) < 5:
-        raise ValueError('fewer than five verified eligible topics')
+    if len(selected) < 3:
+        raise ValueError('fewer than three verified eligible topics')
     key = os.environ['LITELLM_API_KEY']
     endpoint = os.environ.get('LITELLM_BASE_URL', 'http://litellm.litellm.svc.cluster.local:4000/v1').rstrip('/')
     instruction = ('Return only a JSON array, one object per input, with id, title and price. '
