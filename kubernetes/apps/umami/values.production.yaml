@@ -3,7 +3,7 @@
 # Active workload definition: this file; the LXC Compose stack is retired.
 # (app ghcr.io/umami-software/umami 3.4.0, port 3000; database
 # docker.io/postgres 18.6 as a second container in the same pod, the
-# Miniflux in-pod database pattern).
+# single-purpose PostgreSQL sidecar pattern).
 # Public via Pangolin: the retired LXC paired the app with a Newt sidecar,
 # reproduced in-pod with the *same* Newt identity, so the existing
 # Pangolin route and public URL carry over unchanged. Do not rewrite

@@ -103,7 +103,6 @@ skips Alloy and Beszel. Kubernetes uses an Alloy DaemonSet for pod logs.
 
 | Service | Description |
 |---|---|
-| [Miniflux](https://miniflux.app) | Minimalist RSS reader |
 | [Kiwix](https://kiwix.org) | Offline access to Wikipedia, Stack Overflow, and more |
 | [Maloja](https://github.com/krateng/maloja) | Self-hosted scrobbling server (Last.fm alternative) |
 | [LubeLogger](https://lubelogger.com) | Vehicle maintenance tracker |

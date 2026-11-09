@@ -184,10 +184,6 @@ endpoints:
     url: "{{ romm_url }}"
     <<: *defaults
 
-  - name: miniflux
-    url: "{{ miniflux_url }}"
-    <<: *defaults
-
   - name: paperless-ngx
     url: "{{ paperless_ngx_url }}"
     <<: *defaults

@@ -33,8 +33,6 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: kiwix
     - server: https://kubernetes.default.svc
-      namespace: miniflux
-    - server: https://kubernetes.default.svc
       namespace: searxng
     - server: https://kubernetes.default.svc
       namespace: seerr

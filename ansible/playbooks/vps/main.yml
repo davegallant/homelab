@@ -47,7 +47,6 @@
       jellyfin: [tag:monitored, tag:pangolin]
       kratos: [tag:external]
       mcleod: [tag:external, tag:beszel-agent]
-      miniflux: [tag:monitored, tag:pangolin]
       muse: [tag:external]
       nanoclaw: [tag:nanoclaw]
       paperless-ngx: [tag:monitored, tag:pangolin]

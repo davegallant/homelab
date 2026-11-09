@@ -139,10 +139,6 @@
         icon: umami
         href: "{% raw %}{{HOMEPAGE_VAR_UMAMI_URL}}{% endraw %}"
         description: Analytics
-    - Miniflux:
-        href: "{% raw %}{{HOMEPAGE_VAR_MINIFLUX_URL}}{% endraw %}"
-        description: RSS
-        icon: miniflux
     - paperless-ngx:
         icon: paperless-ngx
         href: "{% raw %}{{HOMEPAGE_VAR_PAPERLESS_NGX_URL}}{% endraw %}"

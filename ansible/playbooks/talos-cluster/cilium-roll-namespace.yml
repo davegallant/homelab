@@ -17,7 +17,6 @@
       lubelogger: "https://lubelogger.{{ headscale_magic_dns_domain }}/"
       seerr: "https://seerr.{{ headscale_magic_dns_domain }}/"
       changedetection: "https://changedetection.{{ headscale_magic_dns_domain }}/"
-      miniflux: "{{ miniflux_url }}"
       searxng: "{{ searxng_url }}"
       bentopdf: "{{ bentopdf_url }}"
   tasks:
