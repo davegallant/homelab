@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: searxng
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
 spec:
   replicas: 1
   strategy:
@@ -102,39 +104,10 @@ spec:
               subPath: searxng
             - name: tmp
               mountPath: /tmp
-        {{- if .Values.newt.enabled }}
-        - name: newt
-          image: {{ .Values.newt.image }}
-          imagePullPolicy: IfNotPresent
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            capabilities:
-              drop:
-                - ALL
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-          env:
-            - name: HOME
-              value: /tmp
-            - name: XDG_CONFIG_HOME
-              value: /tmp/.config
-          envFrom:
-            - secretRef:
-                name: {{ .Values.newt.existingSecret | default "searxng-newt" | quote }}
-          volumeMounts:
-            - name: newt-tmp
-              mountPath: /tmp
-          resources:
-            {{- toYaml .Values.newt.resources | nindent 12 }}
-        {{- end }}
       volumes:
         - name: cache
           emptyDir: {}
         - name: tmp
-          emptyDir: {}
-        - name: newt-tmp
           emptyDir: {}
         - name: searxng-settings
           secret:
