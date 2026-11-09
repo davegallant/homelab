@@ -123,6 +123,10 @@
         icon: bentopdf
         href: "{% raw %}{{HOMEPAGE_VAR_BENTOPDF_URL}}{% endraw %}"
         description: PDF tools
+    - FreshRSS:
+        icon: freshrss
+        href: "https://freshrss.tail.davegallant.ca"
+        description: Feed reader
     - Arca:
         icon: archivebox
         href: "https://arca.{{ headscale_magic_dns_domain }}/"
