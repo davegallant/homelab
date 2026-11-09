@@ -121,7 +121,7 @@ endpoints:
     <<: *defaults
 
   - name: unmanic
-    url: "{{ unmanic_url }}"
+    url: "{{ unmanic_url }}/unmanic/ui/dashboard/"
     <<: *defaults
 
   - name: adguard-home
