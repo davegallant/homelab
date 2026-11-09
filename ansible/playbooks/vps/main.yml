@@ -12,6 +12,13 @@
     # match the live value or existing sessions/tokens break.
     pangolin_base_domain: "davegallant.ca"
     pangolin_letsencrypt_email: "davegallant@proton.me"
+    # DNS-only Cloudflare records point at this VPS; keep aligned with its public address.
+    pangolin_vps_public_ipv4: "72.11.149.242"
+    pangolin_public_dns_records:
+      - name: "mealie.{{ pangolin_base_domain }}"
+        type: A
+        content: "{{ pangolin_vps_public_ipv4 }}"
+        proxied: false
     # Plain SSH via ~/.ssh/config (no Tailscale on this host). Explicit: the
     # other playbooks rely on Tailscale SSH and never set this.
     ansible_user: root
@@ -136,8 +143,48 @@
         state: enabled
         policy: deny
 
+    - name: Require the Cloudflare credential for Pangolin DNS
+      ansible.builtin.assert:
+        that:
+          - cloudflare_dns_api_token is defined
+          - cloudflare_dns_api_token | length > 0
+
+    - name: Find the Cloudflare zone for Pangolin DNS records
+      ansible.builtin.uri:
+        url: "https://api.cloudflare.com/client/v4/zones?name={{ pangolin_base_domain }}"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ cloudflare_dns_api_token }}"
+          Content-Type: application/json
+        return_content: true
+        status_code: 200
+      delegate_to: localhost
+      register: pangolin_cloudflare_zone
+      changed_when: false
+      no_log: true
+
+    - name: Require one matching Cloudflare zone
+      ansible.builtin.assert:
+        that:
+          - pangolin_cloudflare_zone.json.success
+          - pangolin_cloudflare_zone.json.result | length == 1
+          - pangolin_cloudflare_zone.json.result[0].name == pangolin_base_domain
+
+    - name: Ensure Pangolin public DNS records
+      ansible.builtin.include_tasks:
+        file: pangolin-dns-record.yml
+      loop: "{{ pangolin_public_dns_records }}"
+      loop_control:
+        loop_var: pangolin_dns_record
+        label: "{{ pangolin_dns_record.name }}"
+      vars:
+        pangolin_cloudflare_zone_id: "{{ pangolin_cloudflare_zone.json.result[0].id }}"
+
     - ansible.builtin.include_tasks:
         file: ../../tasks/docker-compose-up.yml
+
+    - name: Apply pending restarts after stack reconciliation
+      ansible.builtin.meta: flush_handlers
 
     - name: Restart Headscale after configuration changes # noqa: no-handler
       community.docker.docker_container:
@@ -262,3 +309,10 @@
     - name: Set up automated VPS state backups
       ansible.builtin.include_role:
         name: vps_backup
+
+  handlers:
+    - name: Restart Traefik after Pangolin DNS records change
+      community.docker.docker_container:
+        name: traefik
+        state: started
+        restart: true

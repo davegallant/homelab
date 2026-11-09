@@ -43,6 +43,8 @@ spec:
               value: "1000"
             - name: TZ
               value: America/Toronto
+            - name: BASE_URL
+              value: {{ required "mealie.baseUrl must be set" .Values.mealie.baseUrl | quote }}
             - name: DB_ENGINE
               value: sqlite
           ports:

@@ -1,2 +1,5 @@
 newt:
   existingSecret: mealie-newt-external
+
+mealie:
+  baseUrl: https://mealie.davegallant.ca

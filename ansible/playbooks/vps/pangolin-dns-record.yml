@@ -1,0 +1,87 @@
+- name: Read the existing Pangolin DNS record
+  ansible.builtin.uri:
+    url: "https://api.cloudflare.com/client/v4/zones/{{ pangolin_cloudflare_zone_id }}/dns_records?name={{ pangolin_dns_record.name }}"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ cloudflare_dns_api_token }}"
+      Content-Type: application/json
+    return_content: true
+    status_code: 200
+  delegate_to: localhost
+  register: pangolin_existing_dns_record
+  changed_when: false
+  no_log: true
+
+- name: Reject conflicting Pangolin DNS records
+  ansible.builtin.assert:
+    that:
+      - pangolin_existing_dns_record.json.success
+      - >-
+        pangolin_existing_dns_record.json.result | length == 0 or
+        (pangolin_existing_dns_record.json.result | length == 1 and
+        pangolin_existing_dns_record.json.result[0].type == pangolin_dns_record.type and
+        pangolin_existing_dns_record.json.result[0].content == pangolin_dns_record.content and
+        pangolin_existing_dns_record.json.result[0].proxied == pangolin_dns_record.proxied)
+    fail_msg: "A conflicting Cloudflare record exists for {{ pangolin_dns_record.name }}."
+
+- name: Create the Pangolin DNS record
+  ansible.builtin.uri:
+    url: "https://api.cloudflare.com/client/v4/zones/{{ pangolin_cloudflare_zone_id }}/dns_records"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ cloudflare_dns_api_token }}"
+      Content-Type: application/json
+    body_format: json
+    body:
+      type: "{{ pangolin_dns_record.type }}"
+      name: "{{ pangolin_dns_record.name }}"
+      content: "{{ pangolin_dns_record.content }}"
+      ttl: 1
+      proxied: "{{ pangolin_dns_record.proxied }}"
+      comment: Managed by the homelab VPS playbook
+    return_content: true
+    status_code: 200
+  delegate_to: localhost
+  register: pangolin_created_dns_record
+  changed_when: pangolin_created_dns_record.json.success
+  notify: Restart Traefik after Pangolin DNS records change
+  when: pangolin_existing_dns_record.json.result | length == 0
+  no_log: true
+
+- name: Verify the Pangolin DNS record
+  ansible.builtin.uri:
+    url: "https://api.cloudflare.com/client/v4/zones/{{ pangolin_cloudflare_zone_id }}/dns_records?name={{ pangolin_dns_record.name }}"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ cloudflare_dns_api_token }}"
+      Content-Type: application/json
+    return_content: true
+    status_code: 200
+  delegate_to: localhost
+  register: pangolin_verified_dns_record
+  changed_when: false
+  no_log: true
+
+- name: Confirm the Pangolin DNS target
+  ansible.builtin.assert:
+    that:
+      - pangolin_verified_dns_record.json.success
+      - pangolin_verified_dns_record.json.result | length == 1
+      - pangolin_verified_dns_record.json.result[0].type == pangolin_dns_record.type
+      - pangolin_verified_dns_record.json.result[0].content == pangolin_dns_record.content
+      - pangolin_verified_dns_record.json.result[0].proxied == pangolin_dns_record.proxied
+
+- name: Wait for the Pangolin DNS record to resolve publicly
+  ansible.builtin.command:
+    argv:
+      - dig
+      - +short
+      - "@1.1.1.1"
+      - "{{ pangolin_dns_record.name }}"
+      - "{{ pangolin_dns_record.type }}"
+  delegate_to: localhost
+  register: pangolin_public_dns_lookup
+  changed_when: false
+  until: pangolin_dns_record.content in pangolin_public_dns_lookup.stdout_lines
+  retries: 24
+  delay: 5
