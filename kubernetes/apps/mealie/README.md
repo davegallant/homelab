@@ -2,9 +2,8 @@
 
 Mealie runs on Talos as a single replica using SQLite in `/app/data`. The PVC
 uses `local-path` with `volumeType: local`, is Velero-backed by the
-`mealie-daily` Schedule, and pins the workload to the worker where that volume
-is provisioned. Mealie and Newt share a pod; Pangolin routes to the pod's
-HTTP service at `127.0.0.1:9000`.
+`mealie-daily` Schedule, and pins the workload to `k8s-w-1`. Mealie and Newt
+share a pod; Pangolin routes to the pod's HTTP service at `127.0.0.1:9000`.
 
 Create a Mealie site in Pangolin and put its ID and secret in Ansible Vault as
 `mealie_newt_id` and `mealie_newt_secret`. The shared `pangolin_endpoint` is

@@ -16,6 +16,8 @@ spec:
         app.kubernetes.io/name: mealie
     spec:
       automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: k8s-w-1
       securityContext:
         seccompProfile:
           type: RuntimeDefault
