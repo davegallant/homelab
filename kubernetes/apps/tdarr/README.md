@@ -12,8 +12,9 @@ replace the original file; test a few copied files and inspect the results
 before processing the live library. The `/temp` transcode cache is ephemeral
 and is not a backup of source media.
 
-Tdarr server state is stored on the Velero-backed local PVC. The daily backup
-covers that state only; the NFS media share remains outside Velero.
+Tdarr server state is stored on the Velero-backed local PVC. The transcode
+cache is a separate local PVC and is excluded from Velero backups. Both are
+local to `k8s-w-1`; the NFS media share remains outside Velero.
 
 Before syncing, provision the namespace and `tdarr-auth` Secret with
 `just run talos-cluster/gitops-secrets`, then apply `storage.yaml`. Sync the

@@ -20,4 +20,4 @@ resources:
   limits:
     cpu: "2"
     memory: 2Gi
-    ephemeral-storage: 25Gi
+    ephemeral-storage: 2Gi
