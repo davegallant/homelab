@@ -79,6 +79,9 @@ extraResources:
             - matchLabels:
                 k8s:io.kubernetes.pod.namespace: argo-workflows
                 app.kubernetes.io/name: rfd-rising-deals
+            - matchLabels:
+                k8s:io.kubernetes.pod.namespace: mealie
+                app.kubernetes.io/name: mealie
           toPorts:
             - ports:
                 - port: "4000"
