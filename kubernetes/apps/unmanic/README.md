@@ -11,6 +11,10 @@ Velero backup. Worker cache is ephemeral. The NFS media PVC uses `Retain` and is
 not part of Velero backups; it exposes only the test directory through a pod
 `subPath`. The original movie remains in Jellyfin's library, untouched.
 
+Unmanic requests one Intel GPU share and uses Quick Sync for HEVC encoding.
+The Intel GPU device plugin allows two containers per worker GPU for batch
+transcoding; this can contend with Jellyfin's real-time transcodes.
+
 No credentials or external Secrets are required. The pod runs as UID/GID 1000,
 with a restricted security context and a Cilium policy allowing only tailnet
 Gateway ingress, cluster DNS, and NFS to `192.168.1.83:2049`.

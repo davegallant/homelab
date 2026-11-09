@@ -75,6 +75,7 @@ spec:
               cpu: "2"
               memory: 2Gi
               ephemeral-storage: 10Gi
+              gpu.intel.com/i915: 1
           volumeMounts:
             - name: config
               mountPath: /config
