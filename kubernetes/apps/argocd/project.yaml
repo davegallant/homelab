@@ -41,6 +41,8 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: maloja
     - server: https://kubernetes.default.svc
+      namespace: mealie
+    - server: https://kubernetes.default.svc
       namespace: changedetection
     # Batch B: the NFS media tier (authored 2026-10-22).
     - server: https://kubernetes.default.svc

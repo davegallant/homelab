@@ -1,0 +1,16 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: mealie-daily
+  namespace: velero
+  labels:
+    app.kubernetes.io/managed-by: ArgoCD
+spec:
+  paused: false
+  schedule: 0 3 * * *
+  skipImmediately: false
+  template:
+    defaultVolumesToFsBackup: true
+    includedNamespaces:
+      - mealie
+    ttl: 336h
