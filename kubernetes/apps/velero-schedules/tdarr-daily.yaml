@@ -1,0 +1,23 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: tdarr-daily
+  namespace: velero
+  labels:
+    app.kubernetes.io/instance: tdarr
+    app.kubernetes.io/managed-by: ArgoCD
+    app.kubernetes.io/name: tdarr
+    helm.sh/chart: tdarr-1.0.0
+spec:
+  paused: false
+  schedule: 30 6 * * *
+  skipImmediately: false
+  template:
+    defaultVolumesToFsBackup: false
+    excludedResources:
+      - secrets
+    includedNamespaces:
+      - tdarr
+    snapshotVolumes: false
+    storageLocation: default
+    ttl: 336h

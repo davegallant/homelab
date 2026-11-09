@@ -1,0 +1,25 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: tdarr
+  namespace: tdarr
+spec:
+  parentRefs:
+    - name: tailnet-gateway
+      group: gateway.networking.k8s.io
+      kind: Gateway
+      namespace: tailnet-gateway
+      sectionName: https
+  hostnames:
+    - tdarr.tail.davegallant.ca
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: tdarr
+          group: ""
+          kind: Service
+          port: 8265
+          weight: 1

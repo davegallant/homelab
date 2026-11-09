@@ -11,3 +11,4 @@ resources:
   - freshrss-route.yaml
   - invidious-route.yaml
   - searxng-route.yaml
+  - tdarr-route.yaml

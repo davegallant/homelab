@@ -87,6 +87,8 @@ spec:
       namespace: arca
     - server: https://kubernetes.default.svc
       namespace: freshrss
+    - server: https://kubernetes.default.svc
+      namespace: tdarr
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
     - group: apps

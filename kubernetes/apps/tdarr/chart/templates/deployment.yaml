@@ -1,0 +1,152 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tdarr
+  labels:
+    app.kubernetes.io/name: tdarr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tdarr
+      app.kubernetes.io/instance: tdarr
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tdarr
+        app.kubernetes.io/instance: tdarr
+      annotations:
+        backup.velero.io/backup-volumes: data
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: {{ .Values.nodeHostname | quote }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ .Values.uid }}
+        runAsGroup: {{ .Values.gid }}
+        fsGroup: 0
+        fsGroupChangePolicy: OnRootMismatch
+        supplementalGroups:
+          - 0
+          - {{ .Values.mediaGid }}
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: tdarr
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}@{{ .Values.image.digest }}"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: {{ .Values.uid }}
+            runAsGroup: {{ .Values.gid }}
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: serverIP
+              value: 0.0.0.0
+            - name: serverPort
+              value: {{ .Values.serverPort | quote }}
+            - name: webUIPort
+              value: {{ .Values.port | quote }}
+            - name: internalNode
+              value: "true"
+            - name: startPaused
+              value: "true"
+            - name: nodeName
+              value: {{ .Values.nodeName | quote }}
+            - name: inContainer
+              value: "true"
+            - name: ffmpegVersion
+              value: "7"
+            - name: auth
+              value: "true"
+            - name: apiKey
+              valueFrom:
+                secretKeyRef:
+                  name: tdarr-auth
+                  key: apiKey
+            - name: openBrowser
+              value: "false"
+            - name: PUID
+              value: {{ .Values.uid | quote }}
+            - name: PGID
+              value: {{ .Values.gid | quote }}
+            - name: UMASK
+              value: "002"
+            - name: TZ
+              value: {{ .Values.timezone | quote }}
+            - name: HOME
+              value: /tmp
+            - name: TMPDIR
+              value: /tmp
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+            - name: server
+              containerPort: {{ .Values.serverPort }}
+              protocol: TCP
+          startupProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /app/server
+              subPath: server
+            - name: data
+              mountPath: /app/configs
+              subPath: configs
+            - name: data
+              mountPath: /app/logs
+              subPath: logs
+            - name: cache
+              mountPath: /temp
+            - name: tmp
+              mountPath: /tmp
+            - name: runtime
+              mountPath: /run
+            - name: home
+              mountPath: /home/Tdarr
+            - name: media
+              mountPath: /media
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: tdarr-data
+        - name: cache
+          emptyDir:
+            sizeLimit: {{ .Values.transcodeCacheSize }}
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi
+        - name: runtime
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
+        - name: home
+          emptyDir:
+            sizeLimit: 256Mi
+        - name: media
+          persistentVolumeClaim:
+            claimName: tdarr-media
