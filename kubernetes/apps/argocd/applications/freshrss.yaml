@@ -1,0 +1,25 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: freshrss
+  namespace: argocd
+  annotations:
+    homelab.davegallant.ca/backup-policy: scheduled
+spec:
+  project: homelab
+  source:
+    repoURL: https://github.com/davegallant/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/freshrss/chart
+    helm:
+      releaseName: freshrss
+      valueFiles:
+        - ../values.production.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: freshrss
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true

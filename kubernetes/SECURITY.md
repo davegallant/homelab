@@ -13,6 +13,12 @@ those controls separately and mount tokens only for workloads that need API
 access. Reviewed exceptions and their reasons are in
 [`pod-security-exceptions.yaml`](pod-security-exceptions.yaml).
 
+FreshRSS is the reviewed namespace-scoped `baseline` exception: its upstream
+image requires a root startup process to configure Apache, PHP, data
+permissions, and its refresh cron, then change Apache workers to `www-data`.
+Its pod disables privilege escalation and uses RuntimeDefault seccomp. Runtime
+default capabilities remain enabled so Apache can change worker identity.
+
 Workload-specific constraints to preserve during changes and restores:
 
 - Immich PostgreSQL needs a writable root filesystem for its entrypoint.

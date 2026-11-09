@@ -85,6 +85,8 @@ spec:
       namespace: litellm
     - server: https://kubernetes.default.svc
       namespace: arca
+    - server: https://kubernetes.default.svc
+      namespace: freshrss
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
     - group: apps

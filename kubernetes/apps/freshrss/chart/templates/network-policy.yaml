@@ -1,0 +1,46 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: freshrss-default-deny
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: freshrss
+  ingress:
+    - fromEntities:
+        - ingress
+        - host
+      toPorts:
+        - ports:
+            - port: "{{ .Values.port }}"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+            - port: "443"
+              protocol: TCP
+  egressDeny:
+    - toCIDRSet:
+        - cidr: 10.0.0.0/8
+          except:
+            - 10.96.0.10/32
+            - 10.245.0.0/16
+    - toCIDR:
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 100.64.0.0/10
+        - 169.254.0.0/16

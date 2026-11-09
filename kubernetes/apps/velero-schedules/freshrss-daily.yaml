@@ -1,0 +1,22 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: freshrss-daily
+  namespace: velero
+  labels:
+    app.kubernetes.io/instance: freshrss
+    app.kubernetes.io/managed-by: ArgoCD
+    app.kubernetes.io/name: freshrss
+spec:
+  paused: false
+  schedule: 45 2 * * *
+  skipImmediately: false
+  template:
+    defaultVolumesToFsBackup: false
+    excludedResources:
+      - secrets
+    includedNamespaces:
+      - freshrss
+    snapshotVolumes: false
+    storageLocation: default
+    ttl: 336h

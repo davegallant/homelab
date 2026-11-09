@@ -8,3 +8,4 @@ resources:
   - gateway.yaml
   - headplane-route.yaml
   - headlamp-route.yaml
+  - freshrss-route.yaml

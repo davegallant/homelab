@@ -54,6 +54,7 @@ spec:
                   - speedtest-tracker
                   - headplane
                   - headlamp
+                  - freshrss
       tls:
         mode: Terminate
         certificateRefs:

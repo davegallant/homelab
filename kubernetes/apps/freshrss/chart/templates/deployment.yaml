@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: freshrss
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: freshrss
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: freshrss
+      annotations:
+        backup.velero.io/backup-volumes: data
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: {{ .Values.nodeHostname | quote }}
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: freshrss
+          image: {{ printf "%s:%s@%s" .Values.image.repository .Values.image.tag .Values.image.digest | quote }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TZ
+              value: Etc/UTC
+            - name: LISTEN
+              value: "8080"
+            - name: CRON_MIN
+              value: "7,37"
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 24
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            timeoutSeconds: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
+            readOnlyRootFilesystem: false
+          volumeMounts:
+            - name: data
+              mountPath: /var/www/FreshRSS/data
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: freshrss-data
+        - name: tmp
+          emptyDir: {}
