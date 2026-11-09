@@ -11,6 +11,8 @@ spec:
   skipImmediately: false
   template:
     defaultVolumesToFsBackup: true
+    excludedResources:
+      - secrets
     includedNamespaces:
       - mealie
     ttl: 336h

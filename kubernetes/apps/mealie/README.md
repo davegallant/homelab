@@ -11,6 +11,7 @@ used for the endpoint. Run `just run talos-cluster/gitops-secrets` to provision
 the namespace and `mealie-newt-external` Secret before syncing the Application.
 
 The first scheduled Velero backup remains pending until the workload is
-running. Verify a Completed backup and a nonzero PodVolumeBackup before
-considering its data protected. Read `kubernetes/STORAGE.md` for the required
-volume and backup gates.
+running. The schedule excludes Secrets; recreate Newt credentials from Vault.
+Verify a Completed backup and a nonzero PodVolumeBackup before considering its
+data protected. Read `kubernetes/STORAGE.md` for the required volume and backup
+gates.
