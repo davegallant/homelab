@@ -9,3 +9,4 @@ resources:
   - headplane-route.yaml
   - headlamp-route.yaml
   - freshrss-route.yaml
+  - invidious-route.yaml

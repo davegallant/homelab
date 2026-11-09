@@ -55,6 +55,7 @@ spec:
                   - headplane
                   - headlamp
                   - freshrss
+                  - invidious
       tls:
         mode: Terminate
         certificateRefs:
