@@ -66,3 +66,7 @@ publish-tailnet-caddy:
         --label org.opencontainers.image.source=https://github.com/davegallant/homelab \
         docker/tailnet-caddy
 
+
+# Remove unused images older than 30 days on one explicitly selected Docker host
+prune-images host:
+    cd ansible && ansible "{{ host }}" -i inventory --vault-password-file "${ANSIBLE_VAULT_PASSWORD_FILE:-.vault_pass}" -m community.docker.docker_prune -a '{"images":true,"images_filters":{"dangling":false,"until":"720h"}}'
