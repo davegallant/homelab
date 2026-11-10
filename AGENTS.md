@@ -22,29 +22,16 @@ From the **repo root**:
 just lint                               # yamllint + ansible-lint + shellcheck
 ```
 
-### CI/CD
+### Validation
 
-- **On push to `main` (paths `ansible/**`) and daily via cron**: every playbook
-  runs in a Forgejo Actions matrix (`.forgejo/workflows/run-all-playbooks.yaml`),
-  except playbooks with a `.no-ci` marker file in their directory (e.g. `vps`:
-  the VPS edge box only runs by hand, via `just run main --limit vps`)
-- **Manual dispatch**: run a single playbook by name via `run-single-playbook.yml`
-  (refuses `.no-ci` hosts — those run by hand only)
-- **On compose file changes**: `update-containers-table.yml`
-  (`.github/workflows/`) regenerates the README table
-- **On every pull request**: `lint.yml` (`.github/workflows/`) runs yamllint,
-  ansible-lint and shellcheck
-
-Python checks and tests cover repository tooling; `just lint` runs the security
-check self-test and other validation. Deployment CI runs the actual Ansible
-playbooks against real infrastructure. The vault password is injected from
-`secrets.ANSIBLE_VAULT_PASSWORD` via an executable vault password file, so it is
-never written to the runner's disk.
+This checkout has no CI workflows or Git hooks. Run `just lint` locally to
+check YAML, Ansible, shell scripts, Kubernetes pod security, backup coverage,
+and Renovate configuration. Deployment playbooks are run explicitly with
+`just run`; they are not automatically applied by this repository.
 
 Keep all repository work on local `main`: edit, review, and commit there. Create
 another branch or worktree only when Dave explicitly asks. Push only on explicit
-request; a push to `main` under `ansible/**` applies to live hosts, and the daily
-cron re-applies those changes within 24 hours.
+request.
 
 ## Ansible Playbook Conventions
 
