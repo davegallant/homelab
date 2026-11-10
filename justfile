@@ -36,7 +36,6 @@ run playbook="main" *args:
     set -euo pipefail
     PLAYBOOK="$1"
     shift
-    export KUBECONFIG="${KUBECONFIG:-$HOME/.local/share/homelab-talos/kubeconfig}"
     cd ansible
     if [[ -f "playbooks/$PLAYBOOK.yml" ]]; then
         PLAYBOOK_PATH="playbooks/$PLAYBOOK.yml"
