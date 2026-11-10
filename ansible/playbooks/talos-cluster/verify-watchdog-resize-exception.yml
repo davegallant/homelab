@@ -1,0 +1,43 @@
+- name: Require a reviewed watchdog exception and evidence Job
+  ansible.builtin.assert:
+    that:
+      - talos_control_plane_watchdog_review_reason | default('') | trim | length > 0
+      - talos_control_plane_watchdog_evidence_job | default('') | trim | length > 0
+    fail_msg: Supply the reviewed failure reason and a fresh watchdog evidence Job.
+
+- name: Read the watchdog evidence Job
+  ansible.builtin.command:
+    argv: [kubectl, -n, velero, get, job, "{{ talos_control_plane_watchdog_evidence_job }}", -o, json]
+  environment:
+    KUBECONFIG: "{{ talos_kubeconfig }}"
+  delegate_to: localhost
+  register: talos_watchdog_evidence_job
+  changed_when: false
+
+- name: Read the watchdog schedule
+  ansible.builtin.command:
+    argv: [kubectl, -n, velero, get, cronjob, backup-watchdog, -o, json]
+  environment:
+    KUBECONFIG: "{{ talos_kubeconfig }}"
+  delegate_to: localhost
+  register: talos_watchdog_evidence_cronjob
+  changed_when: false
+
+- name: Read the watchdog evidence report
+  ansible.builtin.command:
+    argv: [kubectl, -n, velero, logs, "job/{{ talos_control_plane_watchdog_evidence_job }}"]
+  environment:
+    KUBECONFIG: "{{ talos_kubeconfig }}"
+  delegate_to: localhost
+  register: talos_watchdog_evidence_report
+  changed_when: false
+
+- name: Verify recent gap-free watchdog evidence
+  ansible.builtin.command:
+    argv: [python3, "{{ playbook_dir }}/../../../scripts/watchdog_resize_gate.py"]
+    stdin: >-
+      {{ {'job': talos_watchdog_evidence_job.stdout | from_json,
+          'cronjob': talos_watchdog_evidence_cronjob.stdout | from_json,
+          'report': talos_watchdog_evidence_report.stdout | from_json} | to_json }}
+  delegate_to: localhost
+  changed_when: false

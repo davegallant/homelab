@@ -33,8 +33,14 @@ is Synced, the failed Job and its cause are identified, the cause is resolved,
 and a fresh watchdog check against live data reports no gaps. Verify current
 backup and volume-backup results independently; a successful manual check does
 not prove the next scheduled run will succeed. Any other degraded Application
-still fails the gate. The control-plane resize playbook enforces a stricter
-all-Healthy gate and does not implement this exception.
+still fails the gate. The control-plane resize playbook defaults to the strict
+gate. To use the exception, provide `talos_control_plane_watchdog_exception=true`,
+`talos_control_plane_watchdog_review_reason` describing the identified and
+resolved failure, and `talos_control_plane_watchdog_evidence_job` naming a
+successful watchdog Job in `velero`. Its gap-free report and completion must
+be less than an hour old and later than the latest scheduled watchdog run.
+The playbook validates the evidence before and after the resize; all other
+Applications must remain Synced and Healthy.
 
 ### Investigating node disk usage
 
@@ -124,9 +130,10 @@ Use `resize-worker.yml` for worker memory and `resize-control-plane.yml` for
 control-plane memory. A control-plane memory change requires an explicit
 `-e talos_control_plane_resize_approved=true`; it shuts down the single control
 plane and interrupts the Kubernetes API until Talos and Kubernetes recover.
-The playbook requires the expected cluster, all nodes Ready, all Applications
-Synced/Healthy, a same-day off-host VM backup, an etcd snapshot less than 24
-hours old, and enough Proxmox memory to preserve the 2 GiB host reserve. After
+The playbook requires the expected cluster, all nodes Ready, Applications
+Synced/Healthy with the reviewed watchdog exception above, a same-day off-host
+VM backup, an etcd snapshot less than 24 hours old, and enough Proxmox memory
+to preserve the 2 GiB host reserve. After
 restarting, it verifies Talos health, node readiness, and Application health.
 
 For a control-plane memory resize, update `memory_mib` and

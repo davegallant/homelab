@@ -242,13 +242,22 @@
       changed_when: false
       when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
 
-    - name: Require every Argo CD Application to be Synced and Healthy
+    - name: Verify the reviewed watchdog exception before the resize
+      ansible.builtin.include_tasks: verify-watchdog-resize-exception.yml
+      when:
+        - talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+        - talos_control_plane_watchdog_exception | default(false) | bool
+        - "'backup-watchdog=Synced/Degraded' in talos_control_plane_application_health.stdout_lines"
+
+    - name: Require Argo CD Applications to meet the health gate
       ansible.builtin.assert:
         that:
           - talos_control_plane_application_health.stdout_lines | length > 0
           - >-
             (talos_control_plane_application_health.stdout_lines
-            | select('search', '=Synced/Healthy$') | list | length)
+            | select('search', '=Synced/Healthy$|^backup-watchdog=Synced/Degraded$'
+              if (talos_control_plane_watchdog_exception | default(false) | bool)
+              else '=Synced/Healthy$') | list | length)
             == (talos_control_plane_application_health.stdout_lines | length)
         fail_msg: Refusing to resize while any Argo CD Application is not Synced and Healthy.
       when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
@@ -404,9 +413,18 @@
         and talos_control_plane_application_health_after.stdout_lines | length > 0
         and
           (talos_control_plane_application_health_after.stdout_lines
-          | select('search', '=Synced/Healthy$') | list | length)
+          | select('search', '=Synced/Healthy$|^backup-watchdog=Synced/Degraded$'
+            if (talos_control_plane_watchdog_exception | default(false) | bool)
+            else '=Synced/Healthy$') | list | length)
           == (talos_control_plane_application_health_after.stdout_lines | length)
       retries: 60
       delay: 10
       changed_when: false
       when: talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+
+    - name: Verify the reviewed watchdog exception after the resize
+      ansible.builtin.include_tasks: verify-watchdog-resize-exception.yml
+      when:
+        - talos_control_plane_current_memory_mib | int != talos_control_plane_vm.memory_mib | int
+        - talos_control_plane_watchdog_exception | default(false) | bool
+        - "'backup-watchdog=Synced/Degraded' in talos_control_plane_application_health_after.stdout_lines"
