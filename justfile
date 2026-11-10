@@ -70,3 +70,11 @@ publish-tailnet-caddy:
 # Remove unused images older than 30 days on one explicitly selected Docker host
 prune-images host:
     cd ansible && ansible "{{ host }}" -i inventory --vault-password-file "${ANSIBLE_VAULT_PASSWORD_FILE:-.vault_pass}" -m community.docker.docker_prune -a '{"images":true,"images_filters":{"dangling":false,"until":"720h"}}'
+
+# Derive service ownership from tracked deployment definitions
+service-inventory:
+    python3 scripts/service_audit.py
+
+# Report retained storage and missing Argo owners using the current cluster context
+retirement-report:
+    python3 scripts/service_audit.py --live
