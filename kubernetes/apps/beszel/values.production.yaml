@@ -5,8 +5,7 @@
 # 1Gi provides growth headroom. Data is local-path + volumeType: local.
 # Tailnet exposure follows Prowlarr: userspace Tailscale -> localhost Caddy.
 # Bootstrap identity uses beszel-k8s; Headscale given_name becomes beszel
-# during cutover. External Secrets: beszel-caddy-external and one-use
-# beszel-tailscale-auth. Never back up or clone the tailnet identity.
+# during cutover. Never back up or clone the tailnet identity.
 controllers:
   beszel:
     type: deployment

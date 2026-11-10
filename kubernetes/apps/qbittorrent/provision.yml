@@ -88,26 +88,6 @@
       changed_when: true
       no_log: true
 
-    - name: Apply the external Caddy credential
-      ansible.builtin.command:
-        argv:
-          [
-            kubectl,
-            --context,
-            "{{ talos_kube_context }}",
-            apply,
-            --server-side,
-            --field-manager=ansible-vault,
-            -f,
-            "-",
-          ]
-        stdin: >-
-          {{ {'apiVersion': 'v1', 'kind': 'Secret',
-              'metadata': {'name': 'qbittorrent-caddy-external', 'namespace': 'qbittorrent'},
-              'type': 'Opaque', 'stringData': {'cloudflare_api_token': cloudflare_dns_api_token}} | to_json }}
-      changed_when: true
-      no_log: true
-
     - name: Check for an existing registration Secret
       ansible.builtin.command:
         argv:

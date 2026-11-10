@@ -57,12 +57,10 @@ headscaleDomain: ""
 
 tailscaleHostname: ""
 
-# HOMEPAGE_VAR_* environment for the homepage-environment Secret
+# HOMEPAGE_VAR_* environment for the external Homepage Secret
 # (widget API keys and service URLs), keyed by variable name.
 homepageEnv: {}
 
-# Cloudflare DNS API token for the homepage-caddy Secret.
-cloudflareApiToken: ""
 
 # Rendered config file contents: config/services.yaml and
 # config/settings.yaml after Ansible templating (Homepage's own
