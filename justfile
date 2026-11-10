@@ -19,7 +19,7 @@ lint:
 
 # Validate the Renovate repository configuration with Renovate's own validator
 lint-renovate:
-    npx --yes --package renovate@41.5.0 -- renovate-config-validator --no-global renovate.json
+    npx --yes --package renovate@41.5.0 -- renovate-config-validator renovate.json
 
 # Install required Ansible Galaxy collections
 setup:
