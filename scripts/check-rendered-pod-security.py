@@ -131,8 +131,6 @@ def inspect(root):
                     continue
                 spec = app.get("spec", {})
                 namespace = spec.get("destination", {}).get("namespace", "default")
-                if namespace not in restricted:
-                    continue
                 sources = spec.get("sources") or [spec.get("source", {})]
                 values_sources = {
                     source["ref"]: root
@@ -144,7 +142,8 @@ def inspect(root):
                     if source.get("ref"):
                         continue
                     rendered.extend(render_source(root, source, namespace, app["metadata"]["name"], values_sources, env))
-                findings.extend(inspect_documents(rendered))
+                if namespace in restricted:
+                    findings.extend(inspect_documents(rendered))
                 for document in rendered:
                     for template_metadata, pod_spec in _CHECKER.workload_pod_spec(document):
                         for group in _CHECKER.CONTAINER_GROUPS:
@@ -155,7 +154,7 @@ def inspect(root):
                                 )
                                 namespace_name = template_metadata.get("namespace", namespace)
                                 workload_name = template_metadata.get("name", app["metadata"]["name"])
-                                for resource in missing_resource_limits(container.get("resources", {})):
+                                for resource in (missing_resource_limits(container.get("resources", {})) if namespace in restricted else []):
                                     findings.append(
                                         "{}/{} {}:{} missing {} limit".format(
                                             namespace_name, workload_name, group, container_name, resource
@@ -192,7 +191,7 @@ def main():
     except (OSError, RuntimeError, yaml.YAMLError) as error:
         print("Pod security render failed: {}".format(error), file=sys.stderr)
         return 2
-    print("Rendered {} applications in Restricted namespaces".format(len(apps)))
+    print("Rendered {} applications for image audit".format(len(apps)))
     if args.audit_image_digests:
         missing = [item for item in images if not image_is_pinned(item[3])]
         print("Rendered containers: {}; missing version tag or SHA-256 digest: {}".format(len(images), len(missing)))

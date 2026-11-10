@@ -14,6 +14,30 @@ SPEC.loader.exec_module(RENDERED_CHECKER)
 
 
 class RenderedPodSecurityTests(unittest.TestCase):
+    def test_image_audit_includes_non_restricted_namespace(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            applications = root / "kubernetes/apps/argocd/applications"
+            manifests = root / "kubernetes/apps/sample/manifests"
+            applications.mkdir(parents=True)
+            manifests.mkdir(parents=True)
+            (applications / "sample.yaml").write_text('''kind: Application
+metadata: {name: sample}
+spec:
+  source: {path: kubernetes/apps/sample/manifests}
+  destination: {namespace: sample}
+''')
+            (manifests / "pod.yaml").write_text('''kind: Pod
+metadata: {name: sample}
+spec:
+  containers:
+    - name: app
+      image: example.invalid/app:1
+''')
+            result = subprocess.run([sys.executable, str(SCRIPT), "--root", str(root)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("image lacks a version tag or SHA-256 digest", result.stdout)
+
     def test_all_rendered_containers_need_cpu_and_memory_limits(self):
         self.assertEqual(
             RENDERED_CHECKER.missing_resource_limits({"limits": {"cpu": "250m", "memory": "128Mi"}}),
