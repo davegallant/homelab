@@ -14,7 +14,7 @@ spec:
     path: kubernetes/apps/kor
   destination:
     server: https://kubernetes.default.svc
-    namespace: velero
+    namespace: kor
   syncPolicy:
     syncOptions:
       - ServerSideApply=true

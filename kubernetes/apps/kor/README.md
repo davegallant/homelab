@@ -1,7 +1,7 @@
 # Kor
 
 Kor scans for potentially unused Kubernetes resources every Monday at 01:00 UTC.
-It runs as a read-only CronJob in the existing `velero` namespace. Results are
+It runs as a read-only CronJob in the dedicated `kor` namespace. Results are
 available in the completed Job's pod logs; two successful and two failed Jobs
 are retained. Findings require review before any deletion. The service account
 can read Secrets cluster-wide as required to detect unused Secrets.
