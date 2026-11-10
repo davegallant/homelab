@@ -27,7 +27,11 @@
             packages = with pkgs; [
               ansible
               ansible-lint
+              kubernetes-helm
+              kubectl
               just
+              nodejs
+              (python3.withPackages (ps: [ ps.pyyaml ]))
               shellcheck
               yamllint
             ];
