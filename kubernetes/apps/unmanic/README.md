@@ -9,7 +9,9 @@ writable `/processed` subpath.
 
 The UI and worker run in one container. Library configuration and plugin state
 live on a 2 GiB local-path PVC pinned to `k8s-w-1` and are included in the daily
-Velero backup. Worker cache is ephemeral. The read-only source PV and writable
+Velero backup. Worker cache is ephemeral, limited to 24 GiB; the container's
+ephemeral-storage limit is 26 GiB. Monitor worker disk headroom during large
+transcodes. The read-only source PV and writable
 output PV both use `Retain` and are not part of Velero backups. The output PV is
 mounted only at `/processed/unmanic-processed`; it is not a library path. The
 original movie remains in Jellyfin's library, untouched.
