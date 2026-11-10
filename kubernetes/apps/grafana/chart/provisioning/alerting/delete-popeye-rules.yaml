@@ -1,0 +1,6 @@
+apiVersion: 1
+deleteRules:
+  - orgId: 1
+    uid: popeye_scan_stale
+  - orgId: 1
+    uid: popeye_metrics_stale
