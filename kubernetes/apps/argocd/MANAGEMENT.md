@@ -222,9 +222,9 @@ verification actions remain usable. Use Argo CD for normal rollback by
 reverting Git and approving a sync. No database or local-PV data is moved by
 this management change; existing Velero and Proxmox backup coverage remains.
 
-The retired Kiwix and Miniflux LXC playbooks are excluded from daily CI and
-the all-host playbook list. Their stopped containers and tracked Compose
-files are historical recovery material, not current deployment targets.
+Miniflux is removed; its chart and lifecycle playbook are retired from this
+repository. Removing tracked configuration does not delete any retained live
+volume data. Audit retained storage separately before deleting it.
 
 For a fresh cluster, bootstrap Argo CD with `argocd.yml`, provision the external
 resources and storage, apply all project definitions and the Applications,

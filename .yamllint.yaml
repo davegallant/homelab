@@ -13,7 +13,6 @@ ignore:
   - kubernetes/apps/homepage/chart/templates/
   - kubernetes/apps/kiwix/chart/templates/
   - kubernetes/apps/arca/chart/templates/
-  - kubernetes/apps/miniflux/chart/templates/
   - kubernetes/apps/grafana/chart/templates/
   - kubernetes/apps/loki/chart/templates/
   - kubernetes/apps/tailnet-gateway/chart/templates/
