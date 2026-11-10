@@ -20,7 +20,7 @@ Restricted namespace is included in the gitops-secrets namespace loop.
   to container logs and existing Alloy/Loki collection. Job history is bounded
   to three successes and three failures, with a seven-day TTL. Reports are
   diagnostic artifacts, not recoverable application state: no Velero schedule.
-- No Homepage URL or Gatus HTTP endpoint: this is a batch scanner. Use Job
+- No standalone Popeye HTTP endpoint: this is a batch scanner. Use Job
   status, reports and the Grafana `popeye_scan_stale` freshness alert instead.
   The internal Pushgateway Service holds the latest metrics in memory; it is
   not exposed through the tailnet Gateway. Its Pod has no API token or egress.
@@ -83,7 +83,8 @@ The manual validation does not prove the future recurring schedule runs.
 The provisioned `Popeye cluster audit` dashboard (`/d/homelab-popeye`) uses the
 existing VictoriaMetrics datasource. It includes upstream severity/code/linter
 panels plus actionable Released PVs, unreferenced claims, shared paths and actual
-scan age. Homepage links to the dashboard using its existing Grafana URL. Gatus
+scan age. Homepage links through `popeye_url`, derived from the existing Grafana URL's
+origin (the main Grafana link includes `/explore`). Gatus
 already monitors that Grafana front door; no synthetic HTTP endpoint is invented
 for the batch scanner.
 
@@ -107,8 +108,9 @@ Its license is preserved in `UPSTREAM-LICENSE`.
 
 Live validation used a temporary additive Alloy scrape policy without changing
 the existing Argo-owned policy. Alloy reported `up=1`; VictoriaMetrics returned
-`popeye_cluster_score{cluster="homelab"}=78`. Remove that temporary policy after
-the approved tracked Alloy sync. A source render is not a live dashboard install.
+`popeye_cluster_score{cluster="homelab"}=78`. That temporary policy was removed after
+the approved tracked Alloy sync. The dashboard is now installed; see the
+[rollout record](../../../operations/popeye-rollout-2026-11-10.md).
 
 Final local validation: full `just lint` passed with 42 Python tests, rendered
 Pod Security and backup coverage, Ansible lint, shellcheck and Renovate validation.
@@ -116,5 +118,5 @@ The rendered Popeye resources passed server-side dry-run admission. Protected
 Homepage/Gatus templates parsed with real inventory/Vault variables; the existing
 Grafana URL and raw Homepage placeholder were preserved. All 14 dashboard queries
 returned live data from VictoriaMetrics. The dashboard JSON and Grafana alert
-provisioning render successfully; installation in running Grafana remains pending
-an approved source push and Argo sync.
+provisioning render successfully; installation in running Grafana was verified after the approved source push
+and Argo sync. The first timed scan remains independently pending.
