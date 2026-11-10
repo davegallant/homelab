@@ -25,7 +25,9 @@ data:
         {"pattern": "*-drill*", "reason": "temporary restore drill namespace, not production backup scope"}
       ],
       "volumes": {
-        "romm/romm-library": "TrueNAS snapshots + Drive sync, not Velero"
+        "romm/romm-library": "TrueNAS snapshots + Drive sync, not Velero",
+        "beszel/beszel-tailscale-state-w2": "Tailnet identity is recreated rather than restored",
+        "immich/immich-model-cache-local": "Machine learning models are a disposable download cache"
       },
       "volume_suffixes": ["-tailscale", "-caddy", "-tailscale-state", "-caddy-state"]
     }
