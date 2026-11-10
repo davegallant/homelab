@@ -1,5 +1,8 @@
 ---
 collections:
-  - ansible.posix
-  - community.docker
-  - community.general
+  - name: ansible.posix
+    version: 2.2.0
+  - name: community.docker
+    version: 5.2.1
+  - name: community.general
+    version: 13.1.0
