@@ -20,9 +20,9 @@ groups:
           uid: victoriametrics
         editorMode: code
         expr: >-
-          (time() - max(kube_cronjob_status_last_successful_time{namespace="velero", cronjob="backup-watchdog"}) > bool 129600)
+          clamp_max((time() - max(kube_cronjob_status_last_successful_time{namespace="velero", cronjob="backup-watchdog"}) > bool 129600)
+          + (max(kube_cronjob_spec_suspend{namespace="velero", cronjob="backup-watchdog"}) == bool 1), 1)
           or absent(kube_cronjob_status_last_successful_time{namespace="velero", cronjob="backup-watchdog"})
-          or (max(kube_cronjob_spec_suspend{namespace="velero", cronjob="backup-watchdog"}) == 1)
         instant: true
         intervalMs: 1000
         maxDataPoints: 43200
