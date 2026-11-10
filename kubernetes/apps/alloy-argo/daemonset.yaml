@@ -20,9 +20,9 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: alloy
-      # No checksum/config annotation here: Ansible computed it, Argo plain
-      # sync does not. A ConfigMap sync alone will NOT roll Alloy pods.
-      # After any ConfigMap sync, run: kubectl -n alloy rollout restart daemonset/alloy
+    # No checksum/config annotation here: Ansible computed it, Argo plain
+    # sync does not. A ConfigMap sync alone will NOT roll Alloy pods.
+    # After any ConfigMap sync, run: kubectl -n alloy rollout restart daemonset/alloy
     spec:
       serviceAccountName: alloy
       tolerations:
