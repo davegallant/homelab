@@ -79,9 +79,12 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
+            - name: source-media
+              mountPath: /mnt
+              readOnly: true
             - name: media
-              mountPath: /library
-              subPath: tdarr-test
+              mountPath: /processed
+              subPath: unmanic-processed
             - name: cache
               mountPath: /tmp/unmanic
             - name: tmp
@@ -93,6 +96,9 @@ spec:
         - name: media
           persistentVolumeClaim:
             claimName: unmanic-media
+        - name: source-media
+          persistentVolumeClaim:
+            claimName: unmanic-source
         - name: cache
           emptyDir:
             sizeLimit: 8Gi
