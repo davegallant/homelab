@@ -9,6 +9,13 @@ SPEC.loader.exec_module(CHECK)
 
 
 class RenderedBackupCoverageTest(unittest.TestCase):
+    def test_statefulset_claim_template_requires_selection(self):
+        pod = {'metadata': {'name': 'db'}, 'spec': {}}
+        templates = [{'metadata': {'name': 'data'}}]
+        self.assertEqual(CHECK.unselected_claims('app', pod, False, {}, templates), ['app/data'])
+        pod['metadata']['annotations'] = {'backup.velero.io/backup-volumes': 'data'}
+        self.assertEqual(CHECK.unselected_claims('app', pod, False, {}, templates), [])
+
     def test_local_claim_must_be_selected_or_excluded(self):
         pod = {'metadata': {'name': 'app'}, 'spec': {'volumes': [{'name': 'data', 'persistentVolumeClaim': {'claimName': 'data'}}]}}
         self.assertEqual(CHECK.unselected_claims('app', pod, False, {}), ['app/data'])

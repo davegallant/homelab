@@ -1,12 +1,14 @@
 """Check whether mounted claims are selected by a Velero schedule."""
 
 
-def unselected_claims(namespace, pod, default_fs, exclusions):
+def unselected_claims(namespace, pod, default_fs, exclusions, claim_templates=()):
     annotations = pod.get('metadata', {}).get('annotations', {}) or {}
     selected = {name.strip() for name in annotations.get('backup.velero.io/backup-volumes', '').split(',') if name.strip()}
     excluded = {name.strip() for name in annotations.get('backup.velero.io/backup-volumes-excludes', '').split(',') if name.strip()}
     missing = []
-    for volume in pod.get('spec', {}).get('volumes', []) or []:
+    volumes = list(pod.get('spec', {}).get('volumes', []) or [])
+    volumes.extend({'name': claim['metadata']['name'], 'persistentVolumeClaim': {'claimName': claim['metadata']['name']}} for claim in claim_templates)
+    for volume in volumes:
         claim = (volume.get('persistentVolumeClaim') or {}).get('claimName')
         if not claim:
             continue
@@ -60,7 +62,8 @@ def main():
                         continue
                     for doc in renderer.render_source(root, source, namespace, app['metadata']['name'], values_sources, env):
                         for metadata, pod_spec in renderer._CHECKER.workload_pod_spec(doc):
-                            for claim in unselected_claims(namespace, {'metadata': metadata, 'spec': pod_spec}, schedule_defaults[namespace], exclusions):
+                            templates = doc.get('spec', {}).get('volumeClaimTemplates', []) if doc.get('kind') == 'StatefulSet' else []
+                            for claim in unselected_claims(namespace, {'metadata': metadata, 'spec': pod_spec}, schedule_defaults[namespace], exclusions, templates):
                                 if not any(claim.endswith(suffix) for suffix in suffixes):
                                     findings.add(claim)
     if findings:
