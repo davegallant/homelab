@@ -47,6 +47,15 @@
     mode: "0600"
   no_log: true
 
+- name: Install restic password file
+  ansible.builtin.copy:
+    content: "{{ vps_backup_restic_password }}\n"
+    dest: /etc/vps-backup/restic-password
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+
 - name: Install backup script
   ansible.builtin.template:
     src: vps-backup.sh.j2

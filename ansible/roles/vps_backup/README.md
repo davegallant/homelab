@@ -56,7 +56,7 @@ rclone/auth, sqlite dump).
 ## Verify
 
 ```sh
-ssh vps "set -a; . /etc/vps-backup/restic.env; set +a; restic snapshots"
+ssh vps "export RESTIC_REPOSITORY=rclone:gdrive:vps-backup RESTIC_PASSWORD_FILE=/etc/vps-backup/restic-password; restic snapshots"
 ssh vps "systemctl list-timers vps-backup.timer"
 ```
 
@@ -68,7 +68,7 @@ first run.
 ```sh
 # 1. Restore the latest snapshot to scratch (staging dir name varies per backup;
 #    find the files after restore).
-ssh vps "set -a; . /etc/vps-backup/restic.env; set +a; restic restore latest --target /tmp/vps-restore && find /tmp/vps-restore -type f"
+ssh vps "export RESTIC_REPOSITORY=rclone:gdrive:vps-backup RESTIC_PASSWORD_FILE=/etc/vps-backup/restic-password; restic restore latest --target /tmp/vps-restore && find /tmp/vps-restore -type f"
 
 # 2. Stop the stack (compose project 'pangolin', compose file at ~/docker-compose.yml).
 ssh vps "docker compose -f ~/docker-compose.yml -p pangolin down"
