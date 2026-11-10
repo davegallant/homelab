@@ -95,6 +95,3 @@ Run `just service-inventory` for desired deployment ownership or
 `just retirement-report` for read-only live retirement candidates. See the
 [service lifecycle](../operations/service-lifecycle.md) for preferred exposure,
 monitoring and retirement patterns.
-
-[Popeye](apps/popeye/README.md) provides daily read-only resource scans and a
-companion check for Released PVs, controller references and shared local paths.

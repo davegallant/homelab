@@ -1,7 +1,4 @@
 exceptions:
-  popeye/popeye pod automountServiceAccountToken: >-
-    Both audit containers require the read-only service account to inspect live
-    resource references; no Secret reads or workload mutations are permitted.
   alloy/alloy pod automountServiceAccountToken: >-
     Alloy requires its scoped API token for node-local pod discovery and logs.
   headlamp/headlamp pod automountServiceAccountToken: >-
