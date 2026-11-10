@@ -18,7 +18,7 @@ configFiles:
   existingConfigMap: homepage-config
   proxyExistingConfigMap: homepage-node-proxy
 configChecksum: 61e9a052fe7a6f3fc60ceea5bf7ee5eb075aaef4a2d13e3cfbbdd9807a61e7aa
-restartTimestamp: '2026-11-09T00:07:02-05:00'
+restartTimestamp: '2026-11-10T20:42:30+00:00'
 tailscale:
   resources:
     requests:

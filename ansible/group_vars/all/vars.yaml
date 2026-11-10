@@ -7,6 +7,9 @@
 # renovate: datasource=github-releases depName=henrygd/beszel
 beszel_version: "0.21.1"
 
+# Grafana's main URL can include /explore; dashboards use its origin.
+popeye_url: "{{ grafana_url | urlsplit('scheme') }}://{{ grafana_url | urlsplit('netloc') }}/d/homelab-popeye"
+
 homelab_lan_subnet: 192.168.1.0/24
 
 # Sources allowed to reach published container ports (see the DOCKER-USER block

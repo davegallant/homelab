@@ -22,7 +22,7 @@
         description: Visualization
     - Popeye:
         icon: mdi-kubernetes
-        href: "{% raw %}{{HOMEPAGE_VAR_GRAFANA_URL}}/d/homelab-popeye{% endraw %}"
+        href: "{% raw %}{{HOMEPAGE_VAR_POPEYE_URL}}{% endraw %}"
         description: Cluster resource audit
     - Beszel:
         icon: beszel
