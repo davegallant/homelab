@@ -2,7 +2,7 @@
 
 Docker-based homelab managed with Ansible. Most self-hosted services run in
 Proxmox LXC containers on Debian 13 with Docker Compose. Homepage also
-has a Talos Kubernetes pilot. Networking is via Tailscale. LXC logging is
+has a Talos Kubernetes cluster. Networking is via Tailscale. LXC logging is
 centralized via Grafana Alloy to Loki.
 
 ## Build / Run Commands
@@ -171,9 +171,9 @@ For `just publish-tailnet-caddy`, read the Caddy base version from
 it. After publishing, inspect the exact registry tag and digest; verify the
 image's `caddy version`; then update every `homelab-caddy-cloudflare` reference
 in the Ansible role and Kubernetes charts to the same `tag@sha256:digest`.
-Publishing changes the registry only. A push containing the Ansible role invokes
-the repository's Ansible deployment workflow; Homepage and Kiwix require
-separate approved Argo CD syncs after the push. Confirm the running container
+Publishing changes the registry only. Deploy the Ansible role explicitly;
+Homepage and Kiwix require separate approved Argo CD syncs after the push.
+Confirm the running container
 image IDs after each deployment before calling the update live.
 
 ## Adding a New Service

@@ -56,7 +56,8 @@ graph TD
         beszelagent["beszel-agent\n(systemd)"]
     end
 
-    alloy -->|"journald + Docker logs"| grafana
+    loki["Loki"]
+    alloy -->|"journald + Docker logs"| loki
     beszelagent -->|"system metrics"| beszel
 ```
 
@@ -67,7 +68,7 @@ Most Ansible-managed LXC containers run:
 - **beszel-agent** (systemd service — reports system metrics → central Beszel)
 
 Hosts without Docker collect journal logs only. The off-tailnet VPS
-skips Alloy and Beszel. Kubernetes uses an Alloy DaemonSet for pod logs.
+skips Alloy and runs Beszel in SSH mode. Kubernetes uses an Alloy DaemonSet for pod logs.
 
 ---
 
