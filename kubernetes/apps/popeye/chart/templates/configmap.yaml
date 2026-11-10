@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: popeye-storage-audit
+  namespace: {{ .Release.Namespace }}
+data:
+  storage-audit.py: |
+{{ .Files.Get "files/storage-audit.py" | indent 4 }}
+  retained-volumes.json: |
+{{ .Files.Get "files/retained-volumes.json" | indent 4 }}

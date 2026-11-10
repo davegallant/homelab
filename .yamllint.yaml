@@ -2,6 +2,7 @@
 extends: default
 
 ignore:
+  - kubernetes/apps/popeye/chart/templates/
   - .direnv/
   - ansible/group_vars/all/secrets.yaml
   # Preserved command output and upstream CRDs are historical evidence.

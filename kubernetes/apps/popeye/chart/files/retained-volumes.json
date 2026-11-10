@@ -1,0 +1,9 @@
+{
+  "pvc-2570b3d1-b453-4043-9fe0-aeee7bae1918": "Retained historical invidious/invidious-db-data; requires a separate rollback decision (2026-11-10)",
+  "pvc-3da566af-0a12-40ec-871e-ab147978d6ba": "Retained historical qbittorrent/qbittorrent-config; requires a separate rollback decision (2026-11-10)",
+  "pvc-58ec6ea0-5533-419c-a6fe-009ec9d9a8bd": "Retained historical invidious/invidious-db-rollback-w1-stage; requires a separate rollback decision (2026-11-10)",
+  "pvc-601a8034-b4e3-48ce-aadd-6437995c5b47": "Retained historical immich/immich-library-local; requires a separate rollback decision (2026-11-10)",
+  "pvc-9a9660c4-f9fa-419a-9d30-bbcf20bf83b7": "Retained historical qbittorrent/qbittorrent; requires a separate rollback decision (2026-11-10)",
+  "pvc-b31ed362-53be-4098-85d7-aa913f11fb12": "Retained historical immich/immich-postgres-data-local; requires a separate rollback decision (2026-11-10)",
+  "pvc-c4c243ba-cec8-4fd8-bc32-221a5155a9ce": "Retained historical forgejo/forgejo-data; requires a separate rollback decision (2026-11-10)"
+}
