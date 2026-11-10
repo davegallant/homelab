@@ -20,6 +20,10 @@
         icon: grafana
         href: "{% raw %}{{HOMEPAGE_VAR_GRAFANA_URL}}{% endraw %}"
         description: Visualization
+    - Popeye:
+        icon: mdi-kubernetes
+        href: "{% raw %}{{HOMEPAGE_VAR_GRAFANA_URL}}/d/homelab-popeye{% endraw %}"
+        description: Cluster resource audit
     - Beszel:
         icon: beszel
         href: "{% raw %}{{HOMEPAGE_VAR_BESZEL_URL}}{% endraw %}"

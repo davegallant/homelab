@@ -1,0 +1,146 @@
+apiVersion: 1
+groups:
+- orgId: 1
+  name: popeye
+  folder: Homelab
+  interval: 1m
+  rules:
+  - uid: popeye_scan_stale
+    title: Popeye has no fresh successful scan
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 300
+        to: 0
+      datasourceUid: victoriametrics
+      model:
+        datasource:
+          type: prometheus
+          uid: victoriametrics
+        editorMode: code
+        expr: >-
+          clamp_max((time() - max(kube_cronjob_status_last_successful_time{namespace="popeye", cronjob="popeye"}) > bool 129600)
+          + (max(kube_cronjob_spec_suspend{namespace="popeye", cronjob="popeye"}) == bool 1), 1)
+          or absent(kube_cronjob_status_last_successful_time{namespace="popeye", cronjob="popeye"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        intervalMs: 1000
+        maxDataPoints: 43200
+        reducer: last
+        refId: B
+        type: reduce
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        conditions:
+        - evaluator:
+            params:
+            - 0
+            type: gt
+          operator:
+            type: and
+          query:
+            params: []
+          reducer:
+            params: []
+            type: last
+          type: query
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: B
+        intervalMs: 1000
+        maxDataPoints: 43200
+        refId: C
+        type: threshold
+    noDataState: Alerting
+    execErrState: Error
+    for: 5m
+    annotations:
+      summary: Popeye is missing, suspended, or has no successful execution within 36 hours.
+      description: >-
+        Check the CronJob, both container logs, kube-state-metrics and metric ingestion. A completed scan reports candidates; it does not prove
+        resources are safe to delete.
+    labels:
+      severity: critical
+      service: cluster-audit
+    isPaused: false
+  - uid: popeye_metrics_stale
+    title: Popeye audit metrics are stale
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 300
+        to: 0
+      datasourceUid: victoriametrics
+      model:
+        datasource:
+          type: prometheus
+          uid: victoriametrics
+        editorMode: code
+        expr: >-
+          (time() - max(homelab_cluster_audit_timestamp_seconds{cluster="homelab"}) > bool 129600)
+          or absent(homelab_cluster_audit_timestamp_seconds{cluster="homelab"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        intervalMs: 1000
+        maxDataPoints: 43200
+        reducer: last
+        refId: B
+        type: reduce
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        conditions:
+        - evaluator:
+            params:
+            - 0
+            type: gt
+          operator:
+            type: and
+          query:
+            params: []
+          reducer:
+            params: []
+            type: last
+          type: query
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: B
+        intervalMs: 1000
+        maxDataPoints: 43200
+        refId: C
+        type: threshold
+    noDataState: Alerting
+    execErrState: Error
+    for: 5m
+    annotations:
+      summary: Popeye metrics are absent or the last storage audit is older than 36 hours.
+      description: Check scan Jobs, Pushgateway, Alloy and VictoriaMetrics. Re-scraping an old report does not refresh its scan timestamp.
+    labels:
+      severity: critical
+      service: cluster-audit
+    isPaused: false

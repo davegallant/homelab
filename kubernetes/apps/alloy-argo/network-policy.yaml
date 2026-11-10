@@ -94,3 +94,11 @@ spec:
         - ports:
             - port: "9965"
               protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: popeye
+            k8s:app.kubernetes.io/name: popeye-pushgateway
+      toPorts:
+        - ports:
+            - port: "9091"
+              protocol: TCP
