@@ -50,6 +50,13 @@ machine:
       permissions: 0644
       path: /var/mnt/kiwix/caddy/.keep
       op: create
+{% if talos_node_ip == '192.168.1.211' %}
+    # Preserve the existing retired Miniflux marker until storage is reviewed.
+    - content: Talos local Miniflux storage root
+      permissions: 0644
+      path: /var/mnt/miniflux/postgres/.keep
+      op: create
+{% endif %}
     - content: Talos local-path-provisioner storage root
       permissions: 0644
       path: /var/mnt/local-path/.keep
@@ -61,3 +68,11 @@ nameservers:
 {% for server in talos_dns_servers %}
   - address: {{ server }}
 {% endfor %}
+{% if talos_node_ip == '192.168.1.211' %}
+---
+apiVersion: v1alpha1
+kind: KubeletConfig
+config:
+  imageGCHighThresholdPercent: 75
+  imageGCLowThresholdPercent: 65
+{% endif %}
