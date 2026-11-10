@@ -48,7 +48,9 @@ notifications:
           method: POST
           path: /message
           body: |
-            {{ $operation := "none" }}{{ if .app.status.operationState }}{{ $operation = .app.status.operationState.phase }}{{ if .app.status.operationState.message }}{{ $operation = .app.status.operationState.message }}{{ end }}{{ end }}
+            {{ $operation := "none" }}{{ if .app.status.operationState }}
+            {{ $operation = .app.status.operationState.phase }}{{ if .app.status.operationState.message }}
+            {{ $operation = .app.status.operationState.message }}{{ end }}{{ end }}
             {{ $details := printf "Application: %s\nHealth: %s\nSync: %s" .app.metadata.name .app.status.health.status .app.status.sync.status }}
             {{ $details = printf "%s\nOperation: %s" $details $operation }}
             {{ $link := printf "%s/applications/%s" .context.argocdUrl .app.metadata.name }}
