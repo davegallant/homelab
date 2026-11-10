@@ -1,5 +1,0 @@
-apiVersion: v2
-name: unmanic
-description: Unmanic media optimizer with isolated test media
-type: application
-version: 1.0.0

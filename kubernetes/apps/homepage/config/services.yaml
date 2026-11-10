@@ -41,10 +41,6 @@
         icon: jellyfin
         href: "{% raw %}{{HOMEPAGE_VAR_JELLYFIN_URL}}{% endraw %}"
         description: Media Server
-    - Unmanic:
-        icon: mdi-movie-edit
-        href: "{% raw %}{{HOMEPAGE_VAR_UNMANIC_URL}}{% endraw %}"
-        description: Media transcoding
     - Audiobookshelf:
         icon: audiobookshelf
         href: "{% raw %}{{HOMEPAGE_VAR_AUDIOBOOKSHELF_URL}}{% endraw %}"

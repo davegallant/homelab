@@ -57,7 +57,6 @@ spec:
                   - freshrss
                   - invidious
                   - searxng
-                  - unmanic
       tls:
         mode: Terminate
         certificateRefs:

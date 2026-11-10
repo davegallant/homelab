@@ -58,8 +58,6 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: invidious
     - server: https://kubernetes.default.svc
-      namespace: unmanic
-    - server: https://kubernetes.default.svc
       namespace: freshrss
     - server: https://kubernetes.default.svc
       namespace: tailnet-gateway

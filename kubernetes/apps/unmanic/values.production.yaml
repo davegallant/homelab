@@ -1,9 +1,0 @@
-image:
-  repository: docker.io/josh5/unmanic
-  tag: "0.4.1"
-  digest: sha256:36a705923193db6b8ca7abd5b57b81a7309d04aedd320ec0ef4e9ac5970be885
-nodeHostname: k8s-w-1
-port: 8888
-storageSize: 2Gi
-uid: 1000
-gid: 1000

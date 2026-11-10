@@ -91,14 +91,6 @@
         opts: defaults,nonempty,allow_other,use_ino,noforget,cache.files=off,moveonenospc=true,category.create=mfs,dropcacheonclose=true,minfreespace=250G,inodecalc=path-hash,func.getattr=newest,fsname=mergerfs
         state: present
 
-    - name: Create Unmanic processed output directory
-      ansible.builtin.file:
-        path: /mnt/pool/unmanic-processed
-        state: directory
-        owner: "1000"
-        group: "1000"
-        mode: "0775"
-
     - name: Create Samba user
       ansible.builtin.user:
         name: "{{ cinema_samba_username }}"
