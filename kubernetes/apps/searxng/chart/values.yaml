@@ -4,7 +4,7 @@
 # ../values.secrets.yaml.j2 and playbooks/talos-cluster/searxng.yml.
 
 searxng:
-  image: docker.io/searxng/searxng:2026.11.8-74418092d@sha256:7add5ffe7933e6b46aa3a26bed8a0c342c9a45ec331d9a8cf145e46b04b24f36
+  image: docker.io/searxng/searxng:2026.11.9-57ff753ad@sha256:287af61f1a13e86d02974fcde91a3413a9945788de38b61ffbc491d81a19bcc2
   uwsgiWorkers: "4"
   uwsgiThreads: "4"
   resources:
