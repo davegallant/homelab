@@ -209,3 +209,9 @@ healthy, and production claims remain Bound to their original PVs.
 
 
 [Back to Kubernetes overview](README.md).
+
+## Broader restore coverage
+
+Use the [restore matrix](../operations/restore-matrix.md) for PostgreSQL, SQLite,
+NAS-backed applications and worker-loss drills. Keep actual drill evidence
+separate from proposed procedures; a committed runbook does not establish recovery.

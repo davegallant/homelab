@@ -88,3 +88,10 @@ Node-local storage binds workloads to a worker. VM backups capture local
 volume data; off-host etcd snapshots capture cluster state. Velero excludes
 Secrets and live Tailscale identities. NAS data has separate protection;
 check each workload's runbook for its actual backup scope.
+
+## Inventory and retirement
+
+Run `just service-inventory` for desired deployment ownership or
+`just retirement-report` for read-only live retirement candidates. See the
+[service lifecycle](../operations/service-lifecycle.md) for preferred exposure,
+monitoring and retirement patterns.
