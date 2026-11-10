@@ -169,9 +169,9 @@
           },
           "editorMode": "code",
           "expr": "avg by(cluster) (popeye_cluster_score{cluster=~\"$cluster\"})",
-          "instant": false,
+          "instant": true,
           "legendFormat": "{{cluster}} ({{grade}})",
-          "range": true,
+          "range": false,
           "refId": "A"
         }
       ],
@@ -554,9 +554,9 @@
               "editorMode": "code",
               "expr": "topk($topk, avg by(cluster,namespace) (popeye_severity_total{severity=\"error\", cluster=~\"$cluster\", namespace=~\"$namespace\"}))",
               "format": "time_series",
-              "instant": false,
+              "instant": true,
               "legendFormat": "{{cluster}} ({{namespace}})",
-              "range": true,
+              "range": false,
               "refId": "A"
             }
           ],
@@ -623,9 +623,9 @@
               "editorMode": "code",
               "expr": "topk($topk, avg by(cluster,namespace) (popeye_severity_total{severity=\"warn\", cluster=~\"$cluster\", namespace=~\"$namespace\"}))",
               "format": "time_series",
-              "instant": false,
+              "instant": true,
               "legendFormat": "{{cluster}} ({{namespace}})",
-              "range": true,
+              "range": false,
               "refId": "A"
             }
           ],
@@ -692,9 +692,9 @@
               "editorMode": "code",
               "expr": "topk($topk, avg by(cluster,namespace) (popeye_severity_total{severity=\"info\", cluster=~\"$cluster\", namespace=~\"$namespace\"}))",
               "format": "time_series",
-              "instant": false,
+              "instant": true,
               "legendFormat": "{{cluster}} {{namespace}}",
-              "range": true,
+              "range": false,
               "refId": "A"
             }
           ],
@@ -1028,7 +1028,8 @@
         {
           "refId": "A",
           "expr": "homelab_storage_actionable_released_volumes{cluster=~\"$cluster\"}",
-          "instant": true
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -1064,7 +1065,8 @@
         {
           "refId": "A",
           "expr": "homelab_storage_unreferenced_claims{cluster=~\"$cluster\"}",
-          "instant": true
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -1100,7 +1102,8 @@
         {
           "refId": "A",
           "expr": "homelab_storage_path_overlaps{cluster=~\"$cluster\"}",
-          "instant": true
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -1136,7 +1139,8 @@
         {
           "refId": "A",
           "expr": "time() - homelab_cluster_audit_timestamp_seconds{cluster=~\"$cluster\"}",
-          "instant": true
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -1272,13 +1276,13 @@
     ]
   },
   "time": {
-    "from": "now-7d",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Popeye cluster audit",
   "uid": "homelab-popeye",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
