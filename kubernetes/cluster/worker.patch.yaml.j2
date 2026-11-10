@@ -68,12 +68,12 @@ nameservers:
 {% for server in talos_dns_servers %}
   - address: {{ server }}
 {% endfor %}
-{% if talos_node_ip == '192.168.1.211' %}
 ---
 apiVersion: v1alpha1
 kind: KubeletConfig
 config:
+  imageMaximumGCAge: 720h
+{% if talos_node_ip == '192.168.1.211' %}
   imageGCHighThresholdPercent: 75
   imageGCLowThresholdPercent: 65
-  imageMaximumGCAge: 720h
 {% endif %}

@@ -45,3 +45,8 @@ nameservers:
 {% for server in talos_dns_servers %}
   - address: {{ server }}
 {% endfor %}
+---
+apiVersion: v1alpha1
+kind: KubeletConfig
+config:
+  imageMaximumGCAge: 720h
