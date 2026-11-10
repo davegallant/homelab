@@ -20,7 +20,7 @@ groups:
           uid: victoriametrics
         editorMode: code
         expr: >-
-          clamp_max((time() - max(kube_cronjob_status_last_successful_time{namespace="popeye", cronjob="popeye"}) > bool 129600)
+          clamp_max((time() - max(kube_cronjob_status_last_successful_time{namespace="popeye", cronjob="popeye"}) > bool 691200)
           + (max(kube_cronjob_spec_suspend{namespace="popeye", cronjob="popeye"}) == bool 1), 1)
           or absent(kube_cronjob_status_last_successful_time{namespace="popeye", cronjob="popeye"})
         instant: true
@@ -68,7 +68,7 @@ groups:
     execErrState: Error
     for: 5m
     annotations:
-      summary: Popeye is missing, suspended, or has no successful execution within 36 hours.
+      summary: Popeye is missing, suspended, or has no successful execution within eight days.
       description: >-
         Check the CronJob, both container logs, kube-state-metrics and metric ingestion. A completed scan reports candidates; it does not prove
         resources are safe to delete.
@@ -91,7 +91,7 @@ groups:
           uid: victoriametrics
         editorMode: code
         expr: >-
-          (time() - max(homelab_cluster_audit_timestamp_seconds{cluster="homelab"}) > bool 129600)
+          (time() - max(homelab_cluster_audit_timestamp_seconds{cluster="homelab"}) > bool 691200)
           or absent(homelab_cluster_audit_timestamp_seconds{cluster="homelab"})
         instant: true
         intervalMs: 1000
@@ -138,7 +138,7 @@ groups:
     execErrState: Error
     for: 5m
     annotations:
-      summary: Popeye metrics are absent or the last storage audit is older than 36 hours.
+      summary: Popeye metrics are absent or the last storage audit is older than eight days.
       description: Check scan Jobs, Pushgateway, Alloy and VictoriaMetrics. Re-scraping an old report does not refresh its scan timestamp.
     labels:
       severity: critical

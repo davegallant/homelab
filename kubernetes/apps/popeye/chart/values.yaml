@@ -1,4 +1,4 @@
-schedule: "30 13 * * *"
+schedule: "30 13 * * 0"
 popeyeImage: quay.io/derailed/popeye:v0.22.1@sha256:ee3e66d023e736eec64edd6ac86a36e33b6a389ff508994ba356cc20b756e5c4
 pythonImage: docker.io/library/python:3.15.2-slim-trixie@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928
 pushgatewayImage: docker.io/prom/pushgateway:v1.11.4@sha256:91a56b89b97dd8a5e1e4fa8b5bbbd86dd57a87a2a3cee3a3ce3368b40ef158ef

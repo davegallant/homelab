@@ -1,6 +1,6 @@
 # Popeye cluster audits
 
-Daily read-only scan at 13:30 UTC. Argo CD owns the CronJob, ConfigMap,
+Weekly read-only scan on Sunday at 13:30 UTC. Argo CD owns the CronJob, ConfigMap,
 ServiceAccount, cluster RBAC and scoped API/DNS/Pushgateway Cilium policies through the dedicated
 `homelab-popeye` project. Namespace provisioning is external: its tracked
 Restricted namespace is included in the gitops-secrets namespace loop.
