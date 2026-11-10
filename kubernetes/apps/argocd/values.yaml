@@ -16,8 +16,6 @@ configs:
       g, muse, role:readonly
 dex:
   enabled: false
-applicationSet:
-  replicas: 0
 notifications:
   enabled: true
   resources:

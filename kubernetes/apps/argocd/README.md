@@ -16,7 +16,8 @@ project playbook checks for Applications still using it before applying the
 restriction.
 
 The installation is a single controller, repo server, API server and Redis.
-Dex and notifications are disabled; ApplicationSet has zero replicas.
+Dex is disabled. The ApplicationSet controller runs with one replica, matching
+the chart default.
 All images have version and digest pins. The server remains a ClusterIP
 Service and runs with `--insecure`; the central Cilium Gateway terminates
 trusted HTTPS and routes browser HTTP through an HTTPRoute to `argocd-server:80`.
