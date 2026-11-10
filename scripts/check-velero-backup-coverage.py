@@ -45,6 +45,8 @@ for path in sorted(SCHEDULES_DIR.glob("*.yaml")):
     if schedule.get("kind") != "Schedule" or schedule.get("metadata", {}).get("namespace") != "velero":
         fail(f"{path.relative_to(ROOT)} must define a Velero Schedule")
     name = schedule["metadata"]["name"]
+    if schedule.get("spec", {}).get("paused", False):
+        fail(f"{name} is paused and cannot provide scheduled backup coverage")
     if name in schedule_names:
         fail(f"duplicate Schedule name {name}")
     schedule_names.add(name)
