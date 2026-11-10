@@ -222,18 +222,7 @@ data:
             if hours is not None and hours > STALE_HOURS:
                 gaps.append(f"{ns}: latest backup {bname} is stale ({hours:.1f}h old, limit {STALE_HOURS:.0f}h)")
                 continue
-            # PVB proof, unless NO volume is eligible: a pod backup-volumes
-            # annotation makes volumes eligible even when the schedule sets
-            # defaultVolumesToFsBackup: false (audiobookshelf: default false,
-            # annotation config-local,metadata-local, Completed PVBs exist).
-            # A schedule default of false alone is NOT manifest-only. Only
-            # skip when no annotation exists in the namespace AND no covering
-            # schedule defaults volumes to fs backup (kiwix/searxng pattern).
-            has_annotation = bool(pod_backup_vols.get(ns))
-            default_fs_any = any((s.get("spec", {}).get("template", {}) or {}).get("defaultVolumesToFsBackup") for s in covering)
-            if not has_annotation and not default_fs_any:
-                warnings.append(f"{ns}: no eligible volumes (no annotation, schedule does not default to fs backup), no PVB check (backup {bname} Completed)")
-                continue
+            # An annotation selects volumes even when the schedule's default is false.
             mine = [
                 p for p in pvbs
                 if (p.get("metadata", {}) or {}).get("labels", {}).get("velero.io/backup-name") == bname
@@ -263,7 +252,7 @@ data:
                 annotated = pod_backup_vols.get(ns, set())
                 eligible = volname in annotated if annotated else default_fs
                 if not eligible:
-                    warnings.append(f"{ns}/{claim}: no backup-volumes annotation and schedule does not default to fs backup, skipped")
+                    gaps.append(f"{ns}/{claim}: local PVC is not selected for filesystem backup or explicitly excluded")
                     continue
                 matches = by_volume.get(volname, []) if volname else []
                 def proves_backup(p):

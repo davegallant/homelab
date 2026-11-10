@@ -23,10 +23,8 @@ Velero can omit byte progress for empty volumes.
    (audiobookshelf: default false, annotation config-local,
    metadata-local, Completed PVBs exist — Gate 0, 2026-10-27, corrected
    from the original manifest-only shortcut, which would have skipped
-   real filesystem backup failures). Only namespaces with NO eligible
-   volumes (no annotation in any pod AND no covering schedule
-   defaulting to fs backup, e.g. kiwix) skip the PVB check: a
-   Completed manifest backup is the proof there.
+   real filesystem backup failures). Local PVCs that are neither selected
+   for filesystem backup nor explicitly excluded are reported as gaps.
 
 ## What it does NOT alert on (reported in the Job log only)
 
