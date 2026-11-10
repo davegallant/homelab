@@ -86,6 +86,10 @@
         href: "{% raw %}{{HOMEPAGE_VAR_SEERR_URL}}{% endraw %}"
         description: Media Management
 - Home:
+    - Mealie:
+        icon: mealie
+        href: "https://mealie.davegallant.ca"
+        description: Recipe manager
     - Immich:
         icon: immich
         href: "{% raw %}{{HOMEPAGE_VAR_IMMICH_URL}}{% endraw %}"
