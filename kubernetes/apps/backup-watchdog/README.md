@@ -48,3 +48,21 @@ Gotify delivery. Use fixture mode to exercise failed, stale, uncovered, zero-byt
 and missing-volume backups, plus clean and deliberately excluded cases. A
 fixture pass does not prove the CronJob runs or alerts arrive. Independently
 monitor missed executions if that guarantee is required.
+
+## Independent freshness alert
+
+Grafana provisions `backup_watchdog_stale` from kube-state-metrics CronJob
+metrics. It alerts after five minutes when the last successful run is older
+than 36 hours, missing (including a never-successful or deleted CronJob), or
+the CronJob is suspended. No data is alerting; query errors use Grafana's error
+state. This avoids relying on the watchdog to report its own absence.
+
+Approve the Grafana sync and verify the rule in its alerting UI. Confirm
+`kube_cronjob_status_last_successful_time` is present for `velero/backup-watchdog`
+and compare its timestamp with the live CronJob. Test missing/stale input in
+an isolated rule, then verify Gotify delivery. Do not suspend production
+backups to test alerting. This has not been deployed merely by committing it.
+
+Grafana, metrics and the watchdog still share the cluster; an off-cluster
+heartbeat and separate notification destination remain necessary to detect
+a complete cluster or Gotify outage independently.

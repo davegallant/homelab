@@ -1,0 +1,77 @@
+apiVersion: 1
+groups:
+- orgId: 1
+  name: backup-watchdog
+  folder: Homelab
+  interval: 1m
+  rules:
+  - uid: backup_watchdog_stale
+    title: Backup watchdog has no fresh successful run
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 300
+        to: 0
+      datasourceUid: victoriametrics
+      model:
+        datasource:
+          type: prometheus
+          uid: victoriametrics
+        editorMode: code
+        expr: >-
+          (time() - max(kube_cronjob_status_last_successful_time{namespace="velero", cronjob="backup-watchdog"}) > bool 129600)
+          or absent(kube_cronjob_status_last_successful_time{namespace="velero", cronjob="backup-watchdog"})
+          or (max(kube_cronjob_spec_suspend{namespace="velero", cronjob="backup-watchdog"}) == 1)
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        intervalMs: 1000
+        maxDataPoints: 43200
+        reducer: last
+        refId: B
+        type: reduce
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        conditions:
+        - evaluator:
+            params:
+            - 0
+            type: gt
+          operator:
+            type: and
+          query:
+            params: []
+          reducer:
+            params: []
+            type: last
+          type: query
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: B
+        intervalMs: 1000
+        maxDataPoints: 43200
+        refId: C
+        type: threshold
+    noDataState: Alerting
+    execErrState: Error
+    for: 5m
+    annotations:
+      summary: Backup watchdog is missing, suspended, or has no successful execution within 36 hours.
+      description: Check the CronJob, its last Job logs, kube-state-metrics and metric ingestion. This alert is independent of the watchdog process
+        but shares the Kubernetes cluster and Gotify delivery path. It does not prove backup restores work.
+    labels:
+      severity: critical
+      service: backups
+    isPaused: false
