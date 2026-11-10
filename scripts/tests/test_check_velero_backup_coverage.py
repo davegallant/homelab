@@ -11,6 +11,30 @@ CHECKER = REPO / "scripts" / "check-velero-backup-coverage.py"
 
 
 class VeleroBackupCoverageTest(unittest.TestCase):
+    def test_schedule_cannot_exclude_persistent_volume_claims(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "scripts").mkdir()
+            shutil.copy(CHECKER, root / "scripts" / CHECKER.name)
+            apps = root / "kubernetes/apps/argocd/applications"
+            schedules = root / "kubernetes/apps/velero-schedules"
+            apps.mkdir(parents=True)
+            schedules.mkdir(parents=True)
+            (apps / "app.yaml").write_text('''kind: Application
+metadata:
+  name: app
+  annotations: {homelab.davegallant.ca/backup-policy: scheduled}
+spec: {project: homelab, destination: {namespace: app}}
+''')
+            (schedules / "app.yaml").write_text('''kind: Schedule
+metadata: {name: app, namespace: velero}
+spec:
+  template: {includedNamespaces: [app], excludedResources: [persistentvolumeclaims]}
+''')
+            result = subprocess.run([sys.executable, str(root / "scripts" / CHECKER.name)], capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("persistentvolumeclaims", result.stderr)
+
     def test_paused_schedule_does_not_count_as_coverage(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

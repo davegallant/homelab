@@ -47,6 +47,10 @@ for path in sorted(SCHEDULES_DIR.glob("*.yaml")):
     name = schedule["metadata"]["name"]
     if schedule.get("spec", {}).get("paused", False):
         fail(f"{name} is paused and cannot provide scheduled backup coverage")
+    template = schedule.get("spec", {}).get("template", {})
+    excluded = {resource.lower() for resource in template.get("excludedResources", [])}
+    if excluded & {"persistentvolumeclaims", "persistentvolumeclaims.", "pvc", "pvcs"}:
+        fail(f"{name} excludes persistentvolumeclaims needed for volume recovery")
     if name in schedule_names:
         fail(f"duplicate Schedule name {name}")
     schedule_names.add(name)
