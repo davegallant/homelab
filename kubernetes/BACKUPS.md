@@ -5,6 +5,13 @@ Backup scope, UTC schedules, retention, and Secret inclusion are declared in
 sources and live Schedule objects before relying on coverage. A schedule is
 not evidence that a backup or restore succeeded.
 
+Local validation renders Applications in scheduled namespaces and checks
+mounted PVC selection. Review [rendered exceptions](backup-rendered-exclusions.yaml)
+when claim names, volume types, or protection change. This check covers Pod
+templates in rendered Kubernetes workloads; it cannot prove a backup succeeded
+or discover claims hidden in unsupported custom workload types. Verify live
+PodVolumeBackups and restore capability separately.
+
 Velero resource archives are not encrypted. Restrict Garage and off-site
 copies, especially backups including Secrets. Recreate external Secrets from
 Ansible Vault. Verify off-site encryption and deletion retention independently.

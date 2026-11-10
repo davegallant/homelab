@@ -1,0 +1,48 @@
+# Review these storage exceptions when workloads or protection change.
+audiobookshelf/audiobookshelf-audiobooks: NFS storage; protection and recovery are
+  external to Velero
+audiobookshelf/audiobookshelf-config: Legacy hostPath PV; Velero filesystem backup
+  is unsupported
+audiobookshelf/audiobookshelf-metadata: Legacy hostPath PV; Velero filesystem backup
+  is unsupported
+audiobookshelf/audiobookshelf-podcasts: NFS storage; protection and recovery are external
+  to Velero
+changedetection/changedetection-datastore: Legacy hostPath PV; Velero filesystem backup
+  is unsupported
+immich/immich-production-library: NFS storage; protection and recovery are external
+  to Velero
+invidious/invidious: Legacy hostPath PV; Velero filesystem backup is unsupported
+invidious/invidious-db-rollback-w1: Legacy hostPath PV; Velero filesystem backup is
+  unsupported
+jellyfin/jellyfin-media: NFS storage; protection and recovery are external to Velero
+kiwix/kiwix-data: NFS storage; protection and recovery are external to Velero
+lidarr/lidarr-media: NFS storage; protection and recovery are external to Velero
+lidarr/lidarr-music: NFS storage; protection and recovery are external to Velero
+lubelogger/lubelogger-data: Legacy hostPath PV; Velero filesystem backup is unsupported
+maloja/maloja-data: Legacy hostPath PV; Velero filesystem backup is unsupported
+navidrome/navidrome: Legacy hostPath PV; Velero filesystem backup is unsupported
+navidrome/navidrome-music: NFS storage; protection and recovery are external to Velero
+paperless-ngx/paperless-ngx-consume: Legacy hostPath PV; Velero filesystem backup
+  is unsupported
+paperless-ngx/paperless-ngx-data: Legacy hostPath PV; Velero filesystem backup is
+  unsupported
+paperless-ngx/paperless-ngx-export: Legacy hostPath PV; Velero filesystem backup is
+  unsupported
+paperless-ngx/paperless-ngx-media: Legacy hostPath PV; Velero filesystem backup is
+  unsupported
+paperless-ngx/paperless-ngx-redis-data: Legacy hostPath PV; Velero filesystem backup
+  is unsupported
+qbittorrent/qbittorrent-pool: NFS storage; protection and recovery are external to
+  Velero
+qbittorrent/qbittorrent-torrents: NFS storage; protection and recovery are external
+  to Velero
+radarr/radarr-media: NFS storage; protection and recovery are external to Velero
+seerr/seerr-config: Legacy hostPath PV; Velero filesystem backup is unsupported
+sonarr/sonarr-media: NFS storage; protection and recovery are external to Velero
+speedtest-tracker/speedtest-tracker-apprise: Legacy hostPath PV; Velero filesystem
+  backup is unsupported
+speedtest-tracker/speedtest-tracker-config: Legacy hostPath PV; Velero filesystem
+  backup is unsupported
+speedtest-tracker/speedtest-tracker-db-data: Legacy hostPath PV; Velero filesystem
+  backup is unsupported
+umami/umami: Legacy hostPath PV; Velero filesystem backup is unsupported
