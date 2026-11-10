@@ -21,10 +21,20 @@ Use the guarded resize playbooks after verifying a fresh off-host backup and
 host storage/memory headroom. A Proxmox disk expansion may require a reboot
 before Talos grows its filesystem. Never infer completion from Proxmox size
 alone. Obtain Dave's explicit approval before any node reboot. First verify
-all expected nodes Ready and Applications Synced/Healthy, then take an off-host
-etcd snapshot. Afterward verify capacity, DiskPressure, local mounts and
-workload health. On a failed gate, halt and preserve state; do not shrink disks
+all expected nodes Ready and Applications Synced/Healthy, subject to the
+watchdog exception below, then take an off-host etcd snapshot. Afterward verify
+capacity, DiskPressure, local mounts and workload health. On a failed gate,
+halt and preserve state; do not shrink disks
 or reboot another node as a workaround.
+
+The `backup-watchdog` Application may remain Degraded because an earlier
+CronJob failed. For manual health gates, accept this only when the Application
+is Synced, the failed Job and its cause are identified, the cause is resolved,
+and a fresh watchdog check against live data reports no gaps. Verify current
+backup and volume-backup results independently; a successful manual check does
+not prove the next scheduled run will succeed. Any other degraded Application
+still fails the gate. The control-plane resize playbook enforces a stricter
+all-Healthy gate and does not implement this exception.
 
 ### Investigating node disk usage
 
@@ -140,7 +150,8 @@ control-plane reboot — there is no control-plane HA.
 
 1. Backups first: a Proxmox snapshot (`backup-now.yml`, or the 02:00 job)
    and an off-host etcd snapshot (`snapshot-etcd.yml`). Confirm Argo
-   Applications are Synced/Healthy and all nodes are Ready.
+   Applications are Synced/Healthy (subject to the watchdog exception above)
+   and all nodes are Ready.
 2. Read the target Talos release notes for machine-config breaking
    changes and Cilium/Kubernetes compatibility. Latest Talos
    releases: https://github.com/siderolabs/talos/releases — build
