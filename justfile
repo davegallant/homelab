@@ -9,6 +9,7 @@ default:
 
 # Lint YAML, Ansible content and shell scripts
 lint:
+    just test
     python3 scripts/check-pod-security.py --self-test
     python3 scripts/check-rendered-pod-security.py
     yamllint -c .yamllint.yaml ansible/ kubernetes/
@@ -16,6 +17,10 @@ lint:
     cd ansible && ANSIBLE_VAULT_PASSWORD_FILE="${ANSIBLE_VAULT_PASSWORD_FILE:-$PWD/.vault_pass}" ansible-lint
     shellcheck scripts/*.sh kubernetes/apps/qbittorrent/scripts/*.sh
     just lint-renovate
+
+# Run regression tests for repository scripts
+test:
+    python3 -m unittest discover -s scripts/tests
 
 # Validate the Renovate repository configuration with Renovate's own validator
 lint-renovate:
