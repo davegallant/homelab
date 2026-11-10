@@ -33,9 +33,9 @@ and Talos credentials are separate maintenance credentials. Argo CD remains
 reachable only through the tailnet Gateway; keep its admin password unique and
 high-entropy. Repository and deployment account MFA remain separate controls.
 
-The URL is `https://argocd.tail.davegallant.ca`. The old `argocd-tailscale`
-and `argocd-caddy` Retain-policy PVCs are unmounted and retained for a later
-per-resource audit; they are not needed by the server pod.
+The URL is `https://argocd.tail.davegallant.ca`. The retired sidecar PVCs
+and their backing directories were removed after review on 2026-11-10.
+The server uses the shared tailnet Gateway.
 
 ## Recovery bootstrap
 

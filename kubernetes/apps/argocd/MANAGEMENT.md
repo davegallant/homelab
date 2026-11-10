@@ -211,8 +211,8 @@ Homepage's production values and approve a sync. External Secret rotations
 also require workload restarts. PostgreSQL password rotation additionally
 requires changing the database role password.
 
-The retired Argo CD sidecar PVCs stay outside the chart and remain
-unmounted. They are retained for a later per-resource audit.
+The retired Argo CD sidecar PVCs and backing directories were removed after
+review on 2026-11-10. They are not part of the recovery bootstrap.
 
 ## Recovery and safeguards
 
