@@ -89,6 +89,8 @@
           - "{{ talos_private_dir }}/secrets.yaml"
           - --install-disk
           - "{{ talos_install_disk }}"
+          - --kubernetes-version
+          - "{{ kubernetes_version }}"
           - --with-docs=false
           - --with-examples=false
           - --output
