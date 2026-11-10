@@ -19,11 +19,7 @@ lint:
 
 # Validate the Renovate repository configuration with Renovate's own validator
 lint-renovate:
-    npx --yes --package renovate -- renovate-config-validator --no-global renovate.json
-
-# Install the repository's pre-commit checks
-install-hooks:
-    git config core.hooksPath .githooks
+    npx --yes --package renovate@41.5.0 -- renovate-config-validator --no-global renovate.json
 
 # Install required Ansible Galaxy collections
 setup:
