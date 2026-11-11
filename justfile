@@ -75,6 +75,10 @@ prune-images host:
 service-inventory:
     python3 scripts/service_audit.py
 
+# Scan the current Kubernetes context for potentially unused resources
+kor:
+    docker run --rm -i -v "$HOME/.kube:/root/.kube:ro" docker.io/yonahdissen/kor:v0.6.9@sha256:1a85158c82bbca16c942426b7ef3faba3f5cb23634b5b66e462716bc8520fc8f all
+
 # Report retained storage and missing Argo owners using the current cluster context
 retirement-report:
     python3 scripts/service_audit.py --live
