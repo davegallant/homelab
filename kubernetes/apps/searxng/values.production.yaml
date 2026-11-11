@@ -3,7 +3,7 @@ searxng:
   resources:
     requests:
       cpu: 5m
-      memory: 272Mi
+      memory: 205Mi
 valkey:
   resources:
     requests:

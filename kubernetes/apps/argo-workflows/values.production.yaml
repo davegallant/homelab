@@ -133,5 +133,5 @@ server:
     seccompProfile: {type: RuntimeDefault}
     capabilities: {drop: [ALL]}
   resources:
-    requests: {cpu: 50m, memory: 128Mi}
+    requests: {cpu: 10m, memory: 128Mi}
     limits: {cpu: 500m, memory: 256Mi}

@@ -28,7 +28,7 @@ operator:
     kubernetes.io/hostname: k8s-cp-1
   resources:
     requests:
-      cpu: 50m
+      cpu: 21m
       memory: 96Mi
     limits:
       cpu: "1"
@@ -104,7 +104,7 @@ hubble:
     replicas: 1
     resources:
       requests:
-        cpu: 25m
+        cpu: 10m
         memory: 64Mi
       limits:
         cpu: "1"

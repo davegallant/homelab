@@ -37,7 +37,7 @@ runner:
 # Nested jobs consume the DinD container budget, not separate Kubernetes pods.
 resources:
   requests:
-    cpu: 100m
+    cpu: 30m
     memory: 256Mi
   limits:
     cpu: "1"

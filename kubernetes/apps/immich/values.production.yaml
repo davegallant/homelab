@@ -86,7 +86,7 @@ controllers:
               failureThreshold: 3
         resources:
           requests:
-            cpu: 250m
+            cpu: 65m
             memory: 512Mi
           limits:
             cpu: 2000m
@@ -142,7 +142,7 @@ controllers:
               failureThreshold: 3
         resources:
           requests:
-            cpu: 150m
+            cpu: 68m
             memory: 1Gi
           limits:
             cpu: 2000m
@@ -188,7 +188,7 @@ controllers:
               failureThreshold: 3
         resources:
           requests:
-            cpu: 25m
+            cpu: 10m
             memory: 64Mi
           limits:
             cpu: 500m
@@ -248,7 +248,7 @@ controllers:
               failureThreshold: 3
         resources:
           requests:
-            cpu: 100m
+            cpu: 10m
             memory: 256Mi
           limits:
             cpu: 1000m
