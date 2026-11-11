@@ -34,6 +34,7 @@
               nodejs
               (python3.withPackages (ps: [ ps.pyyaml ]))
               shellcheck
+              uv
               yamllint
             ];
           };

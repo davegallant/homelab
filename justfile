@@ -79,6 +79,28 @@ service-inventory:
 kor:
     kor all
 
+# Recommend workload resource sizing from the cluster's VictoriaMetrics history
+krr:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    KRR_VERSION="1.31.3"
+    KRR_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/homelab-krr/${KRR_VERSION}"
+    LOCAL_PORT="${KRR_LOCAL_PORT:-18428}"
+    if [[ ! -f "$KRR_DIR/krr.py" ]]; then
+        mkdir -p "$(dirname "$KRR_DIR")"
+        git clone --depth 1 --branch "v${KRR_VERSION}" https://github.com/robusta-dev/krr.git "$KRR_DIR"
+    fi
+    kubectl -n monitoring port-forward "svc/victoriametrics" "${LOCAL_PORT}:8428" >/dev/null 2>&1 &
+    PORT_FORWARD_PID=$!
+    trap 'kill "$PORT_FORWARD_PID" 2>/dev/null || true' EXIT
+    for _ in {1..30}; do
+        if python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:${LOCAL_PORT}/health', timeout=1)" >/dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+    done
+    env -u PYTHONPATH -u PYTHONHOME uv run --python 3.12 --with-requirements "$KRR_DIR/requirements.txt" --no-project python "$KRR_DIR/krr.py" simple --prometheus-url "http://127.0.0.1:${LOCAL_PORT}"
+
 # Report retained storage and missing Argo owners using the current cluster context
 retirement-report:
     python3 scripts/service_audit.py --live
