@@ -29,6 +29,7 @@
               ansible-lint
               kubernetes-helm
               kubectl
+              kor
               just
               nodejs
               (python3.withPackages (ps: [ ps.pyyaml ]))
