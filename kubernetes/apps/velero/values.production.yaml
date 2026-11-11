@@ -14,6 +14,10 @@ configuration:
       provider: aws
   defaultVolumesToFsBackup: true
   uploaderType: kopia
+  repositoryMaintenanceJob:
+    repositoryConfigData:
+      global:
+        keepLatestMaintenanceJobs: 1
 credentials:
   existingSecret: velero-garage-credentials
   useSecret: true
