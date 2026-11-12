@@ -9,7 +9,7 @@ spec:
   sources:
     - repoURL: ghcr.io/vmware-tanzu/charts
       chart: velero
-      targetRevision: "12.2.4"
+      targetRevision: "12.2.5"
       helm:
         releaseName: velero
         valueFiles:
