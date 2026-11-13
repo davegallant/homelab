@@ -128,9 +128,8 @@
         "/^kubernetes/apps/rfd-notify/chart/values\\.yaml$/"
       ],
       "matchStrings": [
-        "(?<prefix>(?:(?<registryIndent>[ \\t]*)registry: (?<registry>[^ \\t\\n]+)\\n)?(?<repoIndent>[ \\t]*)repository: (?<imageRepository>[^ \\t\\n]+)(?<repoComments>(?:\\n[ \\t]*#[^\\n]*)*)\\n)(?<fieldIndent>[ \\t]+)tag: (?<tagQuote>[\\\"']?)(?<currentValue>[^\\\"'\\s]+)[\\\"']?\\n[ \\t]+digest: (?<currentDigest>sha256:[a-f0-9]+)"
+        "(?:(?:[ \\t]*)registry: (?<registry>[^ \\t\\n]+)\\n)?(?:[ \\t]*)repository: (?<imageRepository>[^ \\t\\n]+)(?:\\n[ \\t]*#[^\\n]*)*\\n[ \\t]+tag: [\\\"']?(?<currentValue>[^\\\"'\\s]+)[\\\"']?\\n[ \\t]+digest: (?<currentDigest>sha256:[a-f0-9]+)"
       ],
-      "autoReplaceStringTemplate": "{{{prefix}}}{{{fieldIndent}}}tag: {{{tagQuote}}}{{{newValue}}}{{{tagQuote}}}\n{{{fieldIndent}}}digest: {{{newDigest}}}",
       "depNameTemplate": "{{#if registry}}{{{registry}}}/{{{imageRepository}}}{{else}}{{{imageRepository}}}{{/if}}",
       "datasourceTemplate": "docker"
     }
