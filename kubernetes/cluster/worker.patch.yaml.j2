@@ -18,9 +18,9 @@ machine:
         dhcp: false
         addresses:
           - {{ talos_node_ip }}/{{ talos_network_cidr }}
-{% if talos_extra_addresses is defined and talos_extra_addresses %}
-{% for addr in talos_extra_addresses %}
-          - {{ addr }}/{{ talos_network_cidr }}
+{% if talos_extra_address_cidrs is defined and talos_extra_address_cidrs %}
+{% for addr in talos_extra_address_cidrs %}
+          - {{ addr }}
 {% endfor %}
 {% endif %}
         routes:
