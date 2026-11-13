@@ -1,11 +1,10 @@
 # Default values for the kiwix chart.
 #
-# Values that originate in Ansible (Vault secrets, group_vars) ship
-# empty here and are supplied at deploy time through
-# ../values.ansible.yaml.j2, rendered by
-# playbooks/talos-cluster/kiwix.yml into a protected temp file.
-# Templates fail to render (required) when the critical ones are
-# missing AND the tailnet sidecars are enabled.
+# Kiwix is served over the tailnet through the central Cilium Gateway
+# (see kubernetes/apps/tailnet-gateway). This chart renders only the
+# kiwix-serve Deployment and its ClusterIP Service; there are no
+# Vault-supplied values. Argo CD reads this file plus
+# ../values.production.yaml directly.
 
 kiwix:
   # Application image and runtime settings are managed in this chart.
@@ -18,62 +17,10 @@ kiwix:
       cpu: 1000m
       memory: 1Gi
 
-# Tailnet exposure, mirroring the Homepage pod: userspace Tailscale
-# sidecar TCP-forwarding 443 to an in-pod Caddy, which terminates a
-# real Let's Encrypt certificate (Cloudflare DNS-01) for
-# kiwix.<magicDnsDomain> and proxies to kiwix-serve on 127.0.0.1:8080.
-# The production values enable the sidecar with its Vault-managed
-# identity.
-tailscale:
-  enabled: false
-  image: ghcr.io/tailscale/tailscale:v1.104.4@sha256:ed6480b33c6eb67c9cbd203ed42b9fb57e361986725b6856def71b7a3d9e276c
-  resources:
-    requests:
-      cpu: 25m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 192Mi
-
-caddy:
-  # Existing Secret key: cloudflare_api_token.
-  existingSecret: ""
-  image: ghcr.io/davegallant/homelab-caddy-cloudflare:2.11.9-a8737d0@sha256:a5038b5a00688dfcc39ca23b558eed202a1d07eb62e85e2cc82955dbb8084324
-  resources:
-    requests:
-      cpu: 25m
-      memory: 32Mi
-    limits:
-      cpu: 100m
-      memory: 128Mi
-
-# The pod is pinned to the worker that hosts the static local PVs
-# (../storage.yaml -- deliberately NOT managed by this chart; the
-# chart adopts the existing PVCs and never recreates them). The ZIM
-# data itself is NFS and would float; the sidecar identity pins us.
+# The pod is pinned to k8s-w-1, a holdover from the retired Tailscale
+# sidecar era (the sidecar identity lived on a node-local volume). The
+# ZIM data itself is NFS and would float; revisit whether this pin is
+# still needed before removing it. The chart adopts the existing PVCs
+# from ../storage.yaml by name and never recreates them.
 nodeHostname: k8s-w-1
 fsGroup: 1000
-
-# --- Supplied by the Ansible bridge (values.ansible.yaml.j2) ---
-
-# Headscale MagicDNS domain and the Headscale server domain used for
-# --login-server.
-magicDnsDomain: ""
-headscaleDomain: ""
-
-# Tailscale hostname for the sidecar (from ../vars.yaml).
-tailscaleHostname: ""
-
-# Cloudflare DNS API token for the kiwix-caddy Secret.
-cloudflareApiToken: ""
-
-# Velero Schedule for this namespace (applied into the velero
-# namespace). Manifests-only BY DESIGN: the ZIM library is an NFS
-# mount whose protection is TrueNAS snapshots + Drive sync, and the
-# tailscale-state PVC must never be restored (it would clone a live
-# tailnet identity). The Deployment pod annotation names all three
-# volumes in backup-volumes-excludes for explicitness.
-backup:
-  enabled: true
-  schedule: "10 3 * * *"
-  ttl: 336h
