@@ -1,14 +1,5 @@
 ---
-magicDnsDomain: tail.davegallant.ca
-headscaleDomain: hs.davegallant.ca
-tailscaleHostname: kiwix
 kiwix:
-  resources:
-    requests:
-      cpu: 5m
-      memory: 24Mi
-tailscale:
-  enabled: false
   resources:
     requests:
       cpu: 5m
