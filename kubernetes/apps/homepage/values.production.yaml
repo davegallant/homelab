@@ -1,7 +1,5 @@
 ---
 magicDnsDomain: tail.davegallant.ca
-headscaleDomain: hs.davegallant.ca
-tailscaleHostname: homepage
 homepage:
   existingSecret: homepage-environment-external
   resources:
@@ -12,8 +10,3 @@ configFiles:
   existingConfigMap: homepage-config
 configChecksum: 61e9a052fe7a6f3fc60ceea5bf7ee5eb075aaef4a2d13e3cfbbdd9807a61e7aa
 restartTimestamp: '2026-11-10T20:42:30+00:00'
-tailscale:
-  resources:
-    requests:
-      cpu: 5m
-      memory: 24Mi

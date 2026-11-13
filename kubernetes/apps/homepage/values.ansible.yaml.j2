@@ -1,14 +1,13 @@
 # Ansible-to-Helm values bridge for the homepage chart.
 #
-# Rendered by playbooks/talos-cluster/homepage.yml into a protected
-# temporary file (0600, deleted after the run) and passed to Helm with
-# -f. This is the ONLY channel through which Vault/group_vars values and
-# the rendered config files reach the chart. Never commit a rendered copy.
+# Rendered in memory by playbooks/talos-cluster/gitops-secrets.yml
+# (via gitops-secrets-tasks.yml) and passed to Helm on stdin with
+# --values -. This is the ONLY channel through which Vault/group_vars
+# values and the rendered config files reach the chart render that
+# mints the homepage-environment-external Secret. Never commit a
+# rendered copy.
 magicDnsDomain: {{ headscale_magic_dns_domain | to_json }}
-headscaleDomain: {{ headscale_server_domain | to_json }}
-tailscaleHostname: {{ homepage_tailscale_hostname | to_json }}
 restartTimestamp: {{ homepage_restart_timestamp | default('') | to_json }}
-cloudflareApiToken: {{ cloudflare_dns_api_token | to_json }}
 configFiles:
   servicesYaml: {{ lookup('ansible.builtin.template', playbook_dir + '/../../../kubernetes/apps/homepage/config/services.yaml') | to_json }}
   settingsYaml: {{ lookup('ansible.builtin.template', playbook_dir + '/../../../kubernetes/apps/homepage/config/settings.yaml') | to_json }}

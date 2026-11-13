@@ -2,9 +2,9 @@
 #
 # Values that originate in Ansible (Vault secrets, group_vars, and the
 # rendered config files under ../config) ship empty here and are supplied
-# at deploy time through ../values.ansible.yaml.j2, rendered by
-# playbooks/talos-cluster/homepage.yml into a protected temp file.
-# Templates fail to render (required) when the critical ones are missing.
+# at render time through ../values.ansible.yaml.j2, rendered in memory
+# by playbooks/talos-cluster/gitops-secrets.yml. Templates fail to
+# render (required) when the critical ones are missing.
 
 homepage:
   # Existing Secret with HOMEPAGE_VAR_* environment keys.
@@ -20,28 +20,6 @@ homepage:
       cpu: 100m
       memory: 1Gi
 
-tailscale:
-  image: ghcr.io/tailscale/tailscale:v1.104.4@sha256:ed6480b33c6eb67c9cbd203ed42b9fb57e361986725b6856def71b7a3d9e276c
-  resources:
-    requests:
-      cpu: 25m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 192Mi
-
-caddy:
-  # Existing Secret key: cloudflare_api_token.
-  existingSecret: ""
-  image: ghcr.io/davegallant/homelab-caddy-cloudflare:2.11.9-a8737d0@sha256:a5038b5a00688dfcc39ca23b558eed202a1d07eb62e85e2cc82955dbb8084324
-  resources:
-    requests:
-      cpu: 25m
-      memory: 32Mi
-    limits:
-      cpu: 100m
-      memory: 128Mi
-
 # The pod is pinned to the worker that hosts the static local PVs
 # (../storage.yaml -- deliberately NOT managed by this chart; the chart
 # adopts the existing PVCs and never recreates them).
@@ -50,12 +28,8 @@ fsGroup: 1000
 
 # --- Supplied by the Ansible bridge (values.ansible.yaml.j2) ---
 
-# Headscale MagicDNS domain (e.g. tail.example.com) and the Headscale
-# server domain used for --login-server.
+# Headscale MagicDNS domain (e.g. tail.example.com).
 magicDnsDomain: ""
-headscaleDomain: ""
-
-tailscaleHostname: ""
 
 # HOMEPAGE_VAR_* environment for the external Homepage Secret
 # (widget API keys and service URLs), keyed by variable name.
@@ -69,7 +43,6 @@ homepageEnv: {}
 configFiles:
   # Keep source config managed by Ansible while Argo CD owns the workload.
   existingConfigMap: ""
-  proxyExistingConfigMap: ""
   servicesYaml: ""
   settingsYaml: ""
   widgetsYaml: ""
