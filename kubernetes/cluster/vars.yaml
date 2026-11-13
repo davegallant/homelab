@@ -1,9 +1,9 @@
 ---
 # Renovate only bumps patches within this minor; change minors via the Talos upgrade runbook.
 # renovate: datasource=custom.talos depName=siderolabs/talos versioning=semver
-talos_version: v1.14.5
-talos_iso_filename: metal-amd64-v1.14.5.iso
-talos_iso_sha256: 1505108d78e6260e2a586ced144b928478d70e2424b45f890f5f18a82d30f754
+talos_version: v1.14.6
+talos_iso_filename: metal-amd64-v1.14.6.iso
+talos_iso_sha256: c2264437db0ea7949771ce941940a95e049ce4e84f7b1860be067834137b8f23
 # renovate: datasource=custom.kubernetes depName=kubernetes/kubernetes versioning=semver
 kubernetes_version: 1.37.2
 talos_proxmox_iso_storage: proxmox-iso
