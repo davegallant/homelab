@@ -5,7 +5,7 @@
 # Host agent package version. Renovate groups updates with the Kubernetes hub
 # image in kubernetes/apps/beszel/values.production.yaml.
 # renovate: datasource=github-releases depName=henrygd/beszel
-beszel_version: "0.21.1"
+beszel_version: "0.21.2"
 
 homelab_lan_subnet: 192.168.1.0/24
 
