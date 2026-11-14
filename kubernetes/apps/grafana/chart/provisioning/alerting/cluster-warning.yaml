@@ -1,7 +1,7 @@
 apiVersion: 1
 
 # Warning tier for node disk, mirroring the /var > 90% critical rule in
-# cluster-critical.yaml. Fires earlier (80%) so a filling disk pages
+# cluster-critical.yaml. Fires earlier (85%, matching the kubelet image-GC trigger) so a filling disk pages
 # before it becomes critical. Same query, same datasource, same shape.
 groups:
   - orgId: 1
@@ -51,7 +51,7 @@ groups:
               conditions:
                 - evaluator:
                     params:
-                      - 80
+                      - 85
                     type: gt
                   operator:
                     type: and
@@ -73,8 +73,8 @@ groups:
         execErrState: Error
         for: 5m
         annotations:
-          summary: A Kubernetes node /var filesystem is over 80% full.
-          description: '{{ $labels.node }} ({{ $labels.instance }}) /var usage has been above 80% for at least five minutes.'
+          summary: A Kubernetes node /var filesystem is over 85% full.
+          description: '{{ $labels.node }} ({{ $labels.instance }}) /var usage has been above 85% for at least five minutes.'
         labels:
           severity: warning
           service: kubernetes
