@@ -50,7 +50,5 @@ apiVersion: v1alpha1
 kind: KubeletConfig
 config:
   imageMaximumGCAge: 720h
-{% if talos_node_ip == '192.168.1.211' %}
   imageGCHighThresholdPercent: 75
   imageGCLowThresholdPercent: 65
-{% endif %}
