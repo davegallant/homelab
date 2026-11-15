@@ -5,6 +5,8 @@ ListenPort = 51821
 PrivateKey = {{ beszel_vps_wireguard_private_key }}
 
 # OPNsense wg-beszel server (10.201.0.2). OPNsense dials this VPS.
+# 192.168.1.212/32 is the Beszel hub's w-2 pinned egress (k8s-w-2); keep it
+# in step with the hub pin in kubernetes/apps/beszel/values.production.yaml.
 [Peer]
 PublicKey = {{ beszel_wireguard_opnsense_public_key }}
-AllowedIPs = 10.201.0.2/32
+AllowedIPs = 10.201.0.2/32, 192.168.1.212/32
