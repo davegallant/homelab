@@ -120,7 +120,7 @@ controllers:
               failureThreshold: 3
         resources:
           requests:
-            cpu: 25m
+            cpu: 21m
             memory: 512Mi
           limits:
             # OCR and indexing bursts are CPU-hungry and brief.

@@ -22,7 +22,7 @@ tolerations:
     effect: NoSchedule
 resources:
   requests:
-    cpu: 15m
+    cpu: 10m
     memory: 32Mi
   limits:
     cpu: 100m

@@ -95,7 +95,7 @@ server:
     type: ClusterIP
   resources:
     requests:
-      cpu: 25m
+      cpu: 11m
       memory: 64Mi
     limits:
       cpu: 250m

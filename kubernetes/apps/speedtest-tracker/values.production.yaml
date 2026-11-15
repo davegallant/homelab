@@ -125,7 +125,7 @@ controllers:
               failureThreshold: 3
         resources:
           requests:
-            cpu: 100m
+            cpu: 46m
             memory: 256Mi
           limits:
             # A running speedtest saturates CPU briefly by design.
@@ -177,7 +177,7 @@ controllers:
               failureThreshold: 3
         resources:
           requests:
-            cpu: 21m
+            cpu: 10m
             memory: 147Mi
           limits:
             cpu: 1000m
@@ -228,7 +228,7 @@ controllers:
               failureThreshold: 3
         resources:
           requests:
-            cpu: 25m
+            cpu: 10m
             memory: 128Mi
           limits:
             cpu: 500m

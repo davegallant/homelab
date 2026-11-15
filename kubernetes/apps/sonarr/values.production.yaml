@@ -87,7 +87,7 @@ controllers:
               failureThreshold: 3
         resources:
           requests:
-            cpu: 78m
+            cpu: 12m
             memory: 256Mi
           limits:
             cpu: 1000m
