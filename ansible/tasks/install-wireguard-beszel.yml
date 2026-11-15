@@ -1,0 +1,31 @@
+- name: Require the Beszel WireGuard keys
+  ansible.builtin.assert:
+    that:
+      - beszel_vps_wireguard_private_key is defined
+      - beszel_vps_wireguard_private_key | length > 0
+      # Set after OPNsense applies wg-beszel; that apply must run first.
+      - beszel_wireguard_opnsense_public_key is defined
+      - beszel_wireguard_opnsense_public_key | length > 0
+
+- name: Install WireGuard tools
+  ansible.builtin.apt:
+    name: wireguard-tools
+    state: present
+
+- name: Copy wg-beszel configuration
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/wg-beszel.conf.j2"
+    dest: /etc/wireguard/wg-beszel.conf
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  register: wg_beszel_config
+
+- name: Enable wg-quick for the Beszel tunnel and apply config changes
+  ansible.builtin.systemd:
+    name: wg-quick@wg-beszel
+    enabled: true
+    state: "{{ 'restarted' if wg_beszel_config.changed else 'started' }}"
+  # The unit only exists after wireguard-tools installs; check mode cannot see it.
+  when: not ansible_check_mode

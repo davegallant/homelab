@@ -1,0 +1,10 @@
+# Managed by Ansible (playbooks/vps). Edit the playbook instead.
+[Interface]
+Address = 10.201.0.1/24
+ListenPort = 51821
+PrivateKey = {{ beszel_vps_wireguard_private_key }}
+
+# OPNsense wg-beszel server (10.201.0.2). OPNsense dials this VPS.
+[Peer]
+PublicKey = {{ beszel_wireguard_opnsense_public_key }}
+AllowedIPs = 10.201.0.2/32
