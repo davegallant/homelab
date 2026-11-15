@@ -148,7 +148,7 @@ rawResources:
               - 192.168.1.205/32 # pve-g3-1
               - 192.168.1.206/32 # pve-g3-2
               - 192.168.1.16/32 # TrueNAS SCALE
-              - 72.11.149.242/32 # RackNerd VPS
+              - 10.201.0.1/32 # RackNerd VPS over wg-beszel
             toPorts:
               - ports:
                   - port: "45876"
