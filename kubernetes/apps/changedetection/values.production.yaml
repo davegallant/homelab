@@ -181,12 +181,6 @@ rawResources:
                   - port: "443"
                     protocol: TCP
           - toCIDR:
-              - 204.244.250.128/32
-            toPorts:
-              - ports:
-                  - port: "15479"
-                    protocol: UDP
-          - toCIDR:
               - 239.255.255.250/32
             toPorts:
               - ports:
@@ -266,14 +260,7 @@ rawResources:
               - 172.17.0.1/32
               - 172.18.0.1/32
               - 172.19.0.1/32
-              - 204.244.250.128/32
             toPorts:
               - ports:
                   - port: "41641"
-                    protocol: UDP
-          - toCIDR:
-              - 204.244.250.128/32
-            toPorts:
-              - ports:
-                  - port: "9930"
                     protocol: UDP

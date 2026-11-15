@@ -436,12 +436,6 @@ rawResources:
                   - port: "1900"
                     protocol: UDP
           - toCIDR:
-              - 204.244.250.128/32
-            toPorts:
-              - ports:
-                  - port: "23104"
-                    protocol: UDP
-          - toCIDR:
               - 5.161.218.233/32
               - 45.159.97.61/32
               - 45.159.97.144/32
@@ -516,20 +510,7 @@ rawResources:
               - 172.17.0.1/32
               - 172.18.0.1/32
               - 172.19.0.1/32
-              - 204.244.250.128/32
             toPorts:
               - ports:
                   - port: "41641"
-                    protocol: UDP
-          - toCIDR:
-              - 204.244.250.128/32
-            toPorts:
-              - ports:
-                  - port: "56858"
-                    protocol: UDP
-          - toCIDR:
-              - 204.244.250.128/32
-            toPorts:
-              - ports:
-                  - port: "9930"
                     protocol: UDP
