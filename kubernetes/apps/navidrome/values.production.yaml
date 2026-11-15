@@ -237,6 +237,7 @@ rawResources:
                     - matchPattern: "*"
           - toFQDNs:
               - matchName: api.deezer.com
+              - matchName: cdn-images.dzcdn.net
               - matchName: ws.audioscrobbler.com
             toPorts:
               - ports:
