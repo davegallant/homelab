@@ -132,15 +132,6 @@
         port: "22"
         proto: tcp
 
-    - name: Allow Beszel agent from its hub
-      community.general.ufw:
-        rule: allow
-        from_ip: "{{ beszel_hub_egress_ip }}"
-        port: "45876"
-        proto: tcp
-    # Hub egress is pinned to 192.168.1.212 (k8s-w-2); see
-    # kubernetes/apps/beszel/values.production.yaml. Keep this rule.
-
     - name: Allow WireGuard listener for Beszel
       community.general.ufw:
         rule: allow
@@ -154,7 +145,7 @@
         proto: tcp
         interface_in: wg-beszel
     # This host is reached over plain SSH (no Tailscale). Keep SSH and the
-    # source-restricted Beszel agent rules BEFORE the deny policy loads.
+    # Beszel agent rules BEFORE the deny policy loads.
 
     - name: Enable UFW
       community.general.ufw:
