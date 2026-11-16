@@ -44,8 +44,8 @@ controllers:
               - ALL
         image:
           repository: docker.io/linuxserver/radarr
-          tag: 6.4.4
-          digest: sha256:90fc402fd050506460369cf263feb1193888ebd06cbf5fa665e9a247f9c02b83
+          tag: 7.0.3
+          digest: sha256:ff1b1f21a200e19f52017bd1544031143715b1ab262b823a9dcb916a71da0956
         # s6 resets the umask in non-root mode. Start Radarr directly so
         # imported media keeps the existing group-writable permissions.
         command:
