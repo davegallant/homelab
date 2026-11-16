@@ -6,11 +6,9 @@ groups:
     folder: Homelab
     interval: 1m
     rules:
-      # Excluded destinations are known-harmless denied flows: the fossorial
-      # endpoints newt sidecars probe, plus two Google frontend IPs prowlarr
-      # hits daily on non-web TCP ports (its policy allows world 80/443 only;
-      # prowlarr stays healthy). Observed daily since 2026-11-09; revisit if
-      # a workload genuinely needs one of these destinations.
+      # All workloads except prowlarr: the fossorial exclusions below are the
+      # only cluster-wide ones (newt sidecar probes). Prowlarr has its own
+      # rule below because its flaresolverr sidecar phones Google daily.
       - uid: cilium_workload_tcp_policy_drops
         title: Kubernetes workload TCP policy drops
         condition: C
@@ -32,7 +30,8 @@ groups:
                     reason=~"POLICY_DENIED|POLICY_DENY",
                     protocol="TCP",
                     source!="",
-                    destination!~"^(api\\.fossorial\\.io|13\\.223\\.241\\.208|98\\.85\\.9\\.165|74\\.125\\.197\\.188|64\\.233\\.178\\.188)$"
+                    source!="prowlarr/prowlarr",
+                    destination!~"^(api\\.fossorial\\.io|13\\.223\\.241\\.208|98\\.85\\.9\\.165)$"
                   }[5m])
                 )
               instant: true
@@ -88,6 +87,96 @@ groups:
             {{ $labels.source }} in each of the last five minutes. Inspect the
             Hubble dashboard and Loki dropped-flow logs for destination and
             drop reason.
+        labels:
+          severity: warning
+          service: cilium
+        isPaused: false
+
+      # Prowlarr only: Chrome inside the flaresolverr sidecar phones Google
+      # background services (e.g. GCM) on non-web TCP ports while solving
+      # Cloudflare challenges; the policy correctly denies these. Excluded
+      # here by Google edge prefix (74.125./64.233.) so frontend IP rotation
+      # does not re-trigger the alert. Prowlarr itself has no Google
+      # endpoints (verified in its codebase 2026-11-16); extend the prefixes
+      # if new Google ranges appear.
+      - uid: cilium_prowlarr_tcp_policy_drops
+        title: Prowlarr TCP policy drops
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: victoriametrics
+            model:
+              datasource:
+                type: prometheus
+                uid: victoriametrics
+              editorMode: code
+              expr: >-
+                sum by (source) (
+                  increase(hubble_drop_total{
+                    job="prometheus.scrape.annotated_services",
+                    reason=~"POLICY_DENIED|POLICY_DENY",
+                    protocol="TCP",
+                    source="prowlarr/prowlarr",
+                    destination!~"^((api\\.fossorial\\.io|13\\.223\\.241\\.208|98\\.85\\.9\\.165)$|74\\.125\\..*|64\\.233\\..*)"
+                  }[5m])
+                )
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: false
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 10
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: >-
+            Cilium denied more than 10 TCP flows involving prowlarr/prowlarr
+            in five minutes (excluding denied flows to Google edge IPs).
+          description: >-
+            Cilium denied more than 10 TCP flows involving workload
+            prowlarr/prowlarr in each of the last five minutes, excluding
+            denied flows to Google edge prefixes (Chrome phone-home from the
+            flaresolverr sidecar). Inspect the Hubble dashboard and Loki
+            dropped-flow logs for destination and drop reason.
         labels:
           severity: warning
           service: cilium
