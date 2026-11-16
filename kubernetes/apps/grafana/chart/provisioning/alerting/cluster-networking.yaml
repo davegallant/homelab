@@ -6,6 +6,11 @@ groups:
     folder: Homelab
     interval: 1m
     rules:
+      # Excluded destinations are known-harmless denied flows: the fossorial
+      # endpoints newt sidecars probe, plus two Google frontend IPs prowlarr
+      # hits daily on non-web TCP ports (its policy allows world 80/443 only;
+      # prowlarr stays healthy). Observed daily since 2026-11-09; revisit if
+      # a workload genuinely needs one of these destinations.
       - uid: cilium_workload_tcp_policy_drops
         title: Kubernetes workload TCP policy drops
         condition: C
@@ -27,7 +32,7 @@ groups:
                     reason=~"POLICY_DENIED|POLICY_DENY",
                     protocol="TCP",
                     source!="",
-                    destination!~"^(api\\.fossorial\\.io|13\\.223\\.241\\.208|98\\.85\\.9\\.165)$"
+                    destination!~"^(api\\.fossorial\\.io|13\\.223\\.241\\.208|98\\.85\\.9\\.165|74\\.125\\.197\\.188|64\\.233\\.178\\.188)$"
                   }[5m])
                 )
               instant: true
