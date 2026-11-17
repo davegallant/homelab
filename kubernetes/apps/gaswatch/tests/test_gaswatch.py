@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
+import time
 from datetime import UTC, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import pytest
 import aiohttp
@@ -36,7 +39,6 @@ from gaswatch import (
 NOW = datetime(2026, 9, 7, 22, 0, tzinfo=UTC)
 EDT = timezone(timedelta(hours=-4))
 LOCAL_EVENING = datetime(2026, 9, 7, 22, 0, tzinfo=EDT)
-LOCAL_MORNING = datetime(2026, 9, 8, 8, 0, tzinfo=EDT)
 
 DROP = 4.0
 LOOKBACK = timedelta(hours=24)
@@ -123,6 +125,7 @@ def test_config_loads_valid_environment_with_drop_defaults() -> None:
     assert config.drop_lookback == timedelta(hours=24)
     assert config.hysteresis_cpl == 2.0
     assert config.quiet_hours is None
+    assert config.timezone == ZoneInfo("America/Toronto")
     assert config.max_price_age == timedelta(hours=6)
     assert config.timeout_seconds == 20.0
 
@@ -140,6 +143,23 @@ def test_config_parses_drop_and_quiet_hours() -> None:
     assert config.drop_lookback == timedelta(hours=48)
     assert config.hysteresis_cpl == 1.5
     assert config.quiet_hours == (23, 7)
+
+
+def test_config_parses_timezone() -> None:
+    env = base_env()
+    env["GASWATCH_TIMEZONE"] = "UTC"
+
+    config = Config.from_env(env, require_gotify=True)
+
+    assert config.timezone == ZoneInfo("UTC")
+
+
+def test_config_rejects_invalid_timezone() -> None:
+    env = base_env()
+    env["GASWATCH_TIMEZONE"] = "Not/AZone"
+
+    with pytest.raises(ConfigError, match="GASWATCH_TIMEZONE"):
+        Config.from_env(env, require_gotify=True)
 
 
 @pytest.mark.parametrize(
@@ -322,12 +342,13 @@ def test_decide_alerts_again_after_rearm() -> None:
     state = fresh_state(armed=False, last_alert=last_alert_at(165.9))
     history = [observation(172.0, 2)]
 
+    # Still 4.5 below the high: no re-arm, even after a 1.6 climb.
     decision = decide(167.5, history, state)
-
-    # Climbed 1.6 (no re-arm yet) ... use a bigger climb plus a fresh drop.
     assert decision.action is AlertAction.SUPPRESSED
+    assert decision.armed is False
 
-    decision = decide(168.5, history, state)
+    # Climbed to within hysteresis of the high: re-arms, no alert.
+    decision = decide(170.5, history, state)
     assert decision.armed is True
     assert decision.action is AlertAction.WATCHING
 
@@ -335,6 +356,24 @@ def test_decide_alerts_again_after_rearm() -> None:
     decision = decide(167.5, history, rearmed)
     assert decision.action is AlertAction.ALERT
     assert decision.drop_cpl == pytest.approx(4.5)
+
+
+def test_decide_does_not_realert_on_rise_within_dip() -> None:
+    # 2026-11-17 regression: alerted at 137.9, cheapest rose to 140.9 and
+    # alerted again because +2 hysteresis re-armed while the price was
+    # still 4.0 below the 24h high of 144.9.
+    state = fresh_state(armed=False, last_alert=last_alert_at(137.9))
+    history = [observation(144.9, 20)]
+
+    decision = decide(140.9, history, state)
+
+    assert decision.action is AlertAction.SUPPRESSED
+    assert decision.armed is False
+
+    # Recovery to within hysteresis of the high re-arms without alerting.
+    decision = decide(143.9, history, state)
+    assert decision.action is AlertAction.WATCHING
+    assert decision.armed is True
 
 
 def test_decide_alerts_on_further_leg_down() -> None:
@@ -729,7 +768,7 @@ def test_run_alerts_then_suppresses_then_rearms(tmp_path, capsys) -> None:
     assert len(notifier.messages) == 1
     assert "status=suppressed" in capsys.readouterr().out
 
-    # Climbs back above the alert price + hysteresis: re-arms.
+    # Climbs to within hysteresis of the 24h high: re-arms.
     result = asyncio.run(
         run(config, Mode.NORMAL, FakeProvider([cheap_station(168.0)]), notifier, NOW)
     )
@@ -785,16 +824,25 @@ def test_run_warms_up_without_history(tmp_path, capsys) -> None:
 
 
 def test_run_defers_alert_during_quiet_hours_and_delivers_after(
-    monkeypatch, tmp_path, capsys
+    tmp_path, capsys
 ) -> None:
     state_path = tmp_path / "state.json"
-    seed_history(state_path, (170.0, 20.0))
+    seed_history(state_path, (170.0, 8.0))
     config = config_for_path(state_path, GASWATCH_QUIET_HOURS="21-7")
     notifier = FakeNotifier()
-    monkeypatch.setattr("gaswatch._local_now", lambda moment: LOCAL_EVENING)
+    # NOW + 4h is 02:00 UTC = 22:00 EDT, inside quiet hours. Times are
+    # real UTC timestamps converted by the code; patching the local-time
+    # conversion hid the UTC-vs-Toronto bug.
+    evening = NOW + timedelta(hours=4)
 
     result = asyncio.run(
-        run(config, Mode.NORMAL, FakeProvider([cheap_station(165.9)]), notifier, NOW)
+        run(
+            config,
+            Mode.NORMAL,
+            FakeProvider([cheap_station(165.9)]),
+            notifier,
+            evening,
+        )
     )
 
     assert result == 0
@@ -806,15 +854,15 @@ def test_run_defers_alert_during_quiet_hours_and_delivers_after(
     assert state.pending.price_cpl == pytest.approx(165.9)
     assert state.armed is False
 
-    # Morning: the deferred alert is delivered, no new alert fires.
-    monkeypatch.setattr("gaswatch._local_now", lambda moment: LOCAL_MORNING)
+    # Morning: 12:00 UTC = 08:00 EDT, outside quiet hours. The deferred
+    # alert is delivered, no new alert fires.
     result = asyncio.run(
         run(
             config,
             Mode.NORMAL,
             FakeProvider([cheap_station(166.0)]),
             notifier,
-            NOW + timedelta(hours=10),
+            NOW + timedelta(hours=14),
         )
     )
 
@@ -828,15 +876,86 @@ def test_run_defers_alert_during_quiet_hours_and_delivers_after(
     assert "status=suppressed" in output
 
 
-def test_run_quiet_hours_keeps_first_pending_alert(monkeypatch, tmp_path) -> None:
+def test_run_quiet_hours_use_configured_timezone_not_utc(
+    monkeypatch, request, tmp_path, capsys
+) -> None:
+    # 2026-11-17 regression: 07:17 UTC is outside 23-7 in UTC but 02:17
+    # EST, so the alert must defer; 12:17 UTC is 07:17 EST, so the
+    # deferred alert is delivered then. Force the process local timezone
+    # to UTC, as in the container: without this, the test passes on any
+    # Toronto-local machine even with the bug, which is how it hid.
+    previous_tz = os.environ.get("TZ")
+    monkeypatch.setenv("TZ", "UTC")
+    time.tzset()
+
+    def _restore_timezone() -> None:
+        if previous_tz is None:
+            os.environ.pop("TZ", None)
+        else:
+            os.environ["TZ"] = previous_tz
+        time.tzset()
+
+    request.addfinalizer(_restore_timezone)
+
     state_path = tmp_path / "state.json"
-    seed_history(state_path, (170.0, 20.0))
+    trigger = datetime(2026, 11, 17, 7, 17, tzinfo=UTC)
+    save_state(
+        state_path,
+        fresh_state(
+            observations=(
+                Observation(trigger - timedelta(hours=12), 144.9, "Esso"),
+            )
+        ),
+    )
+    config = config_for_path(state_path, GASWATCH_QUIET_HOURS="23-7")
+    notifier = FakeNotifier()
+
+    result = asyncio.run(
+        run(
+            config,
+            Mode.NORMAL,
+            FakeProvider([cheap_station(137.9, "Pioneer")]),
+            notifier,
+            trigger,
+        )
+    )
+
+    assert result == 0
+    assert notifier.messages == []
+    assert "status=deferred" in capsys.readouterr().out
+
+    result = asyncio.run(
+        run(
+            config,
+            Mode.NORMAL,
+            FakeProvider([cheap_station(137.9, "Pioneer")]),
+            notifier,
+            trigger + timedelta(hours=5),
+        )
+    )
+
+    assert result == 0
+    assert len(notifier.messages) == 1
+    assert "137.9" in notifier.messages[0][0]
+    state = load_state(state_path)
+    assert state is not None and state.pending is None
+
+
+def test_run_quiet_hours_keeps_first_pending_alert(tmp_path) -> None:
+    state_path = tmp_path / "state.json"
+    seed_history(state_path, (170.0, 8.0))
     config = config_for_path(state_path, GASWATCH_QUIET_HOURS="21-7")
     notifier = FakeNotifier()
-    monkeypatch.setattr("gaswatch._local_now", lambda moment: LOCAL_EVENING)
 
+    # 22:00 and 23:00 EDT, both inside quiet hours 21-7.
     asyncio.run(
-        run(config, Mode.NORMAL, FakeProvider([cheap_station(165.9)]), notifier, NOW)
+        run(
+            config,
+            Mode.NORMAL,
+            FakeProvider([cheap_station(165.9)]),
+            notifier,
+            NOW + timedelta(hours=4),
+        )
     )
     asyncio.run(
         run(
@@ -844,7 +963,7 @@ def test_run_quiet_hours_keeps_first_pending_alert(monkeypatch, tmp_path) -> Non
             Mode.NORMAL,
             FakeProvider([cheap_station(161.8)]),
             notifier,
-            NOW + timedelta(hours=1),
+            NOW + timedelta(hours=5),
         )
     )
 
@@ -931,18 +1050,22 @@ def test_gotify_failure_does_not_disarm(tmp_path) -> None:
     assert state.pending is None
 
 
-def test_deferred_delivery_failure_keeps_pending(monkeypatch, tmp_path) -> None:
+def test_deferred_delivery_failure_keeps_pending(tmp_path) -> None:
     state_path = tmp_path / "state.json"
-    seed_history(state_path, (170.0, 20.0))
+    seed_history(state_path, (170.0, 8.0))
     config = config_for_path(state_path, GASWATCH_QUIET_HOURS="21-7")
-    monkeypatch.setattr("gaswatch._local_now", lambda moment: LOCAL_EVENING)
     asyncio.run(
-        run(config, Mode.NORMAL, FakeProvider([cheap_station(165.9)]), FakeNotifier(), NOW)
+        run(
+            config,
+            Mode.NORMAL,
+            FakeProvider([cheap_station(165.9)]),
+            FakeNotifier(),
+            NOW + timedelta(hours=4),
+        )
     )
     state = load_state(state_path)
     assert state is not None and state.pending is not None
 
-    monkeypatch.setattr("gaswatch._local_now", lambda moment: LOCAL_MORNING)
     with pytest.raises(GaswatchError, match="Gotify rejected message"):
         asyncio.run(
             run(
@@ -950,7 +1073,7 @@ def test_deferred_delivery_failure_keeps_pending(monkeypatch, tmp_path) -> None:
                 Mode.NORMAL,
                 FakeProvider([cheap_station(166.0)]),
                 FakeNotifier(error=GaswatchError("Gotify rejected message")),
-                NOW + timedelta(hours=10),
+                NOW + timedelta(hours=14),
             )
         )
 

@@ -109,6 +109,8 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.runtimeSecret }}
                   key: GASWATCH_QUIET_HOURS
+            - name: GASWATCH_TIMEZONE
+              value: America/Toronto
             - name: GASWATCH_TIMEOUT_SECONDS
               valueFrom:
                 secretKeyRef:
