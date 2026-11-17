@@ -24,7 +24,12 @@ tuning values directly in Vault; Vault is the source of truth now that the
 standalone Forgejo repo is retired. The current alert tuning is 4.0¢/L over a
 24-hour lookback with 2.0¢/L hysteresis, quiet hours `23-7`, and a 20-second
 request timeout. Set `gaswatch_quiet_hours` to an empty string to disable quiet
-hours. Use a separate Gotify application token for Gaswatch; Argo
+hours. Quiet hours are evaluated in `America/Toronto` via
+`GASWATCH_TIMEZONE` (a plain env value in the CronWorkflow, not a Vault
+secret; the code defaults to `America/Toronto` if unset), never in the
+container's local timezone, which is UTC in the Alpine image. The chart's
+requirements include `tzdata` so `zoneinfo` resolves the timezone without
+system tzdata. Use a separate Gotify application token for Gaswatch; Argo
 workflow-failure notifications keep their existing global token. Provision
 the runtime Secret with:
 
@@ -68,7 +73,9 @@ PYTHONPATH=kubernetes/apps/gaswatch/chart/files uv run --no-project \
 ```
 
 The alert triggers when the cheapest valid observation is below the recent
-lookback high by `GASWATCH_DROP_CPL`; it rearms after a rise of
-`GASWATCH_HYSTERESIS_CPL`. Quiet hours defer notifications. Defaults are 4¢/L,
+lookback high by `GASWATCH_DROP_CPL`; it rearms only once the price recovers
+to within `GASWATCH_HYSTERESIS_CPL` of that high (or drops a further
+`GASWATCH_DROP_CPL` below the alert price), and a re-arming run never alerts
+itself. Quiet hours defer notifications. Defaults are 4¢/L,
 24 hours, and 2¢/L respectively. The GasBuddy token cache and alert history
 share the PVC so restarts preserve both.

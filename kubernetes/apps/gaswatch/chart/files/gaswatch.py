@@ -21,6 +21,7 @@ from datetime import UTC, datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import Any, Protocol
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import aiohttp
 from dotenv import load_dotenv
@@ -84,6 +85,7 @@ class Config:
     drop_lookback: timedelta
     hysteresis_cpl: float
     quiet_hours: tuple[int, int] | None
+    timezone: ZoneInfo
     max_price_age: timedelta
     gotify_url: str | None
     gotify_token: str | None
@@ -156,6 +158,17 @@ class Config:
         quiet_raw = values.get("GASWATCH_QUIET_HOURS", "").strip()
         quiet_hours = _parse_quiet_hours(quiet_raw) if quiet_raw else None
 
+        timezone_raw = (
+            values.get("GASWATCH_TIMEZONE", "America/Toronto").strip()
+            or "America/Toronto"
+        )
+        try:
+            timezone = ZoneInfo(timezone_raw)
+        except (ZoneInfoNotFoundError, ValueError) as exc:
+            raise ConfigError(
+                "GASWATCH_TIMEZONE must be a valid IANA timezone name"
+            ) from exc
+
         max_age_hours = finite_float(
             "GASWATCH_MAX_PRICE_AGE_HOURS", positive=True
         )
@@ -198,6 +211,7 @@ class Config:
             ),
             hysteresis_cpl=optional_float("GASWATCH_HYSTERESIS_CPL", 2.0),
             quiet_hours=quiet_hours,
+            timezone=timezone,
             max_price_age=timedelta(hours=max_age_hours),
             gotify_url=gotify_url,
             gotify_token=gotify_token,
@@ -232,7 +246,9 @@ def _parse_quiet_hours(raw: str) -> tuple[int, int]:
 def in_quiet_hours(now: datetime, quiet_hours: tuple[int, int] | None) -> bool:
     """Check quiet hours against the timezone of the given timestamp.
 
-    Callers pass a local timestamp; run() converts with astimezone() first.
+    Callers pass a timestamp already converted to the configured
+    timezone; run() converts with astimezone(config.timezone) first.
+    Never rely on the container's local timezone (UTC in the image).
     """
     if quiet_hours is None:
         return False
@@ -243,11 +259,6 @@ def in_quiet_hours(now: datetime, quiet_hours: tuple[int, int] | None) -> bool:
     if start < end:
         return start <= hour < end
     return hour >= start or hour < end
-
-
-def _local_now(moment: datetime) -> datetime:
-    """Return the machine-local time for a timestamp (split out for tests)."""
-    return moment.astimezone()
 
 
 def lookback_label(lookback: timedelta) -> str:
@@ -345,8 +356,12 @@ def decide_alert(
     ``history`` holds pruned observations *excluding* the current one. An
     alert fires when the price sits at least ``drop_threshold_cpl`` below the
     highest price seen inside ``lookback``. After an alert the watcher
-    disarms until the price climbs ``hysteresis_cpl`` back above the alert
-    price, or drops a further ``drop_threshold_cpl`` below it.
+    disarms until the price recovers to within ``hysteresis_cpl`` of that
+    high, or drops a further ``drop_threshold_cpl`` below the alert price.
+    Re-arming on a small climb above the alert price would re-alert on a
+    rise whenever the first drop was deep, so recovery is measured
+    against the high, not the alert price. A run that re-arms never
+    alerts itself; the next fall from the recovered price does.
     """
     if now.tzinfo is None:
         raise ValueError("now must be timezone-aware")
@@ -361,16 +376,18 @@ def decide_alert(
     armed = state.armed
     last_alert = state.last_alert
 
+    rearmed = False
     if not armed and last_alert is not None:
-        if price_cpl >= last_alert.price_cpl + hysteresis_cpl:
+        if price_cpl >= reference_cpl - hysteresis_cpl:
             armed = True
+            rearmed = True
         elif last_alert.price_cpl - price_cpl >= drop_threshold_cpl:
             # Another full leg down while still disarmed: alert again.
             leg = last_alert.price_cpl - price_cpl
             new_alert = AlertRecord(current, price_cpl, station, leg)
             return Decision(AlertAction.ALERT, leg, reference_cpl, False, new_alert)
 
-    if armed and drop_cpl >= drop_threshold_cpl:
+    if armed and not rearmed and drop_cpl >= drop_threshold_cpl:
         new_alert = AlertRecord(current, price_cpl, station, drop_cpl)
         return Decision(AlertAction.ALERT, drop_cpl, reference_cpl, False, new_alert)
 
@@ -937,7 +954,9 @@ async def run(
         _log_status(stations[0], decision, status, observed_at, drop_label)
         return 0
 
-    quiet = in_quiet_hours(_local_now(observed_at), config.quiet_hours)
+    quiet = in_quiet_hours(
+        observed_at.astimezone(config.timezone), config.quiet_hours
+    )
 
     # Deliver an alert that was deferred through quiet hours.
     if working.pending is not None and not quiet:
