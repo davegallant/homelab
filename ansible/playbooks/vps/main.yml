@@ -55,7 +55,6 @@
       kratos: [tag:external]
       mcleod: [tag:external, tag:beszel-agent]
       muse: [tag:external]
-      nanoclaw: [tag:nanoclaw]
       paperless-ngx: [tag:monitored, tag:pangolin]
       searxng: [tag:monitored]
       umami: [tag:monitored, tag:pangolin]

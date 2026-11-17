@@ -2,9 +2,8 @@
 // Changes from the SaaS version:
 //   1. Removed nodeAttrs (Funnel is a Tailscale SaaS feature, not in Headscale).
 //   2. tagOwners lists all tags referenced in acls/ssh (Headscale requires
-//      every tag to be defined). Existing service tags have no user owners;
-//      tag:nanoclaw is owned by dave@ so its personal node can be converted
-//      to a tagged node. The VPS playbook applies the configured node tags.
+//      every tag to be defined). Existing service tags have no user owners.
+//      The VPS playbook applies the configured node tags.
 //   3. SSH covers every node via autogroup:member + autogroup:tagged
 //      (Headscale rejects "*" as an SSH dst), replacing the SaaS
 //      per-tag/self rules — tagged nodes never match autogroup:self,
@@ -54,13 +53,12 @@
 			"src":    ["100.100.0.48"],
 			"dst":    ["100.100.0.8:443"],
 		},
-		// NanoClaw can reach the shared HTTPS gateway for k8s-readonly. The
-		// gateway also serves other hostnames on this same IP/port; Headscale
-		// cannot filter by hostname, so this matches Muse's network permission.
+		// Kratos can read the tailnet Gateway HTTPS endpoint, matching Muse's
+		// gateway access. IP source, so tag:external (which also covers mcleod)
+		// does not inherit it.
 		{
 			"action": "accept",
-			"proto":  "tcp",
-			"src":    ["tag:nanoclaw"],
+			"src":    ["100.100.0.56"],
 			"dst":    ["100.100.0.8:443"],
 		},
 		// Gatus may query only its observed Tailnet health-check targets, DNS,
@@ -89,7 +87,7 @@
 		// Tagged nodes use the tailnet DNS resolvers for MagicDNS and filtering.
 		{
 			"action": "accept",
-			"src":    ["tag:external", "tag:beszel-agent", "tag:monitored", "tag:nanoclaw"],
+			"src":    ["tag:external", "tag:beszel-agent", "tag:monitored"],
 			"dst":    ["100.100.0.7:53", "{{ headscale_primary_dns_ip }}:53"],
 		},
 		// Allow members to use exit nodes (internet-bound traffic).
@@ -173,18 +171,12 @@
 			"accept": ["100.100.0.7:443", "100.100.0.8:443"],
 			"deny":   ["tag:loki:3100", "tag:pangolin:443"],
 		},
-		// NanoClaw gets the k8s-readonly gateway path and DNS, without Muse's Gatus access.
+		// Kratos may reach the Gateway HTTPS endpoint only, like Muse, with no Loki or Pangolin access.
 		{
-			"src":    "tag:nanoclaw",
+			"src":    "100.100.0.56",
 			"proto":  "tcp",
-			"accept": ["100.100.0.8:443", "100.100.0.7:53", "{{ headscale_primary_dns_ip }}:53"],
+			"accept": ["100.100.0.8:443"],
 			"deny":   ["100.100.0.7:443", "100.100.0.22:443", "100.100.0.1:443", "tag:loki:3100", "tag:pangolin:443"],
-		},
-		{
-			"src":    "tag:nanoclaw",
-			"proto":  "udp",
-			"accept": ["100.100.0.7:53", "{{ headscale_primary_dns_ip }}:53"],
-			"deny":   ["100.100.0.8:53"],
 		},
 		{
 			"src":    "tag:external",
@@ -270,16 +262,6 @@
 			"dst":    ["tag:pangolin"],
 			"accept": ["root"],
 		},
-		{
-			"src":    "dave@",
-			"dst":    ["tag:nanoclaw"],
-			"accept": ["root"],
-		},
-		{
-			"src":   "tag:nanoclaw",
-			"dst":   ["dave@", "tag:external", "tag:pangolin", "tag:monitored", "tag:loki"],
-			"deny": ["root"],
-		},
 	],
 
 	// All tags referenced in acls/ssh must be defined here, even if empty.
@@ -290,6 +272,5 @@
 		"tag:monitored": [],
 		"tag:gatus":     [],
 		"tag:external":  [],
-		"tag:nanoclaw":  ["dave@"],
 	},
 }
