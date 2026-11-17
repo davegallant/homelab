@@ -46,16 +46,15 @@
 			"dst":    ["100.100.0.7:443"],
 		},
 		// Muse can read the k8s-readonly API proxy over its tailnet HTTPS endpoint (IP source,
-		// following the Gatus pattern - NOT tag:external, to avoid granting kratos/mcleod and
-		// to pass the tag:external deny dave@:443 test).
+		// following the Gatus pattern - NOT tag:external, so tag:external hosts do not inherit it
+		// and the tag:external deny dave@:443 test still passes).
 		{
 			"action": "accept",
 			"src":    ["100.100.0.48"],
 			"dst":    ["100.100.0.8:443"],
 		},
 		// Kratos can read the tailnet Gateway HTTPS endpoint, matching Muse's
-		// gateway access. IP source, so tag:external (which also covers mcleod)
-		// does not inherit it.
+		// gateway access. IP source, so tag:external hosts do not inherit it.
 		{
 			"action": "accept",
 			"src":    ["100.100.0.56"],

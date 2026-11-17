@@ -53,7 +53,6 @@
       invidious: [tag:monitored, tag:pangolin]
       jellyfin: [tag:monitored, tag:pangolin]
       kratos: [tag:external]
-      mcleod: [tag:external, tag:beszel-agent]
       muse: [tag:external]
       paperless-ngx: [tag:monitored, tag:pangolin]
       searxng: [tag:monitored]
