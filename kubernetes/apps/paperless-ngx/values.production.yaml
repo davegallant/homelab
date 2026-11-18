@@ -88,6 +88,11 @@ controllers:
           # The compose reaches Redis by service name; in-pod it is
           # the neighbouring container.
           PAPERLESS_REDIS: redis://127.0.0.1:6379
+          # 3.5.0 tightened the allowed_hosts default (#14735): with
+          # PAPERLESS_URL set, only the URL host is allowed, which
+          # rejects kubelet probes (pod IP) and Newt's health check
+          # (Service name). "*" restores the pre-3.5.0 default.
+          PAPERLESS_ALLOWED_HOSTS: "*"
         probes:
           startup:
             enabled: true
