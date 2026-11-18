@@ -1,8 +1,3 @@
-vps_host := "vps"
-vps_dir := "~"
-
-local_dir := "/Volumes/backups/pangolin"
-
 # Show available recipes
 default:
     @just --list
