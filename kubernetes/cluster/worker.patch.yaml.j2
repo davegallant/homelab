@@ -29,6 +29,18 @@ machine:
 {% if talos_default_route_source | default('') %}
             source: {{ talos_default_route_source }}
 {% endif %}
+{% if talos_dhi_registry_username is defined and talos_dhi_registry_username | length > 0 and talos_dhi_registry_password is defined and talos_dhi_registry_password | length > 0 %}
+  # Docker Hardened Images (dhi.io) pull credentials. Vars are intentionally
+  # NOT in vars.yaml (never put machine secrets there): supply them via
+  # --extra-vars from a Vault-encrypted file when running generate-config.
+  # Without them this block renders nothing.
+  registries:
+    config:
+      dhi.io:
+        auth:
+          username: "{{ talos_dhi_registry_username }}"
+          password: "{{ talos_dhi_registry_password }}"
+{% endif %}
   files:
     - content: Talos local Homepage storage root
       permissions: 0644
