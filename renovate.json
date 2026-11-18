@@ -257,6 +257,20 @@
         "codeberg.org/forgejo/forgejo"
       ],
       "enabled": false
+    },
+    {
+      "description": "Cilium is the CNI and the Gateway front door: soak releases a week, keep both pins in one PR, and link the upgrade runbook",
+      "matchDepNames": [
+        "cilium"
+      ],
+      "matchDatasources": [
+        "helm"
+      ],
+      "groupName": "cilium",
+      "minimumReleaseAge": "7 days",
+      "prBodyNotes": [
+        "Cilium is the CNI and the Gateway front door \u2014 follow kubernetes/apps/cilium/UPGRADE-RUNBOOK.md before merging. Required: render diff + xdsMode split check, parent-first sync, per-node rollout watch, abort criteria."
+      ]
     }
   ]
 }
