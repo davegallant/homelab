@@ -1,6 +1,6 @@
 services:
   adguard-secondary:
-    image: docker.io/adguard/adguardhome:v0.107.80@sha256:8224eeda45e5c0efe014376f239f67b26e4b73bbb19576da6e576e398f1ea763
+    image: docker.io/adguard/adguardhome:v1.0.0@sha256:c0c09989753b542009c3dc27df14657952de91c204d80079bea6c53df1c6290f
     container_name: adguard-secondary
     network_mode: host
     restart: always
