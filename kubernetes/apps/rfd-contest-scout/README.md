@@ -50,25 +50,23 @@ does not overlap it.
 ## Secrets
 
 The runtime Secret `rfd-contest-scout-runtime-external` in `argo-workflows` holds
-`APPRISE_URL`, built from the Vault value `contest_scout_gotify_token`. That
-token belongs to a separate Gotify application named Contest Scout, so it is not
-the RFD Notify token.
+`APPRISE_URL`, built from the existing Vault value `rfd_notify_gotify_token`. It
+uses the same Gotify application as RFD Notify, so Contest Scout digests arrive
+in that app and no new Vault value is needed. Argo failure notifications still
+use `argo_workflows_gotify_token`.
 
 Provision it after the namespace exists:
 
 ```sh
-just edit-secrets   # add contest_scout_gotify_token
-just run talos-cluster/gitops-secrets --tags rfd-contest-scout-secret
+just run talos-cluster/gitops-secrets --tags rfd-contest-scout-secret -e talos_kube_context=homelab
 ```
-
-Pass the intended `talos_kube_context` extra var as for other runtime secrets.
 
 Only the workflow pod can reach DNS, `forums.redflagdeals.com`, and
 `gotify.davegallant.ca` over HTTPS (`rfd-contest-scout-egress`).
 
 ## Runbook
 
-1. Confirm the Gotify application and the Vault key exist (see Secrets).
+1. Confirm `rfd_notify_gotify_token` is in Vault (see Secrets).
 2. Render and check locally, then server dry-run. Do not push or sync until
    Dave approves.
 3. After approval, push to `main`. Sync the parent `argocd` Application first:
@@ -94,7 +92,7 @@ Only the workflow pod can reach DNS, `forums.redflagdeals.com`, and
    ```
 
    A Succeeded workflow does not prove delivery. Check that the Gotify
-   "Contest Scout" application received the message. Check the logs for
+   application shared with RFD Notify received the Contest Scout message. Check the logs for
    `delivered N contests via Gotify`.
 7. Verify a Velero backup with the state-keeper mounted, and require a
    Completed backup and a Completed PodVolumeBackup for
@@ -130,9 +128,6 @@ delete the claim without Dave's go.
 
 ## Open items
 
-- The Gotify application and the `contest_scout_gotify_token` Vault key are
-  not yet provisioned. The manual run and any Gotify arrival check depend on
-  them.
 - NanoClaw's Contest Scout is still live on the NanoClaw host and is not part
   of this app. Until it is retired, Dave may receive two digests.
 - The NanoClaw title rules keep some titles such as `(BC best)`. This port keeps
