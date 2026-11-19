@@ -1,0 +1,67 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: rfd-contest-scout
+  namespace: argo-workflows
+spec:
+  schedules:
+    - {{ .Values.schedule | quote }}
+  timezone: {{ .Values.timezone | quote }}
+  suspend: {{ .Values.suspend }}
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 300
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  workflowSpec:
+    entrypoint: digest
+    activeDeadlineSeconds: 300
+    serviceAccountName: argo-workflow
+    podMetadata:
+      labels:
+        app.kubernetes.io/name: rfd-contest-scout
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 10001
+      runAsGroup: 10001
+      fsGroup: 10001
+      seccompProfile:
+        type: RuntimeDefault
+    volumes:
+      - name: script
+        configMap:
+          name: rfd-contest-scout-script
+      - name: state
+        persistentVolumeClaim:
+          claimName: {{ .Values.state.claimName }}
+    templates:
+      - name: digest
+        retryStrategy:
+          limit: "0"
+        container:
+          image: {{ .Values.image | quote }}
+          imagePullPolicy: IfNotPresent
+          command: [python3, -B, /app/scout.py, digest]
+          env:
+            - name: APPRISE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.runtimeSecret }}
+                  key: APPRISE_URL
+            - name: CONTEST_SCOUT_DB
+              value: /state/contest-scout.db
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: script
+              mountPath: /app
+              readOnly: true
+            - name: state
+              mountPath: /state

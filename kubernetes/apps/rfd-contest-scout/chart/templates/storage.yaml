@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.state.claimName }}
+  namespace: argo-workflows
+  annotations:
+    volumeType: {{ .Values.state.volumeType | quote }}
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: {{ .Values.state.storageClassName }}
+  resources:
+    requests:
+      storage: {{ .Values.state.size }}
