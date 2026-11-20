@@ -44,9 +44,8 @@ spec:
           command: [sh, -ec]
           args:
             - >-
-              python -m venv /tmp/venv &&
-              /tmp/venv/bin/pip install --no-cache-dir -r requirements.txt &&
-              /tmp/venv/bin/python gaswatch.py
+              python3 -m pip install --no-cache-dir --target=/tmp/deps -r requirements.txt &&
+              PYTHONPATH=/tmp/deps python3 gaswatch.py
           env:
             - name: GASWATCH_STATE_FILE
               value: /state/gaswatch-state.json
