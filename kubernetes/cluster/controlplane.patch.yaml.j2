@@ -15,6 +15,7 @@ nodeIP:
 cluster:
   proxy:
     disabled: true
+    image: registry.k8s.io/kube-proxy:v{{ kubernetes_version }}
 machine:
   network:
     interfaces:

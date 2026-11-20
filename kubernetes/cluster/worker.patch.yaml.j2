@@ -46,6 +46,12 @@ machine:
       permissions: 0644
       path: /var/mnt/homepage/config/.keep
       op: create
+{% for root in talos_node_storage_roots | default([]) %}
+    - content: "{{ root.content }}"
+      permissions: 0644
+      path: {{ root.path }}
+      op: create
+{% endfor %}
     - content: Talos local-path-provisioner storage root
       permissions: 0644
       path: /var/mnt/local-path/.keep
