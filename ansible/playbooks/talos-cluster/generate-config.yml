@@ -5,6 +5,7 @@
   gather_facts: false
   vars_files:
     - ../../../kubernetes/cluster/vars.yaml
+    - ../../group_vars/all/secrets.yaml
   vars:
     talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
     talos_private_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.local/share/homelab-talos"
