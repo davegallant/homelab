@@ -41,11 +41,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}@{{ .Values.image.digest }}"
           imagePullPolicy: IfNotPresent
           workingDir: /workspace
-          command: [sh, -ec]
-          args:
-            - >-
-              python3 -m pip install --no-cache-dir --target=/tmp/deps -r requirements.txt &&
-              PYTHONPATH=/tmp/deps python3 gaswatch.py
+          command: [python3, bootstrap.py]
           env:
             - name: GASWATCH_STATE_FILE
               value: /state/gaswatch-state.json

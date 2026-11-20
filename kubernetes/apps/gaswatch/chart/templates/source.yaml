@@ -8,3 +8,5 @@ data:
 {{ .Files.Get "files/gaswatch.py" | indent 4 }}
   requirements.txt: |-
 {{ .Files.Get "files/requirements.txt" | indent 4 }}
+  bootstrap.py: |-
+{{ .Files.Get "files/bootstrap.py" | indent 4 }}
