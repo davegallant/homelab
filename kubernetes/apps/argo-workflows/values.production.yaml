@@ -39,7 +39,7 @@ controller:
             labels:
               app.kubernetes.io/name: argo-workflows-gotify
           script:
-            image: dhi.io/python:3.14.5-debian13@sha256:7b74640b7f36f4e32dccaddc497182f90f476f889323ab5626b7cffd67ba3c8a
+            image: dhi.io/python:3.15.2-debian13@sha256:5f3efbd860ff18cf93c93e5812e300a17e6e06d35be4f973581f3129addeccac
             command: [python3]
             resources:
               requests: {cpu: 50m, memory: 64Mi}
