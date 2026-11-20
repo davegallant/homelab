@@ -25,6 +25,10 @@ spec:
           imagePullPolicy: IfNotPresent
           args:
             - valkey-server
+            # DHI entrypoint does not add this (the stock image did). Ingress is
+            # limited to this namespace, so protected mode is not needed here.
+            - --protected-mode
+            - "no"
             - --save
             - "30"
             - "1"
