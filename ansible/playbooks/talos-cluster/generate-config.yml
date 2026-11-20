@@ -5,6 +5,7 @@
   gather_facts: false
   vars_files:
     - ../../../kubernetes/cluster/vars.yaml
+    - ../../group_vars/all/secrets.yaml
   vars:
     talosctl_binary: "{{ lookup('ansible.builtin.env', 'TALOSCTL') | default('talosctl', true) }}"
     talos_private_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.local/share/homelab-talos"
@@ -51,6 +52,12 @@
         dest: "{{ talos_private_dir }}/controlplane.patch.yaml"
         mode: "0600"
 
+    - name: Render control plane audit policy patch
+      ansible.builtin.template:
+        src: ../../../kubernetes/cluster/audit-config.patch.yaml
+        dest: "{{ talos_private_dir }}/audit-config.patch.yaml"
+        mode: "0600"
+
     - name: Render worker patches
       ansible.builtin.template:
         src: ../../../kubernetes/cluster/worker.patch.yaml.j2
@@ -62,6 +69,7 @@
         talos_extra_address_cidrs: "{{ item.extra_address_cidrs | default([]) }}"
         talos_node_ip_subnet: "{{ item.kubelet_node_ip_subnet | default(talos_kubelet_node_ip_subnet) }}"
         talos_default_route_source: "{{ item.default_route_source | default('') }}"
+        talos_node_storage_roots: "{{ item.storage_roots | default([]) }}"
       loop: "{{ talos_nodes | selectattr('role', 'equalto', 'worker') | list }}"
       loop_control:
         label: "{{ item.name }}"
@@ -108,6 +116,8 @@
           - "{{ talos_private_dir }}/base/controlplane.yaml"
           - --patch
           - "@{{ talos_private_dir }}/controlplane.patch.yaml"
+          - --patch
+          - "@{{ talos_private_dir }}/audit-config.patch.yaml"
           - --output
           - "{{ talos_private_dir }}/k8s-cp-1.yaml"
       changed_when: true

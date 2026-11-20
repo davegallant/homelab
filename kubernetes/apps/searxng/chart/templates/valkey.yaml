@@ -55,8 +55,9 @@ spec:
             {{- toYaml .Values.valkey.resources | nindent 12 }}
           securityContext:
             runAsNonRoot: true
-            runAsUser: 999
-            runAsGroup: 999
+            # DHI image runs as nonroot (65532); 999 was the stock valkey UID.
+            runAsUser: 65532
+            runAsGroup: 65532
             readOnlyRootFilesystem: true
             capabilities:
               drop:

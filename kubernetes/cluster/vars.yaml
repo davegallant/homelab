@@ -43,6 +43,14 @@ talos_nodes:
     # continues to select the node address, 192.168.1.211.
     extra_address_cidrs: ["192.168.1.152/32"]
     kubelet_node_ip_subnet: 192.168.1.211/32
+    # Storage roots live on this node only; keep them out of the shared worker
+    # template so other workers do not gain these directories.
+    storage_roots:
+      - {path: /var/mnt/homepage/tailscale/.keep, content: Talos local Homepage storage root}
+      - {path: /var/mnt/homepage/caddy/.keep, content: Talos local Homepage storage root}
+      - {path: /var/mnt/kiwix/tailscale/.keep, content: Talos local Kiwix storage root}
+      - {path: /var/mnt/kiwix/caddy/.keep, content: Talos local Kiwix storage root}
+      - {path: /var/mnt/miniflux/postgres/.keep, content: Talos local Miniflux storage root}
     default_route_source: 192.168.1.211
     vcpu: 3
     memory_mib: 12288
