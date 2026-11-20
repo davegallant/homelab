@@ -23,9 +23,9 @@ searxng:
       memory: 64Mi
 
 valkey:
-  # DHI pilot: digest pin TODO — dhi.io requires auth. After `docker login
-  # dhi.io`, resolve with `docker buildx imagetools inspect` and pin it here.
-  image: dhi.io/valkey:9.1.3-debian13
+  # DHI pilot: digest read from a pod pulled on k8s-w-1 after the Talos
+  # registry auth was applied (dhi.io requires auth).
+  image: dhi.io/valkey:9.1.3-debian13@sha256:30ad0b49d349ec92fb1a1741192268a363bb0aefd10b66d239cefc8ebb29f2cf
   resources:
     requests:
       cpu: 50m
