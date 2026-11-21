@@ -25,7 +25,7 @@ searxng:
 valkey:
   # DHI pilot: digest read from a pod pulled on k8s-w-1 after the Talos
   # registry auth was applied (dhi.io requires auth).
-  image: dhi.io/valkey:9.1.4-debian13@sha256:79cc370cac7a25462d4f4ed710d413267b5875279fcd5b95c1566c97c892caac
+  image: dhi.io/valkey:9.1.4-debian13@sha256:4430d0e62fd3e64069c88d13afcc6bf6b7f525e3c425091c0c2f25bbc8720b56
   resources:
     requests:
       cpu: 50m
