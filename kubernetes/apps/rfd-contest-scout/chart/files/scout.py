@@ -243,7 +243,6 @@ def render_digest(items, today):
             lines.append(f"- [{escape_markdown(title)}]({item['url']}) — "
                          f"{format_expiry(item['expires_on'])} · {item['frequency']}{note}")
         lines.append("")
-    lines.append("Eligibility is based on the title; check the contest rules before entering.")
     return "\n".join(lines).strip()
 
 
