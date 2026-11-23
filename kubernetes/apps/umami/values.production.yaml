@@ -105,8 +105,8 @@ controllers:
           readOnlyRootFilesystem: true
         image:
           repository: docker.io/library/postgres
-          tag: "18.7"
-          digest: sha256:eb63372c1e05c755f55fa30cbd07aecc443676fc6c0fa90b9002d01537841e1a
+          tag: "19.0"
+          digest: sha256:766ddae4967301b9802b341bb596905f11dd5c558149690a7a4d80c2f61bbcf9
         envFrom:
           - secretRef:
               name: umami-external
