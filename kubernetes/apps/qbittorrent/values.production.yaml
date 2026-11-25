@@ -20,8 +20,8 @@ controllers:
       app:
         image:
           repository: docker.io/linuxserver/qbittorrent
-          tag: 5.3.0
-          digest: sha256:3d4c4545d51a690a0df15a2ff99038823a88a9822df8e794526447b9afbd7384
+          tag: 5.3.1
+          digest: sha256:1fa2f9692501f27ce51c4fffd771d63ec38f1163cb648941c324344b7c5a3915
         env:
           PUID: '1000'
           PGID: '1000'
@@ -76,8 +76,8 @@ controllers:
       bootstrap:
         image:
           repository: docker.io/linuxserver/qbittorrent
-          tag: 5.3.0
-          digest: sha256:3d4c4545d51a690a0df15a2ff99038823a88a9822df8e794526447b9afbd7384
+          tag: 5.3.1
+          digest: sha256:1fa2f9692501f27ce51c4fffd771d63ec38f1163cb648941c324344b7c5a3915
         command:
           - /bin/bash
           - -ec
