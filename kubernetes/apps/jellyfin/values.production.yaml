@@ -233,3 +233,11 @@ rawResources:
               - ports:
                   - port: "443"
                     protocol: TCP
+          - toFQDNs:
+              - matchName: manifest.intro-skipper.org
+              - matchName: github.com
+              - matchName: objects.githubusercontent.com
+            toPorts:
+              - ports:
+                  - port: "443"
+                    protocol: TCP
