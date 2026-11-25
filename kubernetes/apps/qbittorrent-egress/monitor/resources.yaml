@@ -107,7 +107,7 @@ spec:
           # fail-closed boundary. The actual exit is checked by check.py.
           initContainers:
             - name: reconciliation-delay
-              image: docker.io/linuxserver/qbittorrent:5.3.0@sha256:3d4c4545d51a690a0df15a2ff99038823a88a9822df8e794526447b9afbd7384
+              image: docker.io/linuxserver/qbittorrent:5.3.1@sha256:1fa2f9692501f27ce51c4fffd771d63ec38f1163cb648941c324344b7c5a3915
               command: [sleep, '20']
               securityContext:
                 runAsNonRoot: true
@@ -124,7 +124,7 @@ spec:
                   memory: 32Mi
           containers:
             - name: check
-              image: docker.io/linuxserver/qbittorrent:5.3.0@sha256:3d4c4545d51a690a0df15a2ff99038823a88a9822df8e794526447b9afbd7384
+              image: docker.io/linuxserver/qbittorrent:5.3.1@sha256:1fa2f9692501f27ce51c4fffd771d63ec38f1163cb648941c324344b7c5a3915
               command: [python3, /checks/check.py]
               envFrom:
                 - secretRef:
