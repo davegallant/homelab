@@ -39,8 +39,8 @@ initContainers:
         name: plugins
 kubectl:
   image:
-    digest: sha256:5ed410ebac5dc976cc717098994dcdb29bbbd38f6bd65f582311f5be4ba719cf
-    repository: registry.k8s.io/kubectl:v1.37.0
+    digest: sha256:82f06779a0dcd86225ffdb96c005418b9716093a39907a5ecf686d7a22e6b788
+    repository: registry.k8s.io/kubectl:v1.37.3
     tag: ''
 namespace:
   labels:
