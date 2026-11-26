@@ -2,4 +2,4 @@ schedule: "0 12 * * *"
 timezone: America/Toronto
 suspend: true
 sendGotify: false
-image: dhi.io/python:3.15.2-debian13@sha256:d865291cf12dd5984f92656eacdaabda6e6621872e49995fa0dbd0dbe4a87592
+image: dhi.io/python:3.15.2-debian13@sha256:d5387cad673412ef60e7fdadec757bd653c7dc289bfdccb4beff6d1ccec94f36
