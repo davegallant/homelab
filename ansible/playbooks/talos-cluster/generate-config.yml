@@ -97,6 +97,8 @@
           - "{{ talos_private_dir }}/secrets.yaml"
           - --install-disk
           - "{{ talos_install_disk }}"
+          - --install-image
+          - "factory.talos.dev/metal-installer/{{ talos_schematic_id }}:{{ talos_version }}"
           - --kubernetes-version
           - "{{ kubernetes_version }}"
           - --with-docs=false

@@ -4,6 +4,9 @@
 talos_version: v1.14.7
 talos_iso_filename: metal-amd64-v1.14.7.iso
 talos_iso_sha256: 8f426aa9fca789a434b24bb64714cb53e8aa5b08d70e9c645554cac24972db4f
+# Image Factory schematic with the i915 extension (GPU workers); the installer
+# image must keep it or a reinstall drops GPU support.
+talos_schematic_id: dc8730aa8cc7bfa5ef7e2b3284248f2631135b2faf4ae11aa997a0c1987b0eee
 # renovate: datasource=custom.kubernetes depName=kubernetes/kubernetes versioning=semver
 kubernetes_version: 1.37.3
 talos_proxmox_iso_storage: proxmox-iso
