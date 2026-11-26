@@ -98,8 +98,8 @@ controllers:
       companion:
         image:
           repository: quay.io/invidious/invidious-companion
-          tag: 2026.11.07-f4cdf76
-          digest: sha256:d63f3c55edf281073c1e3ce23ab528b2d8c7561071a5426e62effd19c39a8748
+          tag: 2026.11.26-e3f933b
+          digest: sha256:2c6ba8fea404ad9697256c725a3b818646e638dd490150a10744897026055856
         envFrom:
           - secretRef:
               name: invidious-external
