@@ -31,7 +31,8 @@ lanDnsClients:
   - 192.168.1.214/31
   - 192.168.1.216/29
   - 192.168.1.224/27
-tlsSecretName: lan-gateway-wildcard
+# Issued and renewed by cert-manager (kubernetes/apps/cert-manager).
+tlsSecretName: lan-gateway-wildcard-acme
 # Tailnet entry: userspace Tailscale forwarding tailnet TCP 443 to the Caddy
 # Service, so tailnet clients (100.x) reach the same Caddy from anywhere.
 tailscaleImage: ghcr.io/tailscale/tailscale:v1.104.7@sha256:72c1e19e0aedca96b8533bbb0b4368564410ff20b17e53b804eb6c1f04a31be4

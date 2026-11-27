@@ -62,4 +62,5 @@ spec:
         certificateRefs:
           - group: ""
             kind: Secret
-            name: tailnet-gateway-wildcard
+            # Issued and renewed by cert-manager (kubernetes/apps/cert-manager).
+            name: tailnet-gateway-wildcard-acme
