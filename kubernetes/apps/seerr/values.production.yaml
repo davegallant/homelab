@@ -161,6 +161,16 @@ rawResources:
               - ports:
                   - port: "8989"
                     protocol: TCP
+          - toEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: jellyfin
+                  k8s:app.kubernetes.io/name: jellyfin
+                  k8s:app.kubernetes.io/instance: jellyfin
+                  k8s:app.kubernetes.io/controller: jellyfin
+            toPorts:
+              - ports:
+                  - port: "8096"
+                    protocol: TCP
           - toEntities:
               - world
             toPorts:

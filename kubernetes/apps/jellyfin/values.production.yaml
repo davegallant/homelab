@@ -148,6 +148,16 @@ rawResources:
           - fromEndpoints:
               - matchLabels:
                   k8s:io.kubernetes.pod.namespace: jellyfin
+          - fromEndpoints:
+              - matchLabels:
+                  k8s:io.kubernetes.pod.namespace: seerr
+                  k8s:app.kubernetes.io/name: seerr
+                  k8s:app.kubernetes.io/instance: seerr
+                  k8s:app.kubernetes.io/controller: seerr
+            toPorts:
+              - ports:
+                  - port: "8096"
+                    protocol: TCP
         egress:
           - toEndpoints:
               - matchLabels:
