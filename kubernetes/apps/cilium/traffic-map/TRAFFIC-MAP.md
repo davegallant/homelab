@@ -226,7 +226,7 @@ The new pod IP and source port differ from the pre-restart pod's tuple, so
 these forwarded events cannot be explained solely by the old pod's conntrack
 entry.
 The tracked Lidarr policy still has an `egressDeny` for `192.168.1.0/24`
-([policy values](../lidarr/values.production.yaml)). This test therefore found
+([policy values](../../lidarr/values.production.yaml)). This test therefore found
 a real policy hole: traffic from the replacement pod is still forwarded. The
 observation stopped as soon as the first streamed batch showed the forwarded
 verdict. Sonarr and Radarr were not restarted; no policy was changed. No

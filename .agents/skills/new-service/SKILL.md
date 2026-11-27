@@ -37,7 +37,6 @@ and rollback before changing the running service.
 
 2. **Add the service to Homepage on Talos.** Read
    `kubernetes/apps/homepage/README.md` before editing its configuration.
-   The former Homepage LXC is retired.
    - Add `HOMEPAGE_VAR_<SERVICE>_URL: {{ <service>_url | to_json }}` under
      the existing environment mapping in
      `kubernetes/apps/homepage/values.ansible.yaml.j2`.

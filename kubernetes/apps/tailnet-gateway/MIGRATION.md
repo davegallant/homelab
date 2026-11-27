@@ -34,7 +34,7 @@ workloads or data.
    change. Prune only approved obsolete resources for that app, without force.
    Deleting their PVCs or ConfigMaps while the Deployment still mounts them
    breaks the existing path. Preserve data pending separately approved cleanup.
-5. Wait for the retired Headscale node to become offline before removing or
+5. Wait for the old Headscale node to become offline before removing or
    expiring its colliding registration. Do not add an extra DNS record while an
    online node owns that name.
 6. Preserve existing extra DNS records when adding the app's records. Validate

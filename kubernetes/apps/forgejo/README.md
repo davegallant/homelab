@@ -50,4 +50,4 @@ Read [the storage rules](../../STORAGE.md) and
 Verify a fresh backup includes a completed data PodVolumeBackup with nonzero
 bytes. Inspect active claims and retained migration objects before cleanup;
 never overwrite newer Kubernetes writes with a historical source copy.
-Do not restart a retired source service without explicit authorization.
+Do not restart a source service without explicit authorization.

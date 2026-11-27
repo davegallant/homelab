@@ -20,8 +20,7 @@ The Vault bridge expects `gaswatch_location`, `gaswatch_latitude`,
 `gaswatch_drop_lookback_hours`, `gaswatch_hysteresis_cpl`,
 `gaswatch_quiet_hours`, `gaswatch_timeout_seconds`,
 `gaswatch_favourite_station_ids`, and `gaswatch_gotify_token`. Copy the alert
-tuning values directly in Vault; Vault is the source of truth now that the
-standalone Forgejo repo is retired. The current alert tuning is 4.0¢/L over a
+tuning values directly in Vault; Vault is the source of truth. The current alert tuning is 4.0¢/L over a
 24-hour lookback with 2.0¢/L hysteresis, quiet hours `23-7`, and a 20-second
 request timeout. Set `gaswatch_quiet_hours` to an empty string to disable quiet
 hours. Quiet hours are evaluated in `America/Toronto` via

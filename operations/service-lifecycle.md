@@ -44,7 +44,7 @@ retain protected rollback data for a stated period. Remove resource configuratio
 and live resources separately, with a reviewed per-resource deletion list.
 Never use bulk pruning to infer what is safe to delete.
 
-Miniflux is removed. Beszel, Headlamp and k8s-readonly remain until usage and
+Beszel, Headlamp and k8s-readonly remain until usage and
 access requirements establish that one can be retired. Do not equate similar
 names or UI functions with redundant operational needs.
 

@@ -275,8 +275,7 @@ secret.
   control plane, verify each node, then reconcile the pins and regenerate
   configs as directed there. Minor upgrades remain manual and must step through
   each minor.
-- Headscale's `given_name` controls the MagicDNS label. Homepage now runs on
-  Talos; its LXC playbook and LXC rollback path are retired.
+- Headscale's `given_name` controls the MagicDNS label.
 - Homepage's local PVCs and Pod are pinned to `k8s-w-1`. Proxmox VM backups
   cover those disks; an off-host etcd snapshot covers cluster state. Read the
   recovery constraints in the cluster README before restoring a VM.

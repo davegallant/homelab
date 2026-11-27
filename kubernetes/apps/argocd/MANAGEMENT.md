@@ -211,9 +211,6 @@ Homepage's production values and approve a sync. External Secret rotations
 also require workload restarts. PostgreSQL password rotation additionally
 requires changing the database role password.
 
-The retired Argo CD sidecar PVCs and backing directories were removed after
-review on 2026-11-10. They are not part of the recovery bootstrap.
-
 ## Recovery and safeguards
 
 The old application lifecycle playbooks and platform Helm installers check
@@ -222,8 +219,7 @@ verification actions remain usable. Use Argo CD for normal rollback by
 reverting Git and approving a sync. No database or local-PV data is moved by
 this management change; existing Velero and Proxmox backup coverage remains.
 
-Miniflux is removed; its chart and lifecycle playbook are retired from this
-repository. Removing tracked configuration does not delete any retained live
+Removing tracked configuration does not delete any retained live
 volume data. Audit retained storage separately before deleting it.
 
 For a fresh cluster, bootstrap Argo CD with `argocd.yml`, provision the external

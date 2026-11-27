@@ -201,7 +201,7 @@ Or install those tools manually.
 
 Deployment recipes run from the repo root and apply changes to live hosts.
 The all-host list is defined in [playbooks/main.yml](ansible/playbooks/main.yml);
-it excludes retired LXC workloads. Kubernetes follows the separate
+Kubernetes follows the separate
 [Argo CD workflow](kubernetes/apps/argocd/MANAGEMENT.md).
 
 ```sh
