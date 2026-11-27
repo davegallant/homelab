@@ -68,6 +68,59 @@
     - ansible.builtin.include_tasks:
         file: ../../tasks/docker-compose-up.yml
 
+    - name: Read AdGuard user rules
+      ansible.builtin.uri:
+        url: http://127.0.0.1:80/control/filtering/status
+        user: "{{ homepage_adguard_home_username }}"
+        password: "{{ homepage_adguard_home_password }}"
+        force_basic_auth: true
+        return_content: true
+      register: adguard_filtering_status
+      check_mode: false
+      no_log: true
+      tags: ["adguard_lan_gateway"]
+
+    # Replace only the marked LAN gateway block (from
+    # kubernetes/apps/lan-gateway/chart/values.yaml); unmarked copies of the
+    # same rules are dropped so the block stays the single owner.
+    - name: Compute AdGuard user rules with the LAN gateway block
+      ansible.builtin.set_fact:
+        adguard_user_rules_current: "{{ adguard_filtering_status.json.user_rules | default([], true) }}"
+        adguard_user_rules_desired: >-
+          {%- set cur = adguard_filtering_status.json.user_rules | default([], true) -%}
+          {%- set out = [] -%}
+          {%- set ns = namespace(inside=false) -%}
+          {%- for r in cur -%}
+          {%- if r == lan_gateway_adguard_rule_markers[0] -%}{%- set ns.inside = true -%}
+          {%- elif r == lan_gateway_adguard_rule_markers[1] -%}{%- set ns.inside = false -%}
+          {%- elif not ns.inside and r not in lan_gateway_adguard_rules -%}{%- set _ = out.append(r) -%}
+          {%- endif -%}
+          {%- endfor -%}
+          {{ out + lan_gateway_adguard_rules }}
+      tags: ["adguard_lan_gateway"]
+
+    - name: Show AdGuard LAN gateway rule changes
+      ansible.builtin.debug:
+        msg:
+          added: "{{ adguard_user_rules_desired | difference(adguard_user_rules_current) }}"
+          removed: "{{ adguard_user_rules_current | difference(adguard_user_rules_desired) }}"
+      tags: ["adguard_lan_gateway"]
+
+    - name: Apply AdGuard user rules
+      ansible.builtin.uri:
+        url: http://127.0.0.1:80/control/filtering/set_rules
+        method: POST
+        user: "{{ homepage_adguard_home_username }}"
+        password: "{{ homepage_adguard_home_password }}"
+        force_basic_auth: true
+        body_format: json
+        body:
+          rules: "{{ adguard_user_rules_desired }}"
+      when: adguard_user_rules_desired != adguard_user_rules_current
+      changed_when: true
+      no_log: true
+      tags: ["adguard_lan_gateway"]
+
     - name: Serve HTTPS over the tailnet
       ansible.builtin.include_role:
         name: tailnet_caddy

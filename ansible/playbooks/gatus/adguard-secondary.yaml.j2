@@ -36,12 +36,10 @@ filtering:
     - domain: opnsense.davegallant.ca
       answer: 192.168.1.1
       enabled: true
-# LAN gateway split horizon (kubernetes/apps/lan-gateway). This resolver binds
-# only its tailnet IP, so only the tailnet rule can match; the LAN rule keeps
-# parity with the primary.
-user_rules:
-  - '||jellyfin.davegallant.ca^$dnsrewrite=192.168.1.186,client=192.168.1.0/24'
-  - '||jellyfin.davegallant.ca^$dnsrewrite=100.100.0.3,client=100.64.0.0/10'
+# LAN gateway split horizon, generated from
+# kubernetes/apps/lan-gateway/chart/values.yaml (see group_vars/all/vars.yaml).
+# This resolver binds only its tailnet IP, so only the tailnet rules match.
+user_rules: {{ lan_gateway_adguard_rules | to_json }}
 filters:
   - enabled: true
     url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt

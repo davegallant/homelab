@@ -187,6 +187,12 @@ image IDs after each deployment before calling the update live.
 6. Run `just lint` from the repo root before opening a PR
 7. If the host must never run in CI (edge infra like the VPS), add a
    `.no-ci` marker file in the playbook directory with a comment explaining why
+8. If the service runs a Newt sidecar (public through Pangolin), add it to
+   `kubernetes/apps/lan-gateway/chart/values.yaml` `apps` (Kubernetes) or
+   `excluded` with a reason. `just lint` fails otherwise. Deploy order: sync
+   `lan-gateway`, prove the route, then run the `adguard-home` playbook with
+   `--tags adguard_lan_gateway` and the `gatus` playbook for the secondary
+   resolver. See `kubernetes/apps/lan-gateway/README.md`.
 
 ## Shared Variables
 

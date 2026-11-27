@@ -20,16 +20,25 @@ and accepts only `192.168.1.0/24` on TCP 8443.
 
 ## Adding an app
 
+[`chart/values.yaml`](chart/values.yaml) is the single source: the chart,
+both AdGuard instances and the coverage check all read it.
+`scripts/check_lan_gateway_coverage.py` (part of `just lint`) fails when a
+Newt workload is in neither `apps` nor `excluded`, when an entry has no Newt
+workload, or when an app namespace is missing from the AppProject.
+`just check-lan-gateway-pangolin` also compares live Pangolin hostnames.
+
 1. Confirm the Pangolin resource has no Pangolin authentication; this path
    bypasses it.
-2. Add an entry to [`chart/values.yaml`](chart/values.yaml) and the app
-   namespace to `homelab-lan-gateway` in
-   [`project-lan-gateway.yaml`](../argocd/project-lan-gateway.yaml).
-3. Sync `lan-gateway` (no prune, no force) and check the backend policy.
-4. Add both AdGuard rules:
-   `||<app>.davegallant.ca^$dnsrewrite=192.168.1.186,client=192.168.1.0/24` and
-   `||<app>.davegallant.ca^$dnsrewrite=<lan-gateway tailnet IP>,client=100.64.0.0/10`.
-5. Verify from a LAN client without `--resolve`, and that Pangolin still works.
+2. Add the `apps` entry and the namespace to `homelab-lan-gateway` in
+   [`project-lan-gateway.yaml`](../argocd/project-lan-gateway.yaml);
+   `kubectl apply` the project.
+3. Push, sync `lan-gateway` (no prune, no force), and prove the route with
+   `curl --resolve <host>:443:192.168.1.186` and `:100.100.0.3`.
+4. Only then publish DNS: `just run adguard-home --tags adguard_lan_gateway`
+   (primary; replaces only the marked rule block) and `just run gatus`
+   (secondary resolver, rendered from the same values).
+5. Verify with ordinary DNS from a LAN client and a tailnet client, and that
+   Pangolin still works.
 
 ## Applied by hand
 

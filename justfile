@@ -10,9 +10,14 @@ lint:
     yamllint -c .yamllint.yaml ansible/ kubernetes/
     python3 scripts/check-velero-backup-coverage.py
     python3 scripts/rendered_backup_coverage.py
+    python3 scripts/check_lan_gateway_coverage.py
     cd ansible && ANSIBLE_VAULT_PASSWORD_FILE="${ANSIBLE_VAULT_PASSWORD_FILE:-$PWD/.vault_pass}" ansible-lint
     shellcheck scripts/*.sh kubernetes/apps/qbittorrent/scripts/*.sh
     just lint-renovate
+
+# Compare live Pangolin resources with the LAN gateway values (needs ssh vps)
+check-lan-gateway-pangolin:
+    python3 scripts/check_lan_gateway_coverage.py --pangolin
 
 # Run regression tests for repository scripts
 test:

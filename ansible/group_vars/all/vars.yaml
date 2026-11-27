@@ -33,3 +33,19 @@ invidious_url: "https://invidious.tail.davegallant.ca"
 headscale_v4_prefix: "100.100.0.0/16"
 headscale_primary_dns_ip: "100.100.0.9" # AdGuard Home
 headscale_secondary_dns_ip: "100.100.0.7" # Gatus host
+
+# LAN gateway split horizon. kubernetes/apps/lan-gateway/chart/values.yaml is
+# the single source; both AdGuard playbooks manage the rules between the
+# markers and leave every other user rule alone.
+lan_gateway_values: "{{ lookup('ansible.builtin.file', inventory_dir ~ '/../kubernetes/apps/lan-gateway/chart/values.yaml') | from_yaml }}"
+lan_gateway_adguard_rule_markers: ["! lan-gateway begin (managed by Ansible)", "! lan-gateway end"]
+lan_gateway_adguard_rules: >-
+  {%- set v = lan_gateway_values -%}
+  {%- set out = [lan_gateway_adguard_rule_markers[0]] -%}
+  {%- for a in v.apps -%}
+  {%- set h = a.hostname | default(a.name ~ '.davegallant.ca') -%}
+  {%- set _ = out.append('||' ~ h ~ '^$dnsrewrite=' ~ v.loadBalancerIP ~ ',client=' ~ v.lanCidr) -%}
+  {%- set _ = out.append('||' ~ h ~ '^$dnsrewrite=' ~ v.tailnetIP ~ ',client=100.64.0.0/10') -%}
+  {%- endfor -%}
+  {%- set _ = out.append(lan_gateway_adguard_rule_markers[1]) -%}
+  {{ out }}

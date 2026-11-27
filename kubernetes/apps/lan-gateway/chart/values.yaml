@@ -1,6 +1,14 @@
+# Single source of truth for the LAN gateway. The chart renders Caddy sites
+# and backend policies from `apps`; the AdGuard playbooks (primary and
+# secondary) render split-horizon rules from `apps`, `loadBalancerIP` and
+# `tailnetIP`; scripts/check-lan-gateway-coverage.py (just lint) fails when a
+# Newt workload is neither in `apps` nor in `excluded`, or when an entry has
+# no Newt workload behind it.
+#
 # Only list apps that are already public through Pangolin: the LAN must never
 # see more than the internet does. Check the Pangolin resource first; if it
-# uses Pangolin authentication, this path bypasses it.
+# uses Pangolin authentication, this path bypasses it
+# (`just check-lan-gateway-pangolin` compares against live Pangolin).
 #
 # Each entry renders a Caddy site for <hostname> (default
 # <name>.davegallant.ca) proxying to <serviceName>.<namespace>:<port>
@@ -14,8 +22,50 @@ tlsSecretName: lan-gateway-wildcard
 # Service, so tailnet clients (100.x) reach the same Caddy from anywhere.
 tailscaleImage: ghcr.io/tailscale/tailscale:v1.104.7@sha256:72c1e19e0aedca96b8533bbb0b4368564410ff20b17e53b804eb6c1f04a31be4
 tailscaleHostname: lan-gateway
+# Headscale address of the lan-gateway node; AdGuard answers it to 100.x clients.
+tailnetIP: 100.100.0.3
 apps:
+  - name: audiobookshelf
+    port: 80
+    selectorLabels:
+      app.kubernetes.io/name: audiobookshelf
+  - name: bentopdf
+    port: 8080
+    selectorLabels:
+      app.kubernetes.io/name: bentopdf
+  - name: forgejo
+    serviceName: forgejo-http
+    port: 3000
+    selectorLabels:
+      app.kubernetes.io/instance: forgejo
+      app.kubernetes.io/name: forgejo
   - name: jellyfin
     port: 8096
     selectorLabels:
       app.kubernetes.io/name: jellyfin
+  - name: mealie
+    port: 9000
+    selectorLabels:
+      app.kubernetes.io/name: mealie
+  - name: navidrome
+    port: 4533
+    selectorLabels:
+      app.kubernetes.io/name: navidrome
+  - name: paperless-ngx
+    port: 8000
+    selectorLabels:
+      app.kubernetes.io/name: paperless-ngx
+  - name: umami
+    port: 3000
+    selectorLabels:
+      app.kubernetes.io/name: umami
+
+# Newt workloads deliberately not on the LAN gateway. Each needs a reason.
+excluded:
+  - name: gotify
+    reason: >-
+      LXC with no published port (Newt reaches it on a private Docker
+      network); notification traffic is too small to justify publishing it.
+  - name: igotify
+    reason: >-
+      LXC with no published port, like gotify; low-volume notification relay.

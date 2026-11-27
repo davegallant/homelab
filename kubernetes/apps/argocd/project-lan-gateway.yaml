@@ -12,7 +12,21 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: lan-gateway
     - server: https://kubernetes.default.svc
+      namespace: audiobookshelf
+    - server: https://kubernetes.default.svc
+      namespace: bentopdf
+    - server: https://kubernetes.default.svc
+      namespace: forgejo
+    - server: https://kubernetes.default.svc
       namespace: jellyfin
+    - server: https://kubernetes.default.svc
+      namespace: mealie
+    - server: https://kubernetes.default.svc
+      namespace: navidrome
+    - server: https://kubernetes.default.svc
+      namespace: paperless-ngx
+    - server: https://kubernetes.default.svc
+      namespace: umami
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
     - group: apps
