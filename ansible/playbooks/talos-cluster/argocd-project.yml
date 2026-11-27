@@ -55,6 +55,7 @@
         - project-monitoring.yaml
         - project-velero-backup.yaml
         - project-tailnet-gateway.yaml
+        - project-lan-gateway.yaml
       register: argocd_restricted_projects_apply
       changed_when: >-
         'created' in argocd_restricted_projects_apply.stdout or

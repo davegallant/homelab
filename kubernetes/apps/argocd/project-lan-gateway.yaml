@@ -1,0 +1,25 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: homelab-lan-gateway
+  namespace: argocd
+spec:
+  description: LAN gateway Caddy proxy and the backend policies admitting it
+  sourceRepos:
+    - https://github.com/davegallant/homelab.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: lan-gateway
+    - server: https://kubernetes.default.svc
+      namespace: jellyfin
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Service
+    - group: cilium.io
+      kind: CiliumNetworkPolicy

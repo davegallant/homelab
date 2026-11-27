@@ -17,6 +17,7 @@ ignore:
   - kubernetes/apps/grafana/chart/templates/
   - kubernetes/apps/loki/chart/templates/
   - kubernetes/apps/tailnet-gateway/chart/templates/
+  - kubernetes/apps/lan-gateway/chart/templates/
   - kubernetes/apps/rfd-rising-deals/chart/templates/
   - kubernetes/apps/gaswatch/chart/templates/
   - kubernetes/apps/rfd-notify/chart/templates/

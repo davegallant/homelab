@@ -1,0 +1,17 @@
+# Only list apps that are already public through Pangolin: the LAN must never
+# see more than the internet does. Check the Pangolin resource first; if it
+# uses Pangolin authentication, this path bypasses it.
+#
+# Each entry renders a Caddy site for <hostname> (default
+# <name>.davegallant.ca) proxying to <serviceName>.<namespace>:<port>
+# (defaults: name), plus a CiliumNetworkPolicy in the app namespace admitting
+# the Caddy pod on policyPort (default port).
+image: docker.io/library/caddy:2.11.9-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0
+loadBalancerIP: 192.168.1.186
+lanCidr: 192.168.1.0/24
+tlsSecretName: lan-gateway-wildcard
+apps:
+  - name: jellyfin
+    port: 8096
+    selectorLabels:
+      app.kubernetes.io/name: jellyfin

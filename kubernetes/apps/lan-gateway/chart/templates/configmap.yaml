@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lan-gateway-caddy
+  namespace: lan-gateway
+data:
+  Caddyfile: |
+    {
+      admin off
+      http_port 8080
+      https_port 8443
+      auto_https disable_redirects
+      persist_config off
+    }
+{{- range .Values.apps }}
+
+    {{ .hostname | default (printf "%s.davegallant.ca" .name) }} {
+      tls /certs/tls.crt /certs/tls.key
+      reverse_proxy {{ .serviceName | default .name }}.{{ .namespace | default .name }}.svc.cluster.local:{{ .port }}
+    }
+{{- end }}

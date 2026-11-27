@@ -1,0 +1,65 @@
+---
+# The Caddy pod accepts HTTPS only from the LAN and may reach only cluster
+# DNS and the listed backends.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: lan-gateway
+  namespace: lan-gateway
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: lan-gateway
+  ingress:
+    - fromCIDR:
+        - {{ .Values.lanCidr }}
+      toPorts:
+        - ports:
+            - port: "8443"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+{{- range .Values.apps }}
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: {{ .namespace | default .name }}
+{{- range $k, $v := .selectorLabels }}
+            {{ $k }}: {{ $v }}
+{{- end }}
+      toPorts:
+        - ports:
+            - port: "{{ .policyPort | default .port }}"
+              protocol: TCP
+{{- end }}
+{{- range .Values.apps }}
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: {{ .name }}-lan-gateway
+  namespace: {{ .namespace | default .name }}
+spec:
+  endpointSelector:
+    matchLabels:
+{{- range $k, $v := .selectorLabels }}
+      {{ $k }}: {{ $v }}
+{{- end }}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: lan-gateway
+            k8s:app.kubernetes.io/name: lan-gateway
+      toPorts:
+        - ports:
+            - port: "{{ .policyPort | default .port }}"
+              protocol: TCP
+{{- end }}

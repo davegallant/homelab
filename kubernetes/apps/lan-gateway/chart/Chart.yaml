@@ -1,0 +1,5 @@
+apiVersion: v2
+name: lan-gateway
+description: LAN-only HTTPS entry point for apps already public through Pangolin
+type: application
+version: 0.1.0
