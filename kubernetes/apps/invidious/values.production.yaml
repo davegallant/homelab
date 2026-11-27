@@ -53,8 +53,8 @@ controllers:
           readOnlyRootFilesystem: true
         image:
           repository: quay.io/invidious/invidious
-          tag: 2026.11.25-fa031ff
-          digest: sha256:e8c5f6f0cac77380017d834c4c2fac0a8c0b6107fa7342f3fa43fc43445f693a
+          tag: 2026.11.27-0f5e494
+          digest: sha256:0f78c6980614c6e60b7b4e5bcee46b513483f8d683acb74e6a0150850b9a07ca
         envFrom:
           - secretRef:
               name: invidious-external
