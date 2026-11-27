@@ -75,6 +75,11 @@ endpoints:
   - name: searxng
     url: "{{ searxng_url }}/healthz"
     <<: *defaults
+    client:
+      timeout: 20s
+    alerts:
+      - type: gotify
+        failure-threshold: 6
 
   - name: speedtest-tracker
     url: "{{ speedtest_tracker_url }}/admin/login"
@@ -83,6 +88,11 @@ endpoints:
   - name: bento-pdf
     url: "{{ bentopdf_url }}"
     <<: *defaults
+    client:
+      timeout: 20s
+    alerts:
+      - type: gotify
+        failure-threshold: 6
 
   - name: arca
     url: "https://arca.{{ headscale_magic_dns_domain }}/healthz"
@@ -95,6 +105,11 @@ endpoints:
   - name: navidrome
     url: "{{ navidrome_url }}"
     <<: *defaults
+    client:
+      timeout: 20s
+    alerts:
+      - type: gotify
+        failure-threshold: 6
 
   - name: maloja
     url: "{{ maloja_url | regex_replace('/+$', '') }}/static/css/startpage.css"
@@ -115,6 +130,11 @@ endpoints:
   - name: umami
     url: "{{ umami_url }}"
     <<: *defaults
+    client:
+      timeout: 20s
+    alerts:
+      - type: gotify
+        failure-threshold: 6
 
   - name: jellyfin
     url: "{{ jellyfin_url }}"
@@ -163,10 +183,20 @@ endpoints:
   - name: audiobookshelf
     url: "{{ audiobookshelf_url }}"
     <<: *defaults
+    client:
+      timeout: 20s
+    alerts:
+      - type: gotify
+        failure-threshold: 6
 
   - name: forgejo
     url: "{{ forgejo_url }}"
     <<: *defaults
+    client:
+      timeout: 20s
+    alerts:
+      - type: gotify
+        failure-threshold: 6
 
   - name: invidious
     url: "{{ invidious_url }}"
@@ -187,6 +217,11 @@ endpoints:
   - name: paperless-ngx
     url: "{{ paperless_ngx_url }}"
     <<: *defaults
+    client:
+      timeout: 20s
+    alerts:
+      - type: gotify
+        failure-threshold: 6
 
   - name: pangolin
     url: "https://{{ pangolin_dashboard_domain }}/api/v1/"
