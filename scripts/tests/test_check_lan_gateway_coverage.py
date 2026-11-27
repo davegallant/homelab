@@ -9,6 +9,16 @@ import check_lan_gateway_coverage as coverage  # noqa: E402
 
 
 VALUES = """
+lanCidr: 192.168.1.0/24
+lanDnsClients:
+  - 192.168.1.0/25
+  - 192.168.1.128/26
+  - 192.168.1.192/28
+  - 192.168.1.208/31
+  - 192.168.1.211/32
+  - 192.168.1.212/30
+  - 192.168.1.216/29
+  - 192.168.1.224/27
 apps:
   - name: alpha
     port: 80
@@ -32,6 +42,7 @@ class LanGatewayCoverageTest(unittest.TestCase):
         self.root = Path(self.tmp.name)
         self.write("kubernetes/apps/lan-gateway/chart/values.yaml", VALUES)
         self.write("kubernetes/apps/argocd/project-lan-gateway.yaml", PROJECT)
+        self.write("kubernetes/cluster/vars.yaml", "talos_nodes:\n  - name: n1\n    address: 192.168.1.210\n")
         self.write("kubernetes/apps/alpha/values.production.yaml", "image: docker.io/fosrl/newt:1.0\n")
         self.write("ansible/playbooks/beta/docker-compose.yml", "image: docker.io/fosrl/newt:1.0\n")
 
@@ -65,6 +76,11 @@ class LanGatewayCoverageTest(unittest.TestCase):
     def test_missing_project_destination_fails(self):
         self.write("kubernetes/apps/argocd/project-lan-gateway.yaml", "spec: {destinations: []}\n")
         self.assertTrue(any("destination namespace alpha" in e for e in coverage.check(self.root)))
+
+    def test_new_node_not_exempt_fails(self):
+        self.write("kubernetes/cluster/vars.yaml",
+                   "talos_nodes:\n  - {name: n1, address: 192.168.1.210}\n  - {name: n2, address: 192.168.1.5}\n")
+        self.assertTrue(any("lanDnsClients must be" in e for e in coverage.check(self.root)))
 
     def test_pangolin_domain_not_covered_fails(self):
         errors = coverage.check_pangolin(

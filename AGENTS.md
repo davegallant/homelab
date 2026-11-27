@@ -192,7 +192,8 @@ image IDs after each deployment before calling the update live.
    `excluded` with a reason. `just lint` fails otherwise. Deploy order: sync
    `lan-gateway`, prove the route, then run the `adguard-home` playbook with
    `--tags adguard_lan_gateway` and the `gatus` playbook for the secondary
-   resolver. See `kubernetes/apps/lan-gateway/README.md`.
+   resolver. Rerun both after registering a new personal tailnet device. See
+   `kubernetes/apps/lan-gateway/README.md`.
 
 ## Shared Variables
 

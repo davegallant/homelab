@@ -68,6 +68,12 @@
     - ansible.builtin.include_tasks:
         file: ../../tasks/docker-compose-up.yml
 
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/lan-gateway-tailnet-clients.yml
+        apply:
+          tags: ["adguard_lan_gateway"]
+      tags: ["adguard_lan_gateway"]
+
     - name: Read AdGuard user rules
       ansible.builtin.uri:
         url: http://127.0.0.1:80/control/filtering/status

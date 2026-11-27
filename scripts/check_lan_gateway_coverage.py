@@ -6,7 +6,8 @@ ansible/playbooks/ that deploys a Newt image must appear exactly once in the
 lan-gateway values as an `apps` entry or an `excluded` entry with a reason;
 every entry must have a Newt workload behind it (the LAN must never see more
 than Pangolin publishes); and every app namespace must be a destination of the
-homelab-lan-gateway AppProject.
+homelab-lan-gateway AppProject; and `lanDnsClients` must equal `lanCidr` minus
+the Talos node addresses, so cluster DNS keeps the public answer.
 
 `--pangolin` additionally reads live Pangolin resources over `ssh vps` and
 fails on any hostname the values file does not cover.
@@ -14,6 +15,7 @@ fails on any hostname the values file does not cover.
 
 from pathlib import Path
 import argparse
+import ipaddress
 import subprocess
 import sys
 
@@ -23,6 +25,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 VALUES = Path("kubernetes/apps/lan-gateway/chart/values.yaml")
 PROJECT = Path("kubernetes/apps/argocd/project-lan-gateway.yaml")
+CLUSTER_VARS = Path("kubernetes/cluster/vars.yaml")
 SCAN_DIRS = (Path("kubernetes/apps"), Path("ansible/playbooks"))
 SCAN_SUFFIXES = {".yaml", ".yml", ".j2"}
 NEWT_IMAGE = "fosrl/newt"
@@ -46,6 +49,18 @@ def find_newt_apps(root: Path) -> dict[str, list[str]]:
             if NEWT_IMAGE in path.read_text(errors="ignore"):
                 found.setdefault(rel.parts[0], []).append(str(path.relative_to(root)))
     return found
+
+
+def expected_dns_clients(lan_cidr: str, node_addresses: list[str]) -> list[str]:
+    networks = [ipaddress.ip_network(lan_cidr)]
+    for address in node_addresses:
+        excluded = ipaddress.ip_network(f"{address}/32")
+        networks = [
+            part
+            for network in networks
+            for part in (network.address_exclude(excluded) if excluded.subnet_of(network) else [network])
+        ]
+    return [str(n) for n in sorted(networks)]
 
 
 def hostname(entry: dict) -> str:
@@ -90,6 +105,19 @@ def check(root: Path) -> list[str]:
         namespace = entry.get("namespace") or entry.get("name")
         if namespace not in destinations:
             errors.append(f"{PROJECT}: add destination namespace {namespace} for {entry.get('name')}")
+
+    cluster_vars = root / CLUSTER_VARS
+    if cluster_vars.is_file():
+        nodes = (yaml.safe_load(cluster_vars.read_text()) or {}).get("talos_nodes") or []
+        expected = expected_dns_clients(values.get("lanCidr", ""), [n["address"] for n in nodes])
+        actual = [str(ipaddress.ip_network(c)) for c in values.get("lanDnsClients") or []]
+        if sorted(actual) != expected:
+            errors.append(
+                f"{VALUES}: lanDnsClients must be lanCidr minus the Talos node addresses: "
+                + ", ".join(expected)
+            )
+    else:
+        errors.append(f"{CLUSTER_VARS} not found")
     return errors
 
 

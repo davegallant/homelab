@@ -17,6 +17,20 @@
 image: docker.io/library/caddy:2.11.9-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0
 loadBalancerIP: 192.168.1.186
 lanCidr: 192.168.1.0/24
+# AdGuard LAN clients that get the LAN gateway answer: lanCidr minus the Talos
+# node addresses. Cluster DNS reaches AdGuard from the node IPs, and in-cluster
+# clients (Forgejo runner, image pulls) cannot use the LAN gateway, so the
+# nodes keep the public Pangolin answer. scripts/check_lan_gateway_coverage.py
+# recomputes this from kubernetes/cluster/vars.yaml.
+lanDnsClients:
+  - 192.168.1.0/25
+  - 192.168.1.128/26
+  - 192.168.1.192/28
+  - 192.168.1.208/31
+  - 192.168.1.213/32
+  - 192.168.1.214/31
+  - 192.168.1.216/29
+  - 192.168.1.224/27
 tlsSecretName: lan-gateway-wildcard
 # Tailnet entry: userspace Tailscale forwarding tailnet TCP 443 to the Caddy
 # Service, so tailnet clients (100.x) reach the same Caddy from anywhere.

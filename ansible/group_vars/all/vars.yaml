@@ -44,8 +44,8 @@ lan_gateway_adguard_rules: >-
   {%- set out = [lan_gateway_adguard_rule_markers[0]] -%}
   {%- for a in v.apps -%}
   {%- set h = a.hostname | default(a.name ~ '.davegallant.ca') -%}
-  {%- set _ = out.append('||' ~ h ~ '^$dnsrewrite=' ~ v.loadBalancerIP ~ ',client=' ~ v.lanCidr) -%}
-  {%- set _ = out.append('||' ~ h ~ '^$dnsrewrite=' ~ v.tailnetIP ~ ',client=100.64.0.0/10') -%}
+  {%- set _ = out.append('||' ~ h ~ '^$dnsrewrite=' ~ v.loadBalancerIP ~ ',client=' ~ (v.lanDnsClients | join('|'))) -%}
+  {%- set _ = out.append('||' ~ h ~ '^$dnsrewrite=' ~ v.tailnetIP ~ ',client=' ~ (lan_gateway_tailnet_clients | join('|'))) -%}
   {%- endfor -%}
   {%- set _ = out.append(lan_gateway_adguard_rule_markers[1]) -%}
   {{ out }}

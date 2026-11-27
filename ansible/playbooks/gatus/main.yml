@@ -49,6 +49,9 @@
         path: "{{ ansible_facts['env']['HOME'] }}/adguard-secondary/conf/AdGuardHome.yaml"
       register: adguard_secondary_live_config
 
+    - ansible.builtin.include_tasks:
+        file: ../../tasks/lan-gateway-tailnet-clients.yml
+
     - name: Render desired secondary AdGuard config
       ansible.builtin.template:
         src: adguard-secondary.yaml.j2

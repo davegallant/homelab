@@ -13,6 +13,19 @@ The `lan-gateway-tailnet` pod runs userspace Tailscale and forwards tailnet TCP
 no VPS either way. Userspace WireGuard is slower than kernel; a remote 4K
 remux may hit its ceiling.
 
+Two client groups deliberately keep the public Pangolin answer:
+
+- Talos nodes. Cluster DNS reaches AdGuard from the node IPs, and in-cluster
+  clients (Forgejo runner, arca image pulls) cannot use this gateway, so
+  `lanDnsClients` is `lanCidr` minus the node addresses; `just lint` checks it
+  against `kubernetes/cluster/vars.yaml`.
+- Tagged tailnet nodes (Gatus, LXC hosts, `tag:external`). Gatus monitors the
+  Pangolin path on purpose, and tagged ACLs do not allow the lan-gateway node.
+  The tailnet rule lists untagged Headscale nodes only, read from Headscale
+  each time the `adguard-home` and `gatus` playbooks run
+  (`ansible/tasks/lan-gateway-tailnet-clients.yml`). A newly registered device
+  uses Pangolin until those playbooks run again.
+
 It is separate from the tailnet gateway on purpose. Both Cilium Gateways would
 share the `reserved:ingress` identity, so admitting the LAN to one would admit
 it to the tailnet-only apps on `192.168.1.185`. This pod has its own identity
