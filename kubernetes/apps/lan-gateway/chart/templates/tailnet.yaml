@@ -60,8 +60,10 @@ spec:
               value: "true"
             - name: TS_HOSTNAME
               value: {{ .Values.tailscaleHostname }}
+            # local-path mounts a root-owned 0777 directory that tailscaled
+            # cannot chmod; a subdirectory it creates is owned by UID 1000.
             - name: TS_STATE_DIR
-              value: /var/lib/tailscale
+              value: /var/lib/tailscale/state
             - name: TS_KUBE_SECRET
               value: ""
             - name: TS_USERSPACE
