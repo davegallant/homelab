@@ -1,0 +1,43 @@
+---
+crds:
+  enabled: true
+  keep: true
+image:
+  tag: "v1.21.3@sha256:9f4f96a33c7774cef24466fcd85031997531a03a8d117f151126baa8d1290dcc"
+webhook:
+  image:
+    tag: "v1.21.3@sha256:055ac8e9de6a0ba6763794838fe38944acc650f68ebe1b01dd8be079e580f458"
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+cainjector:
+  image:
+    tag: "v1.21.3@sha256:083d0e906f8eb44e255fe4ff817ae54e49f9ed82e22f1011bb4e9e4f4b8a641f"
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+acmesolver:
+  image:
+    tag: "v1.21.3@sha256:c8c1225bb2fe8ab37a330b77f0d8c2ee6a41210fcb54fc07ca606ab9a022b8b7"
+# A Helm hook Job; Argo CD health checks cover the same readiness.
+startupapicheck:
+  enabled: false
+# DNS-01 propagation checks: the LAN blocks Google DNS, and AdGuard answers
+# split-horizon names, so query Cloudflare's resolvers directly.
+dns01RecursiveNameservers: "1.1.1.1:53,1.0.0.1:53"
+dns01RecursiveNameserversOnly: true
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi

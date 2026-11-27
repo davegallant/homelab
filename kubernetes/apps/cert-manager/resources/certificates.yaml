@@ -1,0 +1,45 @@
+---
+# Renewed automatically 30 days before expiry. The tailnet Gateway (Cilium
+# Envoy) reloads Secrets itself; the LAN gateway Caddy pod is restarted by
+# Reloader when its Secret changes.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tailnet-gateway-wildcard
+  namespace: tailnet-gateway
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  secretName: tailnet-gateway-wildcard-acme
+  dnsNames:
+    - "*.tail.davegallant.ca"
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: letsencrypt-production
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  renewBefore: 720h
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: lan-gateway-wildcard
+  namespace: lan-gateway
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  secretName: lan-gateway-wildcard-acme
+  dnsNames:
+    - "*.davegallant.ca"
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: letsencrypt-production
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  renewBefore: 720h

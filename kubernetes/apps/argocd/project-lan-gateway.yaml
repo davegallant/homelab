@@ -5,9 +5,10 @@ metadata:
   name: homelab-lan-gateway
   namespace: argocd
 spec:
-  description: LAN gateway Caddy proxy and the backend policies admitting it
+  description: LAN gateway Caddy proxy, its namespaced Reloader, and backend policies
   sourceRepos:
     - https://github.com/davegallant/homelab.git
+    - https://stakater.github.io/stakater-charts
   destinations:
     - server: https://kubernetes.default.svc
       namespace: lan-gateway
@@ -37,3 +38,9 @@ spec:
       kind: Service
     - group: cilium.io
       kind: CiliumNetworkPolicy
+    - group: ""
+      kind: ServiceAccount
+    - group: rbac.authorization.k8s.io
+      kind: Role
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding

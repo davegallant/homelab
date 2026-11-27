@@ -14,6 +14,7 @@ spec:
     - ghcr.io/vmware-tanzu/charts
     - https://argoproj.github.io/argo-helm
     - https://helm.cilium.io/
+    - https://charts.jetstack.io
     - code.forgejo.org/forgejo-helm
     - https://code.forgejo.org/forgejo-helm/forgejo-runner.git
   destinations:
@@ -22,6 +23,8 @@ spec:
       namespace: argocd
     - server: https://kubernetes.default.svc
       namespace: argo-workflows
+    - server: https://kubernetes.default.svc
+      namespace: cert-manager
     - server: https://kubernetes.default.svc
       namespace: alloy
     - server: https://kubernetes.default.svc
@@ -37,10 +40,20 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: kube-system
     - server: https://kubernetes.default.svc
+      namespace: lan-gateway
+    - server: https://kubernetes.default.svc
       namespace: monitoring
+    - server: https://kubernetes.default.svc
+      namespace: tailnet-gateway
     - server: https://kubernetes.default.svc
       namespace: velero
   clusterResourceWhitelist:
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+    - group: cert-manager.io
+      kind: ClusterIssuer
     - group: admissionregistration.k8s.io
       kind: MutatingAdmissionPolicy
     - group: admissionregistration.k8s.io
@@ -78,6 +91,8 @@ spec:
     - group: cilium.io
       kind: CiliumLocalRedirectPolicy
   namespaceResourceWhitelist:
+    - group: cert-manager.io
+      kind: Certificate
     - group: argoproj.io
       kind: CronWorkflow
     - group: argoproj.io

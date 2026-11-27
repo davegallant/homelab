@@ -1,0 +1,29 @@
+---
+# Manual sync only. Namespaced Reloader for the LAN gateway Caddy pod.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: lan-gateway-reloader
+  namespace: argocd
+  annotations:
+    homelab.davegallant.ca/backup-policy: not-required
+spec:
+  project: homelab-lan-gateway
+  sources:
+    - repoURL: https://stakater.github.io/stakater-charts
+      chart: reloader
+      targetRevision: "2.2.19"
+      helm:
+        releaseName: reloader
+        valueFiles:
+          - $values/kubernetes/apps/lan-gateway/reloader/values.production.yaml
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: lan-gateway
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true

@@ -1,0 +1,31 @@
+---
+# Manual sync only. The chart installs cert-manager and its CRDs; the Git
+# source adds the ClusterIssuers and the gateway wildcard Certificates.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+spec:
+  project: homelab-platform
+  sources:
+    - repoURL: https://charts.jetstack.io
+      chart: cert-manager
+      targetRevision: "v1.21.3"
+      helm:
+        releaseName: cert-manager
+        valueFiles:
+          - $values/kubernetes/apps/cert-manager/values.production.yaml
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/davegallant/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/cert-manager/resources
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true

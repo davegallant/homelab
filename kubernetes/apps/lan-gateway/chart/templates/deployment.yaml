@@ -3,6 +3,9 @@ kind: Deployment
 metadata:
   name: lan-gateway
   namespace: lan-gateway
+  annotations:
+    # Caddy reads certificate files only at startup; restart on renewal.
+    secret.reloader.stakater.com/reload: {{ .Values.tlsSecretName }}
 spec:
   replicas: 1
   strategy:

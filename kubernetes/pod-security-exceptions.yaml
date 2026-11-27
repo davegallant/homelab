@@ -14,6 +14,16 @@ exceptions:
     authenticates clients using their own Kubernetes tokens.
   argo-workflows/argo-workflows-workflow-controller pod automountServiceAccountToken: >-
     The controller uses its namespace-scoped service account to manage workflows.
+  cert-manager/cert-manager pod automountServiceAccountToken: >-
+    The cert-manager controller manages Certificates, Orders and Secrets
+    through the Kubernetes API with its chart-scoped service account.
+  cert-manager/cert-manager-cainjector pod automountServiceAccountToken: >-
+    The CA injector patches webhook and CRD CA bundles through the API.
+  cert-manager/cert-manager-webhook pod automountServiceAccountToken: >-
+    The webhook reads its serving CA Secret through the Kubernetes API.
+  lan-gateway/reloader-reloader pod automountServiceAccountToken: >-
+    Reloader watches Secrets and restarts Deployments in lan-gateway only,
+    through a namespaced Role.
   k8s-readonly/k8s-readonly pod automountServiceAccountToken: >-
     The read-only API proxy needs its scoped ServiceAccount token to list Pods
     and stream logs; it cannot read Secrets.
