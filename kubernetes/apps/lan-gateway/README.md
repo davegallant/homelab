@@ -57,18 +57,16 @@ workload, or when an app namespace is missing from the AppProject.
 
 [`namespace.yaml`](namespace.yaml) (also via the `pod-security` tag of
 `gitops-secrets.yml`), [`lb.yaml`](lb.yaml) and [`storage.yaml`](storage.yaml): the project is
-namespace-scoped only. The `lan-gateway-wildcard` TLS Secret comes from
-Vault through `gitops-secrets.yml --tags lan-gateway-tls -e
-lan_gateway_provision_tls=true`. The `lan-gateway-tailscale-auth` Secret
-holds a single-use, one-hour Headscale pre-auth key (user `dave`), applied
-once and not kept in Vault: `TS_AUTH_ONCE` means it is needed only if the
-state PVC is lost, and then a fresh key is required anyway.
+namespace-scoped only. The TLS Secret is issued by cert-manager (below).
+The `lan-gateway-tailscale-auth` Secret holds a single-use, one-hour
+Headscale pre-auth key (user `dave`), applied once and not kept in Vault:
+`TS_AUTH_ONCE` means it is needed only if the state PVC is lost, and then a
+fresh key is required anyway.
 
 ## Certificate
 
-`*.davegallant.ca`, issued with Lego and Cloudflare DNS-01 into
-`~/.local/share/tailnet-gateway-acme/production/state` (use resolvers
-`1.1.1.1:53,1.0.0.1:53`; 8.8.8.8 is unreachable from the LAN). Renew with
-30 days remaining, update `lan_gateway_tls_crt`/`lan_gateway_tls_key` in
-Vault, reapply the Secret, then restart the Deployment: Caddy reads the
-files only at startup.
+`*.davegallant.ca` comes from cert-manager (`lan-gateway/lan-gateway-wildcard`
+into `lan-gateway-wildcard-acme`; see [cert-manager](../cert-manager/README.md)).
+Caddy reads certificate files only at startup, so the namespaced Reloader
+(`lan-gateway-reloader` Application) restarts the Deployment when the Secret
+changes. Reloader's Role covers `lan-gateway` only.

@@ -71,13 +71,12 @@ Cilium values before changing the app. A repair or restart needs authorization.
 
 ## Certificate renewal and evidence
 
-Inspect actual served expiry; do not use a historical date as the renewal
-inventory. Renew before the operational threshold of 30 days remaining. Use
-production ACME DNS-01 with Vault-sourced credentials and protected temporary
-files. Validate trust, SAN, expiry and key match before updating Vault and the
-wildcard Secret. Verify Envoy serves the new fingerprint through ordinary
-trusted hostname HTTPS. On failure preserve the last working production state;
-never fall back to staging material.
+cert-manager issues and renews `*.tail.davegallant.ca` into
+`tailnet-gateway-wildcard-acme` 30 days before expiry (see
+[cert-manager](../cert-manager/README.md)). Inspect the actual served expiry
+and the Certificate's `Ready` condition; do not use a historical date as the
+renewal inventory. If renewal fails, the previous certificate keeps serving:
+fix the Challenge rather than swapping in manual or staging material.
 
 Keep receipt files local and gitignored under `kubernetes/receipts/`. Record
 which gates passed, failed or remain pending without secret values. Evidence

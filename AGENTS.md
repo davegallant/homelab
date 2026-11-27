@@ -286,6 +286,8 @@ secret.
   playbook for the resource being changed. Proxmox sizing is not part of the
   generated Talos machine config. Control-plane memory changes require the
   dedicated playbook, its health/backup gates, and explicit reboot approval.
+- cert-manager issues and renews the gateway wildcard certificates
+  (`kubernetes/apps/cert-manager/README.md`); do not reissue them by hand.
 - Render Kubernetes Secrets from Ansible Vault into protected temporary files
   through the apply playbook. Keep secret values out of Git and command output.
 - Alloy's Talos DaemonSet reads pod logs through the Kubernetes API with a
