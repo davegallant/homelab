@@ -1,0 +1,16 @@
+---
+# Applied by hand: the lan-gateway project does not manage PVCs.
+# Tailnet node state only. Disposable, NOT backed up by Velero; recreating it
+# means re-registering the lan-gateway node (new pre-auth key).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lan-gateway-tailscale
+  namespace: lan-gateway
+spec:
+  storageClassName: local-path
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

@@ -10,6 +10,10 @@ image: docker.io/library/caddy:2.11.9-alpine@sha256:003a97808e781aa9f7e75cc2f43d
 loadBalancerIP: 192.168.1.186
 lanCidr: 192.168.1.0/24
 tlsSecretName: lan-gateway-wildcard
+# Tailnet entry: userspace Tailscale forwarding tailnet TCP 443 to the Caddy
+# Service, so tailnet clients (100.x) reach the same Caddy from anywhere.
+tailscaleImage: ghcr.io/tailscale/tailscale:v1.104.7@sha256:72c1e19e0aedca96b8533bbb0b4368564410ff20b17e53b804eb6c1f04a31be4
+tailscaleHostname: lan-gateway
 apps:
   - name: jellyfin
     port: 8096

@@ -1,0 +1,101 @@
+# Mirrors tailnet-gateway-fronting. TS_AUTH_ONCE: the auth Secret is used
+# only for the first login; afterwards the node key lives on the PVC.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lan-gateway-tailscale
+  namespace: lan-gateway
+data:
+  serve-config.json: |
+    {
+      "TCP": {
+        "443": {
+          "TCPForward": "lan-gateway.lan-gateway.svc.cluster.local:443"
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lan-gateway-tailnet
+  namespace: lan-gateway
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: lan-gateway-tailnet
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: lan-gateway-tailnet
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-w-1
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: tailscale
+          image: {{ .Values.tailscaleImage }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          envFrom:
+            - secretRef:
+                name: lan-gateway-tailscale-auth
+                optional: true
+          env:
+            - name: TS_AUTH_ONCE
+              value: "true"
+            - name: TS_HOSTNAME
+              value: {{ .Values.tailscaleHostname }}
+            - name: TS_STATE_DIR
+              value: /var/lib/tailscale
+            - name: TS_KUBE_SECRET
+              value: ""
+            - name: TS_USERSPACE
+              value: "true"
+            - name: TS_EXTRA_ARGS
+              value: --login-server=https://hs.davegallant.ca --accept-dns=false
+            - name: TS_SERVE_CONFIG
+              value: /etc/tailscale/serve-config.json
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: "1"
+              memory: 256Mi
+          volumeMounts:
+            - name: state
+              mountPath: /var/lib/tailscale
+            - name: runtime
+              mountPath: /var/run/tailscale
+            - name: tmp
+              mountPath: /tmp
+            - name: config
+              mountPath: /etc/tailscale/serve-config.json
+              subPath: serve-config.json
+              readOnly: true
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: lan-gateway-tailscale
+        - name: runtime
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: lan-gateway-tailscale

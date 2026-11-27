@@ -6,6 +6,13 @@ answers `<app>.davegallant.ca` with `192.168.1.186` only for clients in
 `192.168.1.0/24`; tailnet clients query AdGuard from `100.x` and keep the
 public answer, because no subnet route reaches the LAN from away.
 
+Tailnet clients query AdGuard from `100.x` wherever they are, so they get the
+`lan-gateway` tailnet node's IP instead (rule with `client=100.64.0.0/10`).
+The `lan-gateway-tailnet` pod runs userspace Tailscale and forwards tailnet TCP
+443 to the same Caddy Service: direct WireGuard at home, peer-to-peer away,
+no VPS either way. Userspace WireGuard is slower than kernel; a remote 4K
+remux may hit its ceiling.
+
 It is separate from the tailnet gateway on purpose. Both Cilium Gateways would
 share the `reserved:ingress` identity, so admitting the LAN to one would admit
 it to the tailnet-only apps on `192.168.1.185`. This pod has its own identity
@@ -19,17 +26,21 @@ and accepts only `192.168.1.0/24` on TCP 8443.
    namespace to `homelab-lan-gateway` in
    [`project-lan-gateway.yaml`](../argocd/project-lan-gateway.yaml).
 3. Sync `lan-gateway` (no prune, no force) and check the backend policy.
-4. Add the AdGuard rule
-   `||<app>.davegallant.ca^$dnsrewrite=192.168.1.186,client=192.168.1.0/24`.
+4. Add both AdGuard rules:
+   `||<app>.davegallant.ca^$dnsrewrite=192.168.1.186,client=192.168.1.0/24` and
+   `||<app>.davegallant.ca^$dnsrewrite=<lan-gateway tailnet IP>,client=100.64.0.0/10`.
 5. Verify from a LAN client without `--resolve`, and that Pangolin still works.
 
 ## Applied by hand
 
 [`namespace.yaml`](namespace.yaml) (also via the `pod-security` tag of
-`gitops-secrets.yml`) and [`lb.yaml`](lb.yaml): the project is
+`gitops-secrets.yml`), [`lb.yaml`](lb.yaml) and [`storage.yaml`](storage.yaml): the project is
 namespace-scoped only. The `lan-gateway-wildcard` TLS Secret comes from
 Vault through `gitops-secrets.yml --tags lan-gateway-tls -e
-lan_gateway_provision_tls=true`.
+lan_gateway_provision_tls=true`. The `lan-gateway-tailscale-auth` Secret
+holds a single-use, one-hour Headscale pre-auth key (user `dave`), applied
+once and not kept in Vault: `TS_AUTH_ONCE` means it is needed only if the
+state PVC is lost, and then a fresh key is required anyway.
 
 ## Certificate
 

@@ -1,6 +1,6 @@
 ---
-# The Caddy pod accepts HTTPS only from the LAN and may reach only cluster
-# DNS and the listed backends.
+# The Caddy pod accepts HTTPS only from the LAN and the tailnet pod, and may
+# reach only cluster DNS and the listed backends.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -13,6 +13,14 @@ spec:
   ingress:
     - fromCIDR:
         - {{ .Values.lanCidr }}
+      toPorts:
+        - ports:
+            - port: "8443"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: lan-gateway
+            k8s:app.kubernetes.io/name: lan-gateway-tailnet
       toPorts:
         - ports:
             - port: "8443"
@@ -63,3 +71,38 @@ spec:
             - port: "{{ .policyPort | default .port }}"
               protocol: TCP
 {{- end }}
+---
+# The tailnet pod accepts no pod-network ingress (tailnet traffic arrives
+# inside its WireGuard tunnel). It needs DNS, the Caddy pod, and the internet
+# for Headscale, DERP and direct peer UDP.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: lan-gateway-tailnet
+  namespace: lan-gateway
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: lan-gateway-tailnet
+  ingress: []
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: lan-gateway
+            k8s:app.kubernetes.io/name: lan-gateway
+      toPorts:
+        - ports:
+            - port: "8443"
+              protocol: TCP
+    - toEntities:
+        - world
