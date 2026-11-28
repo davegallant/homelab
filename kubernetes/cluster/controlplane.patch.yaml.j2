@@ -26,6 +26,11 @@ machine:
         routes:
           - network: 0.0.0.0/0
             gateway: {{ talos_default_gateway }}
+    # Node-level pulls (arca image pulls from Forgejo) resolve to the lan-gateway VIP.
+    extraHostEntries:
+      - ip: 192.168.1.186
+        aliases:
+          - forgejo.davegallant.ca
 {% if talos_dhi_registry_username is defined and talos_dhi_registry_username | length > 0 and talos_dhi_registry_password is defined and talos_dhi_registry_password | length > 0 %}
   # Docker Hardened Images (dhi.io) pull credentials. Vars are intentionally
   # NOT in vars.yaml (never put machine secrets there): supply them via
