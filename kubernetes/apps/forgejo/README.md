@@ -8,7 +8,7 @@ reverse the cutover without Dave's explicit authorization.
 
 ## Runtime
 
-- Official Forgejo chart 17.3.2, Forgejo 17.0.1 rootless image pinned by digest.
+- Official Forgejo chart 17.3.3, Forgejo 17.0.1 rootless image pinned by digest.
 - Forgejo and its init containers run as UID/GID 1000 with privilege escalation
   disabled, all capabilities dropped, RuntimeDefault seccomp, and a read-only
   root filesystem. The namespace enforces Restricted Pod Security.
@@ -20,8 +20,8 @@ reverse the cutover without Dave's explicit authorization.
   It was created with `volumeType: local`; the provisioned PV is type
   `local`, with a `Retain` reclaim policy. SQLite remains on local storage.
 - [Public Forgejo](https://forgejo.davegallant.ca) uses the existing
-  Pangolin Newt identity. The separate Newt Deployment connects to the
-  same-namespace `forgejo:3000` Service. Cilium permits its TCP 3000 traffic.
+  Pangolin Newt identity. The Newt sidecar in the Forgejo pod connects to the
+  same-namespace `forgejo:3000` Service; the Cilium egress policy covers the pod.
 - Git operations use HTTPS publicly; Git-over-SSH is tailnet-only (2026-11-04).
 - The embedded SSH server listens on 2222 (rootless, UID 1000). It is reached
   only via the tailnet-gateway fronting node on 2222, which forwards directly

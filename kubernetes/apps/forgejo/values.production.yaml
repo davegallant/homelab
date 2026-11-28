@@ -1,4 +1,4 @@
-# Forgejo production values for forgejo-helm/forgejo 17.3.2.
+# Forgejo production values for forgejo-helm/forgejo 17.3.3.
 # Rootless operation passed an isolated Velero restore and startup drill on
 # 2026-10-31. Git-over-SSH is tailnet-only (2026-11-04): the built-in SSH
 # server listens on 2222, reached via the tailnet-gateway fronting node
@@ -257,7 +257,7 @@ extraDeploy:
     metadata:
       name: forgejo-newt-egress
     spec:
-      description: Allow the Forgejo pod (including its Newt sidecar) to reach the observed Pangolin VPS endpoints. Cilium cannot select a single container, so the app container shares this allowance.
+      description: Allow the Forgejo pod, including its Newt sidecar, to reach the Pangolin VPS. Cilium cannot select one container.
       endpointSelector:
         matchLabels:
           k8s:app.kubernetes.io/instance: forgejo
