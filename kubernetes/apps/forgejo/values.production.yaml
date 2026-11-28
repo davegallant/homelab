@@ -1,4 +1,4 @@
-# Forgejo production values for forgejo-helm/forgejo 17.3.3.
+# Forgejo production values. The chart version is pinned in kubernetes/apps/argocd/applications/forgejo.yaml.
 # Rootless operation passed an isolated Velero restore and startup drill on
 # 2026-10-31. Git-over-SSH is tailnet-only (2026-11-04): the built-in SSH
 # server listens on 2222, reached via the tailnet-gateway fronting node

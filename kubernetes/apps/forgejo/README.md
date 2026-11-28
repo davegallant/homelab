@@ -8,7 +8,7 @@ reverse the cutover without Dave's explicit authorization.
 
 ## Runtime
 
-- Official Forgejo chart 17.3.3, Forgejo 17.0.1 rootless image pinned by digest.
+- Official Forgejo chart (version pinned in the Argo CD Application), Forgejo 17.0.1 rootless image pinned by digest.
 - Forgejo and its init containers run as UID/GID 1000 with privilege escalation
   disabled, all capabilities dropped, RuntimeDefault seccomp, and a read-only
   root filesystem. The namespace enforces Restricted Pod Security.
