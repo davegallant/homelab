@@ -31,6 +31,53 @@ share the `reserved:ingress` identity, so admitting the LAN to one would admit
 it to the tailnet-only apps on `192.168.1.185`. This pod has its own identity
 and accepts only `192.168.1.0/24` on TCP 8443.
 
+## How it works
+
+Split-horizon DNS picks the path, and the LAN gateway serves the same
+hostnames over the LAN and the tailnet without going through the VPS.
+
+```mermaid
+flowchart LR
+    subgraph home["Home LAN 192.168.1.0/24"]
+        lanc["LAN client"]
+        adg["AdGuard primary<br/>192.168.1.77"]
+    end
+    subgraph ts["Tailnet 100.64.0.0/10"]
+        tsc["Tailnet client"]
+        adgt["AdGuard primary and secondary<br/>tailnet IPs"]
+    end
+    subgraph cluster["Talos cluster"]
+        pods["Pods<br/>CoreDNS: public answer"]
+        nodes["Node traffic<br/>/etc/hosts: forgejo to 192.168.1.186"]
+        lg["LAN gateway Caddy<br/>192.168.1.186:443"]
+        lgt["lan-gateway-tailnet<br/>100.100.0.3"]
+    end
+    vps["VPS (Pangolin)"]
+
+    lanc -->|"*.davegallant.ca"| adg
+    adg -->|"lanDnsClients: 192.168.1.186"| lg
+    tsc -->|"*.davegallant.ca"| adgt
+    adgt -->|"tailnetIP: 100.100.0.3"| lgt
+    lgt -->|"TCP 443 forwarded to Caddy"| lg
+    nodes -->|"host and remote-node ingress"| lg
+    pods -->|"public answer"| vps
+    lanc -.->|"off-LAN or no gateway answer"| vps
+```
+
+- **DNS.** AdGuard answers `*.davegallant.ca` with `192.168.1.186` for LAN
+  clients in `lanDnsClients`, and with `tailnetIP` (`100.100.0.3`) for
+  tailnet clients. Both come from `chart/values.yaml` through the managed
+  AdGuard rule block.
+- **Caddy.** The gateway admits only the LAN CIDR, the tailnet pod, and
+  `host`/`remote-node` identities on 8443 (`chart/templates/ciliumpolicy.yaml`).
+  Each app gets its own CiliumNetworkPolicy allowing Caddy to reach it.
+- **Talos nodes.** Nodes are excluded from `lanDnsClients`, so cluster DNS
+  still returns the public address to pods. Node-level traffic resolves
+  `forgejo.davegallant.ca` through a Talos `extraHostEntries` entry pointing
+  at `192.168.1.186`, so containerd image pulls from Forgejo use the gateway.
+- **Gotify** is not an app here. Its LAN and tailnet rules live in
+  `lan_extra_adguard_rules` (`ansible/group_vars/all/vars.yaml`).
+
 ## Adding an app
 
 [`chart/values.yaml`](chart/values.yaml) is the single source: the chart,
