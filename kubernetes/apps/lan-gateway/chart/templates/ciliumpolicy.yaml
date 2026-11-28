@@ -25,6 +25,15 @@ spec:
         - ports:
             - port: "8443"
               protocol: TCP
+    # Node-originated traffic (containerd image pulls, host network) reaches Caddy
+    # with host or remote-node identity, not a LAN CIDR, once the VIP is translated.
+    - fromEntities:
+        - host
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "8443"
+              protocol: TCP
   egress:
     - toEndpoints:
         - matchLabels:
