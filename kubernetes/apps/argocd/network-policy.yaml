@@ -56,5 +56,8 @@ spec:
             - port: "41641"
               protocol: UDP
   egressDeny:
-    - toCIDR:
-        - 192.168.1.0/24
+    # Gotify's LAN address is the one exception; the world:443 egress above admits it.
+    - toCIDRSet:
+        - cidr: 192.168.1.0/24
+          except:
+            - 192.168.1.100/32

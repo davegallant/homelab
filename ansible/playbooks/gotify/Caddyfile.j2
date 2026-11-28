@@ -1,0 +1,8 @@
+# Managed by Ansible (playbooks/gotify). Serves Gotify over TLS on the LAN and
+# through Pangolin. The certificate is issued by Let's Encrypt via Cloudflare DNS-01.
+gotify.davegallant.ca {
+    tls {
+        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+    }
+    reverse_proxy gotify:80
+}

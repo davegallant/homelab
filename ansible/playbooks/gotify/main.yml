@@ -1,6 +1,12 @@
 ---
 - name: Install gotify
   hosts: gotify
+  vars:
+    # Only the LAN may reach the HTTPS listener (Caddy on 443), not the tailnet default.
+    ufw_docker_allowed_source_ports:
+      - port: 443
+        sources:
+          - "{{ homelab_lan_subnet }}"
   tasks:
     - ansible.builtin.include_tasks:
         file: ../../tasks/install-docker.yml
@@ -18,6 +24,12 @@
       ansible.builtin.template:
         src: docker-compose.yml
         dest: "~/docker-compose.yml"
+        mode: "0640"
+
+    - name: Copy Caddyfile
+      ansible.builtin.template:
+        src: Caddyfile.j2
+        dest: "~/Caddyfile"
         mode: "0640"
 
     - name: Create 'config' directory

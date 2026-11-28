@@ -9,6 +9,21 @@ services:
       - ~/data:/app/data
     security_opt:
       - no-new-privileges:true
+  caddy:
+    image: ghcr.io/davegallant/homelab-caddy-cloudflare:2.11.9-a8737d0@sha256:ed3980963b032b6ad1a16a004c31d1068e74e46fe1efa16939cef21c362fcb0e
+    container_name: caddy-gotify
+    restart: always
+    networks:
+      - gotify
+    ports:
+      - "443:443"
+    environment:
+      - CLOUDFLARE_API_TOKEN={{ cloudflare_dns_api_token }}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ~/caddy-data:/data
+    security_opt:
+      - no-new-privileges:true
   newt:
     image: docker.io/fosrl/newt:1.20.1@sha256:03561e3f3d10b94ee7839318ae46e5acf8b4431550ea1d0e15666ab60caa2e43
     container_name: newt-gotify

@@ -47,5 +47,20 @@ lan_gateway_adguard_rules: >-
   {%- set _ = out.append('||' ~ h ~ '^$dnsrewrite=' ~ v.loadBalancerIP ~ ',client=' ~ (v.lanDnsClients | join('|'))) -%}
   {%- set _ = out.append('||' ~ h ~ '^$dnsrewrite=' ~ v.tailnetIP ~ ',client=' ~ (lan_gateway_tailnet_clients | join('|'))) -%}
   {%- endfor -%}
+  {%- for r in lan_extra_adguard_rules -%}{%- set _ = out.append(r) -%}{%- endfor -%}
   {%- set _ = out.append(lan_gateway_adguard_rule_markers[1]) -%}
   {{ out }}
+
+# Gotify LXC LAN address (DHCP reservation in opnsense-iac). Home clients resolve
+# gotify.davegallant.ca to it so alerts keep flowing when the VPS is down.
+gotify_lan_ip: 192.168.1.100
+# Gotify LXC's Headscale address.
+gotify_tailnet_ip: 100.100.0.10
+
+# Extra split-horizon rules inside the managed AdGuard block (LAN clients only).
+# All LAN clients, including Talos nodes: in-cluster DNS forwards from node IPs,
+# so pods that alert through Gotify get the LAN answer too.
+lan_extra_adguard_rules:
+  - "||gotify.davegallant.ca^$dnsrewrite={{ gotify_lan_ip }},client={{ homelab_lan_subnet }}"
+  # Tailnet clients (100.64.0.0/10) reach Gotify directly over the tailnet, not via Pangolin.
+  - "||gotify.davegallant.ca^$dnsrewrite={{ gotify_tailnet_ip }},client=100.64.0.0/10"
