@@ -1,7 +1,7 @@
 # Forgejo production
 
 Public Forgejo runs on Kubernetes following the successful 2026-10-25
-cutover. Forgejo and Newt are each configured at one replica. The LXC
+cutover. Forgejo runs one pod, with Newt as a sidecar container in that pod. The LXC
 Forgejo server and Newt connector are stopped; their data is retained.
 Resolve service failures in Kubernetes. Do not restart the LXC services or
 reverse the cutover without Dave's explicit authorization.
