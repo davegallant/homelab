@@ -48,7 +48,7 @@ flowchart LR
     end
     subgraph cluster["Talos cluster"]
         pods["Pods<br/>CoreDNS: public answer"]
-        nodes["Node traffic<br/>/etc/hosts: forgejo to 192.168.1.186"]
+        nodes["Node traffic<br/>/etc/hosts: jellyfin to 192.168.1.186"]
         lg["LAN gateway Caddy<br/>192.168.1.186:443"]
         lgt["lan-gateway-tailnet<br/>100.100.0.3"]
     end
@@ -73,8 +73,8 @@ flowchart LR
   Each app gets its own CiliumNetworkPolicy allowing Caddy to reach it.
 - **Talos nodes.** Nodes are excluded from `lanDnsClients`, so cluster DNS
   still returns the public address to pods. Node-level traffic resolves
-  `forgejo.davegallant.ca` through a Talos `extraHostEntries` entry pointing
-  at `192.168.1.186`, so containerd image pulls from Forgejo use the gateway.
+  `jellyfin.davegallant.ca` through a Talos `extraHostEntries` entry pointing
+  at `192.168.1.186`, so containerd image pulls from Jellyfin use the gateway.
 - **Gotify** is not an app here. Its LAN and tailnet rules live in
   `lan_extra_adguard_rules` (`ansible/group_vars/all/vars.yaml`).
 
